@@ -1,0 +1,35 @@
+package paratask.test;
+
+public class TestMultiTask2 {
+	public static void main(String[] args) {
+	
+		TaskID tid_0 = runBM_0();
+		TaskID tid_1 = runBM_1();
+		TaskID tid_2 = runBM_2();
+		TaskID tid_3 = runBM_3();
+		TaskID tid_4 = runBM_4();
+		
+		TaskIDGroup tig = new TaskIDGroup(5);
+		
+		tig.add(tid_0);
+		tig.add(tid_1);
+		tig.add(tid_2);
+		tig.add(tid_3);
+		tig.add(tid_4);
+		
+		try {
+			tig.waitTillFinished();
+		} catch (ExecutionException e) {
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	TASK(*) private static void runBM_0() { try { Thread.sleep(1000*5); System.out.println("Thread " + Thread.currentThread().getId() + " fihishes its work~~"); } catch (InterruptedException e1) { e1.printStackTrace(); } }
+	TASK(*) private static void runBM_1() { try { Thread.sleep(1000*5); System.out.println("Thread " + Thread.currentThread().getId() + " fihishes its work~~"); } catch (InterruptedException e1) { e1.printStackTrace(); } }
+	TASK(*) private static void runBM_2() { try { Thread.sleep(1000*5); System.out.println("Thread " + Thread.currentThread().getId() + " fihishes its work~~"); } catch (InterruptedException e1) { e1.printStackTrace(); } }
+	TASK(*) private static void runBM_3() { try { Thread.sleep(1000*5); System.out.println("Thread " + Thread.currentThread().getId() + " fihishes its work~~"); } catch (InterruptedException e1) { e1.printStackTrace(); } }
+	TASK(*) private static void runBM_4() { try { Thread.sleep(1000*5); System.out.println("Thread " + Thread.currentThread().getId() + " fihishes its work~~"); } catch (InterruptedException e1) { e1.printStackTrace(); } }
+
+}

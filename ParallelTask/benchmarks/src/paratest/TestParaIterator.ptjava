@@ -1,0 +1,61 @@
+package paratest;
+
+import java.util.ArrayList;
+
+import paratask.runtime.ParaTask;
+import pi.ParIterator;
+import pi.ParIteratorFactory;
+
+/**
+ * The TestParaIterator class is a subclass of Test.
+ * 
+ * It initialises a ParIterator over an array of Bytes then 
+ * runs through them in a parallel fashion. This is done by 
+ * using multi tasks for processing the elements.
+ * 
+ * @param Size - the number of elements in the array
+ * 
+ * @author Peter Nicolau
+ */
+public class TestParaIterator extends Test {
+
+	private int fThreads;
+	private int fSize;
+	private ParIterator<Integer> fIterator;
+
+	public TestParaIterator(int threads, int size) {
+		fThreads = threads;
+		fSize = size;
+	}
+
+	public void execute() {
+		ArrayList<Integer> array = new ArrayList<Integer>();
+
+		for (int i = 0; i < fSize; i++) {
+			array.add(0);
+		}
+
+		fIterator = ParIteratorFactory.createParIterator(array, ParaTask.getThreadPoolSize());
+		long start = System.nanoTime();
+
+		TaskID id = process();
+
+		try {
+			id.waitTillFinished();
+		} catch (ExecutionException e) {
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+		long finish = System.nanoTime();
+		System.out.println(fSize + "\t" + (finish - start));
+	}
+
+	TASK(fThreads) public void process(){
+		while (fIterator.hasNext()) {
+			fIterator.next();
+		}
+	}
+
+}
