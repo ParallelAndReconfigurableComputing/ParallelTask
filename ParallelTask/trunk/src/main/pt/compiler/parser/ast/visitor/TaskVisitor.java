@@ -1174,11 +1174,11 @@ public final class TaskVisitor implements VoidVisitor<Object> {
         
     	//-- added this for ParaTask
         printer.printLn("//-- ParaTask related imports",-1);
-    	printer.printLn("import paratask.runtime.*;",-1);
+    	printer.printLn("import pt.runtime.*;",-1);
     	printer.printLn("import java.util.concurrent.ExecutionException;",-1);
     	printer.printLn("import java.util.concurrent.locks.*;",-1);
     	printer.printLn("import java.lang.reflect.*;",-1);
-    	printer.printLn("import paratask.runtime.GuiThread;",-1);
+    	printer.printLn("import pt.runtime.GuiThread;",-1);
     	printer.printLn("import java.util.concurrent.BlockingQueue;", -1);
     	printer.printLn("import java.util.ArrayList;", -1);
     	printer.printLn("import java.util.List;", -1);
