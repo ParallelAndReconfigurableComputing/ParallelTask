@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
       id="nz.ac.auckland.ptjavafeature"
-      label="PTJava Text Editor"
+      label="ParaTask Plugin"
       version="2.1.0"
       plugin="nz.ac.auckland.ptjava">
 

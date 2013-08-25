@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: PTJava Editor
+Bundle-Name: ParaTask Plugin
 Bundle-SymbolicName: nz.ac.auckland.ptjava;singleton:=true
 Bundle-Version: 2.1.0
 Bundle-Activator: nz.ac.auckland.ptjava.PTJavaPlugin

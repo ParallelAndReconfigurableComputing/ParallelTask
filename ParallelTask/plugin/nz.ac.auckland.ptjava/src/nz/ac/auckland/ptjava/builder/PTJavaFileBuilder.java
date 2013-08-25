@@ -63,7 +63,7 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 
-import paratask.compiler.ParaTaskParser;
+import pt.compiler.ParaTaskParser;
 
 /**
  * A builder for .ptjava files. Implements the builder extension.
