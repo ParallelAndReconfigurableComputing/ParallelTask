@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project name="ParaTask" default="clean" basedir=".">
+	<property name="src" value="src/main"/>
+	<property name="dest" value="classes"/>
+	<property name="compiler_jar" value="PTCompiler.jar"/>
+	<property name="runtim_jar" value="PTRuntime.jar"/>
+	
+	<!-- You MUST configure a valid path for JavaCC -->
+	<property name="javacc_home" value="D:/Java/javacc-5.0"/>
+	<property name="javacc_script_dir" value="${src}/pt/compiler/parser"/>
+	<property name="javacc_script" value="${javacc_script_dir}/java_1_5.jj"/>
+
+	<target name="init">
+		<mkdir dir="${dest}"/>
+	</target>
+
+	<target name="re-generate Parser ?" depends="init">
+		<echo message="ATTENTION !!! Before you re-generate the parser, make sure you have already installed JavaCC 5.0, and you must configure the property of 'javacc_home' a valid path for this script. We strongly recommand you do not re-generate the parser unless you really need to do."/>
+		<input message="Do you want to re-genereate the parser(y/n)?" addproperty="generate" validargs="y,n" />
+		<condition property="generateParser.yesOrNo">
+			<equals arg1="y" arg2="${generate}"/>
+		</condition>
+	</target>
+
+	<target name="buildJavaCC" if="generateParser.yesOrNo" depends="re-generate Parser ?">
+		<javacc target="${javacc_script}" outputdirectory="${javacc_script_dir}" javacchome="${javacc_home}"/>
+	</target>
+
+	<target name="notbuildJavaCC" unless="generateParser.yesOrNo" depends="buildJavaCC">
+		<echo message="Default files are used to generate the parser."/>
+	</target>
+	
+	<!--
+	<target name="buildJavaCC" depends="init">
+		<javacc target="${javacc_script}" outputdirectory="${javacc_script_dir}" javacchome="${javacc_home}"/>
+	</target>
+	-->
+
+	<target name="compile" depends="buildJavaCC, notbuildJavaCC">
+		<javac includeantruntime="false" srcdir="${src}" destdir="${dest}"/>
+	</target>
+
+	<target name="require Android ?" depends="compile">
+		<input message="Android Environment Required(y/n)?" addproperty="require" validargs="y,n" />
+		<condition property="requireAndroid.yesOrNo">
+			<equals arg1="y" arg2="${require}"/>
+		</condition>
+	</target>
+
+	<target name="build4android" if="requireAndroid.yesOrNo" depends="require Android ?">
+		<jar jarfile="${compiler_jar}" basedir="${dest}" excludes="**/pt/queues/,**/pt/runtime/"/>
+		<jar jarfile="${runtim_jar}" basedir="${dest}" excludes="**/pt/compiler/"/>
+	</target>
+
+	<target name="build4desktop" unless="requireAndroid.yesOrNo" depends="build4android">
+		<jar jarfile="${compiler_jar}" basedir="${dest}" excludes="**/android/,**/pt/queues/,**/pt/runtime/"/>
+		<jar jarfile="${runtim_jar}" basedir="${dest}" excludes="**/android/,**/pt/compiler/"/>
+	</target>
+
+	<!--
+	<target name="build" depends="compile">
+		<jar jarfile="${compiler_jar}" basedir="${dest}" excludes="**/android/,**/pt/queues/,**/pt/runtime/"/>
+		<jar jarfile="${runtim_jar}" basedir="${dest}" excludes="**/android/,**/pt/compiler/"/>
+	</target>
+	-->
+	
+	<target name="clean" depends="build4android, build4desktop">
+		<delete dir="${dest}" />
+	</target>
+</project>
