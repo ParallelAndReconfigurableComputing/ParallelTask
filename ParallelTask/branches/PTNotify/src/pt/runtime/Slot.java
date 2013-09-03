@@ -23,6 +23,7 @@ import java.lang.reflect.Method;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class Slot {
+	public static enum SetCompleteSlot {TRUE, FALSE}
 	
 	final public static Slot quit = new Slot();
 	
@@ -32,9 +33,7 @@ public class Slot {
 	private ConcurrentLinkedQueue<Object> interResults = null;
 	private Class interResultType = null;
 	
-	private boolean executeOnEDT = false;
-	
-	private boolean isASetCompleteSlot = false;
+	private SetCompleteSlot isASetCompleteSlot = SetCompleteSlot.FALSE;
 	
 	private TaskID<?> taskID = null; 	// TODO this is the task for which this slot is attached to (who should assign it?)
 				// cannot be assigned at the time the slot is created (since the TaskID wasn't created just yet)
@@ -44,20 +43,19 @@ public class Slot {
 	private Slot() {
 	}
 	
-	public Slot(Method method, Object instance, boolean executeOnEDT, boolean isIntermediateResultSlot) {
+	public Slot(Method method, Object instance, boolean isIntermediateResultSlot) {
 		this.method = method;
 		this.instance = instance;
-		this.executeOnEDT = executeOnEDT;
 		this.isIntermediateResultSlot = isIntermediateResultSlot;
 	}
 
-	public Slot(Method method, Object instance, boolean executeOnEDT, boolean isIntermediateResultSlot, boolean isASetCompleteSlot) {
-		this(method, instance, executeOnEDT, isIntermediateResultSlot);
+	public Slot(Method method, Object instance, boolean isIntermediateResultSlot, SetCompleteSlot isASetCompleteSlot) {
+		this(method, instance, isIntermediateResultSlot);
 		this.isASetCompleteSlot = isASetCompleteSlot;
 	}
 	
 	public boolean isASetCompleteSlot() {
-		return isASetCompleteSlot;
+		return isASetCompleteSlot == SetCompleteSlot.TRUE;
 	}
 	
 	public void addIntermediateResult(Class type, Object value) {
@@ -94,9 +92,5 @@ public class Slot {
 
 	public boolean isIntermediateResultSlot() {
 		return isIntermediateResultSlot;
-	}
-
-	public void setExecuteOnEDT(boolean executeOnEDT) {
-		this.executeOnEDT = executeOnEDT;
 	}
 }

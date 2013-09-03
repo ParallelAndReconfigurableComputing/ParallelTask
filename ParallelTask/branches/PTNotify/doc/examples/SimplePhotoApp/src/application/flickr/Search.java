@@ -13,14 +13,17 @@ import com.aetrion.flickr.*;//####[16]####
 import com.aetrion.flickr.photos.*;//####[17]####
 //####[17]####
 //-- ParaTask related imports//####[17]####
-import paratask.runtime.*;//####[17]####
+import pt.runtime.*;//####[17]####
 import java.util.concurrent.ExecutionException;//####[17]####
 import java.util.concurrent.locks.*;//####[17]####
 import java.lang.reflect.*;//####[17]####
-import javax.swing.SwingUtilities;//####[17]####
+import pt.runtime.GuiThread;//####[17]####
+import java.util.concurrent.BlockingQueue;//####[17]####
+import java.util.ArrayList;//####[17]####
+import java.util.List;//####[17]####
 //####[17]####
 public class Search {//####[19]####
-//####[19]####
+    static{ParaTask.init();}//####[19]####
     /*  ParaTask helper method to access private/protected slots *///####[19]####
     public void __pt__accessPrivateSlot(Method m, Object instance, TaskID arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[19]####
         if (m.getParameterTypes().length == 0)//####[19]####
@@ -37,31 +40,62 @@ public class Search {//####[19]####
 //####[24]####
     private static PhotosInterface photoInterface = flickr.getPhotosInterface();//####[24]####
 //####[41]####
-    private static Method __pt__getSquareImageTask_Photo_method = null;//####[41]####
-    private static Lock __pt__getSquareImageTask_Photo_lock = new ReentrantLock();//####[41]####
-    public static TaskID<Image> getSquareImageTask(Photo p)  {//####[41]####
-//####[41]####
+    private static volatile Method __pt__getSquareImageTask_Photo_method = null;//####[41]####
+    private synchronized static void __pt__getSquareImageTask_Photo_ensureMethodVarSet() {//####[41]####
+        if (__pt__getSquareImageTask_Photo_method == null) {//####[41]####
+            try {//####[41]####
+                __pt__getSquareImageTask_Photo_method = ParaTaskHelper.getDeclaredMethod(new ParaTaskHelper.ClassGetter().getCurrentClass(), "__pt__getSquareImageTask", new Class[] {//####[41]####
+                    Photo.class//####[41]####
+                });//####[41]####
+            } catch (Exception e) {//####[41]####
+                e.printStackTrace();//####[41]####
+            }//####[41]####
+        }//####[41]####
+    }//####[41]####
+    public static TaskID<Image> getSquareImageTask(Photo p) {//####[41]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[41]####
         return getSquareImageTask(p, new TaskInfo());//####[41]####
     }//####[41]####
-    public static TaskID<Image> getSquareImageTask(Photo p, TaskInfo taskinfo)  {//####[41]####
+    public static TaskID<Image> getSquareImageTask(Photo p, TaskInfo taskinfo) {//####[41]####
+        // ensure Method variable is set//####[41]####
         if (__pt__getSquareImageTask_Photo_method == null) {//####[41]####
-            try {//####[41]####
-                __pt__getSquareImageTask_Photo_lock.lock();//####[41]####
-                if (__pt__getSquareImageTask_Photo_method == null) //####[41]####
-                    __pt__getSquareImageTask_Photo_method = ParaTaskHelper.getDeclaredMethod(new ParaTaskHelper.ClassGetter().getCurrentClass(), "__pt__getSquareImageTask", new Class[] {Photo.class});//####[41]####
-            } catch (Exception e) {//####[41]####
-                e.printStackTrace();//####[41]####
-            } finally {//####[41]####
-                __pt__getSquareImageTask_Photo_lock.unlock();//####[41]####
-            }//####[41]####
+            __pt__getSquareImageTask_Photo_ensureMethodVarSet();//####[41]####
         }//####[41]####
-//####[41]####
-        Object[] args = new Object[] {p};//####[41]####
-        taskinfo.setTaskArguments(args);//####[41]####
+        taskinfo.setParameters(p);//####[41]####
         taskinfo.setMethod(__pt__getSquareImageTask_Photo_method);//####[41]####
         taskinfo.setInteractive(true);//####[41]####
-//####[41]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[41]####
+    }//####[41]####
+    public static TaskID<Image> getSquareImageTask(TaskID<Photo> p) {//####[41]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[41]####
+        return getSquareImageTask(p, new TaskInfo());//####[41]####
+    }//####[41]####
+    public static TaskID<Image> getSquareImageTask(TaskID<Photo> p, TaskInfo taskinfo) {//####[41]####
+        // ensure Method variable is set//####[41]####
+        if (__pt__getSquareImageTask_Photo_method == null) {//####[41]####
+            __pt__getSquareImageTask_Photo_ensureMethodVarSet();//####[41]####
+        }//####[41]####
+        taskinfo.setTaskIdArgIndexes(0);//####[41]####
+        taskinfo.addDependsOn(p);//####[41]####
+        taskinfo.setParameters(p);//####[41]####
+        taskinfo.setMethod(__pt__getSquareImageTask_Photo_method);//####[41]####
+        taskinfo.setInteractive(true);//####[41]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[41]####
+    }//####[41]####
+    public static TaskID<Image> getSquareImageTask(BlockingQueue<Photo> p) {//####[41]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[41]####
+        return getSquareImageTask(p, new TaskInfo());//####[41]####
+    }//####[41]####
+    public static TaskID<Image> getSquareImageTask(BlockingQueue<Photo> p, TaskInfo taskinfo) {//####[41]####
+        // ensure Method variable is set//####[41]####
+        if (__pt__getSquareImageTask_Photo_method == null) {//####[41]####
+            __pt__getSquareImageTask_Photo_ensureMethodVarSet();//####[41]####
+        }//####[41]####
+        taskinfo.setQueueArgIndexes(0);//####[41]####
+        taskinfo.setIsPipeline(true);//####[41]####
+        taskinfo.setParameters(p);//####[41]####
+        taskinfo.setMethod(__pt__getSquareImageTask_Photo_method);//####[41]####
+        taskinfo.setInteractive(true);//####[41]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[41]####
     }//####[41]####
     public static Image __pt__getSquareImageTask(Photo p) {//####[41]####
@@ -93,31 +127,62 @@ public class Search {//####[19]####
         return image;//####[66]####
     }//####[67]####
 //####[69]####
-    private static Method __pt__getMediumImageTask_Photo_method = null;//####[69]####
-    private static Lock __pt__getMediumImageTask_Photo_lock = new ReentrantLock();//####[69]####
-    public static TaskID<Image> getMediumImageTask(Photo p)  {//####[69]####
-//####[69]####
+    private static volatile Method __pt__getMediumImageTask_Photo_method = null;//####[69]####
+    private synchronized static void __pt__getMediumImageTask_Photo_ensureMethodVarSet() {//####[69]####
+        if (__pt__getMediumImageTask_Photo_method == null) {//####[69]####
+            try {//####[69]####
+                __pt__getMediumImageTask_Photo_method = ParaTaskHelper.getDeclaredMethod(new ParaTaskHelper.ClassGetter().getCurrentClass(), "__pt__getMediumImageTask", new Class[] {//####[69]####
+                    Photo.class//####[69]####
+                });//####[69]####
+            } catch (Exception e) {//####[69]####
+                e.printStackTrace();//####[69]####
+            }//####[69]####
+        }//####[69]####
+    }//####[69]####
+    public static TaskID<Image> getMediumImageTask(Photo p) {//####[69]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[69]####
         return getMediumImageTask(p, new TaskInfo());//####[69]####
     }//####[69]####
-    public static TaskID<Image> getMediumImageTask(Photo p, TaskInfo taskinfo)  {//####[69]####
+    public static TaskID<Image> getMediumImageTask(Photo p, TaskInfo taskinfo) {//####[69]####
+        // ensure Method variable is set//####[69]####
         if (__pt__getMediumImageTask_Photo_method == null) {//####[69]####
-            try {//####[69]####
-                __pt__getMediumImageTask_Photo_lock.lock();//####[69]####
-                if (__pt__getMediumImageTask_Photo_method == null) //####[69]####
-                    __pt__getMediumImageTask_Photo_method = ParaTaskHelper.getDeclaredMethod(new ParaTaskHelper.ClassGetter().getCurrentClass(), "__pt__getMediumImageTask", new Class[] {Photo.class});//####[69]####
-            } catch (Exception e) {//####[69]####
-                e.printStackTrace();//####[69]####
-            } finally {//####[69]####
-                __pt__getMediumImageTask_Photo_lock.unlock();//####[69]####
-            }//####[69]####
+            __pt__getMediumImageTask_Photo_ensureMethodVarSet();//####[69]####
         }//####[69]####
-//####[69]####
-        Object[] args = new Object[] {p};//####[69]####
-        taskinfo.setTaskArguments(args);//####[69]####
+        taskinfo.setParameters(p);//####[69]####
         taskinfo.setMethod(__pt__getMediumImageTask_Photo_method);//####[69]####
         taskinfo.setInteractive(true);//####[69]####
-//####[69]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[69]####
+    }//####[69]####
+    public static TaskID<Image> getMediumImageTask(TaskID<Photo> p) {//####[69]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[69]####
+        return getMediumImageTask(p, new TaskInfo());//####[69]####
+    }//####[69]####
+    public static TaskID<Image> getMediumImageTask(TaskID<Photo> p, TaskInfo taskinfo) {//####[69]####
+        // ensure Method variable is set//####[69]####
+        if (__pt__getMediumImageTask_Photo_method == null) {//####[69]####
+            __pt__getMediumImageTask_Photo_ensureMethodVarSet();//####[69]####
+        }//####[69]####
+        taskinfo.setTaskIdArgIndexes(0);//####[69]####
+        taskinfo.addDependsOn(p);//####[69]####
+        taskinfo.setParameters(p);//####[69]####
+        taskinfo.setMethod(__pt__getMediumImageTask_Photo_method);//####[69]####
+        taskinfo.setInteractive(true);//####[69]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[69]####
+    }//####[69]####
+    public static TaskID<Image> getMediumImageTask(BlockingQueue<Photo> p) {//####[69]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[69]####
+        return getMediumImageTask(p, new TaskInfo());//####[69]####
+    }//####[69]####
+    public static TaskID<Image> getMediumImageTask(BlockingQueue<Photo> p, TaskInfo taskinfo) {//####[69]####
+        // ensure Method variable is set//####[69]####
+        if (__pt__getMediumImageTask_Photo_method == null) {//####[69]####
+            __pt__getMediumImageTask_Photo_ensureMethodVarSet();//####[69]####
+        }//####[69]####
+        taskinfo.setQueueArgIndexes(0);//####[69]####
+        taskinfo.setIsPipeline(true);//####[69]####
+        taskinfo.setParameters(p);//####[69]####
+        taskinfo.setMethod(__pt__getMediumImageTask_Photo_method);//####[69]####
+        taskinfo.setInteractive(true);//####[69]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[69]####
     }//####[69]####
     public static Image __pt__getMediumImageTask(Photo p) {//####[69]####
@@ -161,31 +226,478 @@ public class Search {//####[19]####
         return image;//####[106]####
     }//####[107]####
 //####[134]####
-    private static Method __pt__searchTask_String_int_int_method = null;//####[134]####
-    private static Lock __pt__searchTask_String_int_int_lock = new ReentrantLock();//####[134]####
-    public static TaskID<List<PhotoWithImage>> searchTask(String str, int picsPerPage, int pageOffset)  {//####[134]####
-//####[134]####
+    private static volatile Method __pt__searchTask_String_int_int_method = null;//####[134]####
+    private synchronized static void __pt__searchTask_String_int_int_ensureMethodVarSet() {//####[134]####
+        if (__pt__searchTask_String_int_int_method == null) {//####[134]####
+            try {//####[134]####
+                __pt__searchTask_String_int_int_method = ParaTaskHelper.getDeclaredMethod(new ParaTaskHelper.ClassGetter().getCurrentClass(), "__pt__searchTask", new Class[] {//####[134]####
+                    String.class, int.class, int.class//####[134]####
+                });//####[134]####
+            } catch (Exception e) {//####[134]####
+                e.printStackTrace();//####[134]####
+            }//####[134]####
+        }//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(String str, int picsPerPage, int pageOffset) {//####[134]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[134]####
         return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[134]####
     }//####[134]####
-    public static TaskID<List<PhotoWithImage>> searchTask(String str, int picsPerPage, int pageOffset, TaskInfo taskinfo)  {//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(String str, int picsPerPage, int pageOffset, TaskInfo taskinfo) {//####[134]####
+        // ensure Method variable is set//####[134]####
         if (__pt__searchTask_String_int_int_method == null) {//####[134]####
-            try {//####[134]####
-                __pt__searchTask_String_int_int_lock.lock();//####[134]####
-                if (__pt__searchTask_String_int_int_method == null) //####[134]####
-                    __pt__searchTask_String_int_int_method = ParaTaskHelper.getDeclaredMethod(new ParaTaskHelper.ClassGetter().getCurrentClass(), "__pt__searchTask", new Class[] {String.class, int.class, int.class});//####[134]####
-            } catch (Exception e) {//####[134]####
-                e.printStackTrace();//####[134]####
-            } finally {//####[134]####
-                __pt__searchTask_String_int_int_lock.unlock();//####[134]####
-            }//####[134]####
+            __pt__searchTask_String_int_int_ensureMethodVarSet();//####[134]####
         }//####[134]####
-//####[134]####
-        Object[] args = new Object[] {str, picsPerPage, pageOffset};//####[134]####
-        taskinfo.setTaskArguments(args);//####[134]####
+        taskinfo.setParameters(str, picsPerPage, pageOffset);//####[134]####
         taskinfo.setMethod(__pt__searchTask_String_int_int_method);//####[134]####
         taskinfo.setInteractive(true);//####[134]####
-//####[134]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(TaskID<String> str, int picsPerPage, int pageOffset) {//####[134]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[134]####
+        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(TaskID<String> str, int picsPerPage, int pageOffset, TaskInfo taskinfo) {//####[134]####
+        // ensure Method variable is set//####[134]####
+        if (__pt__searchTask_String_int_int_method == null) {//####[134]####
+            __pt__searchTask_String_int_int_ensureMethodVarSet();//####[134]####
+        }//####[134]####
+        taskinfo.setTaskIdArgIndexes(0);//####[134]####
+        taskinfo.addDependsOn(str);//####[134]####
+        taskinfo.setParameters(str, picsPerPage, pageOffset);//####[134]####
+        taskinfo.setMethod(__pt__searchTask_String_int_int_method);//####[134]####
+        taskinfo.setInteractive(true);//####[134]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, int picsPerPage, int pageOffset) {//####[134]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[134]####
+        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, int picsPerPage, int pageOffset, TaskInfo taskinfo) {//####[134]####
+        // ensure Method variable is set//####[134]####
+        if (__pt__searchTask_String_int_int_method == null) {//####[134]####
+            __pt__searchTask_String_int_int_ensureMethodVarSet();//####[134]####
+        }//####[134]####
+        taskinfo.setQueueArgIndexes(0);//####[134]####
+        taskinfo.setIsPipeline(true);//####[134]####
+        taskinfo.setParameters(str, picsPerPage, pageOffset);//####[134]####
+        taskinfo.setMethod(__pt__searchTask_String_int_int_method);//####[134]####
+        taskinfo.setInteractive(true);//####[134]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(String str, TaskID<Integer> picsPerPage, int pageOffset) {//####[134]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[134]####
+        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(String str, TaskID<Integer> picsPerPage, int pageOffset, TaskInfo taskinfo) {//####[134]####
+        // ensure Method variable is set//####[134]####
+        if (__pt__searchTask_String_int_int_method == null) {//####[134]####
+            __pt__searchTask_String_int_int_ensureMethodVarSet();//####[134]####
+        }//####[134]####
+        taskinfo.setTaskIdArgIndexes(1);//####[134]####
+        taskinfo.addDependsOn(picsPerPage);//####[134]####
+        taskinfo.setParameters(str, picsPerPage, pageOffset);//####[134]####
+        taskinfo.setMethod(__pt__searchTask_String_int_int_method);//####[134]####
+        taskinfo.setInteractive(true);//####[134]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(TaskID<String> str, TaskID<Integer> picsPerPage, int pageOffset) {//####[134]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[134]####
+        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(TaskID<String> str, TaskID<Integer> picsPerPage, int pageOffset, TaskInfo taskinfo) {//####[134]####
+        // ensure Method variable is set//####[134]####
+        if (__pt__searchTask_String_int_int_method == null) {//####[134]####
+            __pt__searchTask_String_int_int_ensureMethodVarSet();//####[134]####
+        }//####[134]####
+        taskinfo.setTaskIdArgIndexes(0, 1);//####[134]####
+        taskinfo.addDependsOn(str);//####[134]####
+        taskinfo.addDependsOn(picsPerPage);//####[134]####
+        taskinfo.setParameters(str, picsPerPage, pageOffset);//####[134]####
+        taskinfo.setMethod(__pt__searchTask_String_int_int_method);//####[134]####
+        taskinfo.setInteractive(true);//####[134]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, TaskID<Integer> picsPerPage, int pageOffset) {//####[134]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[134]####
+        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, TaskID<Integer> picsPerPage, int pageOffset, TaskInfo taskinfo) {//####[134]####
+        // ensure Method variable is set//####[134]####
+        if (__pt__searchTask_String_int_int_method == null) {//####[134]####
+            __pt__searchTask_String_int_int_ensureMethodVarSet();//####[134]####
+        }//####[134]####
+        taskinfo.setQueueArgIndexes(0);//####[134]####
+        taskinfo.setIsPipeline(true);//####[134]####
+        taskinfo.setTaskIdArgIndexes(1);//####[134]####
+        taskinfo.addDependsOn(picsPerPage);//####[134]####
+        taskinfo.setParameters(str, picsPerPage, pageOffset);//####[134]####
+        taskinfo.setMethod(__pt__searchTask_String_int_int_method);//####[134]####
+        taskinfo.setInteractive(true);//####[134]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(String str, BlockingQueue<Integer> picsPerPage, int pageOffset) {//####[134]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[134]####
+        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(String str, BlockingQueue<Integer> picsPerPage, int pageOffset, TaskInfo taskinfo) {//####[134]####
+        // ensure Method variable is set//####[134]####
+        if (__pt__searchTask_String_int_int_method == null) {//####[134]####
+            __pt__searchTask_String_int_int_ensureMethodVarSet();//####[134]####
+        }//####[134]####
+        taskinfo.setQueueArgIndexes(1);//####[134]####
+        taskinfo.setIsPipeline(true);//####[134]####
+        taskinfo.setParameters(str, picsPerPage, pageOffset);//####[134]####
+        taskinfo.setMethod(__pt__searchTask_String_int_int_method);//####[134]####
+        taskinfo.setInteractive(true);//####[134]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(TaskID<String> str, BlockingQueue<Integer> picsPerPage, int pageOffset) {//####[134]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[134]####
+        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(TaskID<String> str, BlockingQueue<Integer> picsPerPage, int pageOffset, TaskInfo taskinfo) {//####[134]####
+        // ensure Method variable is set//####[134]####
+        if (__pt__searchTask_String_int_int_method == null) {//####[134]####
+            __pt__searchTask_String_int_int_ensureMethodVarSet();//####[134]####
+        }//####[134]####
+        taskinfo.setQueueArgIndexes(1);//####[134]####
+        taskinfo.setIsPipeline(true);//####[134]####
+        taskinfo.setTaskIdArgIndexes(0);//####[134]####
+        taskinfo.addDependsOn(str);//####[134]####
+        taskinfo.setParameters(str, picsPerPage, pageOffset);//####[134]####
+        taskinfo.setMethod(__pt__searchTask_String_int_int_method);//####[134]####
+        taskinfo.setInteractive(true);//####[134]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, BlockingQueue<Integer> picsPerPage, int pageOffset) {//####[134]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[134]####
+        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, BlockingQueue<Integer> picsPerPage, int pageOffset, TaskInfo taskinfo) {//####[134]####
+        // ensure Method variable is set//####[134]####
+        if (__pt__searchTask_String_int_int_method == null) {//####[134]####
+            __pt__searchTask_String_int_int_ensureMethodVarSet();//####[134]####
+        }//####[134]####
+        taskinfo.setQueueArgIndexes(0, 1);//####[134]####
+        taskinfo.setIsPipeline(true);//####[134]####
+        taskinfo.setParameters(str, picsPerPage, pageOffset);//####[134]####
+        taskinfo.setMethod(__pt__searchTask_String_int_int_method);//####[134]####
+        taskinfo.setInteractive(true);//####[134]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(String str, int picsPerPage, TaskID<Integer> pageOffset) {//####[134]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[134]####
+        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(String str, int picsPerPage, TaskID<Integer> pageOffset, TaskInfo taskinfo) {//####[134]####
+        // ensure Method variable is set//####[134]####
+        if (__pt__searchTask_String_int_int_method == null) {//####[134]####
+            __pt__searchTask_String_int_int_ensureMethodVarSet();//####[134]####
+        }//####[134]####
+        taskinfo.setTaskIdArgIndexes(2);//####[134]####
+        taskinfo.addDependsOn(pageOffset);//####[134]####
+        taskinfo.setParameters(str, picsPerPage, pageOffset);//####[134]####
+        taskinfo.setMethod(__pt__searchTask_String_int_int_method);//####[134]####
+        taskinfo.setInteractive(true);//####[134]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(TaskID<String> str, int picsPerPage, TaskID<Integer> pageOffset) {//####[134]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[134]####
+        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(TaskID<String> str, int picsPerPage, TaskID<Integer> pageOffset, TaskInfo taskinfo) {//####[134]####
+        // ensure Method variable is set//####[134]####
+        if (__pt__searchTask_String_int_int_method == null) {//####[134]####
+            __pt__searchTask_String_int_int_ensureMethodVarSet();//####[134]####
+        }//####[134]####
+        taskinfo.setTaskIdArgIndexes(0, 2);//####[134]####
+        taskinfo.addDependsOn(str);//####[134]####
+        taskinfo.addDependsOn(pageOffset);//####[134]####
+        taskinfo.setParameters(str, picsPerPage, pageOffset);//####[134]####
+        taskinfo.setMethod(__pt__searchTask_String_int_int_method);//####[134]####
+        taskinfo.setInteractive(true);//####[134]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, int picsPerPage, TaskID<Integer> pageOffset) {//####[134]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[134]####
+        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, int picsPerPage, TaskID<Integer> pageOffset, TaskInfo taskinfo) {//####[134]####
+        // ensure Method variable is set//####[134]####
+        if (__pt__searchTask_String_int_int_method == null) {//####[134]####
+            __pt__searchTask_String_int_int_ensureMethodVarSet();//####[134]####
+        }//####[134]####
+        taskinfo.setQueueArgIndexes(0);//####[134]####
+        taskinfo.setIsPipeline(true);//####[134]####
+        taskinfo.setTaskIdArgIndexes(2);//####[134]####
+        taskinfo.addDependsOn(pageOffset);//####[134]####
+        taskinfo.setParameters(str, picsPerPage, pageOffset);//####[134]####
+        taskinfo.setMethod(__pt__searchTask_String_int_int_method);//####[134]####
+        taskinfo.setInteractive(true);//####[134]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(String str, TaskID<Integer> picsPerPage, TaskID<Integer> pageOffset) {//####[134]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[134]####
+        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(String str, TaskID<Integer> picsPerPage, TaskID<Integer> pageOffset, TaskInfo taskinfo) {//####[134]####
+        // ensure Method variable is set//####[134]####
+        if (__pt__searchTask_String_int_int_method == null) {//####[134]####
+            __pt__searchTask_String_int_int_ensureMethodVarSet();//####[134]####
+        }//####[134]####
+        taskinfo.setTaskIdArgIndexes(1, 2);//####[134]####
+        taskinfo.addDependsOn(picsPerPage);//####[134]####
+        taskinfo.addDependsOn(pageOffset);//####[134]####
+        taskinfo.setParameters(str, picsPerPage, pageOffset);//####[134]####
+        taskinfo.setMethod(__pt__searchTask_String_int_int_method);//####[134]####
+        taskinfo.setInteractive(true);//####[134]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(TaskID<String> str, TaskID<Integer> picsPerPage, TaskID<Integer> pageOffset) {//####[134]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[134]####
+        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(TaskID<String> str, TaskID<Integer> picsPerPage, TaskID<Integer> pageOffset, TaskInfo taskinfo) {//####[134]####
+        // ensure Method variable is set//####[134]####
+        if (__pt__searchTask_String_int_int_method == null) {//####[134]####
+            __pt__searchTask_String_int_int_ensureMethodVarSet();//####[134]####
+        }//####[134]####
+        taskinfo.setTaskIdArgIndexes(0, 1, 2);//####[134]####
+        taskinfo.addDependsOn(str);//####[134]####
+        taskinfo.addDependsOn(picsPerPage);//####[134]####
+        taskinfo.addDependsOn(pageOffset);//####[134]####
+        taskinfo.setParameters(str, picsPerPage, pageOffset);//####[134]####
+        taskinfo.setMethod(__pt__searchTask_String_int_int_method);//####[134]####
+        taskinfo.setInteractive(true);//####[134]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, TaskID<Integer> picsPerPage, TaskID<Integer> pageOffset) {//####[134]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[134]####
+        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, TaskID<Integer> picsPerPage, TaskID<Integer> pageOffset, TaskInfo taskinfo) {//####[134]####
+        // ensure Method variable is set//####[134]####
+        if (__pt__searchTask_String_int_int_method == null) {//####[134]####
+            __pt__searchTask_String_int_int_ensureMethodVarSet();//####[134]####
+        }//####[134]####
+        taskinfo.setQueueArgIndexes(0);//####[134]####
+        taskinfo.setIsPipeline(true);//####[134]####
+        taskinfo.setTaskIdArgIndexes(1, 2);//####[134]####
+        taskinfo.addDependsOn(picsPerPage);//####[134]####
+        taskinfo.addDependsOn(pageOffset);//####[134]####
+        taskinfo.setParameters(str, picsPerPage, pageOffset);//####[134]####
+        taskinfo.setMethod(__pt__searchTask_String_int_int_method);//####[134]####
+        taskinfo.setInteractive(true);//####[134]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(String str, BlockingQueue<Integer> picsPerPage, TaskID<Integer> pageOffset) {//####[134]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[134]####
+        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(String str, BlockingQueue<Integer> picsPerPage, TaskID<Integer> pageOffset, TaskInfo taskinfo) {//####[134]####
+        // ensure Method variable is set//####[134]####
+        if (__pt__searchTask_String_int_int_method == null) {//####[134]####
+            __pt__searchTask_String_int_int_ensureMethodVarSet();//####[134]####
+        }//####[134]####
+        taskinfo.setQueueArgIndexes(1);//####[134]####
+        taskinfo.setIsPipeline(true);//####[134]####
+        taskinfo.setTaskIdArgIndexes(2);//####[134]####
+        taskinfo.addDependsOn(pageOffset);//####[134]####
+        taskinfo.setParameters(str, picsPerPage, pageOffset);//####[134]####
+        taskinfo.setMethod(__pt__searchTask_String_int_int_method);//####[134]####
+        taskinfo.setInteractive(true);//####[134]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(TaskID<String> str, BlockingQueue<Integer> picsPerPage, TaskID<Integer> pageOffset) {//####[134]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[134]####
+        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(TaskID<String> str, BlockingQueue<Integer> picsPerPage, TaskID<Integer> pageOffset, TaskInfo taskinfo) {//####[134]####
+        // ensure Method variable is set//####[134]####
+        if (__pt__searchTask_String_int_int_method == null) {//####[134]####
+            __pt__searchTask_String_int_int_ensureMethodVarSet();//####[134]####
+        }//####[134]####
+        taskinfo.setQueueArgIndexes(1);//####[134]####
+        taskinfo.setIsPipeline(true);//####[134]####
+        taskinfo.setTaskIdArgIndexes(0, 2);//####[134]####
+        taskinfo.addDependsOn(str);//####[134]####
+        taskinfo.addDependsOn(pageOffset);//####[134]####
+        taskinfo.setParameters(str, picsPerPage, pageOffset);//####[134]####
+        taskinfo.setMethod(__pt__searchTask_String_int_int_method);//####[134]####
+        taskinfo.setInteractive(true);//####[134]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, BlockingQueue<Integer> picsPerPage, TaskID<Integer> pageOffset) {//####[134]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[134]####
+        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, BlockingQueue<Integer> picsPerPage, TaskID<Integer> pageOffset, TaskInfo taskinfo) {//####[134]####
+        // ensure Method variable is set//####[134]####
+        if (__pt__searchTask_String_int_int_method == null) {//####[134]####
+            __pt__searchTask_String_int_int_ensureMethodVarSet();//####[134]####
+        }//####[134]####
+        taskinfo.setQueueArgIndexes(0, 1);//####[134]####
+        taskinfo.setIsPipeline(true);//####[134]####
+        taskinfo.setTaskIdArgIndexes(2);//####[134]####
+        taskinfo.addDependsOn(pageOffset);//####[134]####
+        taskinfo.setParameters(str, picsPerPage, pageOffset);//####[134]####
+        taskinfo.setMethod(__pt__searchTask_String_int_int_method);//####[134]####
+        taskinfo.setInteractive(true);//####[134]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(String str, int picsPerPage, BlockingQueue<Integer> pageOffset) {//####[134]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[134]####
+        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(String str, int picsPerPage, BlockingQueue<Integer> pageOffset, TaskInfo taskinfo) {//####[134]####
+        // ensure Method variable is set//####[134]####
+        if (__pt__searchTask_String_int_int_method == null) {//####[134]####
+            __pt__searchTask_String_int_int_ensureMethodVarSet();//####[134]####
+        }//####[134]####
+        taskinfo.setQueueArgIndexes(2);//####[134]####
+        taskinfo.setIsPipeline(true);//####[134]####
+        taskinfo.setParameters(str, picsPerPage, pageOffset);//####[134]####
+        taskinfo.setMethod(__pt__searchTask_String_int_int_method);//####[134]####
+        taskinfo.setInteractive(true);//####[134]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(TaskID<String> str, int picsPerPage, BlockingQueue<Integer> pageOffset) {//####[134]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[134]####
+        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(TaskID<String> str, int picsPerPage, BlockingQueue<Integer> pageOffset, TaskInfo taskinfo) {//####[134]####
+        // ensure Method variable is set//####[134]####
+        if (__pt__searchTask_String_int_int_method == null) {//####[134]####
+            __pt__searchTask_String_int_int_ensureMethodVarSet();//####[134]####
+        }//####[134]####
+        taskinfo.setQueueArgIndexes(2);//####[134]####
+        taskinfo.setIsPipeline(true);//####[134]####
+        taskinfo.setTaskIdArgIndexes(0);//####[134]####
+        taskinfo.addDependsOn(str);//####[134]####
+        taskinfo.setParameters(str, picsPerPage, pageOffset);//####[134]####
+        taskinfo.setMethod(__pt__searchTask_String_int_int_method);//####[134]####
+        taskinfo.setInteractive(true);//####[134]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, int picsPerPage, BlockingQueue<Integer> pageOffset) {//####[134]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[134]####
+        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, int picsPerPage, BlockingQueue<Integer> pageOffset, TaskInfo taskinfo) {//####[134]####
+        // ensure Method variable is set//####[134]####
+        if (__pt__searchTask_String_int_int_method == null) {//####[134]####
+            __pt__searchTask_String_int_int_ensureMethodVarSet();//####[134]####
+        }//####[134]####
+        taskinfo.setQueueArgIndexes(0, 2);//####[134]####
+        taskinfo.setIsPipeline(true);//####[134]####
+        taskinfo.setParameters(str, picsPerPage, pageOffset);//####[134]####
+        taskinfo.setMethod(__pt__searchTask_String_int_int_method);//####[134]####
+        taskinfo.setInteractive(true);//####[134]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(String str, TaskID<Integer> picsPerPage, BlockingQueue<Integer> pageOffset) {//####[134]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[134]####
+        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(String str, TaskID<Integer> picsPerPage, BlockingQueue<Integer> pageOffset, TaskInfo taskinfo) {//####[134]####
+        // ensure Method variable is set//####[134]####
+        if (__pt__searchTask_String_int_int_method == null) {//####[134]####
+            __pt__searchTask_String_int_int_ensureMethodVarSet();//####[134]####
+        }//####[134]####
+        taskinfo.setQueueArgIndexes(2);//####[134]####
+        taskinfo.setIsPipeline(true);//####[134]####
+        taskinfo.setTaskIdArgIndexes(1);//####[134]####
+        taskinfo.addDependsOn(picsPerPage);//####[134]####
+        taskinfo.setParameters(str, picsPerPage, pageOffset);//####[134]####
+        taskinfo.setMethod(__pt__searchTask_String_int_int_method);//####[134]####
+        taskinfo.setInteractive(true);//####[134]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(TaskID<String> str, TaskID<Integer> picsPerPage, BlockingQueue<Integer> pageOffset) {//####[134]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[134]####
+        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(TaskID<String> str, TaskID<Integer> picsPerPage, BlockingQueue<Integer> pageOffset, TaskInfo taskinfo) {//####[134]####
+        // ensure Method variable is set//####[134]####
+        if (__pt__searchTask_String_int_int_method == null) {//####[134]####
+            __pt__searchTask_String_int_int_ensureMethodVarSet();//####[134]####
+        }//####[134]####
+        taskinfo.setQueueArgIndexes(2);//####[134]####
+        taskinfo.setIsPipeline(true);//####[134]####
+        taskinfo.setTaskIdArgIndexes(0, 1);//####[134]####
+        taskinfo.addDependsOn(str);//####[134]####
+        taskinfo.addDependsOn(picsPerPage);//####[134]####
+        taskinfo.setParameters(str, picsPerPage, pageOffset);//####[134]####
+        taskinfo.setMethod(__pt__searchTask_String_int_int_method);//####[134]####
+        taskinfo.setInteractive(true);//####[134]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, TaskID<Integer> picsPerPage, BlockingQueue<Integer> pageOffset) {//####[134]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[134]####
+        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, TaskID<Integer> picsPerPage, BlockingQueue<Integer> pageOffset, TaskInfo taskinfo) {//####[134]####
+        // ensure Method variable is set//####[134]####
+        if (__pt__searchTask_String_int_int_method == null) {//####[134]####
+            __pt__searchTask_String_int_int_ensureMethodVarSet();//####[134]####
+        }//####[134]####
+        taskinfo.setQueueArgIndexes(0, 2);//####[134]####
+        taskinfo.setIsPipeline(true);//####[134]####
+        taskinfo.setTaskIdArgIndexes(1);//####[134]####
+        taskinfo.addDependsOn(picsPerPage);//####[134]####
+        taskinfo.setParameters(str, picsPerPage, pageOffset);//####[134]####
+        taskinfo.setMethod(__pt__searchTask_String_int_int_method);//####[134]####
+        taskinfo.setInteractive(true);//####[134]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(String str, BlockingQueue<Integer> picsPerPage, BlockingQueue<Integer> pageOffset) {//####[134]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[134]####
+        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(String str, BlockingQueue<Integer> picsPerPage, BlockingQueue<Integer> pageOffset, TaskInfo taskinfo) {//####[134]####
+        // ensure Method variable is set//####[134]####
+        if (__pt__searchTask_String_int_int_method == null) {//####[134]####
+            __pt__searchTask_String_int_int_ensureMethodVarSet();//####[134]####
+        }//####[134]####
+        taskinfo.setQueueArgIndexes(1, 2);//####[134]####
+        taskinfo.setIsPipeline(true);//####[134]####
+        taskinfo.setParameters(str, picsPerPage, pageOffset);//####[134]####
+        taskinfo.setMethod(__pt__searchTask_String_int_int_method);//####[134]####
+        taskinfo.setInteractive(true);//####[134]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(TaskID<String> str, BlockingQueue<Integer> picsPerPage, BlockingQueue<Integer> pageOffset) {//####[134]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[134]####
+        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(TaskID<String> str, BlockingQueue<Integer> picsPerPage, BlockingQueue<Integer> pageOffset, TaskInfo taskinfo) {//####[134]####
+        // ensure Method variable is set//####[134]####
+        if (__pt__searchTask_String_int_int_method == null) {//####[134]####
+            __pt__searchTask_String_int_int_ensureMethodVarSet();//####[134]####
+        }//####[134]####
+        taskinfo.setQueueArgIndexes(1, 2);//####[134]####
+        taskinfo.setIsPipeline(true);//####[134]####
+        taskinfo.setTaskIdArgIndexes(0);//####[134]####
+        taskinfo.addDependsOn(str);//####[134]####
+        taskinfo.setParameters(str, picsPerPage, pageOffset);//####[134]####
+        taskinfo.setMethod(__pt__searchTask_String_int_int_method);//####[134]####
+        taskinfo.setInteractive(true);//####[134]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, BlockingQueue<Integer> picsPerPage, BlockingQueue<Integer> pageOffset) {//####[134]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[134]####
+        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[134]####
+    }//####[134]####
+    public static TaskID<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, BlockingQueue<Integer> picsPerPage, BlockingQueue<Integer> pageOffset, TaskInfo taskinfo) {//####[134]####
+        // ensure Method variable is set//####[134]####
+        if (__pt__searchTask_String_int_int_method == null) {//####[134]####
+            __pt__searchTask_String_int_int_ensureMethodVarSet();//####[134]####
+        }//####[134]####
+        taskinfo.setQueueArgIndexes(0, 1, 2);//####[134]####
+        taskinfo.setIsPipeline(true);//####[134]####
+        taskinfo.setParameters(str, picsPerPage, pageOffset);//####[134]####
+        taskinfo.setMethod(__pt__searchTask_String_int_int_method);//####[134]####
+        taskinfo.setInteractive(true);//####[134]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[134]####
     }//####[134]####
     public static List<PhotoWithImage> __pt__searchTask(String str, int picsPerPage, int pageOffset) {//####[134]####

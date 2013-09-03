@@ -24,14 +24,17 @@ import javax.swing.UIManager;//####[24]####
 import paratask.runtime.*;//####[26]####
 //####[26]####
 //-- ParaTask related imports//####[26]####
-import paratask.runtime.*;//####[26]####
+import pt.runtime.*;//####[26]####
 import java.util.concurrent.ExecutionException;//####[26]####
 import java.util.concurrent.locks.*;//####[26]####
 import java.lang.reflect.*;//####[26]####
-import javax.swing.SwingUtilities;//####[26]####
+import pt.runtime.GuiThread;//####[26]####
+import java.util.concurrent.BlockingQueue;//####[26]####
+import java.util.ArrayList;//####[26]####
+import java.util.List;//####[26]####
 //####[26]####
 public class ImageProjectPanel extends ProjectPanel {//####[28]####
-//####[28]####
+    static{ParaTask.init();}//####[28]####
     /*  ParaTask helper method to access private/protected slots *///####[28]####
     public void __pt__accessPrivateSlot(Method m, Object instance, TaskID arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[28]####
         if (m.getParameterTypes().length == 0)//####[28]####
@@ -44,31 +47,61 @@ public class ImageProjectPanel extends ProjectPanel {//####[28]####
 //####[30]####
     private JPanel thumbnailsPanel;//####[30]####
 //####[32]####
-    private Method __pt__addToThumbnailsPanelTask_File_TaskIDImage_TaskIDImage_TaskIDImage_method = null;//####[32]####
-    private Lock __pt__addToThumbnailsPanelTask_File_TaskIDImage_TaskIDImage_TaskIDImage_lock = new ReentrantLock();//####[32]####
-    private TaskID<Void> addToThumbnailsPanelTask(final File file, final TaskID<Image> large, final TaskID<Image> square, final TaskID<Image> med)  {//####[32]####
-//####[32]####
+    private static volatile Method __pt__addToThumbnailsPanelTask_File_TaskIDImage_TaskIDImage_TaskIDImage_method = null;//####[32]####
+    private synchronized static void __pt__addToThumbnailsPanelTask_File_TaskIDImage_TaskIDImage_TaskIDImage_ensureMethodVarSet() {//####[32]####
+        if (__pt__addToThumbnailsPanelTask_File_TaskIDImage_TaskIDImage_TaskIDImage_method == null) {//####[32]####
+            try {//####[32]####
+                __pt__addToThumbnailsPanelTask_File_TaskIDImage_TaskIDImage_TaskIDImage_method = ParaTaskHelper.getDeclaredMethod(new ParaTaskHelper.ClassGetter().getCurrentClass(), "__pt__addToThumbnailsPanelTask", new Class[] {//####[32]####
+                    File.class, TaskID.class, TaskID.class, TaskID.class//####[32]####
+                });//####[32]####
+            } catch (Exception e) {//####[32]####
+                e.printStackTrace();//####[32]####
+            }//####[32]####
+        }//####[32]####
+    }//####[32]####
+    private TaskID<Void> addToThumbnailsPanelTask(final Object file, final Object large, final Object square, final Object med) {//####[32]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[32]####
         return addToThumbnailsPanelTask(file, large, square, med, new TaskInfo());//####[32]####
     }//####[32]####
-    private TaskID<Void> addToThumbnailsPanelTask(final File file, final TaskID<Image> large, final TaskID<Image> square, final TaskID<Image> med, TaskInfo taskinfo)  {//####[32]####
+    private TaskID<Void> addToThumbnailsPanelTask(final Object file, final Object large, final Object square, final Object med, TaskInfo taskinfo) {//####[32]####
+        // ensure Method variable is set//####[32]####
         if (__pt__addToThumbnailsPanelTask_File_TaskIDImage_TaskIDImage_TaskIDImage_method == null) {//####[32]####
-            try {//####[32]####
-                __pt__addToThumbnailsPanelTask_File_TaskIDImage_TaskIDImage_TaskIDImage_lock.lock();//####[32]####
-                if (__pt__addToThumbnailsPanelTask_File_TaskIDImage_TaskIDImage_TaskIDImage_method == null) //####[32]####
-                    __pt__addToThumbnailsPanelTask_File_TaskIDImage_TaskIDImage_TaskIDImage_method = ParaTaskHelper.getDeclaredMethod(getClass(), "__pt__addToThumbnailsPanelTask", new Class[] {File.class, TaskID.class, TaskID.class, TaskID.class});//####[32]####
-            } catch (Exception e) {//####[32]####
-                e.printStackTrace();//####[32]####
-            } finally {//####[32]####
-                __pt__addToThumbnailsPanelTask_File_TaskIDImage_TaskIDImage_TaskIDImage_lock.unlock();//####[32]####
-            }//####[32]####
+            __pt__addToThumbnailsPanelTask_File_TaskIDImage_TaskIDImage_TaskIDImage_ensureMethodVarSet();//####[32]####
         }//####[32]####
-//####[32]####
-        Object[] args = new Object[] {file, large, square, med};//####[32]####
-        taskinfo.setTaskArguments(args);//####[32]####
+        List<Integer> __pt__taskIdIndexList = new ArrayList<Integer>();//####[32]####
+        List<Integer> __pt__queueIndexList = new ArrayList<Integer>();//####[32]####
+        if (file instanceof BlockingQueue) {//####[32]####
+            __pt__queueIndexList.add(0);//####[32]####
+        }//####[32]####
+        if (file instanceof TaskID) {//####[32]####
+            taskinfo.addDependsOn((TaskID)file);//####[32]####
+            __pt__taskIdIndexList.add(0);//####[32]####
+        }//####[32]####
+        if (large instanceof BlockingQueue) {//####[32]####
+            __pt__queueIndexList.add(1);//####[32]####
+        }//####[32]####
+        if (square instanceof BlockingQueue) {//####[32]####
+            __pt__queueIndexList.add(2);//####[32]####
+        }//####[32]####
+        if (med instanceof BlockingQueue) {//####[32]####
+            __pt__queueIndexList.add(3);//####[32]####
+        }//####[32]####
+        int[] __pt__queueIndexArray = new int[__pt__queueIndexList.size()];//####[32]####
+        for (int __pt__i = 0; __pt__i < __pt__queueIndexArray.length; __pt__i++) {//####[32]####
+            __pt__queueIndexArray[__pt__i] = __pt__queueIndexList.get(__pt__i);//####[32]####
+        }//####[32]####
+        taskinfo.setQueueArgIndexes(__pt__queueIndexArray);//####[32]####
+        if (__pt__queueIndexArray.length > 0) {//####[32]####
+            taskinfo.setIsPipeline(true);//####[32]####
+        }//####[32]####
+        int[] __pt__taskIdIndexArray = new int[__pt__taskIdIndexList.size()];//####[32]####
+        for (int __pt__i = 0; __pt__i < __pt__taskIdIndexArray.length; __pt__i++) {//####[32]####
+            __pt__taskIdIndexArray[__pt__i] = __pt__taskIdIndexList.get(__pt__i);//####[32]####
+        }//####[32]####
+        taskinfo.setTaskIdArgIndexes(__pt__taskIdIndexArray);//####[32]####
+        taskinfo.setParameters(file, large, square, med);//####[32]####
         taskinfo.setMethod(__pt__addToThumbnailsPanelTask_File_TaskIDImage_TaskIDImage_TaskIDImage_method);//####[32]####
         taskinfo.setInstance(this);//####[32]####
-//####[32]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[32]####
     }//####[32]####
     public void __pt__addToThumbnailsPanelTask(final File file, final TaskID<Image> large, final TaskID<Image> square, final TaskID<Image> med) {//####[32]####
@@ -93,29 +126,30 @@ public class ImageProjectPanel extends ProjectPanel {//####[28]####
         updateUI();//####[49]####
     }//####[50]####
 //####[52]####
-    private Method __pt__finishedAddingNewPanelItemsTask_method = null;//####[52]####
-    private Lock __pt__finishedAddingNewPanelItemsTask_lock = new ReentrantLock();//####[52]####
-    private TaskID<Void> finishedAddingNewPanelItemsTask()  {//####[52]####
-//####[52]####
+    private static volatile Method __pt__finishedAddingNewPanelItemsTask__method = null;//####[52]####
+    private synchronized static void __pt__finishedAddingNewPanelItemsTask__ensureMethodVarSet() {//####[52]####
+        if (__pt__finishedAddingNewPanelItemsTask__method == null) {//####[52]####
+            try {//####[52]####
+                __pt__finishedAddingNewPanelItemsTask__method = ParaTaskHelper.getDeclaredMethod(new ParaTaskHelper.ClassGetter().getCurrentClass(), "__pt__finishedAddingNewPanelItemsTask", new Class[] {//####[52]####
+                    //####[52]####
+                });//####[52]####
+            } catch (Exception e) {//####[52]####
+                e.printStackTrace();//####[52]####
+            }//####[52]####
+        }//####[52]####
+    }//####[52]####
+    private TaskID<Void> finishedAddingNewPanelItemsTask() {//####[52]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[52]####
         return finishedAddingNewPanelItemsTask(new TaskInfo());//####[52]####
     }//####[52]####
-    private TaskID<Void> finishedAddingNewPanelItemsTask(TaskInfo taskinfo)  {//####[52]####
-        if (__pt__finishedAddingNewPanelItemsTask_method == null) {//####[52]####
-            try {//####[52]####
-                __pt__finishedAddingNewPanelItemsTask_lock.lock();//####[52]####
-                if (__pt__finishedAddingNewPanelItemsTask_method == null) //####[52]####
-                    __pt__finishedAddingNewPanelItemsTask_method = ParaTaskHelper.getDeclaredMethod(getClass(), "__pt__finishedAddingNewPanelItemsTask", new Class[] {});//####[52]####
-            } catch (Exception e) {//####[52]####
-                e.printStackTrace();//####[52]####
-            } finally {//####[52]####
-                __pt__finishedAddingNewPanelItemsTask_lock.unlock();//####[52]####
-            }//####[52]####
+    private TaskID<Void> finishedAddingNewPanelItemsTask(TaskInfo taskinfo) {//####[52]####
+        // ensure Method variable is set//####[52]####
+        if (__pt__finishedAddingNewPanelItemsTask__method == null) {//####[52]####
+            __pt__finishedAddingNewPanelItemsTask__ensureMethodVarSet();//####[52]####
         }//####[52]####
-//####[52]####
-        taskinfo.setMethod(__pt__finishedAddingNewPanelItemsTask_method);//####[52]####
+        taskinfo.setParameters();//####[52]####
+        taskinfo.setMethod(__pt__finishedAddingNewPanelItemsTask__method);//####[52]####
         taskinfo.setInstance(this);//####[52]####
-//####[52]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[52]####
     }//####[52]####
     public void __pt__finishedAddingNewPanelItemsTask() {//####[52]####
@@ -296,7 +330,7 @@ public class ImageProjectPanel extends ProjectPanel {//####[28]####
                     /*  -- ParaTask dependsOn clause for 'id' -- *///####[195]####
                     __pt__id.addDependsOn(panel.getHistory());//####[197]####
 //####[197]####
-                    boolean isEDT = SwingUtilities.isEventDispatchThread();//####[197]####
+                    boolean isEDT = GuiThread.isEventDispatchThread();//####[197]####
 //####[197]####
 //####[197]####
                     /*  -- ParaTask notify clause for 'id' -- *///####[197]####
@@ -305,12 +339,12 @@ public class ImageProjectPanel extends ProjectPanel {//####[28]####
                         __pt__id_slot_0 = ParaTaskHelper.getDeclaredMethod(panel.getClass(), "setImageTask", new Class[] { TaskID.class });//####[197]####
                         TaskID __pt__id_slot_0_dummy_0 = null;//####[197]####
                         if (false) panel.setImageTask(__pt__id_slot_0_dummy_0); //-- ParaTask uses this dummy statement to ensure the slot exists (otherwise Java compiler will complain)//####[197]####
-                        __pt__id.addSlotToNotify(new Slot(__pt__id_slot_0, panel, isEDT, false));//####[197]####
+                        __pt__id.addSlotToNotify(new Slot(__pt__id_slot_0, panel, false));//####[197]####
 //####[197]####
                         Method __pt__id_slot_1 = null;//####[197]####
                         __pt__id_slot_1 = ParaTaskHelper.getDeclaredMethod(ImageProjectPanel.this.getClass(), "guiChanged", new Class[] {});//####[197]####
                         if (false) ImageProjectPanel.this.guiChanged(); //-- ParaTask uses this dummy statement to ensure the slot exists (otherwise Java compiler will complain)//####[197]####
-                        __pt__id.addSlotToNotify(new Slot(__pt__id_slot_1, ImageProjectPanel.this, isEDT, false));//####[197]####
+                        __pt__id.addSlotToNotify(new Slot(__pt__id_slot_1, ImageProjectPanel.this, false));//####[197]####
 //####[197]####
                     } catch(Exception __pt__e) { //####[197]####
                         System.err.println("Problem registering method in clause:");//####[197]####
@@ -352,7 +386,7 @@ public class ImageProjectPanel extends ProjectPanel {//####[28]####
                     /*  -- ParaTask dependsOn clause for 'id' -- *///####[235]####
                     __pt__id.addDependsOn(panel.getHistory());//####[237]####
 //####[237]####
-                    boolean isEDT = SwingUtilities.isEventDispatchThread();//####[237]####
+                    boolean isEDT = GuiThread.isEventDispatchThread();//####[237]####
 //####[237]####
 //####[237]####
                     /*  -- ParaTask notify clause for 'id' -- *///####[237]####
@@ -361,12 +395,12 @@ public class ImageProjectPanel extends ProjectPanel {//####[28]####
                         __pt__id_slot_0 = ParaTaskHelper.getDeclaredMethod(panel.getClass(), "setImageTask", new Class[] { TaskID.class });//####[237]####
                         TaskID __pt__id_slot_0_dummy_0 = null;//####[237]####
                         if (false) panel.setImageTask(__pt__id_slot_0_dummy_0); //-- ParaTask uses this dummy statement to ensure the slot exists (otherwise Java compiler will complain)//####[237]####
-                        __pt__id.addSlotToNotify(new Slot(__pt__id_slot_0, panel, isEDT, false));//####[237]####
+                        __pt__id.addSlotToNotify(new Slot(__pt__id_slot_0, panel, false));//####[237]####
 //####[237]####
                         Method __pt__id_slot_1 = null;//####[237]####
                         __pt__id_slot_1 = ParaTaskHelper.getDeclaredMethod(ImageProjectPanel.this.getClass(), "guiChanged", new Class[] {});//####[237]####
                         if (false) ImageProjectPanel.this.guiChanged(); //-- ParaTask uses this dummy statement to ensure the slot exists (otherwise Java compiler will complain)//####[237]####
-                        __pt__id.addSlotToNotify(new Slot(__pt__id_slot_1, ImageProjectPanel.this, isEDT, false));//####[237]####
+                        __pt__id.addSlotToNotify(new Slot(__pt__id_slot_1, ImageProjectPanel.this, false));//####[237]####
 //####[237]####
                     } catch(Exception __pt__e) { //####[237]####
                         System.err.println("Problem registering method in clause:");//####[237]####
@@ -400,7 +434,7 @@ public class ImageProjectPanel extends ProjectPanel {//####[28]####
                     /*  -- ParaTask dependsOn clause for 'id' -- *///####[265]####
                     __pt__id.addDependsOn(panel.getHistory());//####[267]####
 //####[267]####
-                    boolean isEDT = SwingUtilities.isEventDispatchThread();//####[267]####
+                    boolean isEDT = GuiThread.isEventDispatchThread();//####[267]####
 //####[267]####
 //####[267]####
                     /*  -- ParaTask notify clause for 'id' -- *///####[267]####
@@ -409,12 +443,12 @@ public class ImageProjectPanel extends ProjectPanel {//####[28]####
                         __pt__id_slot_0 = ParaTaskHelper.getDeclaredMethod(panel.getClass(), "setImageTask", new Class[] { TaskID.class });//####[267]####
                         TaskID __pt__id_slot_0_dummy_0 = null;//####[267]####
                         if (false) panel.setImageTask(__pt__id_slot_0_dummy_0); //-- ParaTask uses this dummy statement to ensure the slot exists (otherwise Java compiler will complain)//####[267]####
-                        __pt__id.addSlotToNotify(new Slot(__pt__id_slot_0, panel, isEDT, false));//####[267]####
+                        __pt__id.addSlotToNotify(new Slot(__pt__id_slot_0, panel, false));//####[267]####
 //####[267]####
                         Method __pt__id_slot_1 = null;//####[267]####
                         __pt__id_slot_1 = ParaTaskHelper.getDeclaredMethod(ImageProjectPanel.this.getClass(), "guiChanged", new Class[] {});//####[267]####
                         if (false) ImageProjectPanel.this.guiChanged(); //-- ParaTask uses this dummy statement to ensure the slot exists (otherwise Java compiler will complain)//####[267]####
-                        __pt__id.addSlotToNotify(new Slot(__pt__id_slot_1, ImageProjectPanel.this, isEDT, false));//####[267]####
+                        __pt__id.addSlotToNotify(new Slot(__pt__id_slot_1, ImageProjectPanel.this, false));//####[267]####
 //####[267]####
                     } catch(Exception __pt__e) { //####[267]####
                         System.err.println("Problem registering method in clause:");//####[267]####
@@ -472,7 +506,7 @@ public class ImageProjectPanel extends ProjectPanel {//####[28]####
                     /*  -- ParaTask dependsOn clause for 'id' -- *///####[317]####
                     __pt__id.addDependsOn(panel.getHistory());//####[319]####
 //####[319]####
-                    boolean isEDT = SwingUtilities.isEventDispatchThread();//####[319]####
+                    boolean isEDT = GuiThread.isEventDispatchThread();//####[319]####
 //####[319]####
 //####[319]####
                     /*  -- ParaTask notify clause for 'id' -- *///####[319]####
@@ -481,12 +515,12 @@ public class ImageProjectPanel extends ProjectPanel {//####[28]####
                         __pt__id_slot_0 = ParaTaskHelper.getDeclaredMethod(panel.getClass(), "setImageTask", new Class[] { TaskID.class });//####[319]####
                         TaskID __pt__id_slot_0_dummy_0 = null;//####[319]####
                         if (false) panel.setImageTask(__pt__id_slot_0_dummy_0); //-- ParaTask uses this dummy statement to ensure the slot exists (otherwise Java compiler will complain)//####[319]####
-                        __pt__id.addSlotToNotify(new Slot(__pt__id_slot_0, panel, isEDT, false));//####[319]####
+                        __pt__id.addSlotToNotify(new Slot(__pt__id_slot_0, panel, false));//####[319]####
 //####[319]####
                         Method __pt__id_slot_1 = null;//####[319]####
                         __pt__id_slot_1 = ParaTaskHelper.getDeclaredMethod(ImageProjectPanel.this.getClass(), "guiChanged", new Class[] {});//####[319]####
                         if (false) ImageProjectPanel.this.guiChanged(); //-- ParaTask uses this dummy statement to ensure the slot exists (otherwise Java compiler will complain)//####[319]####
-                        __pt__id.addSlotToNotify(new Slot(__pt__id_slot_1, ImageProjectPanel.this, isEDT, false));//####[319]####
+                        __pt__id.addSlotToNotify(new Slot(__pt__id_slot_1, ImageProjectPanel.this, false));//####[319]####
 //####[319]####
                     } catch(Exception __pt__e) { //####[319]####
                         System.err.println("Problem registering method in clause:");//####[319]####

@@ -605,7 +605,7 @@ public class TaskID<E> {
 					executeSlots();
 				
 				//-- 		since slots are executed in the order they are enqueued, then this will be the last slot! :-)
-				callTaskListener(new Slot(ParaTaskHelper.setCompleteSlot, this, false, false, true));
+				callTaskListener(new Slot(ParaTaskHelper.setCompleteSlot, this, false, Slot.SetCompleteSlot.TRUE));
 				
 			} else {
 				setComplete();

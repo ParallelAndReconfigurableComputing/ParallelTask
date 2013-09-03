@@ -11,14 +11,17 @@ import java.awt.image.BufferedImage;//####[10]####
 import javax.swing.JPanel;//####[11]####
 //####[11]####
 //-- ParaTask related imports//####[11]####
-import paratask.runtime.*;//####[11]####
+import pt.runtime.*;//####[11]####
 import java.util.concurrent.ExecutionException;//####[11]####
 import java.util.concurrent.locks.*;//####[11]####
 import java.lang.reflect.*;//####[11]####
-import javax.swing.SwingUtilities;//####[11]####
+import pt.runtime.GuiThread;//####[11]####
+import java.util.concurrent.BlockingQueue;//####[11]####
+import java.util.ArrayList;//####[11]####
+import java.util.List;//####[11]####
 //####[11]####
 public class SearchCompare {//####[13]####
-//####[13]####
+    static{ParaTask.init();}//####[13]####
     /*  ParaTask helper method to access private/protected slots *///####[13]####
     public void __pt__accessPrivateSlot(Method m, Object instance, TaskID arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[13]####
         if (m.getParameterTypes().length == 0)//####[13]####
@@ -94,30 +97,86 @@ public class SearchCompare {//####[13]####
         return result;//####[80]####
     }//####[81]####
 //####[83]####
-    private static Method __pt__compareHash2Task_JPanel_ListPhotoPanelItem_PhotoPanelItem_long_int_int_method = null;//####[83]####
-    private static Lock __pt__compareHash2Task_JPanel_ListPhotoPanelItem_PhotoPanelItem_long_int_int_lock = new ReentrantLock();//####[83]####
-    public static TaskID<Void> compareHash2Task(JPanel thumbnailsPanel, List<PhotoPanelItem> result, PhotoPanelItem compare, long imageHash, int accuracy, int i)  {//####[83]####
-//####[83]####
+    private static volatile Method __pt__compareHash2Task_JPanel_ListPhotoPanelItem_PhotoPanelItem_long_int_int_method = null;//####[83]####
+    private synchronized static void __pt__compareHash2Task_JPanel_ListPhotoPanelItem_PhotoPanelItem_long_int_int_ensureMethodVarSet() {//####[83]####
+        if (__pt__compareHash2Task_JPanel_ListPhotoPanelItem_PhotoPanelItem_long_int_int_method == null) {//####[83]####
+            try {//####[83]####
+                __pt__compareHash2Task_JPanel_ListPhotoPanelItem_PhotoPanelItem_long_int_int_method = ParaTaskHelper.getDeclaredMethod(new ParaTaskHelper.ClassGetter().getCurrentClass(), "__pt__compareHash2Task", new Class[] {//####[83]####
+                    JPanel.class, List.class, PhotoPanelItem.class, long.class, int.class, int.class//####[83]####
+                });//####[83]####
+            } catch (Exception e) {//####[83]####
+                e.printStackTrace();//####[83]####
+            }//####[83]####
+        }//####[83]####
+    }//####[83]####
+    public static TaskID<Void> compareHash2Task(Object thumbnailsPanel, Object result, Object compare, Object imageHash, Object accuracy, Object i) {//####[83]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[83]####
         return compareHash2Task(thumbnailsPanel, result, compare, imageHash, accuracy, i, new TaskInfo());//####[83]####
     }//####[83]####
-    public static TaskID<Void> compareHash2Task(JPanel thumbnailsPanel, List<PhotoPanelItem> result, PhotoPanelItem compare, long imageHash, int accuracy, int i, TaskInfo taskinfo)  {//####[83]####
+    public static TaskID<Void> compareHash2Task(Object thumbnailsPanel, Object result, Object compare, Object imageHash, Object accuracy, Object i, TaskInfo taskinfo) {//####[83]####
+        // ensure Method variable is set//####[83]####
         if (__pt__compareHash2Task_JPanel_ListPhotoPanelItem_PhotoPanelItem_long_int_int_method == null) {//####[83]####
-            try {//####[83]####
-                __pt__compareHash2Task_JPanel_ListPhotoPanelItem_PhotoPanelItem_long_int_int_lock.lock();//####[83]####
-                if (__pt__compareHash2Task_JPanel_ListPhotoPanelItem_PhotoPanelItem_long_int_int_method == null) //####[83]####
-                    __pt__compareHash2Task_JPanel_ListPhotoPanelItem_PhotoPanelItem_long_int_int_method = ParaTaskHelper.getDeclaredMethod(new ParaTaskHelper.ClassGetter().getCurrentClass(), "__pt__compareHash2Task", new Class[] {JPanel.class, List.class, PhotoPanelItem.class, long.class, int.class, int.class});//####[83]####
-            } catch (Exception e) {//####[83]####
-                e.printStackTrace();//####[83]####
-            } finally {//####[83]####
-                __pt__compareHash2Task_JPanel_ListPhotoPanelItem_PhotoPanelItem_long_int_int_lock.unlock();//####[83]####
-            }//####[83]####
+            __pt__compareHash2Task_JPanel_ListPhotoPanelItem_PhotoPanelItem_long_int_int_ensureMethodVarSet();//####[83]####
         }//####[83]####
-//####[83]####
-        Object[] args = new Object[] {thumbnailsPanel, result, compare, imageHash, accuracy, i};//####[83]####
-        taskinfo.setTaskArguments(args);//####[83]####
+        List<Integer> __pt__taskIdIndexList = new ArrayList<Integer>();//####[83]####
+        List<Integer> __pt__queueIndexList = new ArrayList<Integer>();//####[83]####
+        if (thumbnailsPanel instanceof BlockingQueue) {//####[83]####
+            __pt__queueIndexList.add(0);//####[83]####
+        }//####[83]####
+        if (thumbnailsPanel instanceof TaskID) {//####[83]####
+            taskinfo.addDependsOn((TaskID)thumbnailsPanel);//####[83]####
+            __pt__taskIdIndexList.add(0);//####[83]####
+        }//####[83]####
+        if (result instanceof BlockingQueue) {//####[83]####
+            __pt__queueIndexList.add(1);//####[83]####
+        }//####[83]####
+        if (result instanceof TaskID) {//####[83]####
+            taskinfo.addDependsOn((TaskID)result);//####[83]####
+            __pt__taskIdIndexList.add(1);//####[83]####
+        }//####[83]####
+        if (compare instanceof BlockingQueue) {//####[83]####
+            __pt__queueIndexList.add(2);//####[83]####
+        }//####[83]####
+        if (compare instanceof TaskID) {//####[83]####
+            taskinfo.addDependsOn((TaskID)compare);//####[83]####
+            __pt__taskIdIndexList.add(2);//####[83]####
+        }//####[83]####
+        if (imageHash instanceof BlockingQueue) {//####[83]####
+            __pt__queueIndexList.add(3);//####[83]####
+        }//####[83]####
+        if (imageHash instanceof TaskID) {//####[83]####
+            taskinfo.addDependsOn((TaskID)imageHash);//####[83]####
+            __pt__taskIdIndexList.add(3);//####[83]####
+        }//####[83]####
+        if (accuracy instanceof BlockingQueue) {//####[83]####
+            __pt__queueIndexList.add(4);//####[83]####
+        }//####[83]####
+        if (accuracy instanceof TaskID) {//####[83]####
+            taskinfo.addDependsOn((TaskID)accuracy);//####[83]####
+            __pt__taskIdIndexList.add(4);//####[83]####
+        }//####[83]####
+        if (i instanceof BlockingQueue) {//####[83]####
+            __pt__queueIndexList.add(5);//####[83]####
+        }//####[83]####
+        if (i instanceof TaskID) {//####[83]####
+            taskinfo.addDependsOn((TaskID)i);//####[83]####
+            __pt__taskIdIndexList.add(5);//####[83]####
+        }//####[83]####
+        int[] __pt__queueIndexArray = new int[__pt__queueIndexList.size()];//####[83]####
+        for (int __pt__i = 0; __pt__i < __pt__queueIndexArray.length; __pt__i++) {//####[83]####
+            __pt__queueIndexArray[__pt__i] = __pt__queueIndexList.get(__pt__i);//####[83]####
+        }//####[83]####
+        taskinfo.setQueueArgIndexes(__pt__queueIndexArray);//####[83]####
+        if (__pt__queueIndexArray.length > 0) {//####[83]####
+            taskinfo.setIsPipeline(true);//####[83]####
+        }//####[83]####
+        int[] __pt__taskIdIndexArray = new int[__pt__taskIdIndexList.size()];//####[83]####
+        for (int __pt__i = 0; __pt__i < __pt__taskIdIndexArray.length; __pt__i++) {//####[83]####
+            __pt__taskIdIndexArray[__pt__i] = __pt__taskIdIndexList.get(__pt__i);//####[83]####
+        }//####[83]####
+        taskinfo.setTaskIdArgIndexes(__pt__taskIdIndexArray);//####[83]####
+        taskinfo.setParameters(thumbnailsPanel, result, compare, imageHash, accuracy, i);//####[83]####
         taskinfo.setMethod(__pt__compareHash2Task_JPanel_ListPhotoPanelItem_PhotoPanelItem_long_int_int_method);//####[83]####
-//####[83]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[83]####
     }//####[83]####
     public static void __pt__compareHash2Task(JPanel thumbnailsPanel, List<PhotoPanelItem> result, PhotoPanelItem compare, long imageHash, int accuracy, int i) {//####[83]####
@@ -201,30 +260,86 @@ public class SearchCompare {//####[13]####
         return result;//####[166]####
     }//####[167]####
 //####[169]####
-    private static Method __pt__compareColor2Task_JPanel_ListPhotoPanelItem_BufferedImage_int_int_int_method = null;//####[169]####
-    private static Lock __pt__compareColor2Task_JPanel_ListPhotoPanelItem_BufferedImage_int_int_int_lock = new ReentrantLock();//####[169]####
-    public static TaskID<Void> compareColor2Task(JPanel thumbnailsPanel, List<PhotoPanelItem> result, BufferedImage image, int i, int sensitivity, int accuracy)  {//####[169]####
-//####[169]####
+    private static volatile Method __pt__compareColor2Task_JPanel_ListPhotoPanelItem_BufferedImage_int_int_int_method = null;//####[169]####
+    private synchronized static void __pt__compareColor2Task_JPanel_ListPhotoPanelItem_BufferedImage_int_int_int_ensureMethodVarSet() {//####[169]####
+        if (__pt__compareColor2Task_JPanel_ListPhotoPanelItem_BufferedImage_int_int_int_method == null) {//####[169]####
+            try {//####[169]####
+                __pt__compareColor2Task_JPanel_ListPhotoPanelItem_BufferedImage_int_int_int_method = ParaTaskHelper.getDeclaredMethod(new ParaTaskHelper.ClassGetter().getCurrentClass(), "__pt__compareColor2Task", new Class[] {//####[169]####
+                    JPanel.class, List.class, BufferedImage.class, int.class, int.class, int.class//####[169]####
+                });//####[169]####
+            } catch (Exception e) {//####[169]####
+                e.printStackTrace();//####[169]####
+            }//####[169]####
+        }//####[169]####
+    }//####[169]####
+    public static TaskID<Void> compareColor2Task(Object thumbnailsPanel, Object result, Object image, Object i, Object sensitivity, Object accuracy) {//####[169]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[169]####
         return compareColor2Task(thumbnailsPanel, result, image, i, sensitivity, accuracy, new TaskInfo());//####[169]####
     }//####[169]####
-    public static TaskID<Void> compareColor2Task(JPanel thumbnailsPanel, List<PhotoPanelItem> result, BufferedImage image, int i, int sensitivity, int accuracy, TaskInfo taskinfo)  {//####[169]####
+    public static TaskID<Void> compareColor2Task(Object thumbnailsPanel, Object result, Object image, Object i, Object sensitivity, Object accuracy, TaskInfo taskinfo) {//####[169]####
+        // ensure Method variable is set//####[169]####
         if (__pt__compareColor2Task_JPanel_ListPhotoPanelItem_BufferedImage_int_int_int_method == null) {//####[169]####
-            try {//####[169]####
-                __pt__compareColor2Task_JPanel_ListPhotoPanelItem_BufferedImage_int_int_int_lock.lock();//####[169]####
-                if (__pt__compareColor2Task_JPanel_ListPhotoPanelItem_BufferedImage_int_int_int_method == null) //####[169]####
-                    __pt__compareColor2Task_JPanel_ListPhotoPanelItem_BufferedImage_int_int_int_method = ParaTaskHelper.getDeclaredMethod(new ParaTaskHelper.ClassGetter().getCurrentClass(), "__pt__compareColor2Task", new Class[] {JPanel.class, List.class, BufferedImage.class, int.class, int.class, int.class});//####[169]####
-            } catch (Exception e) {//####[169]####
-                e.printStackTrace();//####[169]####
-            } finally {//####[169]####
-                __pt__compareColor2Task_JPanel_ListPhotoPanelItem_BufferedImage_int_int_int_lock.unlock();//####[169]####
-            }//####[169]####
+            __pt__compareColor2Task_JPanel_ListPhotoPanelItem_BufferedImage_int_int_int_ensureMethodVarSet();//####[169]####
         }//####[169]####
-//####[169]####
-        Object[] args = new Object[] {thumbnailsPanel, result, image, i, sensitivity, accuracy};//####[169]####
-        taskinfo.setTaskArguments(args);//####[169]####
+        List<Integer> __pt__taskIdIndexList = new ArrayList<Integer>();//####[169]####
+        List<Integer> __pt__queueIndexList = new ArrayList<Integer>();//####[169]####
+        if (thumbnailsPanel instanceof BlockingQueue) {//####[169]####
+            __pt__queueIndexList.add(0);//####[169]####
+        }//####[169]####
+        if (thumbnailsPanel instanceof TaskID) {//####[169]####
+            taskinfo.addDependsOn((TaskID)thumbnailsPanel);//####[169]####
+            __pt__taskIdIndexList.add(0);//####[169]####
+        }//####[169]####
+        if (result instanceof BlockingQueue) {//####[169]####
+            __pt__queueIndexList.add(1);//####[169]####
+        }//####[169]####
+        if (result instanceof TaskID) {//####[169]####
+            taskinfo.addDependsOn((TaskID)result);//####[169]####
+            __pt__taskIdIndexList.add(1);//####[169]####
+        }//####[169]####
+        if (image instanceof BlockingQueue) {//####[169]####
+            __pt__queueIndexList.add(2);//####[169]####
+        }//####[169]####
+        if (image instanceof TaskID) {//####[169]####
+            taskinfo.addDependsOn((TaskID)image);//####[169]####
+            __pt__taskIdIndexList.add(2);//####[169]####
+        }//####[169]####
+        if (i instanceof BlockingQueue) {//####[169]####
+            __pt__queueIndexList.add(3);//####[169]####
+        }//####[169]####
+        if (i instanceof TaskID) {//####[169]####
+            taskinfo.addDependsOn((TaskID)i);//####[169]####
+            __pt__taskIdIndexList.add(3);//####[169]####
+        }//####[169]####
+        if (sensitivity instanceof BlockingQueue) {//####[169]####
+            __pt__queueIndexList.add(4);//####[169]####
+        }//####[169]####
+        if (sensitivity instanceof TaskID) {//####[169]####
+            taskinfo.addDependsOn((TaskID)sensitivity);//####[169]####
+            __pt__taskIdIndexList.add(4);//####[169]####
+        }//####[169]####
+        if (accuracy instanceof BlockingQueue) {//####[169]####
+            __pt__queueIndexList.add(5);//####[169]####
+        }//####[169]####
+        if (accuracy instanceof TaskID) {//####[169]####
+            taskinfo.addDependsOn((TaskID)accuracy);//####[169]####
+            __pt__taskIdIndexList.add(5);//####[169]####
+        }//####[169]####
+        int[] __pt__queueIndexArray = new int[__pt__queueIndexList.size()];//####[169]####
+        for (int __pt__i = 0; __pt__i < __pt__queueIndexArray.length; __pt__i++) {//####[169]####
+            __pt__queueIndexArray[__pt__i] = __pt__queueIndexList.get(__pt__i);//####[169]####
+        }//####[169]####
+        taskinfo.setQueueArgIndexes(__pt__queueIndexArray);//####[169]####
+        if (__pt__queueIndexArray.length > 0) {//####[169]####
+            taskinfo.setIsPipeline(true);//####[169]####
+        }//####[169]####
+        int[] __pt__taskIdIndexArray = new int[__pt__taskIdIndexList.size()];//####[169]####
+        for (int __pt__i = 0; __pt__i < __pt__taskIdIndexArray.length; __pt__i++) {//####[169]####
+            __pt__taskIdIndexArray[__pt__i] = __pt__taskIdIndexList.get(__pt__i);//####[169]####
+        }//####[169]####
+        taskinfo.setTaskIdArgIndexes(__pt__taskIdIndexArray);//####[169]####
+        taskinfo.setParameters(thumbnailsPanel, result, image, i, sensitivity, accuracy);//####[169]####
         taskinfo.setMethod(__pt__compareColor2Task_JPanel_ListPhotoPanelItem_BufferedImage_int_int_int_method);//####[169]####
-//####[169]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[169]####
     }//####[169]####
     public static void __pt__compareColor2Task(JPanel thumbnailsPanel, List<PhotoPanelItem> result, BufferedImage image, int i, int sensitivity, int accuracy) {//####[169]####

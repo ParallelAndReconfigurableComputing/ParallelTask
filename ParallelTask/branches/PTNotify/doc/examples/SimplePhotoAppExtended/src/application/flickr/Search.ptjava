@@ -43,7 +43,7 @@ public class Search {
 //		return p;
 //	}
 	
-	INTERACTIVE_TASK public static Image getSquareImageTask(Photo p) {
+	IO_TASK public static Image getSquareImageTask(Photo p) {
 		return getSquareImage(p);
 	}
 	
@@ -71,7 +71,7 @@ public class Search {
 		return image;
 	}
 	
-	INTERACTIVE_TASK public static Image getMediumImageTask(Photo p) {
+	IO_TASK public static Image getMediumImageTask(Photo p) {
 		return getMediumImage(p);
 	}
 	
@@ -136,7 +136,7 @@ public class Search {
     */
    // private static SearchProjectPanel panel = null;
 	
-	INTERACTIVE_TASK public static List<PhotoWithImage> searchTask(String str, int picsPerPage, int pageOffset) {
+	IO_TASK public static List<PhotoWithImage> searchTask(String str, int picsPerPage, int pageOffset) {
     	return search(str, picsPerPage, pageOffset);
     }
 	

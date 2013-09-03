@@ -13,14 +13,17 @@ import java.awt.image.LookupOp;//####[12]####
 import java.awt.image.ShortLookupTable;//####[13]####
 //####[13]####
 //-- ParaTask related imports//####[13]####
-import paratask.runtime.*;//####[13]####
+import pt.runtime.*;//####[13]####
 import java.util.concurrent.ExecutionException;//####[13]####
 import java.util.concurrent.locks.*;//####[13]####
 import java.lang.reflect.*;//####[13]####
-import javax.swing.SwingUtilities;//####[13]####
+import pt.runtime.GuiThread;//####[13]####
+import java.util.concurrent.BlockingQueue;//####[13]####
+import java.util.ArrayList;//####[13]####
+import java.util.List;//####[13]####
 //####[13]####
 public class ImageManipulation {//####[15]####
-//####[15]####
+    static{ParaTask.init();}//####[15]####
     /*  ParaTask helper method to access private/protected slots *///####[15]####
     public void __pt__accessPrivateSlot(Method m, Object instance, TaskID arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[15]####
         if (m.getParameterTypes().length == 0)//####[15]####
@@ -37,30 +40,59 @@ public class ImageManipulation {//####[15]####
         long end = System.currentTimeMillis();//####[22]####
     }//####[24]####
 //####[26]####
-    private static Method __pt__invertTask_ImagePanelItem_method = null;//####[26]####
-    private static Lock __pt__invertTask_ImagePanelItem_lock = new ReentrantLock();//####[26]####
-    public static TaskID<ImageCombo> invertTask(ImagePanelItem panel)  {//####[26]####
-//####[26]####
+    private static volatile Method __pt__invertTask_ImagePanelItem_method = null;//####[26]####
+    private synchronized static void __pt__invertTask_ImagePanelItem_ensureMethodVarSet() {//####[26]####
+        if (__pt__invertTask_ImagePanelItem_method == null) {//####[26]####
+            try {//####[26]####
+                __pt__invertTask_ImagePanelItem_method = ParaTaskHelper.getDeclaredMethod(new ParaTaskHelper.ClassGetter().getCurrentClass(), "__pt__invertTask", new Class[] {//####[26]####
+                    ImagePanelItem.class//####[26]####
+                });//####[26]####
+            } catch (Exception e) {//####[26]####
+                e.printStackTrace();//####[26]####
+            }//####[26]####
+        }//####[26]####
+    }//####[26]####
+    public static TaskID<ImageCombo> invertTask(ImagePanelItem panel) {//####[26]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[26]####
         return invertTask(panel, new TaskInfo());//####[26]####
     }//####[26]####
-    public static TaskID<ImageCombo> invertTask(ImagePanelItem panel, TaskInfo taskinfo)  {//####[26]####
+    public static TaskID<ImageCombo> invertTask(ImagePanelItem panel, TaskInfo taskinfo) {//####[26]####
+        // ensure Method variable is set//####[26]####
         if (__pt__invertTask_ImagePanelItem_method == null) {//####[26]####
-            try {//####[26]####
-                __pt__invertTask_ImagePanelItem_lock.lock();//####[26]####
-                if (__pt__invertTask_ImagePanelItem_method == null) //####[26]####
-                    __pt__invertTask_ImagePanelItem_method = ParaTaskHelper.getDeclaredMethod(new ParaTaskHelper.ClassGetter().getCurrentClass(), "__pt__invertTask", new Class[] {ImagePanelItem.class});//####[26]####
-            } catch (Exception e) {//####[26]####
-                e.printStackTrace();//####[26]####
-            } finally {//####[26]####
-                __pt__invertTask_ImagePanelItem_lock.unlock();//####[26]####
-            }//####[26]####
+            __pt__invertTask_ImagePanelItem_ensureMethodVarSet();//####[26]####
         }//####[26]####
-//####[26]####
-        Object[] args = new Object[] {panel};//####[26]####
-        taskinfo.setTaskArguments(args);//####[26]####
+        taskinfo.setParameters(panel);//####[26]####
         taskinfo.setMethod(__pt__invertTask_ImagePanelItem_method);//####[26]####
-//####[26]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[26]####
+    }//####[26]####
+    public static TaskID<ImageCombo> invertTask(TaskID<ImagePanelItem> panel) {//####[26]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[26]####
+        return invertTask(panel, new TaskInfo());//####[26]####
+    }//####[26]####
+    public static TaskID<ImageCombo> invertTask(TaskID<ImagePanelItem> panel, TaskInfo taskinfo) {//####[26]####
+        // ensure Method variable is set//####[26]####
+        if (__pt__invertTask_ImagePanelItem_method == null) {//####[26]####
+            __pt__invertTask_ImagePanelItem_ensureMethodVarSet();//####[26]####
+        }//####[26]####
+        taskinfo.setTaskIdArgIndexes(0);//####[26]####
+        taskinfo.addDependsOn(panel);//####[26]####
+        taskinfo.setParameters(panel);//####[26]####
+        taskinfo.setMethod(__pt__invertTask_ImagePanelItem_method);//####[26]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[26]####
+    }//####[26]####
+    public static TaskID<ImageCombo> invertTask(BlockingQueue<ImagePanelItem> panel) {//####[26]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[26]####
+        return invertTask(panel, new TaskInfo());//####[26]####
+    }//####[26]####
+    public static TaskID<ImageCombo> invertTask(BlockingQueue<ImagePanelItem> panel, TaskInfo taskinfo) {//####[26]####
+        // ensure Method variable is set//####[26]####
+        if (__pt__invertTask_ImagePanelItem_method == null) {//####[26]####
+            __pt__invertTask_ImagePanelItem_ensureMethodVarSet();//####[26]####
+        }//####[26]####
+        taskinfo.setQueueArgIndexes(0);//####[26]####
+        taskinfo.setIsPipeline(true);//####[26]####
+        taskinfo.setParameters(panel);//####[26]####
+        taskinfo.setMethod(__pt__invertTask_ImagePanelItem_method);//####[26]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[26]####
     }//####[26]####
     public static ImageCombo __pt__invertTask(ImagePanelItem panel) {//####[26]####
@@ -93,30 +125,59 @@ public class ImageManipulation {//####[15]####
         return combo;//####[55]####
     }//####[56]####
 //####[58]####
-    private static Method __pt__edgeDetectTask_ImagePanelItem_method = null;//####[58]####
-    private static Lock __pt__edgeDetectTask_ImagePanelItem_lock = new ReentrantLock();//####[58]####
-    public static TaskID<ImageCombo> edgeDetectTask(ImagePanelItem panel)  {//####[58]####
-//####[58]####
+    private static volatile Method __pt__edgeDetectTask_ImagePanelItem_method = null;//####[58]####
+    private synchronized static void __pt__edgeDetectTask_ImagePanelItem_ensureMethodVarSet() {//####[58]####
+        if (__pt__edgeDetectTask_ImagePanelItem_method == null) {//####[58]####
+            try {//####[58]####
+                __pt__edgeDetectTask_ImagePanelItem_method = ParaTaskHelper.getDeclaredMethod(new ParaTaskHelper.ClassGetter().getCurrentClass(), "__pt__edgeDetectTask", new Class[] {//####[58]####
+                    ImagePanelItem.class//####[58]####
+                });//####[58]####
+            } catch (Exception e) {//####[58]####
+                e.printStackTrace();//####[58]####
+            }//####[58]####
+        }//####[58]####
+    }//####[58]####
+    public static TaskID<ImageCombo> edgeDetectTask(ImagePanelItem panel) {//####[58]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[58]####
         return edgeDetectTask(panel, new TaskInfo());//####[58]####
     }//####[58]####
-    public static TaskID<ImageCombo> edgeDetectTask(ImagePanelItem panel, TaskInfo taskinfo)  {//####[58]####
+    public static TaskID<ImageCombo> edgeDetectTask(ImagePanelItem panel, TaskInfo taskinfo) {//####[58]####
+        // ensure Method variable is set//####[58]####
         if (__pt__edgeDetectTask_ImagePanelItem_method == null) {//####[58]####
-            try {//####[58]####
-                __pt__edgeDetectTask_ImagePanelItem_lock.lock();//####[58]####
-                if (__pt__edgeDetectTask_ImagePanelItem_method == null) //####[58]####
-                    __pt__edgeDetectTask_ImagePanelItem_method = ParaTaskHelper.getDeclaredMethod(new ParaTaskHelper.ClassGetter().getCurrentClass(), "__pt__edgeDetectTask", new Class[] {ImagePanelItem.class});//####[58]####
-            } catch (Exception e) {//####[58]####
-                e.printStackTrace();//####[58]####
-            } finally {//####[58]####
-                __pt__edgeDetectTask_ImagePanelItem_lock.unlock();//####[58]####
-            }//####[58]####
+            __pt__edgeDetectTask_ImagePanelItem_ensureMethodVarSet();//####[58]####
         }//####[58]####
-//####[58]####
-        Object[] args = new Object[] {panel};//####[58]####
-        taskinfo.setTaskArguments(args);//####[58]####
+        taskinfo.setParameters(panel);//####[58]####
         taskinfo.setMethod(__pt__edgeDetectTask_ImagePanelItem_method);//####[58]####
-//####[58]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[58]####
+    }//####[58]####
+    public static TaskID<ImageCombo> edgeDetectTask(TaskID<ImagePanelItem> panel) {//####[58]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[58]####
+        return edgeDetectTask(panel, new TaskInfo());//####[58]####
+    }//####[58]####
+    public static TaskID<ImageCombo> edgeDetectTask(TaskID<ImagePanelItem> panel, TaskInfo taskinfo) {//####[58]####
+        // ensure Method variable is set//####[58]####
+        if (__pt__edgeDetectTask_ImagePanelItem_method == null) {//####[58]####
+            __pt__edgeDetectTask_ImagePanelItem_ensureMethodVarSet();//####[58]####
+        }//####[58]####
+        taskinfo.setTaskIdArgIndexes(0);//####[58]####
+        taskinfo.addDependsOn(panel);//####[58]####
+        taskinfo.setParameters(panel);//####[58]####
+        taskinfo.setMethod(__pt__edgeDetectTask_ImagePanelItem_method);//####[58]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[58]####
+    }//####[58]####
+    public static TaskID<ImageCombo> edgeDetectTask(BlockingQueue<ImagePanelItem> panel) {//####[58]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[58]####
+        return edgeDetectTask(panel, new TaskInfo());//####[58]####
+    }//####[58]####
+    public static TaskID<ImageCombo> edgeDetectTask(BlockingQueue<ImagePanelItem> panel, TaskInfo taskinfo) {//####[58]####
+        // ensure Method variable is set//####[58]####
+        if (__pt__edgeDetectTask_ImagePanelItem_method == null) {//####[58]####
+            __pt__edgeDetectTask_ImagePanelItem_ensureMethodVarSet();//####[58]####
+        }//####[58]####
+        taskinfo.setQueueArgIndexes(0);//####[58]####
+        taskinfo.setIsPipeline(true);//####[58]####
+        taskinfo.setParameters(panel);//####[58]####
+        taskinfo.setMethod(__pt__edgeDetectTask_ImagePanelItem_method);//####[58]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[58]####
     }//####[58]####
     public static ImageCombo __pt__edgeDetectTask(ImagePanelItem panel) {//####[58]####
@@ -147,30 +208,44 @@ public class ImageManipulation {//####[15]####
         return combo;//####[85]####
     }//####[86]####
 //####[88]####
-    private static Method __pt__getSmallSquareTask_TaskIDImage_method = null;//####[88]####
-    private static Lock __pt__getSmallSquareTask_TaskIDImage_lock = new ReentrantLock();//####[88]####
-    public static TaskID<Image> getSmallSquareTask(TaskID<Image> image)  {//####[88]####
-//####[88]####
+    private static volatile Method __pt__getSmallSquareTask_TaskIDImage_method = null;//####[88]####
+    private synchronized static void __pt__getSmallSquareTask_TaskIDImage_ensureMethodVarSet() {//####[88]####
+        if (__pt__getSmallSquareTask_TaskIDImage_method == null) {//####[88]####
+            try {//####[88]####
+                __pt__getSmallSquareTask_TaskIDImage_method = ParaTaskHelper.getDeclaredMethod(new ParaTaskHelper.ClassGetter().getCurrentClass(), "__pt__getSmallSquareTask", new Class[] {//####[88]####
+                    TaskID.class//####[88]####
+                });//####[88]####
+            } catch (Exception e) {//####[88]####
+                e.printStackTrace();//####[88]####
+            }//####[88]####
+        }//####[88]####
+    }//####[88]####
+    public static TaskID<Image> getSmallSquareTask(TaskID<Image> image) {//####[88]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[88]####
         return getSmallSquareTask(image, new TaskInfo());//####[88]####
     }//####[88]####
-    public static TaskID<Image> getSmallSquareTask(TaskID<Image> image, TaskInfo taskinfo)  {//####[88]####
+    public static TaskID<Image> getSmallSquareTask(TaskID<Image> image, TaskInfo taskinfo) {//####[88]####
+        // ensure Method variable is set//####[88]####
         if (__pt__getSmallSquareTask_TaskIDImage_method == null) {//####[88]####
-            try {//####[88]####
-                __pt__getSmallSquareTask_TaskIDImage_lock.lock();//####[88]####
-                if (__pt__getSmallSquareTask_TaskIDImage_method == null) //####[88]####
-                    __pt__getSmallSquareTask_TaskIDImage_method = ParaTaskHelper.getDeclaredMethod(new ParaTaskHelper.ClassGetter().getCurrentClass(), "__pt__getSmallSquareTask", new Class[] {TaskID.class});//####[88]####
-            } catch (Exception e) {//####[88]####
-                e.printStackTrace();//####[88]####
-            } finally {//####[88]####
-                __pt__getSmallSquareTask_TaskIDImage_lock.unlock();//####[88]####
-            }//####[88]####
+            __pt__getSmallSquareTask_TaskIDImage_ensureMethodVarSet();//####[88]####
         }//####[88]####
-//####[88]####
-        Object[] args = new Object[] {image};//####[88]####
-        taskinfo.setTaskArguments(args);//####[88]####
+        taskinfo.setParameters(image);//####[88]####
         taskinfo.setMethod(__pt__getSmallSquareTask_TaskIDImage_method);//####[88]####
-//####[88]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[88]####
+    }//####[88]####
+    public static TaskID<Image> getSmallSquareTask(BlockingQueue<TaskID<Image>> image) {//####[88]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[88]####
+        return getSmallSquareTask(image, new TaskInfo());//####[88]####
+    }//####[88]####
+    public static TaskID<Image> getSmallSquareTask(BlockingQueue<TaskID<Image>> image, TaskInfo taskinfo) {//####[88]####
+        // ensure Method variable is set//####[88]####
+        if (__pt__getSmallSquareTask_TaskIDImage_method == null) {//####[88]####
+            __pt__getSmallSquareTask_TaskIDImage_ensureMethodVarSet();//####[88]####
+        }//####[88]####
+        taskinfo.setQueueArgIndexes(0);//####[88]####
+        taskinfo.setIsPipeline(true);//####[88]####
+        taskinfo.setParameters(image);//####[88]####
+        taskinfo.setMethod(__pt__getSmallSquareTask_TaskIDImage_method);//####[88]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[88]####
     }//####[88]####
     public static Image __pt__getSmallSquareTask(TaskID<Image> image) {//####[88]####
@@ -183,30 +258,44 @@ public class ImageManipulation {//####[15]####
     }//####[95]####
 //####[95]####
 //####[97]####
-    private static Method __pt__getMediumTask_TaskIDImage_method = null;//####[97]####
-    private static Lock __pt__getMediumTask_TaskIDImage_lock = new ReentrantLock();//####[97]####
-    public static TaskID<Image> getMediumTask(TaskID<Image> image)  {//####[97]####
-//####[97]####
+    private static volatile Method __pt__getMediumTask_TaskIDImage_method = null;//####[97]####
+    private synchronized static void __pt__getMediumTask_TaskIDImage_ensureMethodVarSet() {//####[97]####
+        if (__pt__getMediumTask_TaskIDImage_method == null) {//####[97]####
+            try {//####[97]####
+                __pt__getMediumTask_TaskIDImage_method = ParaTaskHelper.getDeclaredMethod(new ParaTaskHelper.ClassGetter().getCurrentClass(), "__pt__getMediumTask", new Class[] {//####[97]####
+                    TaskID.class//####[97]####
+                });//####[97]####
+            } catch (Exception e) {//####[97]####
+                e.printStackTrace();//####[97]####
+            }//####[97]####
+        }//####[97]####
+    }//####[97]####
+    public static TaskID<Image> getMediumTask(TaskID<Image> image) {//####[97]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[97]####
         return getMediumTask(image, new TaskInfo());//####[97]####
     }//####[97]####
-    public static TaskID<Image> getMediumTask(TaskID<Image> image, TaskInfo taskinfo)  {//####[97]####
+    public static TaskID<Image> getMediumTask(TaskID<Image> image, TaskInfo taskinfo) {//####[97]####
+        // ensure Method variable is set//####[97]####
         if (__pt__getMediumTask_TaskIDImage_method == null) {//####[97]####
-            try {//####[97]####
-                __pt__getMediumTask_TaskIDImage_lock.lock();//####[97]####
-                if (__pt__getMediumTask_TaskIDImage_method == null) //####[97]####
-                    __pt__getMediumTask_TaskIDImage_method = ParaTaskHelper.getDeclaredMethod(new ParaTaskHelper.ClassGetter().getCurrentClass(), "__pt__getMediumTask", new Class[] {TaskID.class});//####[97]####
-            } catch (Exception e) {//####[97]####
-                e.printStackTrace();//####[97]####
-            } finally {//####[97]####
-                __pt__getMediumTask_TaskIDImage_lock.unlock();//####[97]####
-            }//####[97]####
+            __pt__getMediumTask_TaskIDImage_ensureMethodVarSet();//####[97]####
         }//####[97]####
-//####[97]####
-        Object[] args = new Object[] {image};//####[97]####
-        taskinfo.setTaskArguments(args);//####[97]####
+        taskinfo.setParameters(image);//####[97]####
         taskinfo.setMethod(__pt__getMediumTask_TaskIDImage_method);//####[97]####
-//####[97]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[97]####
+    }//####[97]####
+    public static TaskID<Image> getMediumTask(BlockingQueue<TaskID<Image>> image) {//####[97]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[97]####
+        return getMediumTask(image, new TaskInfo());//####[97]####
+    }//####[97]####
+    public static TaskID<Image> getMediumTask(BlockingQueue<TaskID<Image>> image, TaskInfo taskinfo) {//####[97]####
+        // ensure Method variable is set//####[97]####
+        if (__pt__getMediumTask_TaskIDImage_method == null) {//####[97]####
+            __pt__getMediumTask_TaskIDImage_ensureMethodVarSet();//####[97]####
+        }//####[97]####
+        taskinfo.setQueueArgIndexes(0);//####[97]####
+        taskinfo.setIsPipeline(true);//####[97]####
+        taskinfo.setParameters(image);//####[97]####
+        taskinfo.setMethod(__pt__getMediumTask_TaskIDImage_method);//####[97]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[97]####
     }//####[97]####
     public static Image __pt__getMediumTask(TaskID<Image> image) {//####[97]####
@@ -239,30 +328,59 @@ public class ImageManipulation {//####[15]####
         return buf;//####[129]####
     }//####[130]####
 //####[132]####
-    private static Method __pt__getImageFullTask_File_method = null;//####[132]####
-    private static Lock __pt__getImageFullTask_File_lock = new ReentrantLock();//####[132]####
-    public static TaskID<Image> getImageFullTask(File file)  {//####[132]####
-//####[132]####
+    private static volatile Method __pt__getImageFullTask_File_method = null;//####[132]####
+    private synchronized static void __pt__getImageFullTask_File_ensureMethodVarSet() {//####[132]####
+        if (__pt__getImageFullTask_File_method == null) {//####[132]####
+            try {//####[132]####
+                __pt__getImageFullTask_File_method = ParaTaskHelper.getDeclaredMethod(new ParaTaskHelper.ClassGetter().getCurrentClass(), "__pt__getImageFullTask", new Class[] {//####[132]####
+                    File.class//####[132]####
+                });//####[132]####
+            } catch (Exception e) {//####[132]####
+                e.printStackTrace();//####[132]####
+            }//####[132]####
+        }//####[132]####
+    }//####[132]####
+    public static TaskID<Image> getImageFullTask(File file) {//####[132]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[132]####
         return getImageFullTask(file, new TaskInfo());//####[132]####
     }//####[132]####
-    public static TaskID<Image> getImageFullTask(File file, TaskInfo taskinfo)  {//####[132]####
+    public static TaskID<Image> getImageFullTask(File file, TaskInfo taskinfo) {//####[132]####
+        // ensure Method variable is set//####[132]####
         if (__pt__getImageFullTask_File_method == null) {//####[132]####
-            try {//####[132]####
-                __pt__getImageFullTask_File_lock.lock();//####[132]####
-                if (__pt__getImageFullTask_File_method == null) //####[132]####
-                    __pt__getImageFullTask_File_method = ParaTaskHelper.getDeclaredMethod(new ParaTaskHelper.ClassGetter().getCurrentClass(), "__pt__getImageFullTask", new Class[] {File.class});//####[132]####
-            } catch (Exception e) {//####[132]####
-                e.printStackTrace();//####[132]####
-            } finally {//####[132]####
-                __pt__getImageFullTask_File_lock.unlock();//####[132]####
-            }//####[132]####
+            __pt__getImageFullTask_File_ensureMethodVarSet();//####[132]####
         }//####[132]####
-//####[132]####
-        Object[] args = new Object[] {file};//####[132]####
-        taskinfo.setTaskArguments(args);//####[132]####
+        taskinfo.setParameters(file);//####[132]####
         taskinfo.setMethod(__pt__getImageFullTask_File_method);//####[132]####
-//####[132]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[132]####
+    }//####[132]####
+    public static TaskID<Image> getImageFullTask(TaskID<File> file) {//####[132]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[132]####
+        return getImageFullTask(file, new TaskInfo());//####[132]####
+    }//####[132]####
+    public static TaskID<Image> getImageFullTask(TaskID<File> file, TaskInfo taskinfo) {//####[132]####
+        // ensure Method variable is set//####[132]####
+        if (__pt__getImageFullTask_File_method == null) {//####[132]####
+            __pt__getImageFullTask_File_ensureMethodVarSet();//####[132]####
+        }//####[132]####
+        taskinfo.setTaskIdArgIndexes(0);//####[132]####
+        taskinfo.addDependsOn(file);//####[132]####
+        taskinfo.setParameters(file);//####[132]####
+        taskinfo.setMethod(__pt__getImageFullTask_File_method);//####[132]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[132]####
+    }//####[132]####
+    public static TaskID<Image> getImageFullTask(BlockingQueue<File> file) {//####[132]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[132]####
+        return getImageFullTask(file, new TaskInfo());//####[132]####
+    }//####[132]####
+    public static TaskID<Image> getImageFullTask(BlockingQueue<File> file, TaskInfo taskinfo) {//####[132]####
+        // ensure Method variable is set//####[132]####
+        if (__pt__getImageFullTask_File_method == null) {//####[132]####
+            __pt__getImageFullTask_File_ensureMethodVarSet();//####[132]####
+        }//####[132]####
+        taskinfo.setQueueArgIndexes(0);//####[132]####
+        taskinfo.setIsPipeline(true);//####[132]####
+        taskinfo.setParameters(file);//####[132]####
+        taskinfo.setMethod(__pt__getImageFullTask_File_method);//####[132]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[132]####
     }//####[132]####
     public static Image __pt__getImageFullTask(File file) {//####[132]####
@@ -279,30 +397,59 @@ public class ImageManipulation {//####[15]####
         return null;//####[141]####
     }//####[142]####
 //####[144]####
-    private static Method __pt__sharpenTask_ImagePanelItem_method = null;//####[144]####
-    private static Lock __pt__sharpenTask_ImagePanelItem_lock = new ReentrantLock();//####[144]####
-    public static TaskID<ImageCombo> sharpenTask(ImagePanelItem panel)  {//####[144]####
-//####[144]####
+    private static volatile Method __pt__sharpenTask_ImagePanelItem_method = null;//####[144]####
+    private synchronized static void __pt__sharpenTask_ImagePanelItem_ensureMethodVarSet() {//####[144]####
+        if (__pt__sharpenTask_ImagePanelItem_method == null) {//####[144]####
+            try {//####[144]####
+                __pt__sharpenTask_ImagePanelItem_method = ParaTaskHelper.getDeclaredMethod(new ParaTaskHelper.ClassGetter().getCurrentClass(), "__pt__sharpenTask", new Class[] {//####[144]####
+                    ImagePanelItem.class//####[144]####
+                });//####[144]####
+            } catch (Exception e) {//####[144]####
+                e.printStackTrace();//####[144]####
+            }//####[144]####
+        }//####[144]####
+    }//####[144]####
+    public static TaskID<ImageCombo> sharpenTask(ImagePanelItem panel) {//####[144]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[144]####
         return sharpenTask(panel, new TaskInfo());//####[144]####
     }//####[144]####
-    public static TaskID<ImageCombo> sharpenTask(ImagePanelItem panel, TaskInfo taskinfo)  {//####[144]####
+    public static TaskID<ImageCombo> sharpenTask(ImagePanelItem panel, TaskInfo taskinfo) {//####[144]####
+        // ensure Method variable is set//####[144]####
         if (__pt__sharpenTask_ImagePanelItem_method == null) {//####[144]####
-            try {//####[144]####
-                __pt__sharpenTask_ImagePanelItem_lock.lock();//####[144]####
-                if (__pt__sharpenTask_ImagePanelItem_method == null) //####[144]####
-                    __pt__sharpenTask_ImagePanelItem_method = ParaTaskHelper.getDeclaredMethod(new ParaTaskHelper.ClassGetter().getCurrentClass(), "__pt__sharpenTask", new Class[] {ImagePanelItem.class});//####[144]####
-            } catch (Exception e) {//####[144]####
-                e.printStackTrace();//####[144]####
-            } finally {//####[144]####
-                __pt__sharpenTask_ImagePanelItem_lock.unlock();//####[144]####
-            }//####[144]####
+            __pt__sharpenTask_ImagePanelItem_ensureMethodVarSet();//####[144]####
         }//####[144]####
-//####[144]####
-        Object[] args = new Object[] {panel};//####[144]####
-        taskinfo.setTaskArguments(args);//####[144]####
+        taskinfo.setParameters(panel);//####[144]####
         taskinfo.setMethod(__pt__sharpenTask_ImagePanelItem_method);//####[144]####
-//####[144]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[144]####
+    }//####[144]####
+    public static TaskID<ImageCombo> sharpenTask(TaskID<ImagePanelItem> panel) {//####[144]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[144]####
+        return sharpenTask(panel, new TaskInfo());//####[144]####
+    }//####[144]####
+    public static TaskID<ImageCombo> sharpenTask(TaskID<ImagePanelItem> panel, TaskInfo taskinfo) {//####[144]####
+        // ensure Method variable is set//####[144]####
+        if (__pt__sharpenTask_ImagePanelItem_method == null) {//####[144]####
+            __pt__sharpenTask_ImagePanelItem_ensureMethodVarSet();//####[144]####
+        }//####[144]####
+        taskinfo.setTaskIdArgIndexes(0);//####[144]####
+        taskinfo.addDependsOn(panel);//####[144]####
+        taskinfo.setParameters(panel);//####[144]####
+        taskinfo.setMethod(__pt__sharpenTask_ImagePanelItem_method);//####[144]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[144]####
+    }//####[144]####
+    public static TaskID<ImageCombo> sharpenTask(BlockingQueue<ImagePanelItem> panel) {//####[144]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[144]####
+        return sharpenTask(panel, new TaskInfo());//####[144]####
+    }//####[144]####
+    public static TaskID<ImageCombo> sharpenTask(BlockingQueue<ImagePanelItem> panel, TaskInfo taskinfo) {//####[144]####
+        // ensure Method variable is set//####[144]####
+        if (__pt__sharpenTask_ImagePanelItem_method == null) {//####[144]####
+            __pt__sharpenTask_ImagePanelItem_ensureMethodVarSet();//####[144]####
+        }//####[144]####
+        taskinfo.setQueueArgIndexes(0);//####[144]####
+        taskinfo.setIsPipeline(true);//####[144]####
+        taskinfo.setParameters(panel);//####[144]####
+        taskinfo.setMethod(__pt__sharpenTask_ImagePanelItem_method);//####[144]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[144]####
     }//####[144]####
     public static ImageCombo __pt__sharpenTask(ImagePanelItem panel) {//####[144]####
@@ -333,30 +480,59 @@ public class ImageManipulation {//####[15]####
         return combo;//####[170]####
     }//####[171]####
 //####[173]####
-    private static Method __pt__blurTask_ImagePanelItem_method = null;//####[173]####
-    private static Lock __pt__blurTask_ImagePanelItem_lock = new ReentrantLock();//####[173]####
-    public static TaskID<ImageCombo> blurTask(ImagePanelItem panel)  {//####[173]####
-//####[173]####
+    private static volatile Method __pt__blurTask_ImagePanelItem_method = null;//####[173]####
+    private synchronized static void __pt__blurTask_ImagePanelItem_ensureMethodVarSet() {//####[173]####
+        if (__pt__blurTask_ImagePanelItem_method == null) {//####[173]####
+            try {//####[173]####
+                __pt__blurTask_ImagePanelItem_method = ParaTaskHelper.getDeclaredMethod(new ParaTaskHelper.ClassGetter().getCurrentClass(), "__pt__blurTask", new Class[] {//####[173]####
+                    ImagePanelItem.class//####[173]####
+                });//####[173]####
+            } catch (Exception e) {//####[173]####
+                e.printStackTrace();//####[173]####
+            }//####[173]####
+        }//####[173]####
+    }//####[173]####
+    public static TaskID<ImageCombo> blurTask(ImagePanelItem panel) {//####[173]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[173]####
         return blurTask(panel, new TaskInfo());//####[173]####
     }//####[173]####
-    public static TaskID<ImageCombo> blurTask(ImagePanelItem panel, TaskInfo taskinfo)  {//####[173]####
+    public static TaskID<ImageCombo> blurTask(ImagePanelItem panel, TaskInfo taskinfo) {//####[173]####
+        // ensure Method variable is set//####[173]####
         if (__pt__blurTask_ImagePanelItem_method == null) {//####[173]####
-            try {//####[173]####
-                __pt__blurTask_ImagePanelItem_lock.lock();//####[173]####
-                if (__pt__blurTask_ImagePanelItem_method == null) //####[173]####
-                    __pt__blurTask_ImagePanelItem_method = ParaTaskHelper.getDeclaredMethod(new ParaTaskHelper.ClassGetter().getCurrentClass(), "__pt__blurTask", new Class[] {ImagePanelItem.class});//####[173]####
-            } catch (Exception e) {//####[173]####
-                e.printStackTrace();//####[173]####
-            } finally {//####[173]####
-                __pt__blurTask_ImagePanelItem_lock.unlock();//####[173]####
-            }//####[173]####
+            __pt__blurTask_ImagePanelItem_ensureMethodVarSet();//####[173]####
         }//####[173]####
-//####[173]####
-        Object[] args = new Object[] {panel};//####[173]####
-        taskinfo.setTaskArguments(args);//####[173]####
+        taskinfo.setParameters(panel);//####[173]####
         taskinfo.setMethod(__pt__blurTask_ImagePanelItem_method);//####[173]####
-//####[173]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[173]####
+    }//####[173]####
+    public static TaskID<ImageCombo> blurTask(TaskID<ImagePanelItem> panel) {//####[173]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[173]####
+        return blurTask(panel, new TaskInfo());//####[173]####
+    }//####[173]####
+    public static TaskID<ImageCombo> blurTask(TaskID<ImagePanelItem> panel, TaskInfo taskinfo) {//####[173]####
+        // ensure Method variable is set//####[173]####
+        if (__pt__blurTask_ImagePanelItem_method == null) {//####[173]####
+            __pt__blurTask_ImagePanelItem_ensureMethodVarSet();//####[173]####
+        }//####[173]####
+        taskinfo.setTaskIdArgIndexes(0);//####[173]####
+        taskinfo.addDependsOn(panel);//####[173]####
+        taskinfo.setParameters(panel);//####[173]####
+        taskinfo.setMethod(__pt__blurTask_ImagePanelItem_method);//####[173]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[173]####
+    }//####[173]####
+    public static TaskID<ImageCombo> blurTask(BlockingQueue<ImagePanelItem> panel) {//####[173]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[173]####
+        return blurTask(panel, new TaskInfo());//####[173]####
+    }//####[173]####
+    public static TaskID<ImageCombo> blurTask(BlockingQueue<ImagePanelItem> panel, TaskInfo taskinfo) {//####[173]####
+        // ensure Method variable is set//####[173]####
+        if (__pt__blurTask_ImagePanelItem_method == null) {//####[173]####
+            __pt__blurTask_ImagePanelItem_ensureMethodVarSet();//####[173]####
+        }//####[173]####
+        taskinfo.setQueueArgIndexes(0);//####[173]####
+        taskinfo.setIsPipeline(true);//####[173]####
+        taskinfo.setParameters(panel);//####[173]####
+        taskinfo.setMethod(__pt__blurTask_ImagePanelItem_method);//####[173]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[173]####
     }//####[173]####
     public static ImageCombo __pt__blurTask(ImagePanelItem panel) {//####[173]####

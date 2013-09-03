@@ -41,14 +41,17 @@ import com.aetrion.flickr.photos.PhotoList;//####[43]####
 import application.flickr.Search;//####[45]####
 //####[45]####
 //-- ParaTask related imports//####[45]####
-import paratask.runtime.*;//####[45]####
+import pt.runtime.*;//####[45]####
 import java.util.concurrent.ExecutionException;//####[45]####
 import java.util.concurrent.locks.*;//####[45]####
 import java.lang.reflect.*;//####[45]####
-import javax.swing.SwingUtilities;//####[45]####
+import pt.runtime.GuiThread;//####[45]####
+import java.util.concurrent.BlockingQueue;//####[45]####
+import java.util.ArrayList;//####[45]####
+import java.util.List;//####[45]####
 //####[45]####
 public class SearchProjectPanel extends ProjectPanel implements ActionListener {//####[47]####
-//####[47]####
+    static{ParaTask.init();}//####[47]####
     /*  ParaTask helper method to access private/protected slots *///####[47]####
     public void __pt__accessPrivateSlot(Method m, Object instance, TaskID arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[47]####
         if (m.getParameterTypes().length == 0)//####[47]####
@@ -264,7 +267,7 @@ public class SearchProjectPanel extends ProjectPanel implements ActionListener {
         {//####[280]####
             TaskInfo __pt__currentSearch = new TaskInfo();//####[282]####
 //####[282]####
-            boolean isEDT = SwingUtilities.isEventDispatchThread();//####[282]####
+            boolean isEDT = GuiThread.isEventDispatchThread();//####[282]####
 //####[282]####
 //####[282]####
             /*  -- ParaTask notify clause for 'currentSearch' -- *///####[282]####
@@ -272,12 +275,12 @@ public class SearchProjectPanel extends ProjectPanel implements ActionListener {
                 Method __pt__currentSearch_slot_0 = null;//####[282]####
                 __pt__currentSearch_slot_0 = ParaTaskHelper.getDeclaredMethod(getClass(), "finishedSearch", new Class[] {});//####[283]####
                 if (false) finishedSearch(); //-- ParaTask uses this dummy statement to ensure the slot exists (otherwise Java compiler will complain)//####[283]####
-                __pt__currentSearch.addSlotToNotify(new Slot(__pt__currentSearch_slot_0, this, isEDT, false));//####[283]####
+                __pt__currentSearch.addSlotToNotify(new Slot(__pt__currentSearch_slot_0, this, false));//####[283]####
 //####[283]####
                 Method __pt__currentSearch_slot_1 = null;//####[283]####
                 __pt__currentSearch_slot_1 = ParaTaskHelper.getDeclaredMethod(timer.getClass(), "taskComplete", new Class[] {});//####[283]####
                 if (false) timer.taskComplete(); //-- ParaTask uses this dummy statement to ensure the slot exists (otherwise Java compiler will complain)//####[283]####
-                __pt__currentSearch.addSlotToNotify(new Slot(__pt__currentSearch_slot_1, timer, isEDT, false));//####[283]####
+                __pt__currentSearch.addSlotToNotify(new Slot(__pt__currentSearch_slot_1, timer, false));//####[283]####
 //####[283]####
             } catch(Exception __pt__e) { //####[283]####
                 System.err.println("Problem registering method in clause:");//####[283]####
@@ -291,7 +294,7 @@ public class SearchProjectPanel extends ProjectPanel implements ActionListener {
                 TaskID __pt__currentSearch_inter_slot_0_dummy_0 = null;//####[285]####
                 PhotoWithImage __pt__currentSearch_inter_slot_0_dummy_1 = null;//####[285]####
                 if (false) receiveIntermediate(__pt__currentSearch_inter_slot_0_dummy_0, __pt__currentSearch_inter_slot_0_dummy_1); //-- ParaTask uses this dummy statement to ensure the slot exists (otherwise Java compiler will complain)//####[285]####
-                __pt__currentSearch.addInterSlotToNotify(new Slot(__pt__currentSearch_inter_slot_0, this, isEDT, true));//####[285]####
+                __pt__currentSearch.addInterSlotToNotify(new Slot(__pt__currentSearch_inter_slot_0, this, true));//####[285]####
 //####[285]####
             } catch(Exception __pt__e) { //####[285]####
                 System.err.println("Problem registering method in clause:");//####[285]####
@@ -408,7 +411,7 @@ public class SearchProjectPanel extends ProjectPanel implements ActionListener {
         accuracySlider.setPaintTicks(true);//####[398]####
         accuracySlider.setPaintLabels(true);//####[399]####
         class accuracySliderListener implements ChangeListener {//####[401]####
-//####[401]####
+            static{ParaTask.init();}//####[401]####
             /*  ParaTask helper method to access private/protected slots *///####[401]####
             public void __pt__accessPrivateSlot(Method m, Object instance, TaskID arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[401]####
                 if (m.getParameterTypes().length == 0)//####[401]####
@@ -436,7 +439,7 @@ public class SearchProjectPanel extends ProjectPanel implements ActionListener {
         sensitivitySlider.setPaintTicks(true);//####[418]####
         sensitivitySlider.setPaintLabels(true);//####[419]####
         class sensitivitySliderListener implements ChangeListener {//####[421]####
-//####[421]####
+            static{ParaTask.init();}//####[421]####
             /*  ParaTask helper method to access private/protected slots *///####[421]####
             public void __pt__accessPrivateSlot(Method m, Object instance, TaskID arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[421]####
                 if (m.getParameterTypes().length == 0)//####[421]####

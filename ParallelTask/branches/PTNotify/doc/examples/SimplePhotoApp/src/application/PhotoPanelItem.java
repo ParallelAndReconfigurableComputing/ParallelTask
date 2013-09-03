@@ -24,14 +24,17 @@ import application.flickr.Search;//####[26]####
 import com.aetrion.flickr.photos.Photo;//####[28]####
 //####[28]####
 //-- ParaTask related imports//####[28]####
-import paratask.runtime.*;//####[28]####
+import pt.runtime.*;//####[28]####
 import java.util.concurrent.ExecutionException;//####[28]####
 import java.util.concurrent.locks.*;//####[28]####
 import java.lang.reflect.*;//####[28]####
-import javax.swing.SwingUtilities;//####[28]####
+import pt.runtime.GuiThread;//####[28]####
+import java.util.concurrent.BlockingQueue;//####[28]####
+import java.util.ArrayList;//####[28]####
+import java.util.List;//####[28]####
 //####[28]####
 public class PhotoPanelItem extends JPanel implements ActionListener {//####[30]####
-//####[30]####
+    static{ParaTask.init();}//####[30]####
     /*  ParaTask helper method to access private/protected slots *///####[30]####
     public void __pt__accessPrivateSlot(Method m, Object instance, TaskID arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[30]####
         if (m.getParameterTypes().length == 0)//####[30]####
@@ -131,7 +134,7 @@ public class PhotoPanelItem extends JPanel implements ActionListener {//####[30]
             {//####[124]####
                 TaskInfo __pt__id = new TaskInfo();//####[125]####
 //####[125]####
-                boolean isEDT = SwingUtilities.isEventDispatchThread();//####[125]####
+                boolean isEDT = GuiThread.isEventDispatchThread();//####[125]####
 //####[125]####
 //####[125]####
                 /*  -- ParaTask notify clause for 'id' -- *///####[125]####
@@ -140,7 +143,7 @@ public class PhotoPanelItem extends JPanel implements ActionListener {//####[30]
                     __pt__id_slot_0 = ParaTaskHelper.getDeclaredMethod(getClass(), "downloadCompleteTask", new Class[] { TaskID.class });//####[125]####
                     TaskID __pt__id_slot_0_dummy_0 = null;//####[125]####
                     if (false) downloadCompleteTask(__pt__id_slot_0_dummy_0); //-- ParaTask uses this dummy statement to ensure the slot exists (otherwise Java compiler will complain)//####[125]####
-                    __pt__id.addSlotToNotify(new Slot(__pt__id_slot_0, this, isEDT, false));//####[125]####
+                    __pt__id.addSlotToNotify(new Slot(__pt__id_slot_0, this, false));//####[125]####
 //####[125]####
                 } catch(Exception __pt__e) { //####[125]####
                     System.err.println("Problem registering method in clause:");//####[125]####
