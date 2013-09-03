@@ -39,7 +39,10 @@ public class ParaTask {
 	private static int threadPoolSize = Runtime.getRuntime().availableProcessors();
 	private static ScheduleType scheduleType = ScheduleType.MixedSchedule;
 	static boolean isInitialized = false;
-	
+
+	static Thread EDT = null;		// a reference to the EDT
+	static TaskListener listener;	// the EDT task listener
+		
 	ParaTask(){
 		
 	}
@@ -139,14 +142,24 @@ public class ParaTask {
 			} catch (NoSuchMethodException e) {
 				e.printStackTrace();
 			}
-			EventLoop.init();
+
+			//-- Create the task pool
+			TaskpoolFactory.getTaskpool();
 			
-			if (!GuiThread.isEventDispatchThread())
-				EventLoop.register();
+			//-- initialize the EDT
+			EDT = GuiThread.getEventDispatchThread();
+			listener = new TaskListener();
 			
 			isInitialized = true;
 		}
 	}
+	
+	static TaskListener getEDTTaskListener() {
+		if (EDT == null) {
+			throw new RuntimeException("Please call ParaTask.init() early in the main method of your application!");
+		}
+		return listener;
+	}	
 	
 	/**
 	 * Flattens a list of TaskIDs. Only has an effect if some of the TaskIDs were actually TaskIDGroups.

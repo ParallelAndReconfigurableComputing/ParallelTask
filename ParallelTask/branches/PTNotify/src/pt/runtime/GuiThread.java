@@ -19,6 +19,7 @@ public class GuiThread {
 		}
 		
 		proxy.init();
+		initialized = true;
 	}
 	
 	public static Thread getEventDispatchThread() {

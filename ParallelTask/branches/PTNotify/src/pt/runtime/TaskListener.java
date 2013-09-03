@@ -22,45 +22,11 @@ package pt.runtime;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.Iterator;
+import java.util.List;
 
 
 public class TaskListener {
-	
-	private LinkedBlockingQueue<Slot> notifyQueue = new LinkedBlockingQueue<Slot>();
-	
-	private boolean alreadyInsideEventLoop = false;
-	
-	public int exec() {
-		if (alreadyInsideEventLoop)
-			return -1;
-		alreadyInsideEventLoop = true;
-		
-//		System.err.println("----- Thread "+Thread.currentThread().getId()+
-//				" ("+Thread.currentThread()+") will now enter EventLoop ");
-		while (true) {
-			try {
-				Slot slot = notifyQueue.take();
-				
-				// this Slot is requesting to end the event loop
-				if (slot == Slot.quit) {
-//					System.err.println("**** Thread "+Thread.currentThread().getId()+
-//							" ("+Thread.currentThread()+") will now exit the ParaTask EventLoop ");
-					return 0;
-				}
-				
-				if (slot.executeOnEDT()) 
-					executeSlotOnEDT(slot);		// gets executed on EDT using invokeLater(), success is set within this call
-				else
-					executeSlot(slot);	// gets executed on current thread
-				
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-				return -1;
-			}
-		}
-	}
 	
 	/**
 	 * Executes the specified slot. If an exception occurs while running the slot, this is stored in the slot.
@@ -161,12 +127,19 @@ public class TaskListener {
 			}
 		});
 	}
-	
+
 	public void executeSlots(Slot slot) {
-		notifyQueue.add(slot);
+		executeSlotOnEDT(slot);
 	}
 	
-	public void executeSlots(ArrayList<Slot> slots) {
-		notifyQueue.addAll(slots);
-	}
+	/**
+	 * 	All the Slots are executed on the EDT
+	 */
+	public void executeSlots(List<Slot> slots) {
+		Iterator<Slot> it = slots.iterator();
+		while (it.hasNext()) {
+			Slot slot = it.next();
+			executeSlotOnEDT(slot);
+		}
+	}	
 }

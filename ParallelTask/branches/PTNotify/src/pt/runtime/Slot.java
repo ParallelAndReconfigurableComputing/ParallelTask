@@ -96,10 +96,6 @@ public class Slot {
 		return isIntermediateResultSlot;
 	}
 
-	public boolean executeOnEDT() {
-		return executeOnEDT;
-	}
-
 	public void setExecuteOnEDT(boolean executeOnEDT) {
 		this.executeOnEDT = executeOnEDT;
 	}
