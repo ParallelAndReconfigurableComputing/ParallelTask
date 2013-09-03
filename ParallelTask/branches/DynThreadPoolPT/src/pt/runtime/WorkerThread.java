@@ -19,15 +19,71 @@
 
 package pt.runtime;
 
-
 public class WorkerThread extends TaskThread {
 	
-	public WorkerThread(int id, Taskpool taskpool) {
-		super(taskpool);
+	/**
+	 * 
+	 * @Author Kingsley
+	 * @since 25/04/2013
+	 * 
+	 * When creating a new worker, indicate it is dedicated for multi task or dedicated for one-off task
+	 * 
+	 * @since 16/05/2013
+	 * Add a variable to check if the worker thread should go out of the loop.
+	 * 
+	 * @since 23/05/2013
+	 * Add a variable to indicate if the worker thread is waiting for tasks completion
+	 * 
+	 * @since 24/05/2013
+	 * Create a static variable used to tell if some threads need to be cancelled or not.
+	 * 
+	 * @since 25/05/2013
+	 * Change "isKilled" to "isPoisoned"
+	 * Think it is un-necessary to distinguish nested and non-nested situation. Cancel "isWaiting".
+	 * 
+	 * */
+	private boolean isMultiTaskWorker;
+	
+	//private boolean isKilled = false;
+	private boolean isPoisoned = false;
+	
+	//private boolean isWaiting = false;
+	
+	private boolean isCancelRequired = false; 
+	
+	public WorkerThread(int globalID, int localID, Taskpool taskpool, boolean isMultiTaskWorker) {
+		super(taskpool, isMultiTaskWorker);
 		
 		// this ensures that WorkerThread IDs start from 0
-		if (threadID != id)
+		
+		/**
+		 * 
+		 * @Author : Kingsley
+		 * @since : 26/04/2013
+		 * 
+		 * Still remain the threadID check.
+		 * 
+		 * Thread id check has to be separated.
+		 * 
+		 * @since : 02/05/2013
+		 * One-off task threads do not need local thread ID.
+		 * 
+		 * */
+		
+		if (threadID != globalID)
 			throw new IllegalArgumentException("WorkerID does not match - should create WorkerThreads first");
+	
+		
+		if (isMultiTaskWorker) {
+			if (threadLocalID != localID)
+				throw new IllegalArgumentException("WorkerID does not match - should create WorkerThreads first");
+		}/*else {
+			if (oneoffTaskThreadID != localID)
+				throw new IllegalArgumentException("WorkerID does not match - should create WorkerThreads first");
+			
+		}*/
+
+		this.isMultiTaskWorker = isMultiTaskWorker;
 	}
 	
 	/** 
@@ -36,10 +92,22 @@ public class WorkerThread extends TaskThread {
 	 * 
 	 * returns true if it did execute another task.. otherwise false if it ended up sleeping instead
 	 * 
+	 * 
+	 * @author Kingsley
+	 * @since 23/05/2013
+	 * If worker thread find a poison pill from within this "executeAnotherTaskOrSleep()" method, which means
+	 * it is waiting for some other tasks finish first. 
+	 * Set "isWaiting" to true, in order to examine this variable inside of the poison pill.
+	 * 
+	 * @since 25/05/2013
+	 * Think it is un-necessary to distinguish nested and non-nested situation. Cancel "isWaiting".
 	 */
 	public boolean executeAnotherTaskOrSleep() {
+
 		TaskID task = taskpool.workerPollNextTask();
 		if (task != null) {
+			//isWaiting = true;
+			
 			executeTask(task);
 			return true;
 		} else {
@@ -52,13 +120,77 @@ public class WorkerThread extends TaskThread {
 		}
 	}
 	
+	/**
+	 * @author Kingsley
+	 * @since 23/05/2013
+	 * 
+	 * If worker thread find a poison pill from within this "run()" method, which means
+	 * it is not waiting for some other tasks finish first. 
+	 * Set "isWaiting" to false, in order to examine this variable inside of the poison pill.
+	 * 
+	 * @since 25/05/2013
+	 * Think it is un-necessary to distinguish nested and non-nested situation. Cancel "isWaiting".
+	 * */
+	
+	
 	@Override
 	public void run() {
 		while (true) {
 			TaskID task = taskpool.workerTakeNextTask();
-			
+			//System.out.println(Thread.currentThread().getId());
 			//- execute the task
+			
+			//isWaiting = false;
+			
 			boolean success = executeTask(task);
+			
+			/**
+			 * @author Kingsley
+			 * @since 16/05/2013
+			 * 
+			 * After the worker thread found a fake task, it may get a chance to go out of the loop.
+			 * 
+			 * @since 24/05/2013
+			 * If worker thread can pick up task from within this method, which means it is not 
+			 * under a nested situation.
+			 * 
+			 * And only "isCancelRequired" = true, can break the loop
+			 * 
+			 * @since 25/05/2013
+			 * If "isCancelRequired" = true, which means current thread has a chance to take a 
+			 * poison pill but, before that, it may have been poisoned.
+			 * 
+			 * @since 31/05/2013
+			 * Simplify the implementation of reducing thread number.
+			 * Do not need to access the "PoisonPillBox" to get a "pill"
+			 * Instead, using the class of "LottoBox"
+			 * 
+			 * */
+			//System.out.println("outside " + threadID + " " + isCancelRequired + " " + isPoisoned);
+
+			if (isCancelRequired) {
+				if (isPoisoned) {
+					break;
+				}else {
+					/*PoisonPill pill = PoisonPillBox.getPill();
+					if (null != pill) {
+						pill.tryKill();
+					}else {
+						//Test only branch
+						//System.out.println(threadID + " - null - ? ");
+					}*/
+					
+					LottoBox.tryLuck();
+					
+					if (/*isKilled*/ isPoisoned) {
+						break;
+					}
+				}
+			}
+			
+			
+			
+			
 			
 			//-- Note: at this point, although the task has executed, it is not considered "complete" until the slots (if any) are executed by the registered thread.
 			
@@ -75,5 +207,56 @@ public class WorkerThread extends TaskThread {
 //				System.err.flush();
 //			}
 		}
+	}
+
+	protected boolean isMultiTaskWorker() {
+		return isMultiTaskWorker;
+	}
+
+	protected void setMultiTaskWorker(boolean isMultiTaskWorker) {
+		this.isMultiTaskWorker = isMultiTaskWorker;
+	}
+
+	/*protected void setKilled(boolean isKilled) {
+		this.isKilled = isKilled;
+	}*/
+	protected void setPoisoned(boolean isPoisoned) {
+		this.isPoisoned = isPoisoned;
+	}
+
+	protected boolean isPoisoned() {
+		return isPoisoned;
+	}
+
+	/**
+	 * 
+	 * @author Kingsley
+	 * @since 25/05/2013
+	 * Think it is un-necessary to distinguish nested and non-nested situation. Cancel "isWaiting".
+	 * 
+	 * */
+	
+	/*protected boolean isWaiting() {
+		return isWaiting;
+	}*/
+
+	
+
+	/**
+	 * 
+	 * @author Kingsley
+	 * @since 24/05/2013
+	 * @param boolean cancelRequired
+	 * 
+	 * Used by thread pool to tell worker threads that some threads need to be killed.
+	 * 
+	 * 
+	 * */
+	protected void requireCancel(boolean cancelRequired){
+		this.isCancelRequired = cancelRequired;
+	}
+
+	protected boolean isCancelRequired() {
+		return isCancelRequired;
 	}
 }

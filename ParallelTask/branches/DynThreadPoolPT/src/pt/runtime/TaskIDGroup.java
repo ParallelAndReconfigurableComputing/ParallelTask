@@ -63,9 +63,24 @@ public class TaskIDGroup<E> extends TaskID<E> {
 	private CopyOnWriteArrayList<Throwable> exceptionList = new CopyOnWriteArrayList<Throwable>();
 	
 	/**
+	 * 
+	 * @author Kingsley
+	 * @since 08/05/2013
+	 * 
+	 * This is used to indicate if the multi task has been expanded or not
+	 */
+	private boolean isExpanded = false;
+	
+	/**
 	 * Construct a new group that will contain <code>groupSize</code> tasks.
 	 * @param groupSize		The number of tasks that will be added to the group
 	 */
+	
+	/**
+	 * This public constructor is actually used to group a bunch of tasks, which
+	 * may include one-off task or multi task, should not give any id to this 
+	 * group.
+	 * */
 	public TaskIDGroup(int groupSize) {
 		this.groupSize = groupSize;
 	}
@@ -92,10 +107,28 @@ public class TaskIDGroup<E> extends TaskID<E> {
 	 * Add a task to this group. 
 	 * @param id	The <code>TaskID</code> to add
 	 */
+	
+	/**
+	 * @author Kingsley
+	 * @since 10/05/2013
+	 * 
+	 * Do not set relative id here. Instead, before a TaskID is added into a group, a relative id
+	 * should be given first.
+	 * 
+	 * However if do not set relative id here, when trying to add a TaskID into a user defined
+	 * group, this TaskID become untraceable through relative id. It still can be traced through
+	 * its global id. 
+	 * 
+	 * Because of the same reason, do not set part of group here. Instead, set part of group when
+	 * a multi task is expanded just like set relative id there.
+	 * 
+	 * Maybe a good idea that only allow to call this method paratask runtime internally, which means
+	 * it is used for multi task group only but not user defined group.
+	 * */
 	public void add(TaskID<E> id) {
 		innerTasks.add(id);
-		id.setPartOfGroup(this);
-		id.setRelativeID(nextRelativeID++);
+		//id.setPartOfGroup(this);
+		//id.setRelativeID(nextRelativeID++);
 	}
 	
 	/**
@@ -245,7 +278,8 @@ public class TaskIDGroup<E> extends TaskID<E> {
 
 	@Override
 	TaskInfo getTaskInfo() {
-		throw new UnsupportedOperationException("TODO: Not implemented! Does a TaskIDGroup need to be able to use this method?");
+		return taskInfo;
+		//throw new UnsupportedOperationException("TODO: Not implemented! Does a TaskIDGroup need to be able to use this method?");
 	}
 
 	/**
@@ -304,10 +338,32 @@ public class TaskIDGroup<E> extends TaskID<E> {
 	@Override
 	public void waitTillFinished() throws ExecutionException, InterruptedException {
 		int size = innerTasks.size();
-		
-		for (int i = size-1; i >= 0; i--) {		// wait for them in reverse order (LIFO)
+		for (int i = size-1; i >= 0; i--) {// wait for them in reverse order (LIFO)
 			try {
-				innerTasks.get(i).waitTillFinished();
+				/**
+				 * 
+				 * @author Kingsley
+				 * @since 08/05/2013
+				 * 
+				 * When waiting tasks get finished, first check the type of the task.
+				 * if it is a TaskIDGroup, which means there is a multi task inside the group
+				 * (even it is still not expanded), wait until it is expanded before start 
+				 * tracing its processing status.
+				 * if it is a TaskID, which means it is a normal task, start checking if it completed
+				 * 
+				 * */
+				//innerTasks.get(i).waitTillFinished();
+				
+				TaskID taskID= innerTasks.get(i);
+				if (taskID instanceof TaskIDGroup) {
+					TaskIDGroup taskIDGroup = (TaskIDGroup) taskID;
+					while (!taskIDGroup.getExpanded()) {
+						Thread.sleep(1);
+					}
+					taskIDGroup.waitTillFinished();
+				} else {
+					taskID.waitTillFinished();
+				}
 			} catch (ExecutionException e) {
 				/* ignore the exception, all inner exceptions will be thrown below */
 			}
@@ -332,5 +388,21 @@ public class TaskIDGroup<E> extends TaskID<E> {
 			//-- this is the last thread to arrive.. reset the barrier
 			barrier.set(0);
 		}
+	}
+
+
+	/**
+	 * 
+	 * @author Kingsley
+	 * @since 08/05/2013
+	 * 
+	 * After a multi task worker thread expand a mult task, call this method to set a "true" value.
+	 */
+	protected void setExpanded(boolean isExpanded) {
+		this.isExpanded = isExpanded;
+	}
+	
+	protected boolean getExpanded(){
+		return isExpanded;
 	}
 }

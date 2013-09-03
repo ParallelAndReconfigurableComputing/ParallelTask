@@ -54,6 +54,25 @@ public class CurrentTask {
 		return ((TaskThread)t).getThreadID();
 	}
 	
+	 /**
+	  * 
+	  * @author Kingsley
+	  * @since 10/05/2013
+	  * 
+      * Returns the ParaTask thread's Local ID. This method is only applicable for ParaTask threads, and must therefore 
+      * only be called within ParaTask tasks. 
+      * @return	The ParaTask thread's Local ID.
+      * 
+      * @throws RuntimeException if not called from within a ParaTask task. 
+     */
+	public static int currentThreadLocalID() {
+		Thread t = Thread.currentThread();
+		if (!(t instanceof TaskThread)) {
+			throw new ParaTaskRuntimeException("ParaTask.currentThreadID() may only be called from within a Task");
+		}
+		return ((TaskThread)t).getThreadLocalID();
+	}
+	
 	/**
 	 * Inquire as to whether the current code being executed is inside a task. Useful in some applications where
 	 * the same code fragment might be executed both as a task and sequentially. For example: 
@@ -221,5 +240,57 @@ public class CurrentTask {
 		} else {
 			//-- no need for barrier since there are no siblings
 		}
+	}
+	
+	
+	/**
+	 * @author Kingsley
+	 * @since 21/05/2013
+	 * @return true, if current task is one-off task. Otherwise false
+	 * 
+	 * Check if current executing task is one-off task.
+	 * If current thread is one-off task thread, its current task is definitely one-off task.
+	 * 
+	 * */
+	public static boolean isOneoffTask(){
+		Thread t = Thread.currentThread();
+		if (!(t instanceof TaskThread)) {
+			throw new ParaTaskRuntimeException("ParaTask.isOneoffTask() may only be called from within a Task");
+		}
+		return ((TaskThread)t).getThreadLocalID() == -1? true : false;
+	}
+	
+	/**
+	 * @author Kingsley
+	 * @since 21/05/2013
+	 * @return true, if current task is multi task. Otherwise false
+	 * 
+	 * Check if current executing task is multi task.
+	 * If current thread is multi task thread, its current task is definitely multi task.
+	 * 
+	 * */
+	public static boolean isMultiTask(){
+		Thread t = Thread.currentThread();
+		if (!(t instanceof TaskThread)) {
+			throw new ParaTaskRuntimeException("ParaTask.isMultiTask() may only be called from within a Task");
+		}
+		return ((TaskThread)t).getThreadLocalID() != -1? true : false;
+	}
+	
+	/**
+	 * @author Kingsley
+	 * @since 21/05/2013
+	 * @return true, if current task is sub task. Otherwise false
+	 * 
+	 * Check if current executing task is sub task.
+	 * 
+	 * */
+	public static boolean isSubTask(){
+		Thread t = Thread.currentThread();
+		if (!(t instanceof TaskThread)) {
+			throw new ParaTaskRuntimeException("ParaTask.isSubTask() may only be called from within a Task");
+		}
+	
+		return ((TaskThread)t).currentExecutingTask().isSubTask();
 	}
 }

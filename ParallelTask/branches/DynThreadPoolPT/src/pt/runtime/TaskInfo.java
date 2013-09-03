@@ -52,6 +52,16 @@ public class TaskInfo {
 	
 	private boolean isInteractive = false;
 	
+	/**
+	 * 
+	 * @author Kingsley
+	 * @since 10/05/2013
+	 * 
+	 * Used to identify if it is a sub task for a multi task
+	 * 
+	 * */
+	private boolean isSubTask = false;
+
 	public boolean hasAnySlots() {
 		return hasAnySlots;
 	}
@@ -216,4 +226,19 @@ public class TaskInfo {
 		return !excHandler_registeredExceptions.isEmpty();
 	}
 
+	/**
+	 * 
+	 * @author Kingsley
+	 * @since 10/05/2013
+	 * 
+	 * Getter and Setter for isSubTask
+	 * 
+	 * */
+	protected boolean isSubTask() {
+		return isSubTask;
+	}
+
+	protected void setSubTask(boolean isSubTask) {
+		this.isSubTask = isSubTask;
+	}
 }
