@@ -19,8 +19,8 @@
 	<property name="lib.dir" location="lib" />
 	<property name="bin.dir" location="bin" />
 
-	<property name="compiler_jar" value="PTCompiler.jar"/>
-	<property name="runtim_jar" value="PTRuntime.jar"/>
+	<property name="compiler_jar" value="PTCompiler"/>
+	<property name="runtim_jar" value="PTRuntime"/>
 	
 	<!-- You MUST configure a valid path for JavaCC -->
 	<property name="javacc_home" value=""/>
