@@ -23,8 +23,8 @@
 	<property name="runtim_jar" value="PTRuntime.jar"/>
 	
 	<!-- You MUST configure a valid path for JavaCC -->
-	<property name="javacc_home" value="D:/Java/javacc-5.0"/>
-	<property name="javacc_script_dir" value="${src}/pt/compiler/parser"/>
+	<property name="javacc_home" value=""/>
+	<property name="javacc_script_dir" value="${src.dir}/pt/compiler/parser"/>
 	<property name="javacc_script" value="${javacc_script_dir}/java_1_5.jj"/>
 
 	<!-- Dependencies that cannot be fetched from central repository -->
