@@ -1,34 +1,64 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<project name="ParaTask" default="clean" basedir=".">
-	<property name="src" value="src"/>
-	<property name="dest" value="classes"/>
+<project name="ParaIterator" xmlns:ivy="antlib:org.apache.ivy.ant" default="main" basedir=".">
+
+	<!-- Version convention: [release].[add new features].[bug fixed] -->
+	<property name="version" value="1.0.0"/>
+
+	<!-- =================================
+	Properties that don't usually change from here below.
+ 		 ================================= -->
+
+	<property name="src.dir" location="src"/>
+	<property name="test.dir" location="test"/>	
+
+	<property name="target.dir" location="target"/>
+	<property name="target.classes.main.dir" location="${target.dir}/classes/main"/>
+	<property name="target.classes.test.dir" location="${target.dir}/classes/test"/>
+	<property name="target.report.dir" location="${target.dir}/report"/>
+
+	<property name="lib.dir" location="lib" />
+	<property name="bin.dir" location="bin" />
+
 	<property name="compiler_jar" value="PTCompiler.jar"/>
-	<property name="runtime_jar" value="PTRuntime.jar"/>
+	<property name="runtim_jar" value="PTRuntime.jar"/>
 	
 	<!-- You MUST configure a valid path for JavaCC -->
-	<property name="javacc_home" value="libs/javacc-5.0"/>
+	<property name="javacc_home" value=""/>
 	<property name="javacc_script_dir" value="${src}/pt/compiler/parser"/>
 	<property name="javacc_script" value="${javacc_script_dir}/java_1_5.jj"/>
 
-	<target name="init">
-		<mkdir dir="${dest}"/>
-	</target>
-	
-	<path id="project.class.path">
-    	<pathelement path="bin"/>
-  	</path>
-  	
-	<target name="compile.ptjava.files">
-	    <java classname="pt.compiler.ParaTaskParser">
-			<arg value="doc/examples"/>
-	        <classpath>
-	        	<pathelement location="bin"/>
-			</classpath>
-		</java>
+	<!-- Dependencies that cannot be fetched from central repository -->
+	<path id="build.class.path">
+		<fileset dir="${lib.dir}">
+			<include name="**/*.jar" />
+		</fileset>
+	</path>
+
+	<!-- For JUnit tests. -->
+	<path id="junit.class.path">
+		<fileset dir="${lib.dir}">
+			<include name="**/*.jar" />
+		</fileset>
+		<pathelement location="${target.classes.main.dir}" />
+		<pathelement location="${target.classes.test.dir}" />
+	</path>
+
+	<!-- =================================
+	Targets that don't usually change from here below.
+ 		 ================================= -->
+
+	<target name="clean" description="Clean up the existing build.">
+		<delete dir="${target.dir}" />
 	</target>
 
+	<target name="makedir" description="Creating the folders.">
+		<mkdir dir="${target.dir}"/>
+		<mkdir dir="${target.classes.main.dir}"/>
+		<mkdir dir="${target.classes.test.dir}"/>
+		<mkdir dir="${target.report.dir}"/>
+	</target>
 
-	<target name="re-generate Parser ?" depends="init">
+	<target name="re-generate Parser ?" depends="clean, makedir, resolve">
 		<echo message="ATTENTION !!! Before you re-generate the parser, make sure you have already installed JavaCC 5.0, and you must configure the property of 'javacc_home' a valid path for this script. We strongly recommand you do not re-generate the parser unless you really need to do."/>
 		<input message="Do you want to re-genereate the parser(y/n)?" addproperty="generate" validargs="y,n" />
 		<condition property="generateParser.yesOrNo">
@@ -36,22 +66,22 @@
 		</condition>
 	</target>
 
-	<!--
 	<target name="buildJavaCC" if="generateParser.yesOrNo" depends="re-generate Parser ?">
 		<javacc target="${javacc_script}" outputdirectory="${javacc_script_dir}" javacchome="${javacc_home}"/>
 	</target>
-	-->
 
 	<target name="notbuildJavaCC" unless="generateParser.yesOrNo" depends="buildJavaCC">
 		<echo message="Default files are used to generate the parser."/>
 	</target>
-	
-	<target name="buildJavaCC" depends="init">
-		<javacc target="${javacc_script}" outputdirectory="${javacc_script_dir}" javacchome="${javacc_home}"/>
-	</target>
 
-	<target name="compile" depends="buildJavaCC, notbuildJavaCC">
-		<javac includeantruntime="false" srcdir="${src}" destdir="${dest}"/>
+	<target name="compile" depends="buildJavaCC, notbuildJavaCC" description="Compiles the java code">
+		<javac includeantruntime="true" srcdir="${src.dir}" destdir="${target.classes.main.dir}">
+			<classpath refid="build.class.path" />
+		</javac>
+		<javac includeantruntime="false" srcdir="${test.dir}" destdir="${target.classes.test.dir}">
+			<!-- <classpath refid="build.class.path" /> -->
+			<classpath refid="junit.class.path" />
+		</javac>
 	</target>
 
 	<target name="require Android ?" depends="compile">
@@ -62,26 +92,71 @@
 	</target>
 
 	<target name="build4android" if="requireAndroid.yesOrNo" depends="require Android ?">
-		<jar jarfile="${compiler_jar}" basedir="${dest}" excludes="**/pt/queues/,**/pt/runtime/"/>
-		<jar jarfile="${runtime_jar}" basedir="${dest}" excludes="**/pt/compiler/"/>
+		<jar jarfile="${target.dir}/${compiler_jar}-${version}.jar" basedir="${target.classes.main.dir}" excludes="**/pt/queues/,**/pt/runtime/"/>
+		<jar jarfile="${target.dir}/${runtim_jar}-${version}.jar" basedir="${target.classes.main.dir}" excludes="**/pt/compiler/"/>
 	</target>
 
-	<target name="build4desktop" depends="init">
-	    <javac includeantruntime="false" srcdir="${src}" destdir="${dest}"/>
-		<jar jarfile="${compiler_jar}" basedir="${dest}" excludes="**/android/,**/pt/queues/,**/pt/runtime/"/>
-		<jar jarfile="${runtime_jar}" basedir="${dest}" excludes="**/android/,**/pt/compiler/"/>
+	<target name="build4desktop" unless="requireAndroid.yesOrNo" depends="build4android">
+		<jar jarfile="${target.dir}/${compiler_jar}-${version}.jar" basedir="${target.classes.main.dir}" excludes="**/android/,**/pt/queues/,**/pt/runtime/"/>
+		<jar jarfile="${target.dir}/${runtim_jar}-${version}.jar" basedir="${target.classes.main.dir}" excludes="**/android/,**/pt/compiler/"/>
 	</target>
 
-	<!--
-	<target name="build" depends="compile">
-		<jar jarfile="${compiler_jar}" basedir="${dest}" excludes="**/android/,**/pt/queues/,**/pt/runtime/"/>
-		<jar jarfile="${runtime_jar}" basedir="${dest}" excludes="**/android/,**/pt/compiler/"/>
+	<!-- Output is XML, could also be plain
+	<target name="test" depends="compile" description="Run the JUnit Tests.">
+		<junit printsummary="yes" fork="true" haltonfailure="yes">
+			<classpath refid="junit.class.path" />
+			<formatter type="xml" />
+			<batchtest todir="${target.report.dir}">
+				<fileset dir="${test.dir}">
+					<include name="**/*Test*.java" />
+				</fileset>
+			</batchtest>
+		</junit>
 	</target>
 	-->
-	
-	<target name="clean">
-		<delete dir="${dest}" />
-		<delete file="${compiler_jar}" />
-		<delete file="${runtime_jar}" />
+
+	<target name="main" depends="build4android, build4desktop" description="Compile and Test.">
+		<description>Main target</description>
 	</target>
+	
+
+	<!-- =================================
+	Automatically install ivy if it is not properly installed, and resolve dependencies.
+	Never touch anything below, unless you want a newer version of ivy!
+ 		 ================================= -->
+
+	<!-- target: resolve -->
+    <target name="resolve" depends="" description="retrieve dependencies with ivy">
+        <ivy:retrieve />
+    </target>
+
+    <!-- Change this version number for getting newer version of ivy -->
+	<property name="ivy.install.version" value="2.3.0" />
+    <condition property="ivy.home" value="${env.IVY_HOME}">
+      <isset property="env.IVY_HOME" />
+    </condition>
+    <property name="ivy.home" value="${user.home}/.ant" />
+    <property name="ivy.jar.dir" value="${ivy.home}/lib" />
+    <property name="ivy.jar.file" value="${ivy.jar.dir}/ivy.jar" />
+
+    <target name="download-ivy" unless="offline" description="Download ivy from the central repository.">
+
+        <mkdir dir="${ivy.jar.dir}"/>
+        <!-- download Ivy from web site so that it can be used even without any special installation -->
+        <get src="http://repo2.maven.org/maven2/org/apache/ivy/ivy/${ivy.install.version}/ivy-${ivy.install.version}.jar" 
+             dest="${ivy.jar.file}" usetimestamp="true"/>
+    </target>
+
+    <target name="install-ivy" depends="download-ivy" description="Install ivy if not properly installed.">
+		<!-- try to load ivy here from ivy home, in case the user has not already dropped
+		it into ant's lib dir (note that the latter copy will always take precedence).
+		We will not fail as long as local lib dir exists (it may be empty) and
+		ivy is in at least one of ant's lib dir or the local lib dir. -->
+        <path id="ivy.lib.path">
+            <fileset dir="${ivy.jar.dir}" includes="*.jar"/>
+
+        </path>
+        <taskdef resource="org/apache/ivy/ant/antlib.xml"
+                 uri="antlib:org.apache.ivy.ant" classpathref="ivy.lib.path"/>
+    </target>
 </project>
