@@ -13,7 +13,7 @@ public class GuiThread {
 		
 		String vmName = System.getProperty("java.vm.name");
 		if (vmName.equals("Dalvik")) {
-			proxy = GuiThreadAndroid.getInstance();
+			proxy = GuiThreadAndroidDynamic.getInstance();
 		} else {
 			proxy = GuiThreadSwing.getInstance();
 		}
