@@ -115,7 +115,10 @@ public class TaskID<E> {
 	 * Checks to see if this task if a part of a pipeline.
 	 */
 	public boolean isPipeline() {
-		return taskInfo.isPipeline();
+		if (this.taskInfo == null)
+			return false;
+		else
+			return taskInfo.isPipeline();
 	}
 	
 	/**
