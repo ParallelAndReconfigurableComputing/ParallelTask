@@ -1272,7 +1272,8 @@ public final class TaskVisitor implements VoidVisitor<Object> {
         printer.printLn(" {",n.getBeginLine());
         printer.indent();
         
-        printer.print("static{ParaTask.init();}");
+        if (this.currentClassStack.size() == 1)
+        	printer.print("static{ParaTask.init();}");
         
         //-- Note added this for ParaTask... even if no TASKS are declared in here, the normal methods might be used as slots
         //--  e.g.   TaskID id = instance.someTaskInAnotherClass() notify( slotInHere() );
