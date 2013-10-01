@@ -41,7 +41,7 @@ public class ParaTask {
 	static boolean isInitialized = false;
 
 	static Thread EDT = null;		// a reference to the EDT
-	static TaskListener listener;	// the EDT task listener
+	static AbstractTaskListener listener;	// the EDT task listener
 		
 	ParaTask(){
 		
@@ -148,13 +148,19 @@ public class ParaTask {
 			
 			//-- initialize the EDT
 			EDT = GuiThread.getEventDispatchThread();
-			listener = new TaskListener();
+			listener = new GuiEdtTaskListener();
 			
+			/*
+			listener = new SlotHandlingThreadTaskListener();
+			EDT = new SlotHandlingThread(listener);
+			EDT.setDaemon(true);
+			EDT.start();
+			*/
 			isInitialized = true;
 		}
 	}
 	
-	static TaskListener getEDTTaskListener() {
+	static AbstractTaskListener getEDTTaskListener() {
 		if (EDT == null) {
 			throw new RuntimeException("Please call ParaTask.init() early in the main method of your application!");
 		}

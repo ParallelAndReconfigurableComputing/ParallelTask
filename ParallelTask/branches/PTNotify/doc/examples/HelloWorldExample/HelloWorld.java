@@ -20,157 +20,178 @@ public class HelloWorld {//####[1]####
             m.invoke(instance, arg, interResult);//####[1]####
     }//####[1]####
 //####[3]####
-    public static void main(String[] args) {//####[3]####
-        System.out.println("(1)");//####[5]####
-        hello("Sequential");//####[7]####
-        System.out.println("(2)");//####[9]####
-        TaskID id1 = oneoff_hello();//####[11]####
-        System.out.println("(3)");//####[13]####
-        TaskIDGroup id2 = multi_hello();//####[15]####
-        System.out.println("(4)");//####[17]####
-        TaskID id3 = interactive_hello();//####[19]####
-        System.out.println("(5)");//####[21]####
-        TaskID id4 = new HelloWorld().oneoff_hello2();//####[23]####
-        System.out.println("(6)");//####[25]####
-        TaskIDGroup g = new TaskIDGroup(4);//####[27]####
-        g.add(id1);//####[28]####
-        g.add(id2);//####[29]####
-        g.add(id3);//####[30]####
-        g.add(id4);//####[31]####
-        System.out.println("** Going to wait for the tasks to execute... ");//####[32]####
-        try {//####[33]####
-            g.waitTillFinished();//####[34]####
-        } catch (ExecutionException e) {//####[35]####
-            e.printStackTrace();//####[36]####
-        } catch (InterruptedException e) {//####[37]####
-            e.printStackTrace();//####[38]####
-        }//####[39]####
-        System.out.println("** Done! All tasks have now completed.");//####[40]####
-    }//####[41]####
-//####[43]####
-    private static void hello(String name) {//####[43]####
-        System.out.println("Hello from " + name);//####[44]####
-    }//####[45]####
-//####[47]####
-    private static volatile Method __pt__oneoff_hello__method = null;//####[47]####
-    private synchronized static void __pt__oneoff_hello__ensureMethodVarSet() {//####[47]####
-        if (__pt__oneoff_hello__method == null) {//####[47]####
-            try {//####[47]####
-                __pt__oneoff_hello__method = ParaTaskHelper.getDeclaredMethod(new ParaTaskHelper.ClassGetter().getCurrentClass(), "__pt__oneoff_hello", new Class[] {//####[47]####
-                    //####[47]####
-                });//####[47]####
-            } catch (Exception e) {//####[47]####
-                e.printStackTrace();//####[47]####
-            }//####[47]####
-        }//####[47]####
+    private void notifyFunc() {//####[3]####
+        System.out.println("in notifyFunc");//####[4]####
+    }//####[5]####
+//####[7]####
+    public static void main(String[] args) {//####[7]####
+        System.out.println("(1)");//####[9]####
+        hello("Sequential");//####[11]####
+        System.out.println("(2)");//####[13]####
+        TaskID id1 = oneoff_hello();//####[15]####
+        System.out.println("(3)");//####[17]####
+        HelloWorld hw = new HelloWorld();//####[19]####
+        TaskInfo __pt__id2 = new TaskInfo();//####[21]####
+//####[21]####
+        boolean isEDT = GuiThread.isEventDispatchThread();//####[21]####
+//####[21]####
+//####[21]####
+        /*  -- ParaTask notify clause for 'id2' -- *///####[21]####
+        try {//####[21]####
+            Method __pt__id2_slot_0 = null;//####[21]####
+            __pt__id2_slot_0 = ParaTaskHelper.getDeclaredMethod(hw.getClass(), "notifyFunc", new Class[] {});//####[21]####
+            if (false) hw.notifyFunc(); //-- ParaTask uses this dummy statement to ensure the slot exists (otherwise Java compiler will complain)//####[21]####
+            __pt__id2.addSlotToNotify(new Slot(__pt__id2_slot_0, hw, false));//####[21]####
+//####[21]####
+        } catch(Exception __pt__e) { //####[21]####
+            System.err.println("Problem registering method in clause:");//####[21]####
+            __pt__e.printStackTrace();//####[21]####
+        }//####[21]####
+        TaskIDGroup id2 = multi_hello(__pt__id2);//####[21]####
+        System.out.println("(4)");//####[23]####
+        TaskID id3 = interactive_hello();//####[25]####
+        System.out.println("(5)");//####[27]####
+        TaskID id4 = new HelloWorld().oneoff_hello2();//####[29]####
+        System.out.println("(6)");//####[31]####
+        TaskIDGroup g = new TaskIDGroup(4);//####[33]####
+        g.add(id1);//####[34]####
+        g.add(id2);//####[35]####
+        g.add(id3);//####[36]####
+        g.add(id4);//####[37]####
+        System.out.println("** Going to wait for the tasks to execute... ");//####[38]####
+        try {//####[39]####
+            g.waitTillFinished();//####[40]####
+        } catch (ExecutionException e) {//####[41]####
+            e.printStackTrace();//####[42]####
+        } catch (InterruptedException e) {//####[43]####
+            e.printStackTrace();//####[44]####
+        }//####[45]####
+        System.out.println("** Done! All tasks have now completed.");//####[46]####
     }//####[47]####
-    private static TaskID<Void> oneoff_hello() {//####[47]####
-        //-- execute asynchronously by enqueuing onto the taskpool//####[47]####
-        return oneoff_hello(new TaskInfo());//####[47]####
-    }//####[47]####
-    private static TaskID<Void> oneoff_hello(TaskInfo taskinfo) {//####[47]####
-        // ensure Method variable is set//####[47]####
-        if (__pt__oneoff_hello__method == null) {//####[47]####
-            __pt__oneoff_hello__ensureMethodVarSet();//####[47]####
-        }//####[47]####
-        taskinfo.setParameters();//####[47]####
-        taskinfo.setMethod(__pt__oneoff_hello__method);//####[47]####
-        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[47]####
-    }//####[47]####
-    public static void __pt__oneoff_hello() {//####[47]####
-        hello("One-off Task");//####[48]####
-    }//####[49]####
 //####[49]####
-//####[51]####
-    private static volatile Method __pt__oneoff_hello2__method = null;//####[51]####
-    private synchronized static void __pt__oneoff_hello2__ensureMethodVarSet() {//####[51]####
-        if (__pt__oneoff_hello2__method == null) {//####[51]####
-            try {//####[51]####
-                __pt__oneoff_hello2__method = ParaTaskHelper.getDeclaredMethod(new ParaTaskHelper.ClassGetter().getCurrentClass(), "__pt__oneoff_hello2", new Class[] {//####[51]####
-                    //####[51]####
-                });//####[51]####
-            } catch (Exception e) {//####[51]####
-                e.printStackTrace();//####[51]####
-            }//####[51]####
-        }//####[51]####
+    private static void hello(String name) {//####[49]####
+        System.out.println("Hello from " + name);//####[50]####
     }//####[51]####
-    private TaskID<Void> oneoff_hello2() {//####[51]####
-        //-- execute asynchronously by enqueuing onto the taskpool//####[51]####
-        return oneoff_hello2(new TaskInfo());//####[51]####
-    }//####[51]####
-    private TaskID<Void> oneoff_hello2(TaskInfo taskinfo) {//####[51]####
-        // ensure Method variable is set//####[51]####
-        if (__pt__oneoff_hello2__method == null) {//####[51]####
-            __pt__oneoff_hello2__ensureMethodVarSet();//####[51]####
-        }//####[51]####
-        taskinfo.setParameters();//####[51]####
-        taskinfo.setMethod(__pt__oneoff_hello2__method);//####[51]####
-        taskinfo.setInstance(this);//####[51]####
-        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[51]####
-    }//####[51]####
-    public void __pt__oneoff_hello2() {//####[51]####
-        System.out.println("Hello from oneoff_hello2");//####[52]####
-    }//####[53]####
 //####[53]####
+    private static volatile Method __pt__oneoff_hello__method = null;//####[53]####
+    private synchronized static void __pt__oneoff_hello__ensureMethodVarSet() {//####[53]####
+        if (__pt__oneoff_hello__method == null) {//####[53]####
+            try {//####[53]####
+                __pt__oneoff_hello__method = ParaTaskHelper.getDeclaredMethod(new ParaTaskHelper.ClassGetter().getCurrentClass(), "__pt__oneoff_hello", new Class[] {//####[53]####
+                    //####[53]####
+                });//####[53]####
+            } catch (Exception e) {//####[53]####
+                e.printStackTrace();//####[53]####
+            }//####[53]####
+        }//####[53]####
+    }//####[53]####
+    private static TaskID<Void> oneoff_hello() {//####[53]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[53]####
+        return oneoff_hello(new TaskInfo());//####[53]####
+    }//####[53]####
+    private static TaskID<Void> oneoff_hello(TaskInfo taskinfo) {//####[53]####
+        // ensure Method variable is set//####[53]####
+        if (__pt__oneoff_hello__method == null) {//####[53]####
+            __pt__oneoff_hello__ensureMethodVarSet();//####[53]####
+        }//####[53]####
+        taskinfo.setParameters();//####[53]####
+        taskinfo.setMethod(__pt__oneoff_hello__method);//####[53]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[53]####
+    }//####[53]####
+    public static void __pt__oneoff_hello() {//####[53]####
+        hello("One-off Task");//####[54]####
+    }//####[55]####
 //####[55]####
-    private static volatile Method __pt__multi_hello__method = null;//####[55]####
-    private synchronized static void __pt__multi_hello__ensureMethodVarSet() {//####[55]####
-        if (__pt__multi_hello__method == null) {//####[55]####
-            try {//####[55]####
-                __pt__multi_hello__method = ParaTaskHelper.getDeclaredMethod(new ParaTaskHelper.ClassGetter().getCurrentClass(), "__pt__multi_hello", new Class[] {//####[55]####
-                    //####[55]####
-                });//####[55]####
-            } catch (Exception e) {//####[55]####
-                e.printStackTrace();//####[55]####
-            }//####[55]####
-        }//####[55]####
-    }//####[55]####
-    private static TaskIDGroup<Void> multi_hello() {//####[55]####
-        //-- execute asynchronously by enqueuing onto the taskpool//####[55]####
-        return multi_hello(new TaskInfo());//####[55]####
-    }//####[55]####
-    private static TaskIDGroup<Void> multi_hello(TaskInfo taskinfo) {//####[55]####
-        // ensure Method variable is set//####[55]####
-        if (__pt__multi_hello__method == null) {//####[55]####
-            __pt__multi_hello__ensureMethodVarSet();//####[55]####
-        }//####[55]####
-        taskinfo.setParameters();//####[55]####
-        taskinfo.setMethod(__pt__multi_hello__method);//####[55]####
-        return TaskpoolFactory.getTaskpool().enqueueMulti(taskinfo, 8);//####[55]####
-    }//####[55]####
-    public static void __pt__multi_hello() {//####[55]####
-        hello("Multi-Task [subtask " + CurrentTask.relativeID() + "]  [thread " + CurrentTask.currentThreadID() + "]  [globalID " + CurrentTask.globalID() + "]  [mulTaskSize " + CurrentTask.multiTaskSize() + "]  [TaskID " + CurrentTask.currentTaskID() + "]  [ISinside? " + CurrentTask.insideTask() + "]  [progress " + CurrentTask.getProgress() + "]");//####[56]####
-    }//####[57]####
 //####[57]####
+    private static volatile Method __pt__oneoff_hello2__method = null;//####[57]####
+    private synchronized static void __pt__oneoff_hello2__ensureMethodVarSet() {//####[57]####
+        if (__pt__oneoff_hello2__method == null) {//####[57]####
+            try {//####[57]####
+                __pt__oneoff_hello2__method = ParaTaskHelper.getDeclaredMethod(new ParaTaskHelper.ClassGetter().getCurrentClass(), "__pt__oneoff_hello2", new Class[] {//####[57]####
+                    //####[57]####
+                });//####[57]####
+            } catch (Exception e) {//####[57]####
+                e.printStackTrace();//####[57]####
+            }//####[57]####
+        }//####[57]####
+    }//####[57]####
+    private TaskID<Void> oneoff_hello2() {//####[57]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[57]####
+        return oneoff_hello2(new TaskInfo());//####[57]####
+    }//####[57]####
+    private TaskID<Void> oneoff_hello2(TaskInfo taskinfo) {//####[57]####
+        // ensure Method variable is set//####[57]####
+        if (__pt__oneoff_hello2__method == null) {//####[57]####
+            __pt__oneoff_hello2__ensureMethodVarSet();//####[57]####
+        }//####[57]####
+        taskinfo.setParameters();//####[57]####
+        taskinfo.setMethod(__pt__oneoff_hello2__method);//####[57]####
+        taskinfo.setInstance(this);//####[57]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[57]####
+    }//####[57]####
+    public void __pt__oneoff_hello2() {//####[57]####
+        System.out.println("Hello from oneoff_hello2");//####[58]####
+    }//####[59]####
 //####[59]####
-    private static volatile Method __pt__interactive_hello__method = null;//####[59]####
-    private synchronized static void __pt__interactive_hello__ensureMethodVarSet() {//####[59]####
-        if (__pt__interactive_hello__method == null) {//####[59]####
-            try {//####[59]####
-                __pt__interactive_hello__method = ParaTaskHelper.getDeclaredMethod(new ParaTaskHelper.ClassGetter().getCurrentClass(), "__pt__interactive_hello", new Class[] {//####[59]####
-                    //####[59]####
-                });//####[59]####
-            } catch (Exception e) {//####[59]####
-                e.printStackTrace();//####[59]####
-            }//####[59]####
-        }//####[59]####
-    }//####[59]####
-    public static TaskID<Void> interactive_hello() {//####[59]####
-        //-- execute asynchronously by enqueuing onto the taskpool//####[59]####
-        return interactive_hello(new TaskInfo());//####[59]####
-    }//####[59]####
-    public static TaskID<Void> interactive_hello(TaskInfo taskinfo) {//####[59]####
-        // ensure Method variable is set//####[59]####
-        if (__pt__interactive_hello__method == null) {//####[59]####
-            __pt__interactive_hello__ensureMethodVarSet();//####[59]####
-        }//####[59]####
-        taskinfo.setParameters();//####[59]####
-        taskinfo.setMethod(__pt__interactive_hello__method);//####[59]####
-        taskinfo.setInteractive(true);//####[59]####
-        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[59]####
-    }//####[59]####
-    public static void __pt__interactive_hello() {//####[59]####
-        hello("Interactive Task");//####[60]####
-    }//####[61]####
 //####[61]####
-}//####[61]####
+    private static volatile Method __pt__multi_hello__method = null;//####[61]####
+    private synchronized static void __pt__multi_hello__ensureMethodVarSet() {//####[61]####
+        if (__pt__multi_hello__method == null) {//####[61]####
+            try {//####[61]####
+                __pt__multi_hello__method = ParaTaskHelper.getDeclaredMethod(new ParaTaskHelper.ClassGetter().getCurrentClass(), "__pt__multi_hello", new Class[] {//####[61]####
+                    //####[61]####
+                });//####[61]####
+            } catch (Exception e) {//####[61]####
+                e.printStackTrace();//####[61]####
+            }//####[61]####
+        }//####[61]####
+    }//####[61]####
+    private static TaskIDGroup<Void> multi_hello() {//####[61]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[61]####
+        return multi_hello(new TaskInfo());//####[61]####
+    }//####[61]####
+    private static TaskIDGroup<Void> multi_hello(TaskInfo taskinfo) {//####[61]####
+        // ensure Method variable is set//####[61]####
+        if (__pt__multi_hello__method == null) {//####[61]####
+            __pt__multi_hello__ensureMethodVarSet();//####[61]####
+        }//####[61]####
+        taskinfo.setParameters();//####[61]####
+        taskinfo.setMethod(__pt__multi_hello__method);//####[61]####
+        return TaskpoolFactory.getTaskpool().enqueueMulti(taskinfo, 8);//####[61]####
+    }//####[61]####
+    public static void __pt__multi_hello() {//####[61]####
+        hello("Multi-Task [subtask " + CurrentTask.relativeID() + "]  [thread " + CurrentTask.currentThreadID() + "]  [globalID " + CurrentTask.globalID() + "]  [mulTaskSize " + CurrentTask.multiTaskSize() + "]  [TaskID " + CurrentTask.currentTaskID() + "]  [ISinside? " + CurrentTask.insideTask() + "]  [progress " + CurrentTask.getProgress() + "]");//####[62]####
+    }//####[63]####
+//####[63]####
+//####[65]####
+    private static volatile Method __pt__interactive_hello__method = null;//####[65]####
+    private synchronized static void __pt__interactive_hello__ensureMethodVarSet() {//####[65]####
+        if (__pt__interactive_hello__method == null) {//####[65]####
+            try {//####[65]####
+                __pt__interactive_hello__method = ParaTaskHelper.getDeclaredMethod(new ParaTaskHelper.ClassGetter().getCurrentClass(), "__pt__interactive_hello", new Class[] {//####[65]####
+                    //####[65]####
+                });//####[65]####
+            } catch (Exception e) {//####[65]####
+                e.printStackTrace();//####[65]####
+            }//####[65]####
+        }//####[65]####
+    }//####[65]####
+    public static TaskID<Void> interactive_hello() {//####[65]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[65]####
+        return interactive_hello(new TaskInfo());//####[65]####
+    }//####[65]####
+    public static TaskID<Void> interactive_hello(TaskInfo taskinfo) {//####[65]####
+        // ensure Method variable is set//####[65]####
+        if (__pt__interactive_hello__method == null) {//####[65]####
+            __pt__interactive_hello__ensureMethodVarSet();//####[65]####
+        }//####[65]####
+        taskinfo.setParameters();//####[65]####
+        taskinfo.setMethod(__pt__interactive_hello__method);//####[65]####
+        taskinfo.setInteractive(true);//####[65]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[65]####
+    }//####[65]####
+    public static void __pt__interactive_hello() {//####[65]####
+        hello("Interactive Task");//####[66]####
+    }//####[67]####
+//####[67]####
+}//####[67]####

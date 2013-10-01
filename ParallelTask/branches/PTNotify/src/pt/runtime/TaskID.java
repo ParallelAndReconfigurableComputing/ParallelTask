@@ -663,7 +663,7 @@ public class TaskID<E> {
 	
 	void callTaskListener(Slot slot) {
 //		System.out.println("want to execute slot: "+slot.getMethod().getName());
-		ParaTask.getEDTTaskListener().executeSlots(slot);
+		ParaTask.getEDTTaskListener().executeSlot(slot);
 //		System.out.println("executed slot: "+slot.getMethod().getName());
 	}
 	
