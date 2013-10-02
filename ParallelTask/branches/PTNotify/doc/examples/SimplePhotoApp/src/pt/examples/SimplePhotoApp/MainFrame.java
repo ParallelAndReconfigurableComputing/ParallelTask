@@ -16,6 +16,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -28,8 +29,8 @@ public class MainFrame extends JFrame {
 
 	public static final String applicationName = "ParaImage";
 	public static final String applicationVersion = "0.9";
-	public static final String appIcon = Utils.getImageDir() + "logo.png";
-	public static final String appLogo = Utils.getImageDir() + "logo_name.png";
+	public static final String appIcon = "logo.png";
+	public static final String appLogo = "logo_name.png";
 	
 	public static int timeWasterSize =  150;// 120;
 	
@@ -55,11 +56,8 @@ public class MainFrame extends JFrame {
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		setSize(width, height);
 		
-		try {
-			frameIcon = ImageIO.read(new File(appIcon));
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		}
+		
+		frameIcon = Utils.getImg(appIcon);
 
 		setIconImage(frameIcon);
 		
@@ -86,7 +84,7 @@ public class MainFrame extends JFrame {
 			}
 		});
 		
-	    iconSave = new ImageIcon(Utils.getImageDir() + "save_16.png");
+	    iconSave = new ImageIcon(Utils.getImg("save_16.png"));
 		addMenus();
 		getContentPane().add(pane, BorderLayout.CENTER);
 		setResizable(false);
@@ -107,7 +105,7 @@ public class MainFrame extends JFrame {
 			message+="Sample application developed with ParaTask.<p>";
 			message+="Visit <u><i>http://www.ece.auckland.ac.nz/~sinnen</i></u> for more information";
 			JLabel label = new JLabel(message);
-			JOptionPane.showMessageDialog(MainFrame.this, label, "About "+applicationName, JOptionPane.PLAIN_MESSAGE, new ImageIcon(appLogo)); 
+			JOptionPane.showMessageDialog(MainFrame.this, label, "About "+applicationName, JOptionPane.PLAIN_MESSAGE, new ImageIcon(Utils.getImg(appLogo))); 
 		}
 	};
 	
@@ -116,7 +114,7 @@ public class MainFrame extends JFrame {
 		message+="Check back in a future release!<p><p>";
 		JLabel label = new JLabel(message);
 		label.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-		JOptionPane.showMessageDialog(MainFrame.this, label, "Future release", JOptionPane.PLAIN_MESSAGE, new ImageIcon(Utils.getImageDir() + "tools.png"));
+		JOptionPane.showMessageDialog(MainFrame.this, label, "Future release", JOptionPane.PLAIN_MESSAGE, new ImageIcon(Utils.getImg("tools.png")));
 	}
 	
 	private Action actionFutureWork = new AbstractAction() {

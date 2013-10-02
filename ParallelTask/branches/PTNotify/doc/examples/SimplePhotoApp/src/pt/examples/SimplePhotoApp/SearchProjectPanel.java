@@ -65,17 +65,17 @@ public class SearchProjectPanel extends ProjectPanel implements ActionListener {
 //####[48]####
     private JTextField txtSearch = new JTextField("", 18);//####[48]####
 //####[49]####
-    private JButton btnSearch = new JButton(new ImageIcon(Utils.getImageDir() + "search.png"));//####[49]####
+    private JButton btnSearch = new JButton(new ImageIcon(Utils.getImg("search.png")));//####[49]####
 //####[50]####
-    private JButton btnStop = new JButton(new ImageIcon(Utils.getImageDir() + "stop.png"));//####[50]####
+    private JButton btnStop = new JButton(new ImageIcon(Utils.getImg("stop.png")));//####[50]####
 //####[51]####
     private JSpinner spnResultsPerPage;//####[51]####
 //####[52]####
     private JLabel lblResPP = new JLabel("#pics");//####[52]####
 //####[54]####
-    private JButton btnNext = new JButton(new ImageIcon(Utils.getImageDir() + "right.png"));//####[54]####
+    private JButton btnNext = new JButton(new ImageIcon(Utils.getImg("right.png")));//####[54]####
 //####[55]####
-    private JButton btnPrev = new JButton(new ImageIcon(Utils.getImageDir() + "left.png"));//####[55]####
+    private JButton btnPrev = new JButton(new ImageIcon(Utils.getImg("left.png")));//####[55]####
 //####[56]####
     private JTextField txtCurrentPage = new JTextField("-", 7);//####[56]####
 //####[58]####

@@ -2,12 +2,16 @@
 <project name="ParaTask" xmlns:ivy="antlib:org.apache.ivy.ant" default="main" basedir=".">
 
 	<property name="src.dir" location="src"/>
-	<property name="test.dir" location="test"/>	
+	<property name="test.dir" location="test"/>
+
+	<property name="simplephotoapp.dir" location="doc/examples/SimplePhotoApp"/>	
+	<property name="simplephotoapp.src.dir" location="${simplephotoapp.dir}/src"/>
 
 	<property name="dist.dir" location="release"/>
 	<property name="classes.dir" location="${dist.dir}/classes"/>
 	<property name="classes.main.dir" location="${classes.dir}/main"/>
 	<property name="classes.test.dir" location="${classes.dir}/test"/>
+	<property name="classes.simplephotoapp.dir" location="${classes.dir}/simplephotoapp"/>
 	<property name="test.report.dir" location="${dist.dir}/report"/>
 
 	<property name="lib.dir" location="libs" />
@@ -54,6 +58,7 @@
 		<mkdir dir="${classes.dir}"/>
 		<mkdir dir="${classes.main.dir}"/>
 		<mkdir dir="${classes.test.dir}"/>
+		<mkdir dir="${classes.simplephotoapp.dir}"/>
 		<mkdir dir="${test.report.dir}"/>
 	</target>
 
@@ -70,7 +75,32 @@
 			<classpath refid="junit.class.path" />
 		</javac>
 	</target>
+	
+	<path id="build.simplephotoapp.class.path">
+		<pathelement location="${classes.main.dir}" />
+		<fileset dir="${simplephotoapp.dir}">
+			<include name="**/*.jar" />
+		</fileset>
+	</path>	
+	
+	<target name="compile.simplephotoapp" depends="compile" description="Compiles the java codes of simplephotoapp">
+		<javac includeantruntime="true" srcdir="${simplephotoapp.src.dir}" destdir="${classes.simplephotoapp.dir}">
+			<classpath refid="build.class.path" />
+			<classpath refid="build.simplephotoapp.class.path" />
+		</javac>
 
+		<copy todir="${classes.simplephotoapp.dir}/pt/examples/SimplePhotoApp/images">
+		    <fileset dir="${simplephotoapp.src.dir}/pt/examples/SimplePhotoApp/images">
+		      <include name="**/*.png"/>
+		      <include name="**/*.jpg"/>
+		    </fileset>
+		</copy>
+	</target>
+
+	<target name="dist.simplephotoapp" depends="compile.simplephotoapp">
+		<jar jarfile="${dist.dir}/SimplePhotoApp.jar" basedir="${classes.simplephotoapp.dir}" />
+	</target>
+	
 	<target name="dist" depends="compile">
 		<jar jarfile="${dist.dir}/${compiler_jar}" basedir="${classes.main.dir}" excludes="**/pt/queues/,**/pt/runtime/"/>
 		<jar jarfile="${dist.dir}/${runtime_jar}" basedir="${classes.main.dir}" excludes="**/pt/compiler/"/>

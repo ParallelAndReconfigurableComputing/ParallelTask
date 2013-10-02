@@ -684,26 +684,26 @@ public class ImageProjectPanel extends ProjectPanel {//####[34]####
     private JButton makeButton(String icon, Action action, String tooltip) {//####[436]####
         JButton btn = new JButton(action);//####[437]####
         btn.setToolTipText(tooltip);//####[438]####
-        btn.setIcon(new ImageIcon(icon));//####[439]####
+        btn.setIcon(new ImageIcon(Utils.getImg(icon)));//####[439]####
         btn.setPreferredSize(new Dimension(buttonSize, buttonSize));//####[440]####
         return btn;//####[441]####
     }//####[442]####
 //####[444]####
     private void addToolButtonsPanel() {//####[444]####
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER));//####[445]####
-        panel.add(makeButton(Utils.getImageDir() + "add.png", actionAddImage, "Add more image(s) to the project"));//####[447]####
-        panel.add(makeButton(Utils.getImageDir() + "saveimage.png", actionSaveSelected, "Apply changes to the selected image(s)"));//####[448]####
-        panel.add(makeButton(Utils.getImageDir() + "undo.png", actionUndo, "Undo changes to the selected image(s)"));//####[449]####
-        panel.add(makeButton(Utils.getImageDir() + "remove.png", actionRemoveImage, "Remove selected image(s) from view"));//####[450]####
-        panel.add(makeButton(Utils.getImageDir() + "gradient.png", actionApplyEdge, "Edge detect on the selected image(s)"));//####[451]####
-        panel.add(makeButton(Utils.getImageDir() + "video.png", actionInvert, "Invert colors on the selected image(s)"));//####[452]####
-        panel.add(makeButton(Utils.getImageDir() + "blur.png", actionBlur, "Blur the selected image(s)"));//####[453]####
-        panel.add(makeButton(Utils.getImageDir() + "sharpen.png", actionSharpen, "Sharpen the selected image(s)"));//####[454]####
-        panel.add(makeButton(Utils.getImageDir() + "canvas.png", actionBuildMosaic, "Build a mosaic of the selected image(s)"));//####[455]####
-        panel.add(makeButton(Utils.getImageDir() + "artwork.png", actionBuildImageMosaic, "Build an image mosaic of the selected image(s)"));//####[456]####
-        panel.add(makeButton(Utils.getImageDir() + "palette.png", actionBuildPalette, "Build the palette to be used to make image mosaics"));//####[457]####
-        panel.add(makeButton(Utils.getImageDir() + "clearPalette.png", actionClearPalette, "Clear the palette of images"));//####[458]####
-        panel.add(makeButton(Utils.getImageDir() + "settings.png", actionMosaicSettings, "Modify attributes related to building mosaics"));//####[459]####
+        panel.add(makeButton("add.png", actionAddImage, "Add more image(s) to the project"));//####[447]####
+        panel.add(makeButton("saveimage.png", actionSaveSelected, "Apply changes to the selected image(s)"));//####[448]####
+        panel.add(makeButton("undo.png", actionUndo, "Undo changes to the selected image(s)"));//####[449]####
+        panel.add(makeButton("remove.png", actionRemoveImage, "Remove selected image(s) from view"));//####[450]####
+        panel.add(makeButton("gradient.png", actionApplyEdge, "Edge detect on the selected image(s)"));//####[451]####
+        panel.add(makeButton("video.png", actionInvert, "Invert colors on the selected image(s)"));//####[452]####
+        panel.add(makeButton("blur.png", actionBlur, "Blur the selected image(s)"));//####[453]####
+        panel.add(makeButton("sharpen.png", actionSharpen, "Sharpen the selected image(s)"));//####[454]####
+        panel.add(makeButton("canvas.png", actionBuildMosaic, "Build a mosaic of the selected image(s)"));//####[455]####
+        panel.add(makeButton("artwork.png", actionBuildImageMosaic, "Build an image mosaic of the selected image(s)"));//####[456]####
+        panel.add(makeButton("palette.png", actionBuildPalette, "Build the palette to be used to make image mosaics"));//####[457]####
+        panel.add(makeButton("clearPalette.png", actionClearPalette, "Clear the palette of images"));//####[458]####
+        panel.add(makeButton("settings.png", actionMosaicSettings, "Modify attributes related to building mosaics"));//####[459]####
         JPanel grp = new JPanel(new GridLayout(3, 1));//####[461]####
         grp.add(new JLabel("Select..", JLabel.CENTER));//####[462]####
         JButton btnAll = new JButton(actionSelectAll);//####[463]####

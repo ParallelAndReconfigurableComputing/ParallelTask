@@ -620,21 +620,21 @@ public class ImageProjectPanel extends ProjectPanel {//####[27]####
     private JButton makeButton(String icon, Action action, String tooltip) {//####[411]####
         JButton btn = new JButton(action);//####[412]####
         btn.setToolTipText(tooltip);//####[413]####
-        btn.setIcon(new ImageIcon(icon));//####[414]####
+        btn.setIcon(new ImageIcon(Utils.getImg(icon)));//####[414]####
         btn.setPreferredSize(new Dimension(buttonSize, buttonSize));//####[415]####
         return btn;//####[416]####
     }//####[417]####
 //####[419]####
     private void addToolButtonsPanel() {//####[419]####
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER));//####[420]####
-        panel.add(makeButton(Utils.getImageDir() + "add.png", actionAddImage, "Add more image(s) to the project"));//####[422]####
-        panel.add(makeButton(Utils.getImageDir() + "saveimage.png", actionSaveSelected, "Apply changes to the selected image(s)"));//####[423]####
-        panel.add(makeButton(Utils.getImageDir() + "undo.png", actionUndo, "Undo changes to the selected image(s)"));//####[424]####
-        panel.add(makeButton(Utils.getImageDir() + "remove.png", actionRemoveImage, "Remove selected image(s) from view"));//####[425]####
-        panel.add(makeButton(Utils.getImageDir() + "gradient.png", actionApplyEdge, "Edge detect on the selected image(s)"));//####[426]####
-        panel.add(makeButton(Utils.getImageDir() + "video.png", actionInvert, "Invert colors on the selected image(s)"));//####[427]####
-        panel.add(makeButton(Utils.getImageDir() + "blur.png", actionBlur, "Blur the selected image(s)"));//####[428]####
-        panel.add(makeButton(Utils.getImageDir() + "sharpen.png", actionSharpen, "Sharpen the selected image(s)"));//####[429]####
+        panel.add(makeButton("add.png", actionAddImage, "Add more image(s) to the project"));//####[422]####
+        panel.add(makeButton("saveimage.png", actionSaveSelected, "Apply changes to the selected image(s)"));//####[423]####
+        panel.add(makeButton("undo.png", actionUndo, "Undo changes to the selected image(s)"));//####[424]####
+        panel.add(makeButton("remove.png", actionRemoveImage, "Remove selected image(s) from view"));//####[425]####
+        panel.add(makeButton("gradient.png", actionApplyEdge, "Edge detect on the selected image(s)"));//####[426]####
+        panel.add(makeButton("video.png", actionInvert, "Invert colors on the selected image(s)"));//####[427]####
+        panel.add(makeButton("blur.png", actionBlur, "Blur the selected image(s)"));//####[428]####
+        panel.add(makeButton("sharpen.png", actionSharpen, "Sharpen the selected image(s)"));//####[429]####
         JPanel grp = new JPanel(new GridLayout(3, 1));//####[431]####
         grp.add(new JLabel("Select..", JLabel.CENTER));//####[432]####
         JButton btnAll = new JButton(actionSelectAll);//####[433]####

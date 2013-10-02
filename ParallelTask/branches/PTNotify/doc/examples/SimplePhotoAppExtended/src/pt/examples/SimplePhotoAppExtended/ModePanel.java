@@ -14,9 +14,9 @@ public class ModePanel extends JPanel implements ActionListener {
 
 	private MainFrame mainFrame;
 	private JLabel lblParallelOn = new JLabel(new ImageIcon(
-			Utils.getImageDir() + "parallelOn.png"));
+			Utils.getImg("parallelOn.png")));
 	private JLabel lblSequentialOn = new JLabel(new ImageIcon(
-			Utils.getImageDir() + "parallelOff.png"));
+			Utils.getImg("parallelOff.png")));
 	private static JLabel lblText = new JLabel("");
 
 	private String switchToPar = "Switch to parallel";

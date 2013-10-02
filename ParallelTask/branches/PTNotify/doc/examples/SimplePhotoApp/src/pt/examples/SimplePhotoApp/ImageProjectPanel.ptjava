@@ -411,7 +411,7 @@ public class ImageProjectPanel extends ProjectPanel {
 	private JButton makeButton(String icon, Action action, String tooltip) {
 		JButton btn = new JButton(action);
 		btn.setToolTipText(tooltip);
-		btn.setIcon(new ImageIcon(icon));
+		btn.setIcon(new ImageIcon(Utils.getImg(icon)));
 		btn.setPreferredSize(new Dimension(buttonSize,buttonSize));
 		return btn;
 	}
@@ -419,14 +419,14 @@ public class ImageProjectPanel extends ProjectPanel {
 	private void addToolButtonsPanel() {
 		JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER));
 
-		panel.add(makeButton(Utils.getImageDir() + "add.png", actionAddImage, "Add more image(s) to the project"));
-		panel.add(makeButton(Utils.getImageDir() + "saveimage.png", actionSaveSelected, "Apply changes to the selected image(s)"));
-		panel.add(makeButton(Utils.getImageDir() + "undo.png", actionUndo, "Undo changes to the selected image(s)"));
-		panel.add(makeButton(Utils.getImageDir() + "remove.png", actionRemoveImage, "Remove selected image(s) from view"));
-		panel.add(makeButton(Utils.getImageDir() + "gradient.png", actionApplyEdge, "Edge detect on the selected image(s)"));
-		panel.add(makeButton(Utils.getImageDir() + "video.png", actionInvert, "Invert colors on the selected image(s)"));
-		panel.add(makeButton(Utils.getImageDir() + "blur.png", actionBlur, "Blur the selected image(s)"));
-		panel.add(makeButton(Utils.getImageDir() + "sharpen.png", actionSharpen, "Sharpen the selected image(s)"));
+		panel.add(makeButton("add.png", actionAddImage, "Add more image(s) to the project"));
+		panel.add(makeButton("saveimage.png", actionSaveSelected, "Apply changes to the selected image(s)"));
+		panel.add(makeButton("undo.png", actionUndo, "Undo changes to the selected image(s)"));
+		panel.add(makeButton("remove.png", actionRemoveImage, "Remove selected image(s) from view"));
+		panel.add(makeButton("gradient.png", actionApplyEdge, "Edge detect on the selected image(s)"));
+		panel.add(makeButton("video.png", actionInvert, "Invert colors on the selected image(s)"));
+		panel.add(makeButton("blur.png", actionBlur, "Blur the selected image(s)"));
+		panel.add(makeButton("sharpen.png", actionSharpen, "Sharpen the selected image(s)"));
 		
 		JPanel grp = new JPanel(new GridLayout(3,1));
 		grp.add(new JLabel("Select..",JLabel.CENTER));

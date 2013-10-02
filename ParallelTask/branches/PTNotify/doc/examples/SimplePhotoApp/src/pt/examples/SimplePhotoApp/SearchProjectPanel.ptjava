@@ -46,13 +46,13 @@ public class SearchProjectPanel extends ProjectPanel implements ActionListener {
 
 	private String tempTxt = "[enter search criteria here]";
 	private JTextField txtSearch = new JTextField("", 18);
-	private JButton btnSearch = new JButton(new ImageIcon(Utils.getImageDir() + "search.png"));
-	private JButton btnStop = new JButton(new ImageIcon(Utils.getImageDir() + "stop.png"));
+	private JButton btnSearch = new JButton(new ImageIcon(Utils.getImg("search.png")));
+	private JButton btnStop = new JButton(new ImageIcon(Utils.getImg("stop.png")));
 	private JSpinner spnResultsPerPage;
 	private JLabel lblResPP = new JLabel("#pics");
 //	private JSpinner spnPageOffset;
-	private JButton btnNext = new JButton(new ImageIcon(Utils.getImageDir() + "right.png"));
-	private JButton btnPrev = new JButton(new ImageIcon(Utils.getImageDir() + "left.png"));
+	private JButton btnNext = new JButton(new ImageIcon(Utils.getImg("right.png")));
+	private JButton btnPrev = new JButton(new ImageIcon(Utils.getImg("left.png")));
 	private JTextField txtCurrentPage = new JTextField("-",7);
 	
     private JProgressBar progressBar = new JProgressBar(0,100);
@@ -84,7 +84,7 @@ public class SearchProjectPanel extends ProjectPanel implements ActionListener {
 		txtSearch.setForeground(Color.GRAY);
 		
 		JPanel panelSearch = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
-		//panelSearch.add(new JLabel(new ImageIcon(Utils.getImageDir() + "flickr.jpg")));
+		//panelSearch.add(new JLabel(new ImageIcon(Utils.getImagePath("flickr.jpg")));
 		panelSearch.add(txtSearch);
 		
 		progressBar.setStringPainted(true);

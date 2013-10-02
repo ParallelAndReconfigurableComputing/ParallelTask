@@ -13,8 +13,8 @@ import javax.swing.JPanel;
 public class ModePanel extends JPanel implements ActionListener {
 	
 	private MainFrame mainFrame;
-	private JLabel lblParallelOn = new JLabel(new ImageIcon(Utils.getImageDir() + "parallelOn.png"));
-	private JLabel lblSequentialOn = new JLabel(new ImageIcon(Utils.getImageDir() + "parallelOff.png"));
+	private JLabel lblParallelOn = new JLabel(new ImageIcon(Utils.getImg("parallelOn.png")));
+	private JLabel lblSequentialOn = new JLabel(new ImageIcon(Utils.getImg("parallelOff.png")));
 
 	private String switchToPar = "Switch to parallel";
 	private String switchToSeq = "Switch to sequential";

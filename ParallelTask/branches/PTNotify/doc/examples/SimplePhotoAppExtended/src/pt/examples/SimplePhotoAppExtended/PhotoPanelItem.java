@@ -60,17 +60,17 @@ public class PhotoPanelItem extends JPanel implements ActionListener {//####[33]
 //####[41]####
     private String defaultName = "unnamed";//####[41]####
 //####[43]####
-    private JButton btnDownload = new JButton(new ImageIcon(Utils.getImageDir() + "download.png"));//####[43]####
+    private JButton btnDownload = new JButton(new ImageIcon(Utils.getImg("download.png")));//####[43]####
 //####[44]####
-    private JButton btnView = new JButton(new ImageIcon(Utils.getImageDir() + "openfull.png"));//####[44]####
+    private JButton btnView = new JButton(new ImageIcon(Utils.getImg("openfull.png")));//####[44]####
 //####[45]####
-    private JButton btnSave = new JButton(new ImageIcon(Utils.getImageDir() + "save2.png"));//####[45]####
+    private JButton btnSave = new JButton(new ImageIcon(Utils.getImg("save2.png")));//####[45]####
 //####[46]####
-    private JButton btnHash = new JButton(new ImageIcon(Utils.getImageDir() + "hashComp.png"));//####[46]####
+    private JButton btnHash = new JButton(new ImageIcon(Utils.getImg("hashComp.png")));//####[46]####
 //####[47]####
-    private JButton btnColor = new JButton(new ImageIcon(Utils.getImageDir() + "colorComp.png"));//####[47]####
+    private JButton btnColor = new JButton(new ImageIcon(Utils.getImg("colorComp.png")));//####[47]####
 //####[48]####
-    private JButton btnSettings = new JButton(new ImageIcon(Utils.getImageDir() + "settingsSmall.png"));//####[48]####
+    private JButton btnSettings = new JButton(new ImageIcon(Utils.getImg("settingsSmall.png")));//####[48]####
 //####[50]####
     private static int height = 100;//####[50]####
 //####[52]####

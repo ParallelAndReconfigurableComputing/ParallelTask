@@ -54,11 +54,11 @@ public class PhotoPanelItem extends JPanel implements ActionListener {//####[28]
 //####[35]####
     private String defaultName = "unnamed";//####[35]####
 //####[37]####
-    private JButton btnDownload = new JButton(new ImageIcon(Utils.getImageDir() + "download.png"));//####[37]####
+    private JButton btnDownload = new JButton(new ImageIcon(Utils.getImg("download.png")));//####[37]####
 //####[38]####
-    private JButton btnView = new JButton(new ImageIcon(Utils.getImageDir() + "openfull.png"));//####[38]####
+    private JButton btnView = new JButton(new ImageIcon(Utils.getImg("openfull.png")));//####[38]####
 //####[39]####
-    private JButton btnSave = new JButton(new ImageIcon(Utils.getImageDir() + "save2.png"));//####[39]####
+    private JButton btnSave = new JButton(new ImageIcon(Utils.getImg("save2.png")));//####[39]####
 //####[44]####
     private static int height = 100;//####[44]####
 //####[46]####

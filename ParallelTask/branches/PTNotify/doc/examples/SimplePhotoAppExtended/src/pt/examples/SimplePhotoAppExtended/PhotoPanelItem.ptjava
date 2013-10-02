@@ -40,12 +40,12 @@ public class PhotoPanelItem extends JPanel implements ActionListener {
 	
 	private String defaultName = "unnamed";
 
-	private JButton btnDownload = new JButton(new ImageIcon(Utils.getImageDir() + "download.png"));
-	private JButton btnView = new JButton(new ImageIcon(Utils.getImageDir() + "openfull.png"));
-	private JButton btnSave = new JButton(new ImageIcon(Utils.getImageDir() + "save2.png"));
-	private JButton btnHash = new JButton(new ImageIcon(Utils.getImageDir() + "hashComp.png"));
-	private JButton btnColor = new JButton(new ImageIcon(Utils.getImageDir() + "colorComp.png"));
-	private JButton btnSettings = new JButton(new ImageIcon(Utils.getImageDir() + "settingsSmall.png"));
+	private JButton btnDownload = new JButton(new ImageIcon(Utils.getImg("download.png")));
+	private JButton btnView = new JButton(new ImageIcon(Utils.getImg("openfull.png")));
+	private JButton btnSave = new JButton(new ImageIcon(Utils.getImg("save2.png")));
+	private JButton btnHash = new JButton(new ImageIcon(Utils.getImg("hashComp.png")));
+	private JButton btnColor = new JButton(new ImageIcon(Utils.getImg("colorComp.png")));
+	private JButton btnSettings = new JButton(new ImageIcon(Utils.getImg("settingsSmall.png")));
 	
 	private static int height = 100;
 	

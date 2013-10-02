@@ -199,7 +199,7 @@ public class ImagePanelItem extends JPanel implements ChangeListener {
 //		lblTitle.setBounds(50, imageSize+35, size.width, size.height);
 		
 		JButton btnOpen = new JButton(name);
-		btnOpen.setIcon(new ImageIcon(Utils.getImageDir() + "viewmag.png"));
+		btnOpen.setIcon(new ImageIcon(Utils.getImg("viewmag.png")));
 		add(btnOpen);
 		btnOpen.setToolTipText("View full size");
 		Dimension size = btnOpen.getPreferredSize();
