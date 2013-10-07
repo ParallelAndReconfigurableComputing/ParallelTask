@@ -4,14 +4,14 @@
 	<property name="src.dir" location="src"/>
 	<property name="test.dir" location="test"/>
 
-	<property name="simplephotoapp.dir" location="doc/examples/SimplePhotoApp"/>	
-	<property name="simplephotoapp.src.dir" location="${simplephotoapp.dir}/src"/>
+	<property name="paraimage.dir" location="doc/examples/ParaImage"/>	
+	<property name="paraimage.src.dir" location="${paraimage.dir}/src"/>
 
 	<property name="dist.dir" location="release"/>
 	<property name="classes.dir" location="${dist.dir}/classes"/>
 	<property name="classes.main.dir" location="${classes.dir}/main"/>
 	<property name="classes.test.dir" location="${classes.dir}/test"/>
-	<property name="classes.simplephotoapp.dir" location="${classes.dir}/simplephotoapp"/>
+	<property name="classes.paraimage.dir" location="${classes.dir}/paraimage"/>
 	<property name="test.report.dir" location="${dist.dir}/report"/>
 
 	<property name="lib.dir" location="libs" />
@@ -58,7 +58,7 @@
 		<mkdir dir="${classes.dir}"/>
 		<mkdir dir="${classes.main.dir}"/>
 		<mkdir dir="${classes.test.dir}"/>
-		<mkdir dir="${classes.simplephotoapp.dir}"/>
+		<mkdir dir="${classes.paraimage.dir}"/>
 		<mkdir dir="${test.report.dir}"/>
 	</target>
 
@@ -76,29 +76,29 @@
 		</javac>
 	</target>
 	
-	<path id="build.simplephotoapp.class.path">
+	<path id="build.paraimage.class.path">
 		<pathelement location="${classes.main.dir}" />
-		<fileset dir="${simplephotoapp.dir}">
+		<fileset dir="${paraimage.dir}">
 			<include name="**/*.jar" />
 		</fileset>
 	</path>	
 	
-	<target name="compile.simplephotoapp" depends="compile" description="Compiles the java codes of simplephotoapp">
-		<javac includeantruntime="true" srcdir="${simplephotoapp.src.dir}" destdir="${classes.simplephotoapp.dir}">
+	<target name="compile.paraimage" depends="compile" description="Compiles the java codes of paraimage">
+		<javac includeantruntime="true" srcdir="${paraimage.src.dir}" destdir="${classes.paraimage.dir}">
 			<classpath refid="build.class.path" />
-			<classpath refid="build.simplephotoapp.class.path" />
+			<classpath refid="build.paraimage.class.path" />
 		</javac>
 
-		<copy todir="${classes.simplephotoapp.dir}/pt/examples/SimplePhotoApp/images">
-		    <fileset dir="${simplephotoapp.src.dir}/pt/examples/SimplePhotoApp/images">
+		<copy todir="${classes.paraimage.dir}/pt/examples/ParaImage/images">
+		    <fileset dir="${paraimage.src.dir}/pt/examples/ParaImage/images">
 		      <include name="**/*.png"/>
 		      <include name="**/*.jpg"/>
 		    </fileset>
 		</copy>
 	</target>
 
-	<target name="dist.simplephotoapp" depends="compile.simplephotoapp">
-		<jar jarfile="${dist.dir}/SimplePhotoApp.jar" basedir="${classes.simplephotoapp.dir}" />
+	<target name="dist.paraimage" depends="compile.paraimage">
+		<jar jarfile="${dist.dir}/ParaImage.jar" basedir="${classes.paraimage.dir}" />
 	</target>
 	
 	<target name="dist" depends="compile">
