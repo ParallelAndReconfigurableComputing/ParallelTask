@@ -1,4 +1,4 @@
-package pt.examples.SimplePhotoAppExtended.flickr;
+package pt.examples.ParaImagePro.flickr;
 
 import java.awt.Image;
 import java.util.*;
@@ -9,9 +9,9 @@ import java.util.Collections;
 import org.xml.sax.SAXException;
 
 import pt.runtime.CurrentTask;
-import pt.examples.SimplePhotoAppExtended.SearchProjectPanel;
+import pt.examples.ParaImagePro.SearchProjectPanel;
 
-import pt.examples.SimplePhotoAppExtended.ImageManipulation;
+import pt.examples.ParaImagePro.ImageManipulation;
 
 import com.aetrion.flickr.Flickr;
 import com.aetrion.flickr.FlickrException;

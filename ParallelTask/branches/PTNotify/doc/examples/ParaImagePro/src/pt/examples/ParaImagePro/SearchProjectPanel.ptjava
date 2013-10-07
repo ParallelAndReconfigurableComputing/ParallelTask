@@ -1,4 +1,4 @@
-package pt.examples.SimplePhotoAppExtended;
+package pt.examples.ParaImagePro;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -17,7 +17,7 @@ import javax.swing.JOptionPane;
 import java.awt.event.KeyEvent;
 import java.util.concurrent.ExecutionException;
 import java.util.*;
-import pt.examples.SimplePhotoAppExtended.flickr.PhotoWithImage;
+import pt.examples.ParaImagePro.flickr.PhotoWithImage;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -42,7 +42,7 @@ import pt.runtime.*;
 import com.aetrion.flickr.photos.Photo;
 import com.aetrion.flickr.photos.PhotoList;
 
-import pt.examples.SimplePhotoAppExtended.flickr.Search;
+import pt.examples.ParaImagePro.flickr.Search;
 
 public class SearchProjectPanel extends ProjectPanel implements ActionListener {
 	

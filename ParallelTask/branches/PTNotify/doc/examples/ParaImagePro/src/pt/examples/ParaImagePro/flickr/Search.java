@@ -7,9 +7,8 @@ import java.util.Collection;//####[6]####
 import java.util.Collections;//####[7]####
 import org.xml.sax.SAXException;//####[9]####
 import pt.runtime.CurrentTask;//####[11]####
-import pt.examples.ParaImagePro.ImageManipulation;
-import pt.examples.ParaImagePro.SearchProjectPanel;
-
+import pt.examples.ParaImagePro.SearchProjectPanel;//####[12]####
+import pt.examples.ParaImagePro.ImageManipulation;//####[14]####
 import com.aetrion.flickr.Flickr;//####[16]####
 import com.aetrion.flickr.FlickrException;//####[17]####
 import com.aetrion.flickr.photos.Photo;//####[18]####

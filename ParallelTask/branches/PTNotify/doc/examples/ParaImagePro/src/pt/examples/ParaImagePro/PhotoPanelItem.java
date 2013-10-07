@@ -23,8 +23,7 @@ import javax.swing.JPanel;//####[23]####
 import javax.swing.UIManager;//####[24]####
 import javax.swing.WindowConstants;//####[25]####
 import pt.runtime.*;//####[27]####
-import pt.examples.ParaImagePro.flickr.Search;
-
+import pt.examples.ParaImagePro.flickr.Search;//####[29]####
 import com.aetrion.flickr.photos.Photo;//####[31]####
 //####[31]####
 //-- ParaTask related imports//####[31]####

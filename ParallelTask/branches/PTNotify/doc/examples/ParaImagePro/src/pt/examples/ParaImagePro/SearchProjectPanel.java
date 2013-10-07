@@ -17,10 +17,7 @@ import javax.swing.JOptionPane;//####[16]####
 import java.awt.event.KeyEvent;//####[17]####
 import java.util.concurrent.ExecutionException;//####[18]####
 import java.util.*;//####[19]####
-
-import pt.examples.ParaImagePro.flickr.PhotoWithImage;
-import pt.examples.ParaImagePro.flickr.Search;
-
+import pt.examples.ParaImagePro.flickr.PhotoWithImage;//####[20]####
 import javax.swing.BorderFactory;//####[22]####
 import javax.swing.BoxLayout;//####[23]####
 import javax.swing.ImageIcon;//####[24]####
@@ -41,6 +38,7 @@ import javax.swing.event.DocumentListener;//####[38]####
 import pt.runtime.*;//####[40]####
 import com.aetrion.flickr.photos.Photo;//####[42]####
 import com.aetrion.flickr.photos.PhotoList;//####[43]####
+import pt.examples.ParaImagePro.flickr.Search;//####[45]####
 //####[45]####
 //-- ParaTask related imports//####[45]####
 import pt.runtime.*;//####[45]####

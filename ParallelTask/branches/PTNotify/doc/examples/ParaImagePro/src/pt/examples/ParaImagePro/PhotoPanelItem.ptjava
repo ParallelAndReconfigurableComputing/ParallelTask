@@ -1,4 +1,4 @@
-package pt.examples.SimplePhotoAppExtended;
+package pt.examples.ParaImagePro;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -26,7 +26,7 @@ import javax.swing.WindowConstants;
 
 import pt.runtime.*;
 
-import pt.examples.SimplePhotoAppExtended.flickr.Search;
+import pt.examples.ParaImagePro.flickr.Search;
 
 import com.aetrion.flickr.photos.Photo;
 
