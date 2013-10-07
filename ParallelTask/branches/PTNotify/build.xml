@@ -39,11 +39,11 @@
 		<pathelement location="${classes.test.dir}" />
 	</path>
 
-	<target name="compile.ptjava.files.in.examples">
+	<target name="compile.ptjava.files.in.examples" depends="compile">
 	    <java classname="pt.compiler.ParaTaskParser">
 			<arg value="doc/examples"/>
 	        <classpath>
-	        	<pathelement location="bin"/>
+	        	<pathelement location="${classes.main.dir}" />
 			</classpath>
 		</java>
 	</target>
