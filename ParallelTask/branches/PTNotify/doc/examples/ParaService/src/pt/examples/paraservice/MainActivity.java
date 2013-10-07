@@ -17,13 +17,13 @@ public class MainActivity extends Activity {
 	// Start the  service
 	public void startNewService(View view) {
 		
-		startService(new Intent(this, MyService.class));
+		startService(new Intent(this, ParaService.class));
 	}
 
 	// Stop the  service
 	public void stopNewService(View view) {
 		
-		stopService(new Intent(this, MyService.class));
+		stopService(new Intent(this, ParaService.class));
 	}
 
 	@Override
