@@ -18,7 +18,7 @@ public class ParaService extends Service {
 	
 	@Override
     public void onCreate() {
-        Toast.makeText(this, "The ParaService was Created!", Toast.LENGTH_LONG).show();
+        Toast.makeText(this, "The ParaService process was Created!", Toast.LENGTH_LONG).show();
        
     }
  
