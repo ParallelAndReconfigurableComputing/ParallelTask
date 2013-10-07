@@ -1,5 +1,5 @@
 //Comment out the following package statement to compile separately.
-package pt.examples.SimplePhotoAppExtended;
+package pt.examples.ParaImagePro;
 
 /**
  * ImageDicer provides a grab-bag of image processing operators.

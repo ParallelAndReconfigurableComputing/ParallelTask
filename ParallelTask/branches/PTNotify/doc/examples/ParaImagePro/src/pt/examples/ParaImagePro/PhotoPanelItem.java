@@ -1,4 +1,4 @@
-package pt.examples.SimplePhotoAppExtended;//####[1]####
+package pt.examples.ParaImagePro;//####[1]####
 //####[1]####
 import java.awt.BorderLayout;//####[3]####
 import java.awt.Dimension;//####[4]####
@@ -23,7 +23,8 @@ import javax.swing.JPanel;//####[23]####
 import javax.swing.UIManager;//####[24]####
 import javax.swing.WindowConstants;//####[25]####
 import pt.runtime.*;//####[27]####
-import pt.examples.SimplePhotoAppExtended.flickr.Search;//####[29]####
+import pt.examples.ParaImagePro.flickr.Search;
+
 import com.aetrion.flickr.photos.Photo;//####[31]####
 //####[31]####
 //-- ParaTask related imports//####[31]####

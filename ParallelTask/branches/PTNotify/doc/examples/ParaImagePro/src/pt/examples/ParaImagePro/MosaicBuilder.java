@@ -1,4 +1,4 @@
-package pt.examples.SimplePhotoAppExtended;//####[1]####
+package pt.examples.ParaImagePro;//####[1]####
 //####[1]####
 import java.awt.Color;//####[3]####
 import java.awt.Graphics2D;//####[4]####
