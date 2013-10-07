@@ -1,5 +1,5 @@
 
-package pt.examples.SimplePhotoApp;
+package pt.examples.ParaImage;
 
 import java.awt.Image;
 import java.io.File;

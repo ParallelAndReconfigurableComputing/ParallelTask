@@ -1,4 +1,4 @@
-package pt.examples.SimplePhotoApp;//####[1]####
+package pt.examples.ParaImage;//####[1]####
 //####[1]####
 import java.awt.BorderLayout;//####[3]####
 import java.awt.Color;//####[4]####
@@ -17,7 +17,10 @@ import javax.swing.JOptionPane;//####[16]####
 import java.awt.event.KeyEvent;//####[17]####
 import java.util.concurrent.ExecutionException;//####[18]####
 import java.util.*;//####[19]####
-import pt.examples.SimplePhotoApp.flickr.PhotoWithImage;//####[20]####
+
+import pt.examples.ParaImage.flickr.PhotoWithImage;
+import pt.examples.ParaImage.flickr.Search;
+
 import javax.swing.BoxLayout;//####[22]####
 import javax.swing.ImageIcon;//####[23]####
 import javax.swing.JButton;//####[24]####
@@ -35,7 +38,6 @@ import javax.swing.event.DocumentEvent;//####[35]####
 import javax.swing.event.DocumentListener;//####[36]####
 import com.aetrion.flickr.photos.Photo;//####[38]####
 import com.aetrion.flickr.photos.PhotoList;//####[39]####
-import pt.examples.SimplePhotoApp.flickr.Search;//####[41]####
 //####[41]####
 //-- ParaTask related imports//####[41]####
 import pt.runtime.*;//####[41]####

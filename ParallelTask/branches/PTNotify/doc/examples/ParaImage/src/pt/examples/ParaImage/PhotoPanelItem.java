@@ -1,4 +1,4 @@
-package pt.examples.SimplePhotoApp;//####[1]####
+package pt.examples.ParaImage;//####[1]####
 //####[1]####
 import java.awt.Dimension;//####[3]####
 import java.awt.Graphics2D;//####[4]####
@@ -19,7 +19,9 @@ import javax.swing.JLabel;//####[19]####
 import javax.swing.JOptionPane;//####[20]####
 import javax.swing.JPanel;//####[21]####
 import javax.swing.UIManager;//####[22]####
-import pt.examples.SimplePhotoApp.flickr.Search;//####[24]####
+
+import pt.examples.ParaImage.flickr.Search;
+
 import com.aetrion.flickr.photos.Photo;//####[26]####
 //####[26]####
 //-- ParaTask related imports//####[26]####

@@ -1,4 +1,4 @@
-package pt.examples.SimplePhotoApp;//####[1]####
+package pt.examples.ParaImage;//####[1]####
 //####[1]####
 import java.awt.BorderLayout;//####[3]####
 import java.awt.Component;//####[4]####

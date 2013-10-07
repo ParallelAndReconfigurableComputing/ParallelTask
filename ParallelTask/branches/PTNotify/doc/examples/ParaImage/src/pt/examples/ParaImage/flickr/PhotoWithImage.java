@@ -1,4 +1,4 @@
-package pt.examples.SimplePhotoApp.flickr;
+package pt.examples.ParaImage.flickr;
 
 import java.awt.Image;
 

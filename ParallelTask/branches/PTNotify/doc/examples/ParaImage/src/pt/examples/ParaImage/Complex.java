@@ -1,4 +1,4 @@
-package pt.examples.SimplePhotoApp;
+package pt.examples.ParaImage;
 
 /*************************************************************************
  *  Compilation:  javac Complex.java

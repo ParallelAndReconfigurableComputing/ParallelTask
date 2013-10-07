@@ -30,7 +30,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */ 
 
-package pt.examples.SimplePhotoApp;
+package pt.examples.ParaImage;
 
 import java.io.File;
 import javax.swing.filechooser.*;
