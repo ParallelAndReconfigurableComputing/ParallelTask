@@ -1,7 +1,5 @@
 package pt.examples.paraservice;
 
-import pt.examples.paraservice.R;
-
 import android.os.Bundle;
 import android.app.Activity;
 import android.content.Intent;
@@ -16,16 +14,16 @@ public class MainActivity extends Activity {
 		setContentView(R.layout.main);
 	}
 
-	// Start the service
+	// Start the  service
 	public void startNewService(View view) {
-
-		startService(new Intent(this, ParaService.class));
+		
+		startService(new Intent(this, MyService.class));
 	}
 
-	// Stop the service
+	// Stop the  service
 	public void stopNewService(View view) {
-
-		stopService(new Intent(this, ParaService.class));
+		
+		stopService(new Intent(this, MyService.class));
 	}
 
 	@Override
@@ -34,4 +32,5 @@ public class MainActivity extends Activity {
 		getMenuInflater().inflate(R.menu.main, menu);
 		return true;
 	}
+
 }
