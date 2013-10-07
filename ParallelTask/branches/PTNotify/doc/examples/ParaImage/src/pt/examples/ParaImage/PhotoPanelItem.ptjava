@@ -1,4 +1,4 @@
-package pt.examples.SimplePhotoApp;
+package pt.examples.ParaImage;
 
 import java.awt.Dimension;
 import java.awt.Graphics2D;
@@ -21,7 +21,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.UIManager;
 
-import pt.examples.SimplePhotoApp.flickr.Search;
+import pt.examples.ParaImage.flickr.Search;
 
 import com.aetrion.flickr.photos.Photo;
 

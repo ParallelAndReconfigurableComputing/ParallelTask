@@ -19,9 +19,7 @@ import javax.swing.JLabel;//####[19]####
 import javax.swing.JOptionPane;//####[20]####
 import javax.swing.JPanel;//####[21]####
 import javax.swing.UIManager;//####[22]####
-
-import pt.examples.ParaImage.flickr.Search;
-
+import pt.examples.ParaImage.flickr.Search;//####[24]####
 import com.aetrion.flickr.photos.Photo;//####[26]####
 //####[26]####
 //-- ParaTask related imports//####[26]####

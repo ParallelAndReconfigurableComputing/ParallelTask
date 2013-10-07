@@ -101,7 +101,7 @@ public class MainFrame extends JFrame {
 			String message = "<html><font color=#8888ff size=+2>"
 					+ applicationName + "</font><p><p>";
 			message += "Version: " + applicationVersion + "<p><p>";
-			message += "Copyright&copy 2009 Nasser Giacaman, Peter Nicolau and Oliver Sinnen<p><p>";
+			message += "Copyright&copy 2013 Nasser Giacaman, Peter Nicolau and Oliver Sinnen<p><p>";
 			message += "Sample application developed with ParaTask.<p>";
 			message += "Visit <u><i>http://www.ece.auckland.ac.nz/~sinnen</i></u> for more information";
 			JLabel label = new JLabel(message);
