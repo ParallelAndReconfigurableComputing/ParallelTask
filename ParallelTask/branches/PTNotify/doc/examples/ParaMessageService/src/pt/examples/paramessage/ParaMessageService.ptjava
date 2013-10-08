@@ -1,4 +1,4 @@
-package pt.examples.aidlMessageService;
+package pt.examples.paramessage;
 
 import java.text.SimpleDateFormat;
 
@@ -9,16 +9,16 @@ import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
 
-public class AIDLMessageService extends Service {
+public class ParaMessageService extends Service {
 	private static final String PT_INTENT_ACTION_BIND_MESSAGE_SERVICE = "pt.intent.action.bindMessageService";
-	private final static String LOG_TAG = AIDLMessageService.class.getCanonicalName();
+	private final static String LOG_TAG = ParaMessageService.class.getCanonicalName();
 
 	int globalVar = 0;
 	
 	@Override
 	public void onCreate() {
 		super.onCreate();
-		Log.i(LOG_TAG,"ParaTask: The AIDLMessageService was created.");
+		Log.i(LOG_TAG,"ParaTask: The ParaMessageService was created.");
 		
 		TaskID taskid = countingTask()
 				notifyInterim(receiveProgress(TaskID,String))
@@ -30,7 +30,7 @@ public class AIDLMessageService extends Service {
 	@Override
 	public IBinder onBind(Intent intent) {
 		if(PT_INTENT_ACTION_BIND_MESSAGE_SERVICE.equals(intent.getAction())) {
-			Log.i(LOG_TAG,"ParaTask: The AIDLMessageService was binded.");
+			Log.i(LOG_TAG,"ParaTask: The ParaMessageService was binded.");
 			return new TimeMessageService(this);
 		}
 		return null;

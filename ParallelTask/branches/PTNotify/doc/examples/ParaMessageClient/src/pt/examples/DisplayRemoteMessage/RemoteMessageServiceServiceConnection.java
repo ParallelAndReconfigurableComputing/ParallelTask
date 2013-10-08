@@ -1,7 +1,6 @@
-package pt.examples.aidlDisplayRemoteMessage;
+package pt.examples.DisplayRemoteMessage;
 
-import pt.examples.aidlMessageService.IRemoteMessageService;
-
+import pt.examples.paramessage.IRemoteMessageService;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -12,8 +11,8 @@ import android.util.Log;
 
 public class RemoteMessageServiceServiceConnection implements ServiceConnection {
 
-	private static final String AIDL_MESSAGE_SERVICE_CLASS = ".AIDLMessageService";
-	private static final String AIDL_MESSAGE_SERVICE_PACKAGE = "pt.examples.aidlMessageService";
+	private static final String PT_MESSAGE_SERVICE_CLASS = ".ParaMessageService";
+	private static final String PT_MESSAGE_SERVICE_PACKAGE = "pt.examples.paramessage";
 	private static final String PT_INTENT_ACTION_BIND_MESSAGE_SERVICE = "pt.intent.action.bindMessageService";
 	private final DisplayRemoteMessage parent;
 	private IRemoteMessageService service;
@@ -67,7 +66,7 @@ public class RemoteMessageServiceServiceConnection implements ServiceConnection 
 	public void safelyConnectTheService() {
 		if(service == null) {
 			Intent bindIntent = new Intent(PT_INTENT_ACTION_BIND_MESSAGE_SERVICE);
-			bindIntent.setClassName(AIDL_MESSAGE_SERVICE_PACKAGE, AIDL_MESSAGE_SERVICE_PACKAGE + AIDL_MESSAGE_SERVICE_CLASS);
+			bindIntent.setClassName(PT_MESSAGE_SERVICE_PACKAGE, PT_MESSAGE_SERVICE_PACKAGE + PT_MESSAGE_SERVICE_CLASS);
 			parent.bindService(bindIntent, this, Context.BIND_AUTO_CREATE);
 			Log.d(LOG_TAG, "The Service will be connected soon (asynchronus call)!");
 		}

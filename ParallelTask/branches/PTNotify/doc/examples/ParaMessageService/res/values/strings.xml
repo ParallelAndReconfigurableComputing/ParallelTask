@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">AIDLTimeService</string>
+    <string name="app_name">ParaTimeMessageService</string>
     <string name="time_message">The current time is: </string>
 </resources>

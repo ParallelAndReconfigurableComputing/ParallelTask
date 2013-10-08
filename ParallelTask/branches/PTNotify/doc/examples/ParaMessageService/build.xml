@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<project name="AIDLMessageService" basedir=".">
+<project name="ParaMessageService" basedir=".">
 
 	<property name="paratask.dir" value="../PTNotify" />
 	<property name="paratask.buld.xml" value="${paratask.dir}/build.xml" />

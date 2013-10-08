@@ -1,4 +1,4 @@
-package pt.examples.aidlDisplayRemoteMessage;
+package pt.examples.DisplayRemoteMessage;
 
 import android.app.Activity;
 import android.os.Bundle;

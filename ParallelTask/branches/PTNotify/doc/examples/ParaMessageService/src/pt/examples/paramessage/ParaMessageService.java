@@ -1,4 +1,4 @@
-package pt.examples.aidlMessageService;//####[1]####
+package pt.examples.paramessage;//####[1]####
 //####[1]####
 import java.text.SimpleDateFormat;//####[3]####
 import pt.runtime.TaskID;//####[5]####
@@ -17,7 +17,7 @@ import java.util.concurrent.BlockingQueue;//####[10]####
 import java.util.ArrayList;//####[10]####
 import java.util.List;//####[10]####
 //####[10]####
-public class AIDLMessageService extends Service {//####[12]####
+public class ParaMessageService extends Service {//####[12]####
     static{ParaTask.init();}//####[12]####
     /*  ParaTask helper method to access private/protected slots *///####[12]####
     public void __pt__accessPrivateSlot(Method m, Object instance, TaskID arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[12]####
@@ -31,14 +31,14 @@ public class AIDLMessageService extends Service {//####[12]####
 //####[13]####
     private static final String PT_INTENT_ACTION_BIND_MESSAGE_SERVICE = "pt.intent.action.bindMessageService";//####[13]####
 //####[14]####
-    private static final String LOG_TAG = AIDLMessageService.class.getCanonicalName();//####[14]####
+    private static final String LOG_TAG = ParaMessageService.class.getCanonicalName();//####[14]####
 //####[16]####
     int globalVar = 0;//####[16]####
 //####[19]####
     @Override//####[19]####
     public void onCreate() {//####[19]####
         super.onCreate();//####[20]####
-        Log.i(LOG_TAG, "ParaTask: The AIDLMessageService was created.");//####[21]####
+        Log.i(LOG_TAG, "ParaTask: The ParaMessageService was created.");//####[21]####
         TaskInfo __pt__taskid = new TaskInfo();//####[23]####
 //####[23]####
         boolean isEDT = GuiThread.isEventDispatchThread();//####[23]####
@@ -106,7 +106,7 @@ public class AIDLMessageService extends Service {//####[12]####
     public IBinder onBind(Intent intent) {//####[31]####
         if (PT_INTENT_ACTION_BIND_MESSAGE_SERVICE.equals(intent.getAction())) //####[32]####
         {//####[32]####
-            Log.i(LOG_TAG, "ParaTask: The AIDLMessageService was binded.");//####[33]####
+            Log.i(LOG_TAG, "ParaTask: The ParaMessageService was binded.");//####[33]####
             return new TimeMessageService(this);//####[34]####
         }//####[35]####
         return null;//####[36]####

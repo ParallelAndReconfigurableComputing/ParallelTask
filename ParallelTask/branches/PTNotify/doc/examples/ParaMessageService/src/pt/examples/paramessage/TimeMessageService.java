@@ -1,12 +1,12 @@
-package pt.examples.aidlMessageService;
+package pt.examples.paramessage;
 
 import android.os.RemoteException;
 
 public class TimeMessageService extends IRemoteMessageService.Stub {
 
-	private final AIDLMessageService service;
+	private final ParaMessageService service;
 	
-	public TimeMessageService(AIDLMessageService service) {
+	public TimeMessageService(ParaMessageService service) {
 		this.service = service;
 	}
 	
