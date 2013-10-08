@@ -1,5 +1,8 @@
-package pt.examples.DisplayRemoteMessage;
+package pt.examples.paramessage;
 
+import pt.examples.DisplayRemoteMessage.R;
+import pt.examples.DisplayRemoteMessage.R.id;
+import pt.examples.DisplayRemoteMessage.R.layout;
 import android.app.Activity;
 import android.os.Bundle;
 import android.view.View;

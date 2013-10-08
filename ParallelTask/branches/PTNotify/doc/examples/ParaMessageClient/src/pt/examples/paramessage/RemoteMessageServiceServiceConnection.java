@@ -1,4 +1,4 @@
-package pt.examples.DisplayRemoteMessage;
+package pt.examples.paramessage;
 
 import pt.examples.paramessage.IRemoteMessageService;
 import android.content.ComponentName;

@@ -6,7 +6,7 @@
     <uses-sdk android:minSdkVersion="16" />
 
     <application android:icon="@drawable/icon" android:label="@string/app_name">
-        <activity android:name="pt.examples.DisplayRemoteMessage.DisplayRemoteMessage"
+        <activity android:name="pt.examples.paramessage.DisplayRemoteMessage"
                   android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
