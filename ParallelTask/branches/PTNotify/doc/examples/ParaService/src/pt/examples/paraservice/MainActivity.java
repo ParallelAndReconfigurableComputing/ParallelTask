@@ -3,10 +3,12 @@ package pt.examples.paraservice;
 import android.os.Bundle;
 import android.app.Activity;
 import android.content.Intent;
+import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 
 public class MainActivity extends Activity {
+	private final static String LOG_TAG = MainActivity.class.getCanonicalName();
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -16,13 +18,13 @@ public class MainActivity extends Activity {
 
 	// Start the  service
 	public void startNewService(View view) {
+		Log.i(LOG_TAG, "ParaTask startNewService");
 		startService(new Intent(this, ParaService.class));
-		
 	}
 
 	// Stop the  service
 	public void stopNewService(View view) {
-		
+		Log.i(LOG_TAG, "ParaTask stopNewService");
 		stopService(new Intent(this, ParaService.class));
 	}
 
