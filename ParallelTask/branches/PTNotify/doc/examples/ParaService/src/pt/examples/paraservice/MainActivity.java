@@ -16,8 +16,8 @@ public class MainActivity extends Activity {
 
 	// Start the  service
 	public void startNewService(View view) {
-		
 		startService(new Intent(this, ParaService.class));
+		
 	}
 
 	// Stop the  service
