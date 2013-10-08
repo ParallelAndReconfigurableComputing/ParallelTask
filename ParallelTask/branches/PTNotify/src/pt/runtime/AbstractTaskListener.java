@@ -112,7 +112,7 @@ public abstract class AbstractTaskListener implements Runnable {
 				e.printStackTrace();
 			} catch (InvocationTargetException e) {
 				System.err.println("ParaTask found an unexpected exception while executing a notify or trycatch method: ");
-				e.getCause().printStackTrace();
+				e.printStackTrace(System.err);
 				//-- do not want to end the program just because of one exception.. just print the stack trace and move on.
 				//-- this behaviour is similar to the EDT - a new EDT is created to handle other events.
 			}

@@ -47,6 +47,10 @@ public class ParaTask {
 		
 	}
 	
+	public static Thread getEDT() {
+		return EDT;
+	}
+	
 	/**
 	 * 
 	 * Enum representing the possible schedules that ParaTask supports.
@@ -157,6 +161,8 @@ public class ParaTask {
 			EDT.start();
 			*/
 			isInitialized = true;
+			
+			System.out.println("ParaTask.init EDT id: " + EDT.getId() + " EDT name: " + EDT.getName());
 		}
 	}
 	
