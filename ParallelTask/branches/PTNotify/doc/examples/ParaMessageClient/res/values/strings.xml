@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="query_button">Query</string>
+    <string name="disconnect_button">Disconnect</string>
+    <string name="app_name">AIDLDisplayRemoteMessage</string>
+</resources>
