@@ -154,12 +154,6 @@ public class ParaTask {
 			EDT = GuiThread.getEventDispatchThread();
 			listener = new GuiEdtTaskListener();
 			
-			/*
-			listener = new SlotHandlingThreadTaskListener();
-			EDT = new SlotHandlingThread(listener);
-			EDT.setDaemon(true);
-			EDT.start();
-			*/
 			isInitialized = true;
 			
 			System.out.println("ParaTask.init EDT id: " + EDT.getId() + " EDT name: " + EDT.getName());
