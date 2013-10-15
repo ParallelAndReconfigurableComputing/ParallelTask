@@ -28,4 +28,13 @@
         android:onClick="startNewService"
         android:text="Start Service" />
 
+    <Button
+        android:id="@+id/button3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/button1"
+        android:layout_below="@+id/button1"
+        android:layout_marginTop="30dp"
+        android:text="Test" />
+
 </RelativeLayout>

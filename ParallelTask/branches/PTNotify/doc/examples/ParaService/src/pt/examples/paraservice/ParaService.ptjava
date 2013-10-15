@@ -22,7 +22,7 @@ public class ParaService extends Service {
 	
 	@Override
     public void onCreate() {
-		Log.i(LOG_TAG, "ParaTask conCreate");
+		Log.i(LOG_TAG, "ParaTask onCreate");
 		Thread t = Thread.currentThread();
         Toast.makeText(this, "onCreate Current thread id: "
         		+ t.getId() + " name: " + t.getName() + "\n ParaTask EDT id: "
