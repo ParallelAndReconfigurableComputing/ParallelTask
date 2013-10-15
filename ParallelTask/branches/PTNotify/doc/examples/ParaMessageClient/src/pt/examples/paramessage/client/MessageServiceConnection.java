@@ -1,4 +1,4 @@
-package pt.examples.paramessage;
+package pt.examples.paramessage.client;
 
 import pt.examples.paramessage.IRemoteMessageService;
 import android.content.ComponentName;
@@ -9,20 +9,20 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
 
-public class RemoteMessageServiceServiceConnection implements ServiceConnection {
+public class MessageServiceConnection implements ServiceConnection {
 
 	private static final String PT_MESSAGE_SERVICE_CLASS = ".ParaMessageService";
 	private static final String PT_MESSAGE_SERVICE_PACKAGE = "pt.examples.paramessage";
 	private static final String PT_INTENT_ACTION_BIND_MESSAGE_SERVICE = "pt.intent.action.bindMessageService";
-	private final DisplayRemoteMessage parent;
+	private final MessageViewer parent;
 	private IRemoteMessageService service;
 
-	public RemoteMessageServiceServiceConnection(
-			DisplayRemoteMessage parent) {
+	public MessageServiceConnection(
+			MessageViewer parent) {
 		this.parent = parent;
 	}
 
-	private final static String LOG_TAG = RemoteMessageServiceServiceConnection.class.getCanonicalName();
+	private final static String LOG_TAG = MessageServiceConnection.class.getCanonicalName();
 	@Override
 	public void onServiceConnected(ComponentName name, IBinder service) {
 		Log.d(LOG_TAG, "The service is now connected!");
