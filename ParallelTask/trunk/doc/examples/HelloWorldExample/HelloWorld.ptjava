@@ -1,5 +1,9 @@
 public class HelloWorld {
 	
+	private void notifyFunc() {
+		System.out.println("in notifyFunc");
+	}
+	
 	public static void main(String[] args) {
 		
 		System.out.println("(1)");
@@ -12,7 +16,9 @@ public class HelloWorld {
 		
 		System.out.println("(3)");
 		
-		TaskIDGroup id2 = multi_hello();
+		HelloWorld hw = new HelloWorld();
+		
+		TaskIDGroup id2 = multi_hello() notify(hw::notifyFunc());
 		
 		System.out.println("(4)");
 		

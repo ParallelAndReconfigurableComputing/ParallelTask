@@ -198,7 +198,7 @@ public class TaskIDGroup<E> extends TaskID<E> {
 			if (nothingToQueue) {
 				setComplete();
 			} else {
-				callTaskListener(new Slot(ParaTaskHelper.setCompleteSlot, this, false, false, true));
+				callTaskListener(new Slot(ParaTaskHelper.setCompleteSlot, this, false, Slot.SetCompleteSlot.TRUE));
 			}
 		} else {
 //			System.out.println("Group size of "+ groupSize+ " not finished. Number of tasks completed so far: "+numCompleted);

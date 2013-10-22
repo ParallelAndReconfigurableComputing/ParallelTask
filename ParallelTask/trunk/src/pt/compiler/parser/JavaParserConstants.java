@@ -133,139 +133,135 @@ public interface JavaParserConstants {
   /** RegularExpression Id. */
   int NOTIFY = 69;
   /** RegularExpression Id. */
-  int NOTIFYGUI = 70;
+  int NOTIFYINTER = 70;
   /** RegularExpression Id. */
-  int NOTIFYINTER = 71;
+  int TRYCATCH = 71;
   /** RegularExpression Id. */
-  int NOTIFYINTERGUI = 72;
+  int LONG_LITERAL = 72;
   /** RegularExpression Id. */
-  int TRYCATCH = 73;
+  int INTEGER_LITERAL = 73;
   /** RegularExpression Id. */
-  int LONG_LITERAL = 74;
+  int DECIMAL_LITERAL = 74;
   /** RegularExpression Id. */
-  int INTEGER_LITERAL = 75;
+  int HEX_LITERAL = 75;
   /** RegularExpression Id. */
-  int DECIMAL_LITERAL = 76;
+  int OCTAL_LITERAL = 76;
   /** RegularExpression Id. */
-  int HEX_LITERAL = 77;
+  int FLOATING_POINT_LITERAL = 77;
   /** RegularExpression Id. */
-  int OCTAL_LITERAL = 78;
+  int DECIMAL_FLOATING_POINT_LITERAL = 78;
   /** RegularExpression Id. */
-  int FLOATING_POINT_LITERAL = 79;
+  int DECIMAL_EXPONENT = 79;
   /** RegularExpression Id. */
-  int DECIMAL_FLOATING_POINT_LITERAL = 80;
+  int HEXADECIMAL_FLOATING_POINT_LITERAL = 80;
   /** RegularExpression Id. */
-  int DECIMAL_EXPONENT = 81;
+  int HEXADECIMAL_EXPONENT = 81;
   /** RegularExpression Id. */
-  int HEXADECIMAL_FLOATING_POINT_LITERAL = 82;
+  int CHARACTER_LITERAL = 82;
   /** RegularExpression Id. */
-  int HEXADECIMAL_EXPONENT = 83;
+  int STRING_LITERAL = 83;
   /** RegularExpression Id. */
-  int CHARACTER_LITERAL = 84;
+  int IDENTIFIER = 84;
   /** RegularExpression Id. */
-  int STRING_LITERAL = 85;
+  int LETTER = 85;
   /** RegularExpression Id. */
-  int IDENTIFIER = 86;
+  int PART_LETTER = 86;
   /** RegularExpression Id. */
-  int LETTER = 87;
+  int LPAREN = 87;
   /** RegularExpression Id. */
-  int PART_LETTER = 88;
+  int RPAREN = 88;
   /** RegularExpression Id. */
-  int LPAREN = 89;
+  int LBRACE = 89;
   /** RegularExpression Id. */
-  int RPAREN = 90;
+  int RBRACE = 90;
   /** RegularExpression Id. */
-  int LBRACE = 91;
+  int LBRACKET = 91;
   /** RegularExpression Id. */
-  int RBRACE = 92;
+  int RBRACKET = 92;
   /** RegularExpression Id. */
-  int LBRACKET = 93;
+  int SEMICOLON = 93;
   /** RegularExpression Id. */
-  int RBRACKET = 94;
+  int COMMA = 94;
   /** RegularExpression Id. */
-  int SEMICOLON = 95;
+  int DOT = 95;
   /** RegularExpression Id. */
-  int COMMA = 96;
+  int AT = 96;
   /** RegularExpression Id. */
-  int DOT = 97;
+  int ASSIGN = 97;
   /** RegularExpression Id. */
-  int AT = 98;
+  int LT = 98;
   /** RegularExpression Id. */
-  int ASSIGN = 99;
+  int BANG = 99;
   /** RegularExpression Id. */
-  int LT = 100;
+  int TILDE = 100;
   /** RegularExpression Id. */
-  int BANG = 101;
+  int HOOK = 101;
   /** RegularExpression Id. */
-  int TILDE = 102;
+  int COLON = 102;
   /** RegularExpression Id. */
-  int HOOK = 103;
+  int EQ = 103;
   /** RegularExpression Id. */
-  int COLON = 104;
+  int LE = 104;
   /** RegularExpression Id. */
-  int EQ = 105;
+  int GE = 105;
   /** RegularExpression Id. */
-  int LE = 106;
+  int NE = 106;
   /** RegularExpression Id. */
-  int GE = 107;
+  int SC_OR = 107;
   /** RegularExpression Id. */
-  int NE = 108;
+  int SC_AND = 108;
   /** RegularExpression Id. */
-  int SC_OR = 109;
+  int INCR = 109;
   /** RegularExpression Id. */
-  int SC_AND = 110;
+  int DECR = 110;
   /** RegularExpression Id. */
-  int INCR = 111;
+  int PLUS = 111;
   /** RegularExpression Id. */
-  int DECR = 112;
+  int MINUS = 112;
   /** RegularExpression Id. */
-  int PLUS = 113;
+  int STAR = 113;
   /** RegularExpression Id. */
-  int MINUS = 114;
+  int SLASH = 114;
   /** RegularExpression Id. */
-  int STAR = 115;
+  int BIT_AND = 115;
   /** RegularExpression Id. */
-  int SLASH = 116;
+  int BIT_OR = 116;
   /** RegularExpression Id. */
-  int BIT_AND = 117;
+  int XOR = 117;
   /** RegularExpression Id. */
-  int BIT_OR = 118;
+  int REM = 118;
   /** RegularExpression Id. */
-  int XOR = 119;
+  int LSHIFT = 119;
   /** RegularExpression Id. */
-  int REM = 120;
+  int PLUSASSIGN = 120;
   /** RegularExpression Id. */
-  int LSHIFT = 121;
+  int MINUSASSIGN = 121;
   /** RegularExpression Id. */
-  int PLUSASSIGN = 122;
+  int STARASSIGN = 122;
   /** RegularExpression Id. */
-  int MINUSASSIGN = 123;
+  int SLASHASSIGN = 123;
   /** RegularExpression Id. */
-  int STARASSIGN = 124;
+  int ANDASSIGN = 124;
   /** RegularExpression Id. */
-  int SLASHASSIGN = 125;
+  int ORASSIGN = 125;
   /** RegularExpression Id. */
-  int ANDASSIGN = 126;
+  int XORASSIGN = 126;
   /** RegularExpression Id. */
-  int ORASSIGN = 127;
+  int REMASSIGN = 127;
   /** RegularExpression Id. */
-  int XORASSIGN = 128;
+  int LSHIFTASSIGN = 128;
   /** RegularExpression Id. */
-  int REMASSIGN = 129;
+  int RSIGNEDSHIFTASSIGN = 129;
   /** RegularExpression Id. */
-  int LSHIFTASSIGN = 130;
+  int RUNSIGNEDSHIFTASSIGN = 130;
   /** RegularExpression Id. */
-  int RSIGNEDSHIFTASSIGN = 131;
+  int ELLIPSIS = 131;
   /** RegularExpression Id. */
-  int RUNSIGNEDSHIFTASSIGN = 132;
+  int RUNSIGNEDSHIFT = 132;
   /** RegularExpression Id. */
-  int ELLIPSIS = 133;
+  int RSIGNEDSHIFT = 133;
   /** RegularExpression Id. */
-  int RUNSIGNEDSHIFT = 134;
-  /** RegularExpression Id. */
-  int RSIGNEDSHIFT = 135;
-  /** RegularExpression Id. */
-  int GT = 136;
+  int GT = 134;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -346,9 +342,7 @@ public interface JavaParserConstants {
     "\"IO_TASK\"",
     "\"dependsOn\"",
     "\"notify\"",
-    "\"notifyGUI\"",
     "\"notifyInterim\"",
-    "\"notifyInterimGUI\"",
     "\"asyncCatch\"",
     "<LONG_LITERAL>",
     "<INTEGER_LITERAL>",

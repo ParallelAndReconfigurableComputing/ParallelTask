@@ -410,21 +410,16 @@ public final class TaskVisitor implements VoidVisitor<Object> {
 			
 			if (inst != null && !slotNotifyArg.isStaticSlot())
 				instance = inst.toString();
-			String onEDT;
-			if (slotNotifyArg.getIsGuiNotify())
-				onEDT = "true";
-			else
-				onEDT = "isEDT";
 			
 			if (insideStaticMethod && inst==null)
 				instance = "null";
 			
 			if (type == NOTIFY) {
-				printer.printLn(id+ ".addSlotToNotify(new Slot("+methodVarName+i+", "+ instance +", "+ onEDT +", false));",-1);
+				printer.printLn(id+ ".addSlotToNotify(new Slot("+methodVarName+i+", "+ instance +", false));",-1);
 			} else if (type == EXCEPTION) {
-				printer.printLn(id+ ".addExceptionHandler("+exception+".class, new Slot("+methodVarName+i+", "+ instance +", "+ onEDT +", false));",-1);
+				printer.printLn(id+ ".addExceptionHandler("+exception+".class, new Slot("+methodVarName+i+", "+ instance +", false));",-1);
 			} else if (type == NOTIFY_INTER) {
-				printer.printLn(id+ ".addInterSlotToNotify(new Slot("+methodVarName+i+", "+ instance +", "+ onEDT +", true));",-1);
+				printer.printLn(id+ ".addInterSlotToNotify(new Slot("+methodVarName+i+", "+ instance +", true));",-1);
 			} else {
 				System.err.println("<UNKNOWN type>");
 			}

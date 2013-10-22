@@ -39,9 +39,16 @@ public class ParaTask {
 	private static int threadPoolSize = Runtime.getRuntime().availableProcessors();
 	private static ScheduleType scheduleType = ScheduleType.MixedSchedule;
 	static boolean isInitialized = false;
-	
+
+	static Thread EDT = null;		// a reference to the EDT
+	static AbstractTaskListener listener;	// the EDT task listener
+		
 	ParaTask(){
 		
+	}
+	
+	public static Thread getEDT() {
+		return EDT;
 	}
 	
 	/**
@@ -139,14 +146,49 @@ public class ParaTask {
 			} catch (NoSuchMethodException e) {
 				e.printStackTrace();
 			}
-			EventLoop.init();
+
+			//-- Create the task pool
+			TaskpoolFactory.getTaskpool();
 			
-			if (!GuiThread.isEventDispatchThread())
-				EventLoop.register();
+			//-- initialize the EDT
+			EDT = GuiThread.getEventDispatchThread();
+			listener = new GuiEdtTaskListener();
+			/*
+			 * The ParaTask keywords notifyGUI and notifyInterimGUI has been removed.
+			 * All slots will be handled by the GUI EDT thread, and this feature has been
+			 * tested on both Java SE platform and Android platform, for both with GUI
+			 * and without GUI situations.
+			 * 
+			 * The SlotHandlingThread.java and SlotHandlingThreadTaskListener.java are 
+			 * also removed.
+			 * 
+			 * If there are other situations where we cannot depend on the GUI EDT thread
+			 * to handle slots, or you do want to have a separate thread act as the slot 
+			 * handling thread instead of the GUI EDT thread, please add these two Java 
+			 * files back, and initialize ParaTask.EDT and ParaTask.listener with their 
+			 * instances.
+			 * 
+			 * Here are the svn revision and URLs of these two Java files before
+			 * they are deleted:
+			 * 
+			 * revision 3717
+			 * 
+			 * https://svn.ece.auckland.ac.nz/svn/taschto/ParallelTask/branches/PTNotify/src/pt/runtime/SlotHandlingThread.java
+			 * https://svn.ece.auckland.ac.nz/svn/taschto/ParallelTask/branches/PTNotify/src/pt/runtime/SlotHandlingThreadTaskListener.java
+			 */
 			
 			isInitialized = true;
+			
+			System.out.println("ParaTask.init EDT id: " + EDT.getId() + " EDT name: " + EDT.getName());
 		}
 	}
+	
+	static AbstractTaskListener getEDTTaskListener() {
+		if (EDT == null) {
+			throw new RuntimeException("Please call ParaTask.init() early in the main method of your application!");
+		}
+		return listener;
+	}	
 	
 	/**
 	 * Flattens a list of TaskIDs. Only has an effect if some of the TaskIDs were actually TaskIDGroups.

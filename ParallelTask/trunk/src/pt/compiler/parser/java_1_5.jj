@@ -298,9 +298,7 @@ TOKEN :
 | < TASK_INTERACTIVE: "IO_TASK" >
 | < DEPENDSON: "dependsOn" >
 | < NOTIFY: "notify" >
-| < NOTIFYGUI: "notifyGUI" >
 | < NOTIFYINTER: "notifyInterim" >
-| < NOTIFYINTERGUI: "notifyInterimGUI" >
 | < TRYCATCH: "asyncCatch" >
 }
  
@@ -1924,13 +1922,9 @@ TaskClauseExpr TaskClauseExpression() :
 	( 
 		<DEPENDSON> "(" args = ArgumentList() ")" { if (deps==null) deps = new PT_DependsOn(); deps.addDeps(args); }
 		|  
-		<NOTIFY> 	"(" args = NotifyArgumentList(false,false) ")" { if (nots == null) nots = new PT_Notify(); nots.addNotifies(args); }
+		<NOTIFY> 	"(" args = NotifyArgumentList(false) ")" { if (nots == null) nots = new PT_Notify(); nots.addNotifies(args); }
 		|
-		<NOTIFYGUI> "(" args = NotifyArgumentList(true,false) ")" { if (nots == null) nots = new PT_Notify(); nots.addNotifies(args); }
-		|
-		<NOTIFYINTER> "(" args = NotifyArgumentList(false,true) ")" { if (notInts == null) notInts = new PT_Notify(); notInts.addNotifies(args); }
-		|
-		<NOTIFYINTERGUI> "(" args = NotifyArgumentList(true,true) ")" { if (notInts == null) notInts = new PT_Notify(); notInts.addNotifies(args); }
+		<NOTIFYINTER> "(" args = NotifyArgumentList(true) ")" { if (notInts == null) notInts = new PT_Notify(); notInts.addNotifies(args); }
 		|
 		<TRYCATCH>  "(" args = HandlerArgumentList() ")" { if (hans == null) hans = new PT_Handler(); hans.addHandlers(args); }
 	)+
@@ -2435,18 +2429,16 @@ HandlerArg HandlerArgument() :
 	)
 }
 
-List NotifyArgumentList(boolean guiNotify, boolean intermediate):
+List NotifyArgumentList(boolean intermediate):
 {
 	List ret = new LinkedList();
 	NotifyArg arg = null;
 }
 {
 	arg = NotifyArgument() {
-		arg.setGuiNotify(guiNotify); 
 		arg.setInterNotify(intermediate); 
 		ret.add(arg); }
 	( "," arg = NotifyArgument() {  
-		arg.setGuiNotify(guiNotify); 
 		arg.setInterNotify(intermediate); 
 		ret.add(arg); } )*
   { return ret; }
