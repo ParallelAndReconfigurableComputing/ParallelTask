@@ -153,6 +153,29 @@ public class ParaTask {
 			//-- initialize the EDT
 			EDT = GuiThread.getEventDispatchThread();
 			listener = new GuiEdtTaskListener();
+			/*
+			 * The ParaTask keywords notifyGUI and notifyInterimGUI has been removed.
+			 * All slots will be handled by the GUI EDT thread, and this feature has been
+			 * tested on both Java SE platform and Android platform, for both with GUI
+			 * and without GUI situations.
+			 * 
+			 * The SlotHandlingThread.java and SlotHandlingThreadTaskListener.java are 
+			 * also removed.
+			 * 
+			 * If there are other situations where we cannot depend on the GUI EDT thread
+			 * to handle slots, or you do want to have a separate thread act as the slot 
+			 * handling thread instead of the GUI EDT thread, please add these two Java 
+			 * files back, and initialize ParaTask.EDT and ParaTask.listener with their 
+			 * instances.
+			 * 
+			 * Here are the svn revision and URLs of these two Java files before
+			 * they are deleted:
+			 * 
+			 * revision 3717
+			 * 
+			 * https://svn.ece.auckland.ac.nz/svn/taschto/ParallelTask/branches/PTNotify/src/pt/runtime/SlotHandlingThread.java
+			 * https://svn.ece.auckland.ac.nz/svn/taschto/ParallelTask/branches/PTNotify/src/pt/runtime/SlotHandlingThreadTaskListener.java
+			 */
 			
 			isInitialized = true;
 			
