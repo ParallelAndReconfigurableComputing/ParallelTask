@@ -26,21 +26,12 @@ public class NotifyArg {
 	private Expression instance;
 	private Expression slot;
 	private boolean staticSlot;
-	private boolean isGuiNotify = false;
 	private boolean isIntermediateNotify = false;
 	
 	public NotifyArg(Expression instance, Expression slot, boolean staticSlot) {
 		this.instance = instance;
 		this.slot = slot;
 		this.staticSlot = staticSlot;
-	}
-	
-	public boolean getIsGuiNotify() {
-		return isGuiNotify;
-	}
-	
-	public void setGuiNotify(boolean isGuiNotify) {
-		this.isGuiNotify = isGuiNotify;
 	}
 
 	public Expression getInstance() {

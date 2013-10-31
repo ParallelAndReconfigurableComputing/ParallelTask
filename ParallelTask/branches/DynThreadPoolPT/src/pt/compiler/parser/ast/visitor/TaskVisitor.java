@@ -410,21 +410,16 @@ public final class TaskVisitor implements VoidVisitor<Object> {
 			
 			if (inst != null && !slotNotifyArg.isStaticSlot())
 				instance = inst.toString();
-			String onEDT;
-			if (slotNotifyArg.getIsGuiNotify())
-				onEDT = "true";
-			else
-				onEDT = "isEDT";
 			
 			if (insideStaticMethod && inst==null)
 				instance = "null";
 			
 			if (type == NOTIFY) {
-				printer.printLn(id+ ".addSlotToNotify(new Slot("+methodVarName+i+", "+ instance +", "+ onEDT +", false));",-1);
+				printer.printLn(id+ ".addSlotToNotify(new Slot("+methodVarName+i+", "+ instance +", false));",-1);
 			} else if (type == EXCEPTION) {
-				printer.printLn(id+ ".addExceptionHandler("+exception+".class, new Slot("+methodVarName+i+", "+ instance +", "+ onEDT +", false));",-1);
+				printer.printLn(id+ ".addExceptionHandler("+exception+".class, new Slot("+methodVarName+i+", "+ instance +", false));",-1);
 			} else if (type == NOTIFY_INTER) {
-				printer.printLn(id+ ".addInterSlotToNotify(new Slot("+methodVarName+i+", "+ instance +", "+ onEDT +", true));",-1);
+				printer.printLn(id+ ".addInterSlotToNotify(new Slot("+methodVarName+i+", "+ instance +", true));",-1);
 			} else {
 				System.err.println("<UNKNOWN type>");
 			}
@@ -1277,7 +1272,8 @@ public final class TaskVisitor implements VoidVisitor<Object> {
         printer.printLn(" {",n.getBeginLine());
         printer.indent();
         
-        printer.print("static{ParaTask.init();}");
+        if (this.currentClassStack.size() == 1)
+        	printer.print("static{ParaTask.init();}");
         
         //-- Note added this for ParaTask... even if no TASKS are declared in here, the normal methods might be used as slots
         //--  e.g.   TaskID id = instance.someTaskInAnotherClass() notify( slotInHere() );

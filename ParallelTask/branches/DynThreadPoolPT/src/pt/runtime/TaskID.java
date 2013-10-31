@@ -153,7 +153,10 @@ public class TaskID<E> {
 	 * Checks to see if this task if a part of a pipeline.
 	 */
 	public boolean isPipeline() {
-		return taskInfo.isPipeline();
+		if (this.taskInfo == null)
+			return false;
+		else
+			return taskInfo.isPipeline();
 	}
 	
 	/**
@@ -605,7 +608,7 @@ public class TaskID<E> {
 		Thread registered = taskInfo.getRegisteringThread();
 		if (registered == null)
 			return false;
-		if (registered == EventLoop.EDT && GuiThread.isEventDispatchThread())
+		if (registered == ParaTask.EDT && GuiThread.isEventDispatchThread())
 			return true;
 		else 
 			return registered == Thread.currentThread();
@@ -711,7 +714,7 @@ public class TaskID<E> {
 					executeSlots();
 				
 				//-- 		since slots are executed in the order they are enqueued, then this will be the last slot! :-)
-				callTaskListener(new Slot(ParaTaskHelper.setCompleteSlot, this, false, false, true));
+				callTaskListener(new Slot(ParaTaskHelper.setCompleteSlot, this, false, Slot.SetCompleteSlot.TRUE));
 				
 			} else {
 				setComplete();
@@ -765,35 +768,8 @@ public class TaskID<E> {
 	}
 	
 	void callTaskListener(Slot slot) {
-		Thread registeredThread = taskInfo.getRegisteringThread();
-		
 //		System.out.println("want to execute slot: "+slot.getMethod().getName());
-		
-		TaskListener listener = null;
-		if (slot.executeOnEDT()) {
-			listener = EventLoop.getEDTTaskListener();
-		} else if (registeredThread != null) {
-			listener = EventLoop.getTaskListener(registeredThread);
-		}
-		
-		// TODO  if the registering thread is a TaskThread, then execute on the slot handling thread
-		
-		if (listener != null) {
-			listener.executeSlots(slot);
-		} else {
-			if (registeredThread != null) {
-				if (ParaTaskHelper.isSubClassOf(registeredThread.getClass(),TaskThread.class)) {
-					//-- the registering thread was a TaskThread, therefore the slot is executed sequentially by the special SlotHandlingThread
-					EventLoop.executeOnSlotHandlingThread(slot);
-				} else {
-					System.err.println("Tried to execute slot (TaskID::callTaskListener()). But There is no task listener for thread " + registeredThread);
-					// if can't find listener, then never reach here... unless i've missed something out
-					throw new ParaTaskRuntimeException("can't find listener");
-				}
-			} else {
-				// TODO there is no registered thread... 
-			}
-		}
+		ParaTask.getEDTTaskListener().executeSlot(slot);
 //		System.out.println("executed slot: "+slot.getMethod().getName());
 	}
 	
