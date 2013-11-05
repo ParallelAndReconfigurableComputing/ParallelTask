@@ -482,10 +482,10 @@ public class TaskID<E> {
 					currentWorker.executeAnotherTaskOrSleep();
 				}
 			} else {
-				if (currenThreadIsTheRegisteredThread()) {
-//					System.out.println("current thread is the registering trhead.. will await");
+				if (currentThreadIsTheRegisteredThread()) {
+//					System.out.println("current thread is the registering thread.. will await");
 					completedLatchForRegisteringThread.await();
-//					System.out.println("finsehd await");
+//					System.out.println("finished await");
 				} else {
 					completedLatch.await();
 				}
@@ -498,11 +498,11 @@ public class TaskID<E> {
 		}
 	}
 	
-	protected boolean currenThreadIsTheRegisteredThread() {
+	protected boolean currentThreadIsTheRegisteredThread() {
 		Thread registered = taskInfo.getRegisteringThread();
 		if (registered == null)
 			return false;
-		if (registered == ParaTask.EDT && GuiThread.isEventDispatchThread())
+		if (registered == ParaTask.getEDT() && GuiThread.isEventDispatchThread())
 			return true;
 		else 
 			return registered == Thread.currentThread();
