@@ -14,12 +14,13 @@
 	<property name="classes.paraimage.dir" location="${classes.dir}/paraimage"/>
 	<property name="test.report.dir" location="${dist.dir}/report"/>
 
+	<property name="javadoc.dir" location="doc/api" />
 	<property name="lib.dir" location="libs" />
 
 	<property name="compiler_jar" value="PTCompiler-latest.jar"/>
 	<property name="runtime_jar" value="PTRuntime-latest.jar"/>
 	
-	<property name="javacc_home" value="lib/javacc-5.0"/>
+	<property name="javacc_home" value="libs/javacc-5.0"/>
 	<property name="javacc_script_dir" value="${src.dir}/pt/compiler/parser"/>
 	<property name="javacc_script" value="${javacc_script_dir}/java_1_5.jj"/>
 
@@ -119,11 +120,20 @@
 	</target>
 	
 	<target name="gen.javadoc">
-	    <javadoc packagenames="pt.*"
-           sourcepath="src"
-           defaultexcludes="yes"
-           destdir="doc/api"
-           use="true">
+	    <delete dir="${javadoc.dir}" />
+	    <javadoc
+	        destdir="${javadoc.dir}"
+	        use="true">
+			<fileset dir="${src.dir}" defaultexcludes="yes">
+			    <include name="pt/compiler/ParaTaskParser.java"/>
+      			<include name="pt/runtime/CurrentTask.java"/>
+      			<include name="pt/runtime/ParaTask.java"/>
+      			<include name="pt/runtime/Reduction.java"/>
+      			<include name="pt/runtime/TaskID.java"/>
+      			<include name="pt/runtime/TaskIDGroup.java"/>
+      			<include name="pt/queues/FifoLifoQueue.java"/>
+      			<include name="pt/queues/WorkStealingQueue.java"/>
+    		</fileset>
   		</javadoc>
 	</target>
 
