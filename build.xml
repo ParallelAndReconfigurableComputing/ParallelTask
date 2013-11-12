@@ -136,6 +136,11 @@
     		</fileset>
   		</javadoc>
 	</target>
+	
+	<target name="copy.jars.to.ptplugin.project" depends="dist">
+		<copy file="${dist.dir}/${compiler_jar}" tofile="../nz.ac.auckland.ptjava/PTCompiler.jar" />
+		<copy file="${dist.dir}/${runtime_jar}" tofile="../nz.ac.auckland.ptjava/PTRuntime.jar" />
+	</target>
 
 	<target name="main" depends="test, dist, clean" description="compile, test, dist and clean">
 		<description>Main target</description>
