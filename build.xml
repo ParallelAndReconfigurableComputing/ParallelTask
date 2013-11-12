@@ -1,17 +1,20 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<project name="ParaTask" xmlns:ivy="antlib:org.apache.ivy.ant" default="main" basedir=".">
+<project name="ParaTask" xmlns:ivy="antlib:org.apache.ivy.ant" basedir=".">
 
 	<property name="src.dir" location="src"/>
 	<property name="test.dir" location="test"/>
 
 	<property name="paraimage.dir" location="doc/examples/ParaImage"/>	
 	<property name="paraimage.src.dir" location="${paraimage.dir}/src"/>
+	
+	<property name="house.src.dir" location="doc/examples/HouseExample"/>
 
 	<property name="dist.dir" location="release"/>
 	<property name="classes.dir" location="${dist.dir}/classes"/>
 	<property name="classes.main.dir" location="${classes.dir}/main"/>
 	<property name="classes.test.dir" location="${classes.dir}/test"/>
 	<property name="classes.paraimage.dir" location="${classes.dir}/paraimage"/>
+	<property name="classes.house.dir" location="${classes.dir}/house"/>
 	<property name="test.report.dir" location="${dist.dir}/report"/>
 
 	<property name="javadoc.dir" location="doc/api" />
@@ -60,6 +63,7 @@
 		<mkdir dir="${classes.main.dir}"/>
 		<mkdir dir="${classes.test.dir}"/>
 		<mkdir dir="${classes.paraimage.dir}"/>
+		<mkdir dir="${classes.house.dir}"/>
 		<mkdir dir="${test.report.dir}"/>
 	</target>
 
@@ -76,6 +80,31 @@
 			<classpath refid="junit.class.path" />
 		</javac>
 	</target>
+	
+	<target name="dist" depends="compile">
+		<jar jarfile="${dist.dir}/${compiler_jar}" basedir="${classes.main.dir}" excludes="**/pt/queues/,**/pt/runtime/"/>
+		<jar jarfile="${dist.dir}/${runtime_jar}" basedir="${classes.main.dir}" excludes="**/pt/compiler/"/>
+	</target>	
+	
+	<target name="gen.javadoc">
+	    <delete dir="${javadoc.dir}" />
+	    <javadoc
+	        destdir="${javadoc.dir}"
+	        use="true">
+			<fileset dir="${src.dir}" defaultexcludes="yes">
+			    <include name="pt/compiler/ParaTaskParser.java"/>
+      			<include name="pt/runtime/CurrentTask.java"/>
+      			<include name="pt/runtime/ParaTask.java"/>
+      			<include name="pt/runtime/Reduction.java"/>
+      			<include name="pt/runtime/TaskID.java"/>
+      			<include name="pt/runtime/TaskIDGroup.java"/>
+      			<include name="pt/queues/FifoLifoQueue.java"/>
+      			<include name="pt/queues/WorkStealingQueue.java"/>
+    		</fileset>
+  		</javadoc>
+	</target>
+	
+	<!-- paraimage example -->	
 	
 	<path id="build.paraimage.class.path">
 		<pathelement location="${classes.main.dir}" />
@@ -102,11 +131,25 @@
 		<jar jarfile="${dist.dir}/ParaImage.jar" basedir="${classes.paraimage.dir}" />
 	</target>
 	
-	<target name="dist" depends="compile">
-		<jar jarfile="${dist.dir}/${compiler_jar}" basedir="${classes.main.dir}" excludes="**/pt/queues/,**/pt/runtime/"/>
-		<jar jarfile="${dist.dir}/${runtime_jar}" basedir="${classes.main.dir}" excludes="**/pt/compiler/"/>
+	<!-- house example -->	
+	
+	<target name="compile.house" depends="compile" description="Compiles the java codes of House">
+		<javac includeantruntime="true" srcdir="${house.src.dir}" destdir="${classes.house.dir}">
+	        <classpath>
+	        	<pathelement location="${classes.main.dir}" />
+			</classpath>
+		</javac>
 	</target>
 
+	<target name="dist.house" depends="compile.house, dist">
+		<jar destfile="${dist.dir}/house.jar" basedir="${classes.house.dir}" 
+        	manifest="${house.src.dir}/MANIFEST.MF">
+        	<fileset dir="${classes.house.dir}" includes="**/*.class" />
+        	<zipgroupfileset dir="${dist.dir}" includes="${runtime_jar}" />
+    	</jar>
+	</target>
+
+<!--
 	<target name="test" depends="compile" description="Run the JUnit Tests.">
 		<junit printsummary="yes" fork="true" haltonfailure="yes">
 			<classpath refid="junit.class.path" />
@@ -118,34 +161,12 @@
 			</batchtest>
 		</junit>
 	</target>
-	
-	<target name="gen.javadoc">
-	    <delete dir="${javadoc.dir}" />
-	    <javadoc
-	        destdir="${javadoc.dir}"
-	        use="true">
-			<fileset dir="${src.dir}" defaultexcludes="yes">
-			    <include name="pt/compiler/ParaTaskParser.java"/>
-      			<include name="pt/runtime/CurrentTask.java"/>
-      			<include name="pt/runtime/ParaTask.java"/>
-      			<include name="pt/runtime/Reduction.java"/>
-      			<include name="pt/runtime/TaskID.java"/>
-      			<include name="pt/runtime/TaskIDGroup.java"/>
-      			<include name="pt/queues/FifoLifoQueue.java"/>
-      			<include name="pt/queues/WorkStealingQueue.java"/>
-    		</fileset>
-  		</javadoc>
-	</target>
+-->
 	
 	<target name="copy.jars.to.ptplugin.project" depends="dist">
 		<copy file="${dist.dir}/${compiler_jar}" tofile="../nz.ac.auckland.ptjava/PTCompiler.jar" />
 		<copy file="${dist.dir}/${runtime_jar}" tofile="../nz.ac.auckland.ptjava/PTRuntime.jar" />
 	</target>
-
-	<target name="main" depends="test, dist, clean" description="compile, test, dist and clean">
-		<description>Main target</description>
-	</target>
-	
 
 	<!-- =================================
 	Automatically install ivy if it is not properly installed, and resolve dependencies.
