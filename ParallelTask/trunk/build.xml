@@ -9,7 +9,7 @@
 	
 	<property name="house.src.dir" location="doc/examples/HouseExample"/>
 
-	<property name="dist.dir" location="release"/>
+	<property name="dist.dir" location="dist"/>
 	<property name="classes.dir" location="${dist.dir}/classes"/>
 	<property name="classes.main.dir" location="${classes.dir}/main"/>
 	<property name="classes.test.dir" location="${classes.dir}/test"/>
