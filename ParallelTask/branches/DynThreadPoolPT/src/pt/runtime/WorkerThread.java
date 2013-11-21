@@ -41,13 +41,16 @@ public class WorkerThread extends TaskThread {
 	 * Change "isKilled" to "isPoisoned"
 	 * Think it is un-necessary to distinguish nested and non-nested situation. Cancel "isWaiting".
 	 * 
+	 * @since 01/10/2013
+	 * Change "isPoisoned" to "isCancelled"
+	 * This change will never affect the logic, only beacuse of the re-naming before merge back
+	 * to turnk
+	 * Remove all the unnecessary code before merging.
+	 * 
 	 * */
 	private boolean isMultiTaskWorker;
-	
-	//private boolean isKilled = false;
-	private boolean isPoisoned = false;
-	
-	//private boolean isWaiting = false;
+
+	private boolean isCancelled = false;
 	
 	private boolean isCancelRequired = false; 
 	
@@ -137,10 +140,7 @@ public class WorkerThread extends TaskThread {
 	public void run() {
 		while (true) {
 			TaskID task = taskpool.workerTakeNextTask();
-			//System.out.println(Thread.currentThread().getId());
 			//- execute the task
-			
-			//isWaiting = false;
 			
 			boolean success = executeTask(task);
 			
@@ -166,46 +166,18 @@ public class WorkerThread extends TaskThread {
 			 * Instead, using the class of "LottoBox"
 			 * 
 			 * */
-			//System.out.println("outside " + threadID + " " + isCancelRequired + " " + isPoisoned);
 
 			if (isCancelRequired) {
-				if (isPoisoned) {
+				if (isCancelled) {
 					break;
 				}else {
-					/*PoisonPill pill = PoisonPillBox.getPill();
-					if (null != pill) {
-						pill.tryKill();
-					}else {
-						//Test only branch
-						//System.out.println(threadID + " - null - ? ");
-					}*/
-					
 					LottoBox.tryLuck();
 					
-					if (/*isKilled*/ isPoisoned) {
+					if (isCancelled) {
 						break;
 					}
 				}
 			}
-			
-			
-			
-			
-			
-			//-- Note: at this point, although the task has executed, it is not considered "complete" until the slots (if any) are executed by the registered thread.
-			
-			//-- The following is for testing purposes only, may be removed in final code
-//			if (!success) {
-////				System.err.print("FAILED!! WorkerThread " + threadID + " ( " + Thread.currentThread().getId()+ ")"+ " wanted to execute TaskID " + task.getGlobalID() + " of method: " 
-////						+ task.getTaskInfo().getMethod().getName());
-//				if (task.hasUserError()) {
-////					System.err.println(" --- This is a user-error ( " + task.getException() + " )  --- " );
-//				} else {
-//					System.err.println("ParaTask faced a problem!! WorkerThread " + threadID + " ( " + Thread.currentThread().getId()+ ")"+ " wanted to execute TaskID " + task.getGlobalID() + " of method: " 
-//							+ task.getTaskInfo().getMethod().getName());
-//				}
-//				System.err.flush();
-//			}
 		}
 	}
 
@@ -216,31 +188,13 @@ public class WorkerThread extends TaskThread {
 	protected void setMultiTaskWorker(boolean isMultiTaskWorker) {
 		this.isMultiTaskWorker = isMultiTaskWorker;
 	}
-
-	/*protected void setKilled(boolean isKilled) {
-		this.isKilled = isKilled;
-	}*/
-	protected void setPoisoned(boolean isPoisoned) {
-		this.isPoisoned = isPoisoned;
+	protected void setCancelled(boolean isCancelled) {
+		this.isCancelled = isCancelled;
 	}
 
-	protected boolean isPoisoned() {
-		return isPoisoned;
+	protected boolean isCancelled() {
+		return isCancelled;
 	}
-
-	/**
-	 * 
-	 * @author Kingsley
-	 * @since 25/05/2013
-	 * Think it is un-necessary to distinguish nested and non-nested situation. Cancel "isWaiting".
-	 * 
-	 * */
-	
-	/*protected boolean isWaiting() {
-		return isWaiting;
-	}*/
-
-	
 
 	/**
 	 * 

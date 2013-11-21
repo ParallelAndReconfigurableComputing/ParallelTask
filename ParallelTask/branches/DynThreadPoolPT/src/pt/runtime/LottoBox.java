@@ -9,6 +9,9 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * @author Kingsley
  * @since 31/05/2013
+ * 
+ * @since 01/10/2013
+ * Remove all the unnecessary code before merging.
  *
  */
 public class LottoBox {
@@ -27,9 +30,8 @@ public class LottoBox {
 					//Count down the latch
 					lottoNum.decrementAndGet();
 				
-					//Set it as a killed thread
-					//workerThread.setKilled(true);
-					workerThread.setPoisoned(true);
+					//Set it as a cancelled thread
+					workerThread.setCancelled(true);
 				}else {
 					//No chance to die
 					workerThread.requireCancel(false);

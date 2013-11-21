@@ -202,7 +202,8 @@ public class PoisonPill {
 				
 					//Set it as a killed thread
 					//workerThread.setKilled(true);
-					workerThread.setPoisoned(true);
+					//workerThread.setPoisoned(true);
+					workerThread.setCancelled(true);
 					//System.out.println(workerThread.threadID + "get poison pill");
 				}else {
 					//No chance to die

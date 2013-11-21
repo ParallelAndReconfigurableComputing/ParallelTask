@@ -567,7 +567,7 @@ public class TaskID<E> {
 				
 				while (!hasCompleted.get()) {
 					//System.out.println("inside " + currentWorker.threadID + " " + currentWorker.isCancelRequired() + " " + currentWorker.isPoisoned());
-					if (currentWorker.isCancelRequired() && !currentWorker.isPoisoned()) {
+					if (currentWorker.isCancelRequired() && !currentWorker.isCancelled()) {
 						/*PoisonPill pill = PoisonPillBox.getPill();
 						if (null != pill) {
 							pill.tryKill();
@@ -575,7 +575,7 @@ public class TaskID<E> {
 						LottoBox.tryLuck();
 					}
 					
-					if (!currentWorker.isPoisoned()) {
+					if (!currentWorker.isCancelled()) {
 						// causes the worker to either execute a task or sleep
 						currentWorker.executeAnotherTaskOrSleep();
 					} else {
