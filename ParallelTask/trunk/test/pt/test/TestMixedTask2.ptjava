@@ -1,0 +1,197 @@
+package paratask.test;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.Random;
+
+public class TestMixedTask2 {
+	private static final int N_DATASIZE = 0;
+
+	private static final String BM_METHOD = "execute";
+	
+	private static final Class<?>[] BM_METHOD_ARGUEMENT_TYPE = {int.class};
+
+	private static final String MOL = "MOL";
+
+	private static final String MOL_CLASS = "core.moldyn.Molcore";
+
+	private static final String MON = "MON";
+
+	private static final String MON_CLASS = "core.montecarlo.Moncore";
+
+	private static final String RAY = "RAY";
+
+	private static final String RAY_CLASS = "core.raytracer.Raycore";
+	
+	private static ConcurrentLinkedQueue<Benchmark> concurrentLinkedQueue = null;
+
+	//Should at least 3 arguments
+	//args[0] = the total number of tasks(which includes one-off task and multi-tasks)
+	//args[1] = benchmark name
+	//args[2] = multi-task set length
+	public static void main(String[] args) {
+		if (null == args || args.length != 3) {
+			try {
+				throw new Exception("Wrong arguemnts setting");
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		
+		int totalNum = Integer.valueOf(args[0]);
+		
+		TaskID[] taskIDs = new TaskID[totalNum];
+		
+		TaskIDGroup tig = new TaskIDGroup(totalNum);
+
+		long startTime = System.currentTimeMillis();
+		
+		int[] randomSerial = random_serial(totalNum);
+		for (int i = 0; i < randomSerial.length; i++) {
+			if (randomSerial[i] % 2 == 0) {
+				taskIDs[i] = runBMS(createBenchmarkSet(getBenchmarkClass(args[1]), Integer.valueOf(args[2])));
+			}else {
+				taskIDs[i] = runBM(createBenchmark(getBenchmarkClass(args[1])));
+			}
+		}
+		
+		for(int i = 0; i < totalNum; i++){
+			tig.add(taskIDs[i]);
+		}
+
+		try {
+			tig.waitTillFinished();
+		} catch (ExecutionException e) {
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		
+		long endTime = System.currentTimeMillis();
+		
+		System.out.println(endTime-startTime);
+	}
+
+	TASK(4) private static void runBMS(ConcurrentLinkedQueue<Benchmark> benchmarkQueue) { 
+		System.out.println("Multi Task [Thread ID "+CurrentTask.currentThreadID()+"] [Thread Local ID "+CurrentTask.currentThreadLocalID()+"] [Task Global ID "+CurrentTask.globalID()+"]  [Task Relative ID "+CurrentTask.relativeID()+"]  [Multi Task Size "+CurrentTask.multiTaskSize()+"] ");
+		Benchmark benchmark = null; 
+		while (null != (benchmark = benchmarkQueue.poll())) { 
+			runSubTask(benchmark); 
+		} 
+	}
+
+	TASK private static void runBM(Benchmark benchmark) {
+		try { 
+			System.out.println("One-off Task [Thread ID "+CurrentTask.currentThreadID()+"] [Thread Local ID "+CurrentTask.currentThreadLocalID()+"] [Task Global ID "+CurrentTask.globalID()+"]  [Task Relative ID "+CurrentTask.relativeID()+"]  [Multi Task Size "+CurrentTask.multiTaskSize()+"] ");
+			benchmark.getMethod().invoke(benchmark.getInstance(), benchmark.getArguments()); 
+		} catch (IllegalAccessException e) { 
+			e.printStackTrace(); 
+		} catch (IllegalArgumentException e) { 
+			e.printStackTrace(); 
+		} catch (InvocationTargetException e) { 
+			e.printStackTrace(); 
+		} 
+	}
+	
+	private static void runSubTask(Benchmark benchmark) {
+		try { 
+			benchmark.getMethod().invoke(benchmark.getInstance(), benchmark.getArguments()); 
+		} catch (IllegalAccessException e) { 
+			e.printStackTrace(); 
+		} catch (IllegalArgumentException e) { 
+			e.printStackTrace(); 
+		} catch (InvocationTargetException e) { 
+			e.printStackTrace(); 
+		} 
+	}
+
+	private static int[] random_serial(int limit) {
+		int[] result = new int[limit];
+		for (int i = 0; i < limit; i++)
+			result[i] = i;
+		int w;
+		Random rand = new Random();
+		for (int i = limit - 1; i > 0; i--) {
+			w = rand.nextInt(i);
+			int t = result[i];
+			result[i] = result[w];
+			result[w] = t;
+		}
+		return result;
+	}
+
+	private static ConcurrentLinkedQueue<Benchmark> createBenchmarkSet(Class<?> bmClass, Integer setLen) {
+		concurrentLinkedQueue = new ConcurrentLinkedQueue<Benchmark>();
+		for (int i = 0; i < setLen; i++) {
+			Object benchmark = null;
+			Method method = null;
+			try {
+				benchmark = bmClass.newInstance();
+				method = bmClass.getMethod(BM_METHOD, BM_METHOD_ARGUEMENT_TYPE);
+			} catch (InstantiationException e) {
+				e.printStackTrace();
+			} catch (IllegalAccessException e) {
+				e.printStackTrace();
+			} catch (NoSuchMethodException e) {
+				e.printStackTrace();
+			} catch (SecurityException e) {
+				e.printStackTrace();
+			} catch (IllegalArgumentException e) {
+				e.printStackTrace();
+			}
+			Object[] arguments = new Object[1];
+			arguments[0] = N_DATASIZE;
+
+			concurrentLinkedQueue.add(new Benchmark(benchmark, method, arguments));
+
+		}
+		return concurrentLinkedQueue;
+	}
+	
+	private static Benchmark createBenchmark(Class<?> bmClass) {
+		Object benchmark = null;
+		Method method = null;
+		try {
+			benchmark = bmClass.newInstance();
+			method = bmClass.getMethod(BM_METHOD, BM_METHOD_ARGUEMENT_TYPE);
+		} catch (InstantiationException e) {
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+		} catch (NoSuchMethodException e) {
+			e.printStackTrace();
+		} catch (SecurityException e) {
+			e.printStackTrace();
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+		}
+		Object[] arguments = new Object[1];
+		arguments[0] = N_DATASIZE;
+
+		return new Benchmark(benchmark, method, arguments);
+	}
+
+	private static Class<?> getBenchmarkClass(String bmName) {
+
+		Class<?> bmClass = null;
+
+		try {
+			if (bmName.equalsIgnoreCase(MOL)) {
+				bmClass = Class.forName(MOL_CLASS);
+			} else if (bmName.equalsIgnoreCase(MON)) {
+				bmClass = Class.forName(MON_CLASS);
+			} else if (bmName.equalsIgnoreCase(RAY)) {
+				bmClass = Class.forName(RAY_CLASS);
+			} else {
+				throw new Exception("Can not find the Benchmark " + bmName);
+			}
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return bmClass;
+	}
+}
