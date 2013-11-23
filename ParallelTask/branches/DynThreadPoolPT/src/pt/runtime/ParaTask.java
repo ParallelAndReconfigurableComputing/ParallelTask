@@ -53,10 +53,10 @@ public class ParaTask {
 	
 	//private static int threadPoolSize = Runtime.getRuntime().availableProcessors();
 	private static ScheduleType scheduleType = ScheduleType.WorkStealing;
-	static boolean isInitialized = false;
+	private static boolean isInitialized = false;
 
-	static Thread EDT = null;		// a reference to the EDT
-	static AbstractTaskListener listener;	// the EDT task listener
+	private static Thread EDT = null;		// a reference to the EDT
+	private static AbstractTaskListener listener;	// the EDT task listener
 		
 	ParaTask(){
 		

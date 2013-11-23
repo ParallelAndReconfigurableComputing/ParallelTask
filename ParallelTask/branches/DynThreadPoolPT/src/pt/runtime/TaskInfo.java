@@ -138,7 +138,10 @@ public class TaskInfo {
 	}
 	
 	public Thread setRegisteringThread() {
-		registeringThread = Thread.currentThread();
+		if (GuiThread.isEventDispatchThread())
+			registeringThread = ParaTask.getEDT();
+		else
+			registeringThread = Thread.currentThread();
 		return registeringThread;
 	}
 	
