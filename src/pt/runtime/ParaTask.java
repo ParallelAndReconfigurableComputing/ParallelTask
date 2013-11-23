@@ -22,6 +22,8 @@ package pt.runtime;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import org.omg.CORBA.PUBLIC_MEMBER;
+
 
 /**
  * 
@@ -36,8 +38,21 @@ import java.util.Iterator;
  */
 public class ParaTask {
 	
-	private static int threadPoolSize = Runtime.getRuntime().availableProcessors();
-	private static ScheduleType scheduleType = ScheduleType.MixedSchedule;
+	/**
+	 * 
+	 * @Author : Kingsley
+	 * @since : 29/04/2013
+	 * 
+	 * ParaTask does not need to know the thread pool size. It should ask thread pool to get
+	 * the size of the pool. 
+	 * 
+	 * User does not need to know anything about thread, then it might be a good idea to set
+	 * the thread pool size through the ParaTask rather than accessing the thread pool directly.
+	 * 
+	 * */
+	
+	//private static int threadPoolSize = Runtime.getRuntime().availableProcessors();
+	private static ScheduleType scheduleType = ScheduleType.WorkStealing;
 	private static boolean isInitialized = false;
 
 	private static Thread EDT = null;		// a reference to the EDT
@@ -79,17 +94,84 @@ public class ParaTask {
 		 * from its local queue before helping with the global shared queue.    
 		 */
 		MixedSchedule };
+		
+		
+   /**
+	* 
+	* Enum representing the possible thread pool types that ParaTask supports.
+	* 
+	* @author Kingsley
+ 	* @since 27/05/2013
+  	*/
+	public static enum ThreadPoolType{
+	    	ALL, ONEOFF, MULTI
+	 }	
+		
+		
+
 
     /**
      * Set the size of the thread pool. To have any effect, this must be executed very early before 
      * ParaTask creates the runtime. 
      * @param size
      */
-    public static void setThreadPoolSize(int size) {
+    public static void setThreadPoolSize(ThreadPoolType threadPoolType, int size) {
+    	if (size < 1)
+			throw new IllegalArgumentException("Trying to create a Taskpool with " + size + " threads");
+		
+		
+		/**
+		 * 
+		 * @Author Kingsley
+		 * @since 29/04/2013
+		 * 
+		 * Set thread pool size through accessing the class of thread pool
+		 * 
+		 * @since 27/05/2013
+		 * Add another argument to indicate the thread pool type
+		 * */
+		
+    	//threadPoolSize = size;
+		//ThreadPool.setPoolSize(size);
+		ThreadPool.setPoolSize(threadPoolType,size);
+    }
+    
+    /**
+     * @Author Kingsley
+     * @since 02/05/2013
+     * @param size
+     * 
+     * Set the size of the multi task thread pool. 
+     * To have any effect, this must be executed very early before ParaTask creates the runtime. 
+     * 
+     * @since 27/05/2013
+     * No need any more
+     * 
+     */
+    /*public static void setMultiTaskThreadPoolSize(int size) {
 		if (size < 1)
 			throw new IllegalArgumentException("Trying to create a Taskpool with " + size + " threads");
-    	threadPoolSize = size;
-    }
+		
+		ThreadPool.setMultiTaskThreadPoolSize(size);
+    }*/
+    
+    /**
+     * @Author : Kingsley
+     * @since : 02/05/2013
+     * @param size
+     * 
+     * Set the size of the one-off task thread pool. 
+     * To have any effect, this must be executed very early before ParaTask creates the runtime. 
+     * 
+	 * @since 27/05/2013
+     * No need any more
+     */
+    /*public static void setOneoffThreadPoolSize(int size) {
+		if (size < 1)
+			throw new IllegalArgumentException("Trying to create a Taskpool with " + size + " threads");
+		
+		ThreadPool.setOneoffTaskThreadPoolSize(size);
+    }*/
     
     /**
      * Set the scheduling scheme. This only has an effect if no tasks have been executed yet 
@@ -115,8 +197,23 @@ public class ParaTask {
      * 
      * @return	The thread pool size.
      */
-    public static int getThreadPoolSize() {
-    	return threadPoolSize;
+    public static int getThreadPoolSize(ThreadPoolType threadPoolType) {
+    	
+    	/**
+		 * 
+		 * @Author : Kingsley
+		 * @since : 29/04/2013
+		 * 
+		 * Get thread pool size through accessing the class of thread pool
+		 * 
+		 * */
+    	
+    	//return threadPoolSize;
+    	return ThreadPool.getPoolSize(threadPoolType);
+    }
+    
+    public static int getActiveCount(ThreadPoolType threadPoolType){
+    	return ThreadPool.getActiveCount(threadPoolType);
     }
 	
 	/**
@@ -230,4 +327,5 @@ public class ParaTask {
 		}
 		return list;
 	}
+
 }

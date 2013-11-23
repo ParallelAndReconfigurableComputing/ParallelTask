@@ -19,6 +19,12 @@
 
 package pt.runtime;
 
+import java.util.AbstractQueue;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.LinkedBlockingDeque;
+
 public interface Taskpool {
 		/**
 	* The specified task is currently on the waiting queue since it has some dependences. However, all thoses dependences have 
@@ -53,7 +59,10 @@ public interface Taskpool {
 	* @param taskinfo
 	* @param count
 	* @return
-	*/
+	* 
+	* 
+	* */
+	
 	public TaskIDGroup enqueueMulti(TaskInfo taskinfo, int count);
 	
 	/**
@@ -75,4 +84,18 @@ public interface Taskpool {
 	
 	public int totalNumTasksExecuted();
 	
+	
+	/**
+	 * 
+	 * @Author : Kingsley
+	 * @since : 02/05/2013 
+	 * Used to access local one-off task queues by thread pool when initialization.
+	 * 
+	 * @since : 18/05/2013 
+	 * Used to access private task queues by thread pool when initialization.
+	 *  
+	 * */
+	public Map<Integer, LinkedBlockingDeque<TaskID<?>>> getLocalOneoffTaskQueues();
+	
+	public List<AbstractQueue<TaskID<?>>> getPrivateTaskQueues();
 }

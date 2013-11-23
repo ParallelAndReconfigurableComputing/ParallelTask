@@ -95,6 +95,44 @@ public class TaskID<E> {
 	private PipelineThread pipelineThread = null; 
 	
 	/**
+	 * 
+	 * @Author  Kingsley
+	 * @since 04/05/2013
+	 * 
+	 * Later Expansion
+	 * Use this to indicate how many sub tasks should be expanded.
+	 * Can only be set the value from {@link AbstractTaskPool#enqueueMulti()}
+	 * 
+	 * */
+	private int count = 0;
+	
+	protected int getCount() {
+		return count;
+	}
+
+	protected void setCount(int count) {
+		this.count = count;
+	}
+	
+	/**
+	 * 
+	 * @Author  Kingsley
+	 * @since 21/05/2013
+	 * 
+	 * When a multi task is expanded, set this field to true for its every single sub tasks.
+	 * 
+	 * */
+	private boolean isSubTask = false;
+
+	protected boolean isSubTask() {
+		return isSubTask;
+	}
+
+	protected void setSubTask(boolean isSubTask) {
+		this.isSubTask = isSubTask;
+	}
+
+	/**
 	 * Checks to see if this task has successfully cancelled.
 	 * @return <code>true</code> if it has cancelled successfully, <code>false</code> otherwise. 
 	 */
@@ -291,8 +329,28 @@ public class TaskID<E> {
 		}
 	}
 	
+	/**
+	 * 
+	 * @author Kingsley
+	 * @since 10/05/2013
+	 * 
+	 * Move the globalID allocation from the constructor of TaskID() 
+	 * to the constructor of TaskID(TaskInfo taskInfo)
+	 * 
+	 * The idea is all subtasks of a multi task should share a global id,
+	 * rather than give them a new one when they are created.
+	 * 
+	 * 
+	 * @since 23/05/2013
+	 * All subtasks of a multi task share a global id, this idea is good for understanding
+	 * All subtasks have different global id, this idea is good for software engineering.
+	 * If we treat each subtask the same as one-off task, which means we should give each
+	 * subtask a unique global id.
+	 * 
+	 * */
+	
 	TaskID() {
-		globalID = nextGlobalID.incrementAndGet();
+		//globalID = nextGlobalID.incrementAndGet();
 		completedLatch = new CountDownLatch(1);
 		hasCompleted = new AtomicBoolean(false);
 		status = new AtomicInteger(CREATED);
@@ -301,6 +359,13 @@ public class TaskID<E> {
 	
 	TaskID(TaskInfo taskInfo) {
 		this();
+		
+		/*if(!taskInfo.isSubTask()){
+			globalID = nextGlobalID.incrementAndGet();
+		}*/
+		
+		globalID = nextGlobalID.incrementAndGet();
+		
 		completedLatchForRegisteringThread = new CountDownLatch(1);
 		this.taskInfo = taskInfo;
 		isInteractive = taskInfo.isInteractive();
@@ -465,8 +530,24 @@ public class TaskID<E> {
 	 * ParaTask worker thread, then other tasks are executed until this task completes. 
 	 * @throws ExecutionException
 	 * @throws InterruptedException
+	 * 
+	 * 
+	 * @author Kingsley
+	 * @since 25/05/2013
+	 * 
+	 * Before a worker tries to find another task and executes it, this thread should 
+	 * check if there is cancel request.
+	 * 
+	 * If a worker thread is poisoned, even there are some unfinished children tasks,
+	 * it will not get a chance to execute them, what it can do is check if they are 
+	 * finished or not(executed by other thread)
+	 * 
+	 * @since 31/05/2013
+	 * Simplify the implementation of reducing thread number.
+	 * Do not need to access the "PoisonPillBox" to get a "pill"
+	 * Instead, using the class of "LottoBox"
 	 */
-	public void waitTillFinished() throws ExecutionException, InterruptedException {
+	public void waitTillFinished() throws ExecutionException, InterruptedException {		
 		if (!hasCompleted.get()) {
 			Thread t = Thread.currentThread();
 			
@@ -476,10 +557,35 @@ public class TaskID<E> {
 				WorkerThread currentWorker = (WorkerThread) t;
 				
 				// if still not completed then start a substitute thread
+				
+				/**
+				 * 
+				 * @author Kingsley
+				 * Add a new check condition here in order to check if it is poisoned
+				 * 
+				 * */
+				
 				while (!hasCompleted.get()) {
+					//System.out.println("inside " + currentWorker.threadID + " " + currentWorker.isCancelRequired() + " " + currentWorker.isPoisoned());
+					if (currentWorker.isCancelRequired() && !currentWorker.isCancelled()) {
+						/*PoisonPill pill = PoisonPillBox.getPill();
+						if (null != pill) {
+							pill.tryKill();
+						}*/
+						LottoBox.tryLuck();
+					}
 					
-					// causes the worker to either execute a task or sleep
-					currentWorker.executeAnotherTaskOrSleep();
+					if (!currentWorker.isCancelled()) {
+						// causes the worker to either execute a task or sleep
+						currentWorker.executeAnotherTaskOrSleep();
+					} else {
+						try {
+							Thread.sleep(1);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+					}
+					
 				}
 			} else {
 				if (currentThreadIsTheRegisteredThread()) {
@@ -715,4 +821,20 @@ public class TaskID<E> {
 	void setExecuteOnThread(int executeOnThread) {
 		this.executeOnThread = executeOnThread;
 	}
+
+	
+	/**
+	 * 
+	 * @Author : Kingsley
+	 * @since : 10/05/2013
+	 * 
+	 * When multi task is expanded, call this method, and set global id for its sub tasks.
+	 * 
+	 *
+	 * */
+	protected void setGlobalID(int globalID) {
+		this.globalID = globalID;
+	}
+	
+	
 }

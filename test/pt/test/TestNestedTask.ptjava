@@ -1,0 +1,387 @@
+package paratask.test;
+
+import java.util.Date;
+
+import paratask.moldyn.Param;
+
+public class TestNestedTask {
+	private static final int N_DATASIZE = 0;
+
+	private static final String BM_METHOD = "execute";
+	
+	private static final Class<?>[] BM_METHOD_ARGUEMENT_TYPE = {int.class};
+
+	private static final String MOL = "MOL";
+
+	private static final String MOL_CLASS = "core.moldyn.Molcore";
+
+	private static final String MON = "MON";
+
+	private static final String MON_CLASS = "core.montecarlo.Moncore";
+
+	private static final String RAY = "RAY";
+
+	private static final String RAY_CLASS = "core.raytracer.Raycore";
+	
+	private static Class<?> bmClass;
+		
+
+		public static void main(String[] args) {
+			if (null == args || args.length != 1) {
+				try {
+					throw new Exception("Wrong arguemnts setting");
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+			
+			getBenchmarkClass(args[0]);
+			
+			TaskID tid_0 = runBM_0(createBenchmark());
+			TaskID tid_1 = runBM_1(createBenchmark());
+			TaskID tid_2 = runBM_2(createBenchmark());
+			//TaskID tid_3 = runBM_3(createBenchmark());
+			
+			TaskIDGroup tig = new TaskIDGroup(3);
+			
+			tig.add(tid_0);
+			tig.add(tid_1);
+			tig.add(tid_2);
+			//tig.add(tid_3);
+			
+			try {
+				tig.waitTillFinished();
+			} catch (ExecutionException e) {
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		TASK private static void runBM_0(Benchmark benchmark) {
+			try { 
+				benchmark.getMethod().invoke(benchmark.getInstance(), benchmark.getArguments()); 
+				System.out.println("Thread " + Thread.currentThread().getId() + " fihish benchmark_0 " + "Multi Task [thread "+CurrentTask.currentThreadID()+"] [thread LocalID "+CurrentTask.currentThreadLocalID()+"] [globalID "+CurrentTask.globalID()+"]  [subtask "+CurrentTask.relativeID()+"]  [mulTaskSize "+CurrentTask.multiTaskSize()+"] ");
+				/*WorkerThread workerThread = (WorkerThread) Thread.currentThread();
+				System.out.println(workerThread.currentTaskStack.size());*/
+			} catch (IllegalAccessException e) { 
+				e.printStackTrace(); 
+			} catch (IllegalArgumentException e) { 
+				e.printStackTrace(); 
+			} catch (InvocationTargetException e) { 
+				e.printStackTrace(); 
+			} 
+			
+			TaskID tid_0_1 = runBM_0_1(createBenchmark());
+			TaskIDGroup tig_0_1 = new TaskIDGroup(1);
+			tig_0_1.add(tid_0_1);
+			
+			try {
+				tig_0_1.waitTillFinished();
+			} catch (ExecutionException e) {
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			
+			TaskID tid_0_2 = runBM_0_2(createBenchmark());
+			TaskIDGroup tig_0_2 = new TaskIDGroup(1);
+			tig_0_2.add(tid_0_2);
+			
+			try {
+				tig_0_2.waitTillFinished();
+			} catch (ExecutionException e) {
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			
+		}
+
+		TASK private static void runBM_0_1(Benchmark benchmark) { 
+			try { 
+				benchmark.getMethod().invoke(benchmark.getInstance(), benchmark.getArguments()); 
+				System.out.println("Thread " + Thread.currentThread().getId() + " fihish benchmark_0_1 " + "Multi Task [thread "+CurrentTask.currentThreadID()+"] [thread LocalID "+CurrentTask.currentThreadLocalID()+"] [globalID "+CurrentTask.globalID()+"]  [subtask "+CurrentTask.relativeID()+"]  [mulTaskSize "+CurrentTask.multiTaskSize()+"] ");
+				/*WorkerThread workerThread = (WorkerThread) Thread.currentThread();
+				System.out.println(workerThread.currentTaskStack.size());*/
+			} catch (IllegalAccessException e) { 
+				e.printStackTrace(); 
+			} catch (IllegalArgumentException e) { 
+				e.printStackTrace(); 
+			} catch (InvocationTargetException e) { 
+				e.printStackTrace(); 
+			} 
+		}
+		
+		TASK private static void runBM_0_2(Benchmark benchmark) { 
+			try { 
+				benchmark.getMethod().invoke(benchmark.getInstance(), benchmark.getArguments()); 
+				System.out.println("Thread " + Thread.currentThread().getId() + " fihish benchmark_0_2 " + "Multi Task [thread "+CurrentTask.currentThreadID()+"] [thread LocalID "+CurrentTask.currentThreadLocalID()+"] [globalID "+CurrentTask.globalID()+"]  [subtask "+CurrentTask.relativeID()+"]  [mulTaskSize "+CurrentTask.multiTaskSize()+"] ");
+				/*WorkerThread workerThread = (WorkerThread) Thread.currentThread();
+				System.out.println(workerThread.currentTaskStack.size());*/
+			} catch (IllegalAccessException e) { 
+				e.printStackTrace(); 
+			} catch (IllegalArgumentException e) { 
+				e.printStackTrace(); 
+			} catch (InvocationTargetException e) { 
+				e.printStackTrace(); 
+			} 
+		}
+		
+		TASK private static void runBM_1(Benchmark benchmark) {
+			try { 
+				benchmark.getMethod().invoke(benchmark.getInstance(), benchmark.getArguments());
+				System.out.println("Thread " + Thread.currentThread().getId() + " fihish benchmark_1 " + "Multi Task [thread "+CurrentTask.currentThreadID()+"] [thread LocalID "+CurrentTask.currentThreadLocalID()+"] [globalID "+CurrentTask.globalID()+"]  [subtask "+CurrentTask.relativeID()+"]  [mulTaskSize "+CurrentTask.multiTaskSize()+"] ");
+				/*WorkerThread workerThread = (WorkerThread) Thread.currentThread();
+				System.out.println(workerThread.currentTaskStack.size());*/
+			} catch (IllegalAccessException e) { 
+				e.printStackTrace(); 
+			} catch (IllegalArgumentException e) { 
+				e.printStackTrace(); 
+			} catch (InvocationTargetException e) { 
+				e.printStackTrace(); 
+			} 
+			
+			TaskID tid_1_1 = runBM_1_1(createBenchmark());
+			TaskIDGroup tig_1_1 = new TaskIDGroup(1);
+			tig_1_1.add(tid_1_1);
+			
+			try {
+				tig_1_1.waitTillFinished();
+			} catch (ExecutionException e) {
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			
+			TaskID tid_1_2 = runBM_1_2(createBenchmark());
+			TaskIDGroup tig_1_2 = new TaskIDGroup(1);
+			tig_1_2.add(tid_1_2);
+			
+			try {
+				tig_1_2.waitTillFinished();
+			} catch (ExecutionException e) {
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			
+		}
+		
+		TASK private static void runBM_1_1(Benchmark benchmark) { 
+			try { 
+				benchmark.getMethod().invoke(benchmark.getInstance(), benchmark.getArguments()); 
+				System.out.println("Thread " + Thread.currentThread().getId() + " fihish benchmark_1_1 " + "Multi Task [thread "+CurrentTask.currentThreadID()+"] [thread LocalID "+CurrentTask.currentThreadLocalID()+"] [globalID "+CurrentTask.globalID()+"]  [subtask "+CurrentTask.relativeID()+"]  [mulTaskSize "+CurrentTask.multiTaskSize()+"] ");
+				/*WorkerThread workerThread = (WorkerThread) Thread.currentThread();
+				System.out.println(workerThread.currentTaskStack.size());*/
+			} catch (IllegalAccessException e) { 
+				e.printStackTrace(); 
+			} catch (IllegalArgumentException e) { 
+				e.printStackTrace(); 
+			} catch (InvocationTargetException e) { 
+				e.printStackTrace(); 
+			} 
+		}
+		
+		TASK private static void runBM_1_2(Benchmark benchmark) { 
+			try { 
+				benchmark.getMethod().invoke(benchmark.getInstance(), benchmark.getArguments()); 
+				System.out.println("Thread " + Thread.currentThread().getId() + " fihish benchmark_1_2 " + "Multi Task [thread "+CurrentTask.currentThreadID()+"] [thread LocalID "+CurrentTask.currentThreadLocalID()+"] [globalID "+CurrentTask.globalID()+"]  [subtask "+CurrentTask.relativeID()+"]  [mulTaskSize "+CurrentTask.multiTaskSize()+"] ");
+				/*WorkerThread workerThread = (WorkerThread) Thread.currentThread();
+				System.out.println(workerThread.currentTaskStack.size());*/
+			} catch (IllegalAccessException e) { 
+				e.printStackTrace(); 
+			} catch (IllegalArgumentException e) { 
+				e.printStackTrace(); 
+			} catch (InvocationTargetException e) { 
+				e.printStackTrace(); 
+			} 
+		}
+	
+		TASK private static void runBM_2(Benchmark benchmark) {
+			try { 
+				benchmark.getMethod().invoke(benchmark.getInstance(), benchmark.getArguments()); 
+				System.out.println("Thread " + Thread.currentThread().getId() + " fihish benchmark_2 " + "Multi Task [thread "+CurrentTask.currentThreadID()+"] [thread LocalID "+CurrentTask.currentThreadLocalID()+"] [globalID "+CurrentTask.globalID()+"]  [subtask "+CurrentTask.relativeID()+"]  [mulTaskSize "+CurrentTask.multiTaskSize()+"] ");
+				/*WorkerThread workerThread = (WorkerThread) Thread.currentThread();
+				System.out.println(workerThread.currentTaskStack.size());*/
+			} catch (IllegalAccessException e) { 
+				e.printStackTrace(); 
+			} catch (IllegalArgumentException e) { 
+				e.printStackTrace(); 
+			} catch (InvocationTargetException e) { 
+				e.printStackTrace(); 
+			} 
+			
+			TaskID tid_2_1 = runBM_2_1(createBenchmark());
+			TaskIDGroup tig_2_1 = new TaskIDGroup(1);
+			tig_2_1.add(tid_2_1);
+			
+			try {
+				Thread.sleep(1000 * 5);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			
+			try {
+				tig_2_1.waitTillFinished();
+			} catch (ExecutionException e) {
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			
+			TaskID tid_2_2 = runBM_2_2(createBenchmark());
+			TaskIDGroup tig_2_2 = new TaskIDGroup(1);
+			tig_2_2.add(tid_2_2);
+			
+			try {
+				Thread.sleep(1000 * 5);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			
+			try {
+				tig_2_2.waitTillFinished();
+			} catch (ExecutionException e) {
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			
+		}
+		
+		TASK private static void runBM_2_1(Benchmark benchmark) { 
+			try { 
+				benchmark.getMethod().invoke(benchmark.getInstance(), benchmark.getArguments()); 
+				System.out.println("Thread " + Thread.currentThread().getId() + " fihish benchmark_2_1 " + "Multi Task [thread "+CurrentTask.currentThreadID()+"] [thread LocalID "+CurrentTask.currentThreadLocalID()+"] [globalID "+CurrentTask.globalID()+"]  [subtask "+CurrentTask.relativeID()+"]  [mulTaskSize "+CurrentTask.multiTaskSize()+"] ");
+				/*WorkerThread workerThread = (WorkerThread) Thread.currentThread();
+				System.out.println(workerThread.currentTaskStack.size());*/
+			} catch (IllegalAccessException e) { 
+				e.printStackTrace(); 
+			} catch (IllegalArgumentException e) { 
+				e.printStackTrace(); 
+			} catch (InvocationTargetException e) { 
+				e.printStackTrace(); 
+			} 
+		}
+		
+		TASK private static void runBM_2_2(Benchmark benchmark) { 
+			try { 
+				benchmark.getMethod().invoke(benchmark.getInstance(), benchmark.getArguments()); 
+				System.out.println("Thread " + Thread.currentThread().getId() + " fihish benchmark_2_2 " + "Multi Task [thread "+CurrentTask.currentThreadID()+"] [thread LocalID "+CurrentTask.currentThreadLocalID()+"] [globalID "+CurrentTask.globalID()+"]  [subtask "+CurrentTask.relativeID()+"]  [mulTaskSize "+CurrentTask.multiTaskSize()+"] ");
+				/*WorkerThread workerThread = (WorkerThread) Thread.currentThread();
+				System.out.println(workerThread.currentTaskStack.size());*/
+			} catch (IllegalAccessException e) { 
+				e.printStackTrace(); 
+			} catch (IllegalArgumentException e) { 
+				e.printStackTrace(); 
+			} catch (InvocationTargetException e) { 
+				e.printStackTrace(); 
+			} 
+		}
+		
+		/*TASK private static void runBM_3(Benchmark benchmark) {
+			try { 
+				benchmark.getMethod().invoke(benchmark.getInstance(), benchmark.getArguments()); 
+				System.out.println("Thread " + Thread.currentThread().getId() + " fihish benchmark_3");
+			} catch (IllegalAccessException e) { 
+				e.printStackTrace(); 
+			} catch (IllegalArgumentException e) { 
+				e.printStackTrace(); 
+			} catch (InvocationTargetException e) { 
+				e.printStackTrace(); 
+			} 
+			
+			TaskID tid_3_1 = runBM_3_1(createBenchmark());
+			TaskIDGroup tig_3_1 = new TaskIDGroup(1);
+			tig_3_1.add(tid_3_1);
+			
+			try {
+				tig_3_1.waitTillFinished();
+			} catch (ExecutionException e) {
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			
+			TaskID tid_3_2 = runBM_3_2(createBenchmark());
+			TaskIDGroup tig_3_2 = new TaskIDGroup(1);
+			tig_3_2.add(tid_3_2);
+			
+			try {
+				tig_3_2.waitTillFinished();
+			} catch (ExecutionException e) {
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			
+		}
+		
+		TASK private static void runBM_3_1(Benchmark benchmark) { 
+			try { 
+				benchmark.getMethod().invoke(benchmark.getInstance(), benchmark.getArguments()); 
+				System.out.println("Thread " + Thread.currentThread().getId() + " fihish benchmark_3_1");
+			} catch (IllegalAccessException e) { 
+				e.printStackTrace(); 
+			} catch (IllegalArgumentException e) { 
+				e.printStackTrace(); 
+			} catch (InvocationTargetException e) { 
+				e.printStackTrace(); 
+			} 
+		}
+		
+		TASK private static void runBM_3_2(Benchmark benchmark) { 
+			try { 
+				benchmark.getMethod().invoke(benchmark.getInstance(), benchmark.getArguments()); 
+				System.out.println("Thread " + Thread.currentThread().getId() + " fihish benchmark_3_2");
+			} catch (IllegalAccessException e) { 
+				e.printStackTrace(); 
+			} catch (IllegalArgumentException e) { 
+				e.printStackTrace(); 
+			} catch (InvocationTargetException e) { 
+				e.printStackTrace(); 
+			} 
+		}
+		*/
+		private static Benchmark createBenchmark() {
+			Object benchmark = null;
+			Method method = null;
+			try {
+				benchmark = bmClass.newInstance();
+				method = bmClass.getMethod(BM_METHOD, BM_METHOD_ARGUEMENT_TYPE);
+			} catch (InstantiationException e) {
+				e.printStackTrace();
+			} catch (IllegalAccessException e) {
+				e.printStackTrace();
+			} catch (NoSuchMethodException e) {
+				e.printStackTrace();
+			} catch (SecurityException e) {
+				e.printStackTrace();
+			} catch (IllegalArgumentException e) {
+				e.printStackTrace();
+			}
+			Object[] arguments = new Object[1];
+			arguments[0] = N_DATASIZE;
+
+			return new Benchmark(benchmark, method, arguments);
+		}
+
+		private static void getBenchmarkClass(String bmName) {
+			try {
+				if (bmName.equalsIgnoreCase(MOL)) {
+					bmClass = Class.forName(MOL_CLASS);
+				} else if (bmName.equalsIgnoreCase(MON)) {
+					bmClass = Class.forName(MON_CLASS);
+				} else if (bmName.equalsIgnoreCase(RAY)) {
+					bmClass = Class.forName(RAY_CLASS);
+				} else {
+					throw new Exception("Can not find the Benchmark " + bmName);
+				}
+			} catch (ClassNotFoundException e) {
+				e.printStackTrace();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+}
