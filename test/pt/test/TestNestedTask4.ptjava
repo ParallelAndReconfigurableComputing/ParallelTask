@@ -1,12 +1,11 @@
-package paratask.test;
+package pt.test;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.Random;
 
-import paratask.moldyn.Param;
-import paratask.runtime.ParaTask.ThreadPoolType;
+import pt.runtime.ParaTask.ThreadPoolType;
 
 public class TestNestedTask4 {
 	private static final int N_DATASIZE = 0;

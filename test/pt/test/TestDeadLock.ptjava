@@ -1,4 +1,4 @@
-package paratask.test;
+package pt.test;
 
 public class TestDeadLock {
 	public static void main(String[] args){

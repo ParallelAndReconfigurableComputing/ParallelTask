@@ -1,4 +1,4 @@
-package paratask.test;
+package pt.test;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;

@@ -7,8 +7,6 @@ import java.util.Random;//####[6]####
 //####[6]####
 //-- ParaTask related imports//####[6]####
 import pt.runtime.*;//####[6]####
-import pt.runtime.ParaTask.ThreadPoolType;
-
 import java.util.concurrent.ExecutionException;//####[6]####
 import java.util.concurrent.locks.*;//####[6]####
 import java.lang.reflect.*;//####[6]####
@@ -18,9 +16,7 @@ import java.util.ArrayList;//####[6]####
 import java.util.List;//####[6]####
 //####[6]####
 public class TestMixedTask2 {//####[8]####
-    static{
-    	ParaTask.init();
-    }//####[8]####
+    static{ParaTask.init();}//####[8]####
     /*  ParaTask helper method to access private/protected slots *///####[8]####
     public void __pt__accessPrivateSlot(Method m, Object instance, TaskID arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[8]####
         if (m.getParameterTypes().length == 0)//####[8]####
