@@ -1,4 +1,4 @@
-package paratask.test;
+package pt.test;
 
 public class TestCancel {
 	TASK public static void compute() {

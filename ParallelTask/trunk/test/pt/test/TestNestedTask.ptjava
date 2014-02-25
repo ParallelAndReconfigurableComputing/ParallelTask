@@ -1,8 +1,6 @@
-package paratask.test;
+package pt.test;
 
 import java.util.Date;
-
-import paratask.moldyn.Param;
 
 public class TestNestedTask {
 	private static final int N_DATASIZE = 0;

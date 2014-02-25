@@ -142,7 +142,7 @@ public class Build extends JFrame {//####[22]####
                         Method __pt__id_slot_0 = null;//####[115]####
                         __pt__id_slot_0 = ParaTaskHelper.getDeclaredMethod(Build.this.getClass(), "finishedBuilding", new Class[] {});//####[115]####
                         if (false) Build.this.finishedBuilding(); //-- ParaTask uses this dummy statement to ensure the slot exists (otherwise Java compiler will complain)//####[115]####
-                        __pt__id.addSlotToNotify(new Slot(__pt__id_slot_0, Build.this, isEDT, false));//####[115]####
+                        __pt__id.addSlotToNotify(new Slot(__pt__id_slot_0, Build.this, false));//####[115]####
 //####[115]####
                     } catch(Exception __pt__e) { //####[115]####
                         System.err.println("Problem registering method in clause:");//####[115]####
