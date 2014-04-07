@@ -652,11 +652,12 @@ public class TaskID<E> {
 		return hasUserError.get();
 	}
 	
-	/*
-	 * The Task is really complete now, since any slots have been executed by the registering thread.
+	/**
+	 * @author Kingsley
+	 * @date 2014/04/08
 	 * 
-	 * This method will be called by the registering thread when it completes all the slots (handlers and notifies)
-	 */
+	 * Invoke all the dependent subtasks for group
+	 * */
 	void setComplete() {
 		
 //		System.out.println("SET COMPLETE...");
@@ -678,6 +679,26 @@ public class TaskID<E> {
 		changeStatusLock.unlock();
 		
 		if (group != null) {
+			
+			TaskID groupWaiter = null;
+			
+			if (((TaskID)group).waitingTasks != null) {
+				ConcurrentLinkedQueue<TaskID> groupWaitingTaskIDs = ((TaskID)group).waitingTasks;
+				
+				while ((groupWaiter = groupWaitingTaskIDs.poll()) != null) {
+					// removes the waiter from the queue
+					//groupWaiter.dependenceFinished(group);
+					
+					ConcurrentHashMap groupRemainingDependences = groupWaiter.remainingDependences;
+									
+					groupRemainingDependences.remove(group);
+					if (groupRemainingDependences.isEmpty()) {
+						TaskpoolFactory.getTaskpool().nowReady(groupWaiter);
+					}
+					
+				}
+			}
+			
 			group.setComplete();
 		}
 	}

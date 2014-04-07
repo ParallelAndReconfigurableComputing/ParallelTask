@@ -22,6 +22,7 @@ package pt.runtime;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -313,10 +314,12 @@ public class TaskIDGroup<E> extends TaskID<E> {
 		hasUserError.set(true);
 	}
 
+	/*
 	@Override
 	void setRemainingDependences(ArrayList<TaskID> deps) {
-		throw new UnsupportedOperationException("TODO: Not yet implemented!");
+		//throw new UnsupportedOperationException("TODO: Not yet implemented!");
 	}
+	*/
 
 	@Override
 	void setReturnResult(Object returnResult) {
