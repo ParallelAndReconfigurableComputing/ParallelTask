@@ -322,7 +322,7 @@ public abstract class AbstractTaskPool implements Taskpool {
 		ArrayList<TaskID> allDependences = null;
 		if (taskinfo.getDependences() != null)
 			allDependences = ParaTask.allTasksInList(taskinfo.getDependences());
-
+			
 		Thread rt = taskinfo.setRegisteringThread();
 		
 		if (rt instanceof TaskThread)
@@ -440,6 +440,7 @@ public abstract class AbstractTaskPool implements Taskpool {
 	 * There is just one waiting queue, therefore adding to the waiting queue is not schedule-specific.
 	 */
 	protected void enqueueWaitingTask(TaskID taskID, ArrayList<TaskID> allDependences) {
+
 		if (allDependences.size() > 0) {
 			waitingTasks.put(taskID, "");
 			taskID.setRemainingDependences(allDependences);

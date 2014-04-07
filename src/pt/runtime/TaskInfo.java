@@ -75,6 +75,7 @@ public class TaskInfo {
 		if (otherTask != null) {
 			if (dependences == null)
 				dependences = new ArrayList<TaskID>();
+			
 			dependences.add(otherTask);
 			
 			// mark as pipeline if a dependency is a pipeline stage

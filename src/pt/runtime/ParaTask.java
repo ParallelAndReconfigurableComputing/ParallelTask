@@ -292,18 +292,32 @@ public class ParaTask {
 	 * @param list	Input list of TaskIDs (with potentially some TaskIDGroups)
 	 * @return	A list containing only TaskIDs (i.e. expanding the TaskIDGroups)
 	 * @see #allTasksInGroup(TaskIDGroup)
+	 * 
+	 * @author Kingsley
+	 * @date 2014/04/08
+	 * When add dependency to a task(A), if the dependency is a TaskIDGroup, meaning that it is a Multi-Task,
+	 * the task(A) should directly depends on this Multi-Task, rather than all its sub-tasks.
+	 * 
+	 * This is because of the scheme of Late-expansion. At this point, Multi-Task may have not been executed yet,
+	 * then all its sub-tasks have not been created yet. 
+	 * 
 	 */
 	public static ArrayList<TaskID> allTasksInList(ArrayList<TaskID> list) {
 		ArrayList<TaskID> result = new ArrayList<TaskID>();
 		
 		Iterator<TaskID> it = list.iterator();
 		while (it.hasNext()) {
+			
+			/*
 			TaskID id = it.next();
 			if (id instanceof TaskIDGroup) {
 				result.addAll(allTasksInGroup((TaskIDGroup)id));
 			} else {
 				result.add(id);
 			}
+			*/
+			
+			result.add(it.next());
 		}
 		return result;
 	}
