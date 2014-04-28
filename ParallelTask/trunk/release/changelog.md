@@ -15,3 +15,8 @@ This is an example of change log, please follow the format specified below.
 
 -->
 
+0.9.4 / 2014-04-29
+===
+
+- Kingsley fixed a bug about task dependences.
+
