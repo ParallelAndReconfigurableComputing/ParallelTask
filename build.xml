@@ -102,6 +102,7 @@
       			<include name="pt/queues/WorkStealingQueue.java"/>
     		</fileset>
   		</javadoc>
+  		<jar jarfile="${dist.dir}/ParaTask_API-0.9.4.zip" basedir="${javadoc.dir}" />
 	</target>
 	
 	<!-- paraimage example -->	
