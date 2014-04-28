@@ -13,7 +13,7 @@ import java.util.List;//####[1]####
 public class TestCancel {//####[3]####
     static{ParaTask.init();}//####[3]####
     /*  ParaTask helper method to access private/protected slots *///####[3]####
-    public void __pt__accessPrivateSlot(Method m, Object instance, TaskID arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[3]####
+    public void __pt__accessPrivateSlot(Method m, Object instance, Future arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[3]####
         if (m.getParameterTypes().length == 0)//####[3]####
             m.invoke(instance);//####[3]####
         else if ((m.getParameterTypes().length == 1))//####[3]####
@@ -34,11 +34,11 @@ public class TestCancel {//####[3]####
             }//####[4]####
         }//####[4]####
     }//####[4]####
-    public static TaskID<Void> compute() {//####[4]####
+    public static Future<Void> compute() {//####[4]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[4]####
-        return compute(new TaskInfo());//####[4]####
+        return compute(new Task());//####[4]####
     }//####[4]####
-    public static TaskID<Void> compute(TaskInfo taskinfo) {//####[4]####
+    public static Future<Void> compute(Task taskinfo) {//####[4]####
         // ensure Method variable is set//####[4]####
         if (__pt__compute__method == null) {//####[4]####
             __pt__compute__ensureMethodVarSet();//####[4]####
@@ -63,8 +63,8 @@ public class TestCancel {//####[3]####
 //####[15]####
 //####[17]####
     public static void main(String[] args) {//####[17]####
-        TaskID tid = compute();//####[18]####
-        TaskIDGroup tig = new TaskIDGroup(1);//####[19]####
+        Future tid = compute();//####[18]####
+        FutureGroup tig = new FutureGroup(1);//####[19]####
         tig.add(tid);//####[20]####
         try {//####[22]####
             Thread.sleep(1000 * 5);//####[23]####

@@ -42,7 +42,7 @@ import java.util.List;//####[32]####
 public class ImageProjectPanel extends ProjectPanel {//####[34]####
     static{ParaTask.init();}//####[34]####
     /*  ParaTask helper method to access private/protected slots *///####[34]####
-    public void __pt__accessPrivateSlot(Method m, Object instance, TaskID arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[34]####
+    public void __pt__accessPrivateSlot(Method m, Object instance, Future arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[34]####
         if (m.getParameterTypes().length == 0)//####[34]####
             m.invoke(instance);//####[34]####
         else if ((m.getParameterTypes().length == 1))//####[34]####
@@ -66,18 +66,18 @@ public class ImageProjectPanel extends ProjectPanel {//####[34]####
         if (__pt__addToThumbnailsPanelTask_File_TaskIDImage_TaskIDImage_TaskIDImage_method == null) {//####[43]####
             try {//####[43]####
                 __pt__addToThumbnailsPanelTask_File_TaskIDImage_TaskIDImage_TaskIDImage_method = ParaTaskHelper.getDeclaredMethod(new ParaTaskHelper.ClassGetter().getCurrentClass(), "__pt__addToThumbnailsPanelTask", new Class[] {//####[43]####
-                    File.class, TaskID.class, TaskID.class, TaskID.class//####[43]####
+                    File.class, Future.class, Future.class, Future.class//####[43]####
                 });//####[43]####
             } catch (Exception e) {//####[43]####
                 e.printStackTrace();//####[43]####
             }//####[43]####
         }//####[43]####
     }//####[43]####
-    private TaskID<Void> addToThumbnailsPanelTask(final Object file, final Object large, final Object square, final Object med) {//####[43]####
+    private Future<Void> addToThumbnailsPanelTask(final Object file, final Object large, final Object square, final Object med) {//####[43]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[43]####
-        return addToThumbnailsPanelTask(file, large, square, med, new TaskInfo());//####[43]####
+        return addToThumbnailsPanelTask(file, large, square, med, new Task());//####[43]####
     }//####[43]####
-    private TaskID<Void> addToThumbnailsPanelTask(final Object file, final Object large, final Object square, final Object med, TaskInfo taskinfo) {//####[43]####
+    private Future<Void> addToThumbnailsPanelTask(final Object file, final Object large, final Object square, final Object med, Task taskinfo) {//####[43]####
         // ensure Method variable is set//####[43]####
         if (__pt__addToThumbnailsPanelTask_File_TaskIDImage_TaskIDImage_TaskIDImage_method == null) {//####[43]####
             __pt__addToThumbnailsPanelTask_File_TaskIDImage_TaskIDImage_TaskIDImage_ensureMethodVarSet();//####[43]####
@@ -87,8 +87,8 @@ public class ImageProjectPanel extends ProjectPanel {//####[34]####
         if (file instanceof BlockingQueue) {//####[43]####
             __pt__queueIndexList.add(0);//####[43]####
         }//####[43]####
-        if (file instanceof TaskID) {//####[43]####
-            taskinfo.addDependsOn((TaskID)file);//####[43]####
+        if (file instanceof Future) {//####[43]####
+            taskinfo.addDependsOn((Future)file);//####[43]####
             __pt__taskIdIndexList.add(0);//####[43]####
         }//####[43]####
         if (large instanceof BlockingQueue) {//####[43]####
@@ -118,7 +118,7 @@ public class ImageProjectPanel extends ProjectPanel {//####[34]####
         taskinfo.setInstance(this);//####[43]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[43]####
     }//####[43]####
-    public void __pt__addToThumbnailsPanelTask(final File file, final TaskID<Image> large, final TaskID<Image> square, final TaskID<Image> med) {//####[43]####
+    public void __pt__addToThumbnailsPanelTask(final File file, final Future<Image> large, final Future<Image> square, final Future<Image> med) {//####[43]####
         SwingUtilities.invokeLater(new Runnable() {//####[43]####
 //####[46]####
             @Override//####[46]####
@@ -152,11 +152,11 @@ public class ImageProjectPanel extends ProjectPanel {//####[34]####
             }//####[63]####
         }//####[63]####
     }//####[63]####
-    private TaskID<Void> finishedAddingNewPanelItemsTask() {//####[63]####
+    private Future<Void> finishedAddingNewPanelItemsTask() {//####[63]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[63]####
-        return finishedAddingNewPanelItemsTask(new TaskInfo());//####[63]####
+        return finishedAddingNewPanelItemsTask(new Task());//####[63]####
     }//####[63]####
-    private TaskID<Void> finishedAddingNewPanelItemsTask(TaskInfo taskinfo) {//####[63]####
+    private Future<Void> finishedAddingNewPanelItemsTask(Task taskinfo) {//####[63]####
         // ensure Method variable is set//####[63]####
         if (__pt__finishedAddingNewPanelItemsTask__method == null) {//####[63]####
             __pt__finishedAddingNewPanelItemsTask__ensureMethodVarSet();//####[63]####
@@ -201,23 +201,23 @@ public class ImageProjectPanel extends ProjectPanel {//####[34]####
                 File[] inputImages = fc.getSelectedFiles();//####[92]####
                 if (MainFrame.isParallel) //####[93]####
                 {//####[93]####
-                    TaskIDGroup grp = new TaskIDGroup(inputImages.length);//####[94]####
+                    FutureGroup grp = new FutureGroup(inputImages.length);//####[94]####
                     for (int i = 0; i < inputImages.length; i++) //####[95]####
                     {//####[95]####
-                        TaskID<Image> idImage = ImageManipulation.getImageFullTask(inputImages[i]);//####[96]####
-                        TaskInfo __pt__idMedium = new TaskInfo();//####[97]####
+                        Future<Image> idImage = ImageManipulation.getImageFullTask(inputImages[i]);//####[96]####
+                        Task __pt__idMedium = new Task();//####[97]####
 //####[97]####
                         /*  -- ParaTask dependsOn clause for 'idMedium' -- *///####[97]####
                         __pt__idMedium.addDependsOn(idImage);//####[97]####
 //####[97]####
-                        TaskID<Image> idMedium = ImageManipulation.getMediumTask(idImage, __pt__idMedium);//####[97]####
-                        TaskInfo __pt__idSmall = new TaskInfo();//####[98]####
+                        Future<Image> idMedium = ImageManipulation.getMediumTask(idImage, __pt__idMedium);//####[97]####
+                        Task __pt__idSmall = new Task();//####[98]####
 //####[98]####
                         /*  -- ParaTask dependsOn clause for 'idSmall' -- *///####[98]####
                         __pt__idSmall.addDependsOn(idImage);//####[98]####
 //####[98]####
-                        TaskID<Image> idSmall = ImageManipulation.getSmallSquareTask(idImage, __pt__idSmall);//####[98]####
-                        TaskInfo __pt__id = new TaskInfo();//####[99]####
+                        Future<Image> idSmall = ImageManipulation.getSmallSquareTask(idImage, __pt__idSmall);//####[98]####
+                        Task __pt__id = new Task();//####[99]####
 //####[99]####
                         /*  -- ParaTask dependsOn clause for 'id' -- *///####[99]####
                         __pt__id.addDependsOn(idSmall);//####[101]####
@@ -237,15 +237,15 @@ public class ImageProjectPanel extends ProjectPanel {//####[34]####
                             System.err.println("Problem registering method in clause:");//####[101]####
                             __pt__e.printStackTrace();//####[101]####
                         }//####[101]####
-                        TaskID id = addToThumbnailsPanelTask(inputImages[i], idImage, idSmall, idMedium, __pt__id);//####[101]####
+                        Future id = addToThumbnailsPanelTask(inputImages[i], idImage, idSmall, idMedium, __pt__id);//####[101]####
                         grp.add(id);//####[102]####
                     }//####[103]####
-                    TaskInfo __pt__finalTask = new TaskInfo();//####[104]####
+                    Task __pt__finalTask = new Task();//####[104]####
 //####[104]####
                     /*  -- ParaTask dependsOn clause for 'finalTask' -- *///####[104]####
                     __pt__finalTask.addDependsOn(grp);//####[104]####
 //####[104]####
-                    TaskID finalTask = finishedAddingNewPanelItemsTask(__pt__finalTask);//####[104]####
+                    Future finalTask = finishedAddingNewPanelItemsTask(__pt__finalTask);//####[104]####
                 } else {//####[105]####
                     setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));//####[106]####
                     for (int i = 0; i < inputImages.length; i++) //####[107]####
@@ -348,7 +348,7 @@ public class ImageProjectPanel extends ProjectPanel {//####[34]####
                 ImagePanelItem panel = it.next();//####[198]####
                 if (mainFrame.isParallel) //####[200]####
                 {//####[200]####
-                    TaskInfo __pt__id = new TaskInfo();//####[202]####
+                    Task __pt__id = new Task();//####[202]####
 //####[202]####
                     /*  -- ParaTask dependsOn clause for 'id' -- *///####[202]####
                     __pt__id.addDependsOn(panel.getHistory());//####[204]####
@@ -359,8 +359,8 @@ public class ImageProjectPanel extends ProjectPanel {//####[34]####
                     /*  -- ParaTask notify clause for 'id' -- *///####[204]####
                     try {//####[204]####
                         Method __pt__id_slot_0 = null;//####[204]####
-                        __pt__id_slot_0 = ParaTaskHelper.getDeclaredMethod(panel.getClass(), "setImageTask", new Class[] { TaskID.class });//####[204]####
-                        TaskID __pt__id_slot_0_dummy_0 = null;//####[204]####
+                        __pt__id_slot_0 = ParaTaskHelper.getDeclaredMethod(panel.getClass(), "setImageTask", new Class[] { Future.class });//####[204]####
+                        Future __pt__id_slot_0_dummy_0 = null;//####[204]####
                         if (false) panel.setImageTask(__pt__id_slot_0_dummy_0); //-- ParaTask uses this dummy statement to ensure the slot exists (otherwise Java compiler will complain)//####[204]####
                         __pt__id.addSlotToNotify(new Slot(__pt__id_slot_0, panel, false));//####[204]####
 //####[204]####
@@ -378,7 +378,7 @@ public class ImageProjectPanel extends ProjectPanel {//####[34]####
                         System.err.println("Problem registering method in clause:");//####[204]####
                         __pt__e.printStackTrace();//####[204]####
                     }//####[204]####
-                    TaskID<ImageCombo> id = ImageManipulation.invertTask(panel, __pt__id);//####[204]####
+                    Future<ImageCombo> id = ImageManipulation.invertTask(panel, __pt__id);//####[204]####
                     panel.addToHistory(id);//####[205]####
                 } else {//####[208]####
                     setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));//####[210]####
@@ -411,7 +411,7 @@ public class ImageProjectPanel extends ProjectPanel {//####[34]####
                 ImagePanelItem panel = it.next();//####[239]####
                 if (mainFrame.isParallel) //####[241]####
                 {//####[241]####
-                    TaskInfo __pt__id = new TaskInfo();//####[243]####
+                    Task __pt__id = new Task();//####[243]####
 //####[243]####
                     /*  -- ParaTask dependsOn clause for 'id' -- *///####[243]####
                     __pt__id.addDependsOn(panel.getHistory());//####[245]####
@@ -422,8 +422,8 @@ public class ImageProjectPanel extends ProjectPanel {//####[34]####
                     /*  -- ParaTask notify clause for 'id' -- *///####[245]####
                     try {//####[245]####
                         Method __pt__id_slot_0 = null;//####[245]####
-                        __pt__id_slot_0 = ParaTaskHelper.getDeclaredMethod(panel.getClass(), "setImageTask", new Class[] { TaskID.class });//####[245]####
-                        TaskID __pt__id_slot_0_dummy_0 = null;//####[245]####
+                        __pt__id_slot_0 = ParaTaskHelper.getDeclaredMethod(panel.getClass(), "setImageTask", new Class[] { Future.class });//####[245]####
+                        Future __pt__id_slot_0_dummy_0 = null;//####[245]####
                         if (false) panel.setImageTask(__pt__id_slot_0_dummy_0); //-- ParaTask uses this dummy statement to ensure the slot exists (otherwise Java compiler will complain)//####[245]####
                         __pt__id.addSlotToNotify(new Slot(__pt__id_slot_0, panel, false));//####[245]####
 //####[245]####
@@ -441,7 +441,7 @@ public class ImageProjectPanel extends ProjectPanel {//####[34]####
                         System.err.println("Problem registering method in clause:");//####[245]####
                         __pt__e.printStackTrace();//####[245]####
                     }//####[245]####
-                    TaskID<ImageCombo> id = ImageManipulation.blurTask(panel, __pt__id);//####[245]####
+                    Future<ImageCombo> id = ImageManipulation.blurTask(panel, __pt__id);//####[245]####
                     panel.addToHistory(id);//####[246]####
                 } else {//####[249]####
                     setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));//####[250]####
@@ -466,7 +466,7 @@ public class ImageProjectPanel extends ProjectPanel {//####[34]####
                 ImagePanelItem panel = it.next();//####[270]####
                 if (mainFrame.isParallel) //####[272]####
                 {//####[272]####
-                    TaskInfo __pt__id = new TaskInfo();//####[274]####
+                    Task __pt__id = new Task();//####[274]####
 //####[274]####
                     /*  -- ParaTask dependsOn clause for 'id' -- *///####[274]####
                     __pt__id.addDependsOn(panel.getHistory());//####[276]####
@@ -477,8 +477,8 @@ public class ImageProjectPanel extends ProjectPanel {//####[34]####
                     /*  -- ParaTask notify clause for 'id' -- *///####[276]####
                     try {//####[276]####
                         Method __pt__id_slot_0 = null;//####[276]####
-                        __pt__id_slot_0 = ParaTaskHelper.getDeclaredMethod(panel.getClass(), "setImageTask", new Class[] { TaskID.class });//####[276]####
-                        TaskID __pt__id_slot_0_dummy_0 = null;//####[276]####
+                        __pt__id_slot_0 = ParaTaskHelper.getDeclaredMethod(panel.getClass(), "setImageTask", new Class[] { Future.class });//####[276]####
+                        Future __pt__id_slot_0_dummy_0 = null;//####[276]####
                         if (false) panel.setImageTask(__pt__id_slot_0_dummy_0); //-- ParaTask uses this dummy statement to ensure the slot exists (otherwise Java compiler will complain)//####[276]####
                         __pt__id.addSlotToNotify(new Slot(__pt__id_slot_0, panel, false));//####[276]####
 //####[276]####
@@ -496,7 +496,7 @@ public class ImageProjectPanel extends ProjectPanel {//####[34]####
                         System.err.println("Problem registering method in clause:");//####[276]####
                         __pt__e.printStackTrace();//####[276]####
                     }//####[276]####
-                    TaskID<ImageCombo> id = ImageManipulation.sharpenTask(panel, __pt__id);//####[276]####
+                    Future<ImageCombo> id = ImageManipulation.sharpenTask(panel, __pt__id);//####[276]####
                     panel.addToHistory(id);//####[277]####
                 } else {//####[279]####
                     setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));//####[280]####
@@ -547,7 +547,7 @@ public class ImageProjectPanel extends ProjectPanel {//####[34]####
                 ImagePanelItem panel = it.next();//####[325]####
                 if (mainFrame.isParallel) //####[327]####
                 {//####[327]####
-                    TaskInfo __pt__id = new TaskInfo();//####[329]####
+                    Task __pt__id = new Task();//####[329]####
 //####[329]####
                     /*  -- ParaTask dependsOn clause for 'id' -- *///####[329]####
                     __pt__id.addDependsOn(panel.getHistory());//####[331]####
@@ -558,8 +558,8 @@ public class ImageProjectPanel extends ProjectPanel {//####[34]####
                     /*  -- ParaTask notify clause for 'id' -- *///####[331]####
                     try {//####[331]####
                         Method __pt__id_slot_0 = null;//####[331]####
-                        __pt__id_slot_0 = ParaTaskHelper.getDeclaredMethod(panel.getClass(), "setImageTask", new Class[] { TaskID.class });//####[331]####
-                        TaskID __pt__id_slot_0_dummy_0 = null;//####[331]####
+                        __pt__id_slot_0 = ParaTaskHelper.getDeclaredMethod(panel.getClass(), "setImageTask", new Class[] { Future.class });//####[331]####
+                        Future __pt__id_slot_0_dummy_0 = null;//####[331]####
                         if (false) panel.setImageTask(__pt__id_slot_0_dummy_0); //-- ParaTask uses this dummy statement to ensure the slot exists (otherwise Java compiler will complain)//####[331]####
                         __pt__id.addSlotToNotify(new Slot(__pt__id_slot_0, panel, false));//####[331]####
 //####[331]####
@@ -577,7 +577,7 @@ public class ImageProjectPanel extends ProjectPanel {//####[34]####
                         System.err.println("Problem registering method in clause:");//####[331]####
                         __pt__e.printStackTrace();//####[331]####
                     }//####[331]####
-                    TaskID<ImageCombo> id = ImageManipulation.edgeDetectTask(panel, __pt__id);//####[331]####
+                    Future<ImageCombo> id = ImageManipulation.edgeDetectTask(panel, __pt__id);//####[331]####
                     panel.addToHistory(id);//####[332]####
                 } else {//####[334]####
                     setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));//####[335]####
@@ -731,7 +731,7 @@ public class ImageProjectPanel extends ProjectPanel {//####[34]####
                 ImagePanelItem panel = it.next();//####[486]####
                 if (mainFrame.isParallel) //####[488]####
                 {//####[488]####
-                    TaskInfo __pt__id = new TaskInfo();//####[489]####
+                    Task __pt__id = new Task();//####[489]####
 //####[489]####
                     /*  -- ParaTask dependsOn clause for 'id' -- *///####[489]####
                     __pt__id.addDependsOn(panel.getHistory());//####[491]####
@@ -742,8 +742,8 @@ public class ImageProjectPanel extends ProjectPanel {//####[34]####
                     /*  -- ParaTask notify clause for 'id' -- *///####[491]####
                     try {//####[491]####
                         Method __pt__id_slot_0 = null;//####[491]####
-                        __pt__id_slot_0 = ParaTaskHelper.getDeclaredMethod(panel.getClass(), "setImageTask", new Class[] { TaskID.class });//####[491]####
-                        TaskID __pt__id_slot_0_dummy_0 = null;//####[491]####
+                        __pt__id_slot_0 = ParaTaskHelper.getDeclaredMethod(panel.getClass(), "setImageTask", new Class[] { Future.class });//####[491]####
+                        Future __pt__id_slot_0_dummy_0 = null;//####[491]####
                         if (false) panel.setImageTask(__pt__id_slot_0_dummy_0); //-- ParaTask uses this dummy statement to ensure the slot exists (otherwise Java compiler will complain)//####[491]####
                         __pt__id.addSlotToNotify(new Slot(__pt__id_slot_0, panel, false));//####[491]####
 //####[491]####
@@ -761,7 +761,7 @@ public class ImageProjectPanel extends ProjectPanel {//####[34]####
                         System.err.println("Problem registering method in clause:");//####[491]####
                         __pt__e.printStackTrace();//####[491]####
                     }//####[491]####
-                    TaskID<ImageCombo> id = MosaicBuilder.buildMosaicTask(panel, density, size, __pt__id);//####[491]####
+                    Future<ImageCombo> id = MosaicBuilder.buildMosaicTask(panel, density, size, __pt__id);//####[491]####
                     panel.addToHistory(id);//####[492]####
                 } else {//####[493]####
                     setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));//####[494]####
@@ -796,7 +796,7 @@ public class ImageProjectPanel extends ProjectPanel {//####[34]####
                         timer.taskComplete();//####[521]####
                     } else if (parallelism == 2) //####[522]####
                     {//####[522]####
-                        TaskInfo __pt__id = new TaskInfo();//####[523]####
+                        Task __pt__id = new Task();//####[523]####
 //####[523]####
                         /*  -- ParaTask dependsOn clause for 'id' -- *///####[523]####
                         __pt__id.addDependsOn(panel.getHistory());//####[525]####
@@ -807,8 +807,8 @@ public class ImageProjectPanel extends ProjectPanel {//####[34]####
                         /*  -- ParaTask notify clause for 'id' -- *///####[525]####
                         try {//####[525]####
                             Method __pt__id_slot_0 = null;//####[525]####
-                            __pt__id_slot_0 = ParaTaskHelper.getDeclaredMethod(panel.getClass(), "setImageTask", new Class[] { TaskID.class });//####[525]####
-                            TaskID __pt__id_slot_0_dummy_0 = null;//####[525]####
+                            __pt__id_slot_0 = ParaTaskHelper.getDeclaredMethod(panel.getClass(), "setImageTask", new Class[] { Future.class });//####[525]####
+                            Future __pt__id_slot_0_dummy_0 = null;//####[525]####
                             if (false) panel.setImageTask(__pt__id_slot_0_dummy_0); //-- ParaTask uses this dummy statement to ensure the slot exists (otherwise Java compiler will complain)//####[525]####
                             __pt__id.addSlotToNotify(new Slot(__pt__id_slot_0, panel, false));//####[525]####
 //####[525]####
@@ -826,11 +826,11 @@ public class ImageProjectPanel extends ProjectPanel {//####[34]####
                             System.err.println("Problem registering method in clause:");//####[525]####
                             __pt__e.printStackTrace();//####[525]####
                         }//####[525]####
-                        TaskID<ImageCombo> id = MosaicBuilder.buildImageMosaicTask(panel, palette, density, parallelism, __pt__id);//####[525]####
+                        Future<ImageCombo> id = MosaicBuilder.buildImageMosaicTask(panel, palette, density, parallelism, __pt__id);//####[525]####
                         panel.addToHistory(id);//####[526]####
                     } else if (parallelism == 3) //####[527]####
                     {//####[527]####
-                        TaskInfo __pt__id = new TaskInfo();//####[528]####
+                        Task __pt__id = new Task();//####[528]####
 //####[528]####
                         /*  -- ParaTask dependsOn clause for 'id' -- *///####[528]####
                         __pt__id.addDependsOn(panel.getHistory());//####[530]####
@@ -841,8 +841,8 @@ public class ImageProjectPanel extends ProjectPanel {//####[34]####
                         /*  -- ParaTask notify clause for 'id' -- *///####[530]####
                         try {//####[530]####
                             Method __pt__id_slot_0 = null;//####[530]####
-                            __pt__id_slot_0 = ParaTaskHelper.getDeclaredMethod(panel.getClass(), "setImageTask", new Class[] { TaskID.class });//####[530]####
-                            TaskID __pt__id_slot_0_dummy_0 = null;//####[530]####
+                            __pt__id_slot_0 = ParaTaskHelper.getDeclaredMethod(panel.getClass(), "setImageTask", new Class[] { Future.class });//####[530]####
+                            Future __pt__id_slot_0_dummy_0 = null;//####[530]####
                             if (false) panel.setImageTask(__pt__id_slot_0_dummy_0); //-- ParaTask uses this dummy statement to ensure the slot exists (otherwise Java compiler will complain)//####[530]####
                             __pt__id.addSlotToNotify(new Slot(__pt__id_slot_0, panel, false));//####[530]####
 //####[530]####
@@ -860,11 +860,11 @@ public class ImageProjectPanel extends ProjectPanel {//####[34]####
                             System.err.println("Problem registering method in clause:");//####[530]####
                             __pt__e.printStackTrace();//####[530]####
                         }//####[530]####
-                        TaskID<ImageCombo> id = MosaicBuilder.buildImageMosaicTask3(panel, palette, density, parallelism, __pt__id);//####[530]####
+                        Future<ImageCombo> id = MosaicBuilder.buildImageMosaicTask3(panel, palette, density, parallelism, __pt__id);//####[530]####
                         panel.addToHistory(id);//####[531]####
                     } else if (parallelism == 4) //####[532]####
                     {//####[532]####
-                        TaskInfo __pt__id = new TaskInfo();//####[533]####
+                        Task __pt__id = new Task();//####[533]####
 //####[533]####
                         /*  -- ParaTask dependsOn clause for 'id' -- *///####[533]####
                         __pt__id.addDependsOn(panel.getHistory());//####[535]####
@@ -875,8 +875,8 @@ public class ImageProjectPanel extends ProjectPanel {//####[34]####
                         /*  -- ParaTask notify clause for 'id' -- *///####[535]####
                         try {//####[535]####
                             Method __pt__id_slot_0 = null;//####[535]####
-                            __pt__id_slot_0 = ParaTaskHelper.getDeclaredMethod(panel.getClass(), "setImageTask", new Class[] { TaskID.class });//####[535]####
-                            TaskID __pt__id_slot_0_dummy_0 = null;//####[535]####
+                            __pt__id_slot_0 = ParaTaskHelper.getDeclaredMethod(panel.getClass(), "setImageTask", new Class[] { Future.class });//####[535]####
+                            Future __pt__id_slot_0_dummy_0 = null;//####[535]####
                             if (false) panel.setImageTask(__pt__id_slot_0_dummy_0); //-- ParaTask uses this dummy statement to ensure the slot exists (otherwise Java compiler will complain)//####[535]####
                             __pt__id.addSlotToNotify(new Slot(__pt__id_slot_0, panel, false));//####[535]####
 //####[535]####
@@ -894,10 +894,10 @@ public class ImageProjectPanel extends ProjectPanel {//####[34]####
                             System.err.println("Problem registering method in clause:");//####[535]####
                             __pt__e.printStackTrace();//####[535]####
                         }//####[535]####
-                        TaskID<ImageCombo> id = MosaicBuilder.buildImageMosaicTask4(panel, palette, density, parallelism, __pt__id);//####[535]####
+                        Future<ImageCombo> id = MosaicBuilder.buildImageMosaicTask4(panel, palette, density, parallelism, __pt__id);//####[535]####
                         panel.addToHistory(id);//####[536]####
                     } else {//####[537]####
-                        TaskInfo __pt__id = new TaskInfo();//####[538]####
+                        Task __pt__id = new Task();//####[538]####
 //####[538]####
                         /*  -- ParaTask dependsOn clause for 'id' -- *///####[538]####
                         __pt__id.addDependsOn(panel.getHistory());//####[540]####
@@ -908,8 +908,8 @@ public class ImageProjectPanel extends ProjectPanel {//####[34]####
                         /*  -- ParaTask notify clause for 'id' -- *///####[540]####
                         try {//####[540]####
                             Method __pt__id_slot_0 = null;//####[540]####
-                            __pt__id_slot_0 = ParaTaskHelper.getDeclaredMethod(panel.getClass(), "setImageTask", new Class[] { TaskID.class });//####[540]####
-                            TaskID __pt__id_slot_0_dummy_0 = null;//####[540]####
+                            __pt__id_slot_0 = ParaTaskHelper.getDeclaredMethod(panel.getClass(), "setImageTask", new Class[] { Future.class });//####[540]####
+                            Future __pt__id_slot_0_dummy_0 = null;//####[540]####
                             if (false) panel.setImageTask(__pt__id_slot_0_dummy_0); //-- ParaTask uses this dummy statement to ensure the slot exists (otherwise Java compiler will complain)//####[540]####
                             __pt__id.addSlotToNotify(new Slot(__pt__id_slot_0, panel, false));//####[540]####
 //####[540]####
@@ -927,7 +927,7 @@ public class ImageProjectPanel extends ProjectPanel {//####[34]####
                             System.err.println("Problem registering method in clause:");//####[540]####
                             __pt__e.printStackTrace();//####[540]####
                         }//####[540]####
-                        TaskID<ImageCombo> id = MosaicBuilder.buildImageMosaicTask2(panel, palette, density, parallelism, __pt__id);//####[540]####
+                        Future<ImageCombo> id = MosaicBuilder.buildImageMosaicTask2(panel, palette, density, parallelism, __pt__id);//####[540]####
                         panel.addToHistory(id);//####[541]####
                     }//####[542]####
                 } else {//####[543]####
@@ -953,7 +953,7 @@ public class ImageProjectPanel extends ProjectPanel {//####[34]####
                 ImagePanelItem panel = it.next();//####[562]####
                 if (mainFrame.isParallel) //####[564]####
                 {//####[564]####
-                    TaskInfo __pt__id = new TaskInfo();//####[565]####
+                    Task __pt__id = new Task();//####[565]####
 //####[565]####
                     boolean isEDT = GuiThread.isEventDispatchThread();//####[565]####
 //####[565]####
@@ -974,7 +974,7 @@ public class ImageProjectPanel extends ProjectPanel {//####[34]####
                         System.err.println("Problem registering method in clause:");//####[566]####
                         __pt__e.printStackTrace();//####[566]####
                     }//####[566]####
-                    TaskID<List<PaletteItem>> id = MosaicBuilder.buildMosaicPaletteItemTask(panel, palette, size, __pt__id);//####[566]####
+                    Future<List<PaletteItem>> id = MosaicBuilder.buildMosaicPaletteItemTask(panel, palette, size, __pt__id);//####[566]####
                     try {//####[567]####
                         palette = id.getReturnResult();//####[568]####
                     } catch (ExecutionException e) {//####[569]####
@@ -1020,7 +1020,7 @@ public class ImageProjectPanel extends ProjectPanel {//####[34]####
             class ParallelismSliderListener implements ChangeListener {//####[612]####
 //####[612]####
                 /*  ParaTask helper method to access private/protected slots *///####[612]####
-                public void __pt__accessPrivateSlot(Method m, Object instance, TaskID arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[612]####
+                public void __pt__accessPrivateSlot(Method m, Object instance, Future arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[612]####
                     if (m.getParameterTypes().length == 0)//####[612]####
                         m.invoke(instance);//####[612]####
                     else if ((m.getParameterTypes().length == 1))//####[612]####
@@ -1048,7 +1048,7 @@ public class ImageProjectPanel extends ProjectPanel {//####[34]####
             class DensitySliderListener implements ChangeListener {//####[632]####
 //####[632]####
                 /*  ParaTask helper method to access private/protected slots *///####[632]####
-                public void __pt__accessPrivateSlot(Method m, Object instance, TaskID arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[632]####
+                public void __pt__accessPrivateSlot(Method m, Object instance, Future arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[632]####
                     if (m.getParameterTypes().length == 0)//####[632]####
                         m.invoke(instance);//####[632]####
                     else if ((m.getParameterTypes().length == 1))//####[632]####
@@ -1076,7 +1076,7 @@ public class ImageProjectPanel extends ProjectPanel {//####[34]####
             class SizeSliderListener implements ChangeListener {//####[652]####
 //####[652]####
                 /*  ParaTask helper method to access private/protected slots *///####[652]####
-                public void __pt__accessPrivateSlot(Method m, Object instance, TaskID arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[652]####
+                public void __pt__accessPrivateSlot(Method m, Object instance, Future arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[652]####
                     if (m.getParameterTypes().length == 0)//####[652]####
                         m.invoke(instance);//####[652]####
                     else if ((m.getParameterTypes().length == 1))//####[652]####

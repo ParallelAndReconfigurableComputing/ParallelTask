@@ -19,46 +19,60 @@
 
 package pt.runtime;
 
-import java.lang.reflect.Method;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-public class Slot {
-	public static enum SetCompleteSlot {TRUE, FALSE}
-	
+public class Slot {	
 	final public static Slot quit = new Slot();
-	
-	private Method method;
-	private Object instance;
 
 	private ConcurrentLinkedQueue<Object> interResults = null;
-	private Class interResultType = null;
+	private Class<?> interResultType = null;
 	
-	private SetCompleteSlot isASetCompleteSlot = SetCompleteSlot.FALSE;
+	private boolean isIntermediateResultSlot;
+	private boolean isASetCompleteSlot;
 	
-	private TaskID<?> taskID = null; 	// TODO this is the task for which this slot is attached to (who should assign it?)
+	private Future<?> taskID = null; 	// this is the task for which this slot is attached to (who should assign it?)
 				// cannot be assigned at the time the slot is created (since the TaskID wasn't created just yet)
 	
-	private boolean isIntermediateResultSlot = false;
+	private Functor<?> handler;
+	private FunctorVoidWithOneArg<Future<?>> handlerWithArg;
+	private FunctorVoid voidHandler;
+	private FunctionInterExceptionHandler exceptionHanlder;
+	private FunctorVoidWithTwoArgs<Future<?>, Object> interimHandler;
 	
 	private Slot() {
 	}
 	
-	public Slot(Method method, Object instance, boolean isIntermediateResultSlot) {
-		this.method = method;
-		this.instance = instance;
-		this.isIntermediateResultSlot = isIntermediateResultSlot;
+	public Slot(Functor<?> handler) {
+		this.handler = handler;
 	}
-
-	public Slot(Method method, Object instance, boolean isIntermediateResultSlot, SetCompleteSlot isASetCompleteSlot) {
-		this(method, instance, isIntermediateResultSlot);
-		this.isASetCompleteSlot = isASetCompleteSlot;
+	
+	public Slot(FunctorVoid handler) {
+		this.voidHandler = handler;
 	}
+	
+	public Slot(FunctorVoidWithOneArg<Future<?>> handlerWithArg) {
+		this.handlerWithArg = handlerWithArg;
+	}
+	
+	public Slot(FunctionInterExceptionHandler handler) {
+		this.exceptionHanlder = handler;
+	}
+	
+	public Slot(FunctorVoidWithTwoArgs<Future<?>, Object> interimHandler) {
+		this.interimHandler = interimHandler;
+		this.isIntermediateResultSlot = true;
+	}
+	
+	public Slot setIsSetCompleteSlot(boolean setComplete) {
+		this.isASetCompleteSlot = setComplete;
+		return this;
+	}	
 	
 	public boolean isASetCompleteSlot() {
-		return isASetCompleteSlot == SetCompleteSlot.TRUE;
+		return this.isASetCompleteSlot;
 	}
 	
-	public void addIntermediateResult(Class type, Object value) {
+	public void addIntermediateResult(Class<?> type, Object value) {
 		if (interResults == null) {
 			interResults = new ConcurrentLinkedQueue<Object>();
 			interResultType = type;
@@ -66,31 +80,40 @@ public class Slot {
 		interResults.add(value);
 	}
 	
-	public Object getNextIntermediateResultValue() {
+	private Object getNextIntermediateResultValue() {
 		return interResults.poll();
 	}
 	
-	public Class getIntermediateResultType() {
+	public Class<?> getIntermediateResultType() {
 		return interResultType;
 	}
-	
-	public Method getMethod() {
-		return method;
-	}
-	
-	public Object getInstance() {
-		return instance;
-	}
 
-	public TaskID<?> getTaskID() {
+	public Future<?> getTaskID() {
 		return taskID;
 	}
 
-	public void setTaskID(TaskID<?> taskID) {
+	public void setTaskID(Future<?> taskID) {
 		this.taskID = taskID;
 	}
 
 	public boolean isIntermediateResultSlot() {
 		return isIntermediateResultSlot;
+	}
+	
+	void execute() {
+		if(this.handler != null)
+			this.handler.exec();
+		
+		if(this.handlerWithArg != null)
+			this.handlerWithArg.exec(this.taskID);
+		
+		if(this.voidHandler != null)
+			this.voidHandler.exec();
+		
+		if(this.interimHandler != null)
+			this.interimHandler.exec(this.taskID, getNextIntermediateResultValue());
+		
+		if(this.exceptionHanlder != null)
+			this.exceptionHanlder.doWork(this.taskID.getException());
 	}
 }

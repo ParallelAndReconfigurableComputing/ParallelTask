@@ -19,7 +19,7 @@ import java.util.List;//####[8]####
 public class TestMixedTask3 {//####[10]####
     static{ParaTask.init();}//####[10]####
     /*  ParaTask helper method to access private/protected slots *///####[10]####
-    public void __pt__accessPrivateSlot(Method m, Object instance, TaskID arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[10]####
+    public void __pt__accessPrivateSlot(Method m, Object instance, Future arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[10]####
         if (m.getParameterTypes().length == 0)//####[10]####
             m.invoke(instance);//####[10]####
         else if ((m.getParameterTypes().length == 1))//####[10]####
@@ -59,8 +59,8 @@ public class TestMixedTask3 {//####[10]####
         }//####[42]####
         int sectionNum = Integer.valueOf(args[0]);//####[44]####
         int totalNum = sectionNum * 3;//####[45]####
-        TaskID[] taskIDs = new TaskID[totalNum];//####[47]####
-        TaskIDGroup tig = new TaskIDGroup(totalNum);//####[48]####
+        Future[] taskIDs = new Future[totalNum];//####[47]####
+        FutureGroup tig = new FutureGroup(totalNum);//####[48]####
         long startTime = System.currentTimeMillis();//####[50]####
         int[] randomSerial = random_serial(totalNum);//####[51]####
         int i = 0;//####[53]####
@@ -129,11 +129,11 @@ public class TestMixedTask3 {//####[10]####
             }//####[107]####
         }//####[107]####
     }//####[107]####
-    private static TaskIDGroup<Void> runBMS(ConcurrentLinkedQueue<Benchmark> benchmarkQueue) {//####[107]####
+    private static FutureGroup<Void> runBMS(ConcurrentLinkedQueue<Benchmark> benchmarkQueue) {//####[107]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[107]####
-        return runBMS(benchmarkQueue, new TaskInfo());//####[107]####
+        return runBMS(benchmarkQueue, new Task());//####[107]####
     }//####[107]####
-    private static TaskIDGroup<Void> runBMS(ConcurrentLinkedQueue<Benchmark> benchmarkQueue, TaskInfo taskinfo) {//####[107]####
+    private static FutureGroup<Void> runBMS(ConcurrentLinkedQueue<Benchmark> benchmarkQueue, Task taskinfo) {//####[107]####
         // ensure Method variable is set//####[107]####
         if (__pt__runBMS_ConcurrentLinkedQueueBenchmark_method == null) {//####[107]####
             __pt__runBMS_ConcurrentLinkedQueueBenchmark_ensureMethodVarSet();//####[107]####
@@ -142,11 +142,11 @@ public class TestMixedTask3 {//####[10]####
         taskinfo.setMethod(__pt__runBMS_ConcurrentLinkedQueueBenchmark_method);//####[107]####
         return TaskpoolFactory.getTaskpool().enqueueMulti(taskinfo, 4);//####[107]####
     }//####[107]####
-    private static TaskIDGroup<Void> runBMS(TaskID<ConcurrentLinkedQueue<Benchmark>> benchmarkQueue) {//####[107]####
+    private static FutureGroup<Void> runBMS(Future<ConcurrentLinkedQueue<Benchmark>> benchmarkQueue) {//####[107]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[107]####
-        return runBMS(benchmarkQueue, new TaskInfo());//####[107]####
+        return runBMS(benchmarkQueue, new Task());//####[107]####
     }//####[107]####
-    private static TaskIDGroup<Void> runBMS(TaskID<ConcurrentLinkedQueue<Benchmark>> benchmarkQueue, TaskInfo taskinfo) {//####[107]####
+    private static FutureGroup<Void> runBMS(Future<ConcurrentLinkedQueue<Benchmark>> benchmarkQueue, Task taskinfo) {//####[107]####
         // ensure Method variable is set//####[107]####
         if (__pt__runBMS_ConcurrentLinkedQueueBenchmark_method == null) {//####[107]####
             __pt__runBMS_ConcurrentLinkedQueueBenchmark_ensureMethodVarSet();//####[107]####
@@ -157,11 +157,11 @@ public class TestMixedTask3 {//####[10]####
         taskinfo.setMethod(__pt__runBMS_ConcurrentLinkedQueueBenchmark_method);//####[107]####
         return TaskpoolFactory.getTaskpool().enqueueMulti(taskinfo, 4);//####[107]####
     }//####[107]####
-    private static TaskIDGroup<Void> runBMS(BlockingQueue<ConcurrentLinkedQueue<Benchmark>> benchmarkQueue) {//####[107]####
+    private static FutureGroup<Void> runBMS(BlockingQueue<ConcurrentLinkedQueue<Benchmark>> benchmarkQueue) {//####[107]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[107]####
-        return runBMS(benchmarkQueue, new TaskInfo());//####[107]####
+        return runBMS(benchmarkQueue, new Task());//####[107]####
     }//####[107]####
-    private static TaskIDGroup<Void> runBMS(BlockingQueue<ConcurrentLinkedQueue<Benchmark>> benchmarkQueue, TaskInfo taskinfo) {//####[107]####
+    private static FutureGroup<Void> runBMS(BlockingQueue<ConcurrentLinkedQueue<Benchmark>> benchmarkQueue, Task taskinfo) {//####[107]####
         // ensure Method variable is set//####[107]####
         if (__pt__runBMS_ConcurrentLinkedQueueBenchmark_method == null) {//####[107]####
             __pt__runBMS_ConcurrentLinkedQueueBenchmark_ensureMethodVarSet();//####[107]####
@@ -193,11 +193,11 @@ public class TestMixedTask3 {//####[10]####
             }//####[115]####
         }//####[115]####
     }//####[115]####
-    private static TaskID<Void> runBM(Benchmark benchmark) {//####[115]####
+    private static Future<Void> runBM(Benchmark benchmark) {//####[115]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[115]####
-        return runBM(benchmark, new TaskInfo());//####[115]####
+        return runBM(benchmark, new Task());//####[115]####
     }//####[115]####
-    private static TaskID<Void> runBM(Benchmark benchmark, TaskInfo taskinfo) {//####[115]####
+    private static Future<Void> runBM(Benchmark benchmark, Task taskinfo) {//####[115]####
         // ensure Method variable is set//####[115]####
         if (__pt__runBM_Benchmark_method == null) {//####[115]####
             __pt__runBM_Benchmark_ensureMethodVarSet();//####[115]####
@@ -206,11 +206,11 @@ public class TestMixedTask3 {//####[10]####
         taskinfo.setMethod(__pt__runBM_Benchmark_method);//####[115]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[115]####
     }//####[115]####
-    private static TaskID<Void> runBM(TaskID<Benchmark> benchmark) {//####[115]####
+    private static Future<Void> runBM(Future<Benchmark> benchmark) {//####[115]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[115]####
-        return runBM(benchmark, new TaskInfo());//####[115]####
+        return runBM(benchmark, new Task());//####[115]####
     }//####[115]####
-    private static TaskID<Void> runBM(TaskID<Benchmark> benchmark, TaskInfo taskinfo) {//####[115]####
+    private static Future<Void> runBM(Future<Benchmark> benchmark, Task taskinfo) {//####[115]####
         // ensure Method variable is set//####[115]####
         if (__pt__runBM_Benchmark_method == null) {//####[115]####
             __pt__runBM_Benchmark_ensureMethodVarSet();//####[115]####
@@ -221,11 +221,11 @@ public class TestMixedTask3 {//####[10]####
         taskinfo.setMethod(__pt__runBM_Benchmark_method);//####[115]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[115]####
     }//####[115]####
-    private static TaskID<Void> runBM(BlockingQueue<Benchmark> benchmark) {//####[115]####
+    private static Future<Void> runBM(BlockingQueue<Benchmark> benchmark) {//####[115]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[115]####
-        return runBM(benchmark, new TaskInfo());//####[115]####
+        return runBM(benchmark, new Task());//####[115]####
     }//####[115]####
-    private static TaskID<Void> runBM(BlockingQueue<Benchmark> benchmark, TaskInfo taskinfo) {//####[115]####
+    private static Future<Void> runBM(BlockingQueue<Benchmark> benchmark, Task taskinfo) {//####[115]####
         // ensure Method variable is set//####[115]####
         if (__pt__runBM_Benchmark_method == null) {//####[115]####
             __pt__runBM_Benchmark_ensureMethodVarSet();//####[115]####

@@ -19,7 +19,7 @@
 
 package pt.runtime;
 
-import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.BrokenBarrierException;
 
 /**
@@ -122,7 +122,7 @@ public class CurrentTask {
 	 * Returns the progress of the currently executed task.
 	 *   
 	 * @return	The progress, as updated by the task.
-	 * @see TaskID#setProgress(int) 
+	 * @see Future#setProgress(int) 
 	 * @see #setProgress(int)
      * @throws RuntimeException if not called from within a ParaTask task. 
 	 */
@@ -135,7 +135,7 @@ public class CurrentTask {
 	 * 
 	 * @param progress	The new progress of the currently executing task.
 	 * 
-	 * @see TaskID#getProgress() 
+	 * @see Future#getProgress() 
 	 * @see #getProgress()
      * @throws RuntimeException if not called from within a ParaTask task. 
 	 */
@@ -148,7 +148,7 @@ public class CurrentTask {
 	 * @return	The current task's TaskID
      * @throws RuntimeException if not called from within a ParaTask task. 
 	 */
-	public static TaskID currentTaskID() {
+	public static Future currentTaskID() {
 		Thread t = Thread.currentThread();
 		if (!(t instanceof TaskThread)) {
 			throw new ParaTaskRuntimeException("ParaTask.currentTaskID() may only be called from within a Task");
@@ -159,7 +159,7 @@ public class CurrentTask {
 	/**
 	 * Returns the current task's global ID. All tasks have a unique ID, and this is it.
 	 * @return	The current task's globally-unique ID
-	 * @see TaskID#globalID()
+	 * @see Future#globalID()
      * @throws RuntimeException if not called from within a ParaTask task. 
 	 */
 	public static int globalID() {
@@ -174,7 +174,7 @@ public class CurrentTask {
 	 * All tasks have a relative ID. But this only makes sense for multi-tasks. If the current task is not 
 	 * part of a multi-task, then this always returns 0. Relative IDs start from 0.
 	 * @return	The current task's relative ID
-	 * @see TaskID#relativeID()
+	 * @see Future#relativeID()
      * @throws RuntimeException if not called from within a ParaTask task. 
 	 */
 	public static int relativeID() {
@@ -188,8 +188,8 @@ public class CurrentTask {
 	/**
 	 * The current task checks to see if it has been requested to cancel. 
      * @throws RuntimeException if not called from within a ParaTask task. 
-     * @see TaskID#cancelAttempt()
-     * @see TaskID#cancelRequested() 
+     * @see Future#cancelAttempt()
+     * @see Future#cancelRequested() 
 	 * @return	<code>true</code> if the current task has been asked to cancel, <code>false</code> otherwise.
 	 */
 	public static boolean cancelRequested() {
@@ -209,8 +209,8 @@ public class CurrentTask {
      * @throws RuntimeException if not called from within a ParaTask task. 
 	 */
 	public static <E>void publishInterim(E interimResult) {
-		TaskID<?> id = CurrentTask.currentTaskID();
-		ArrayList<Slot> interSlots = id.getTaskInfo().getInterSlotsToNotify() ;
+		Future<?> id = CurrentTask.currentTaskID();
+		List<Slot> interSlots = id.getTaskInfo().getInterSlotsToNotify() ;
 		if (interSlots == null)
 			return;
 		for (Slot s : interSlots) {
@@ -234,7 +234,7 @@ public class CurrentTask {
 		if (!(t instanceof TaskThread)) {
 			throw new ParaTaskRuntimeException("ParaTask.barrier() may only be called from within a (Multi-)Task");
 		}
-		TaskID ct = ((TaskThread)t).currentExecutingTask();
+		Future ct = ((TaskThread)t).currentExecutingTask();
 		if (ct.isMultiTask()) {
 			ct.getGroup().barrier();
 		} else {

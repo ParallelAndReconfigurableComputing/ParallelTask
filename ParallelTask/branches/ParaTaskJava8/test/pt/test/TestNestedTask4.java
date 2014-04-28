@@ -19,7 +19,7 @@ import java.util.List;//####[8]####
 public class TestNestedTask4 {//####[10]####
     static{ParaTask.init();}//####[10]####
     /*  ParaTask helper method to access private/protected slots *///####[10]####
-    public void __pt__accessPrivateSlot(Method m, Object instance, TaskID arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[10]####
+    public void __pt__accessPrivateSlot(Method m, Object instance, Future arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[10]####
         if (m.getParameterTypes().length == 0)//####[10]####
             m.invoke(instance);//####[10]####
         else if ((m.getParameterTypes().length == 1))//####[10]####
@@ -63,8 +63,8 @@ public class TestNestedTask4 {//####[10]####
         }//####[45]####
         totalNum = Integer.valueOf(args[0]);//####[46]####
         benchmarkName = args[1];//####[47]####
-        TaskID[] taskIDs = new TaskID[totalNum];//####[49]####
-        TaskIDGroup tig = new TaskIDGroup(totalNum);//####[50]####
+        Future[] taskIDs = new Future[totalNum];//####[49]####
+        FutureGroup tig = new FutureGroup(totalNum);//####[50]####
         long startTime = System.currentTimeMillis();//####[52]####
         for (int i = 0; i < totalNum; i++) //####[54]####
         {//####[54]####
@@ -114,11 +114,11 @@ public class TestNestedTask4 {//####[10]####
             }//####[98]####
         }//####[98]####
     }//####[98]####
-    private static TaskID<Void> runBM(Benchmark benchmark) {//####[98]####
+    private static Future<Void> runBM(Benchmark benchmark) {//####[98]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[98]####
-        return runBM(benchmark, new TaskInfo());//####[98]####
+        return runBM(benchmark, new Task());//####[98]####
     }//####[98]####
-    private static TaskID<Void> runBM(Benchmark benchmark, TaskInfo taskinfo) {//####[98]####
+    private static Future<Void> runBM(Benchmark benchmark, Task taskinfo) {//####[98]####
         // ensure Method variable is set//####[98]####
         if (__pt__runBM_Benchmark_method == null) {//####[98]####
             __pt__runBM_Benchmark_ensureMethodVarSet();//####[98]####
@@ -127,11 +127,11 @@ public class TestNestedTask4 {//####[10]####
         taskinfo.setMethod(__pt__runBM_Benchmark_method);//####[98]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[98]####
     }//####[98]####
-    private static TaskID<Void> runBM(TaskID<Benchmark> benchmark) {//####[98]####
+    private static Future<Void> runBM(Future<Benchmark> benchmark) {//####[98]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[98]####
-        return runBM(benchmark, new TaskInfo());//####[98]####
+        return runBM(benchmark, new Task());//####[98]####
     }//####[98]####
-    private static TaskID<Void> runBM(TaskID<Benchmark> benchmark, TaskInfo taskinfo) {//####[98]####
+    private static Future<Void> runBM(Future<Benchmark> benchmark, Task taskinfo) {//####[98]####
         // ensure Method variable is set//####[98]####
         if (__pt__runBM_Benchmark_method == null) {//####[98]####
             __pt__runBM_Benchmark_ensureMethodVarSet();//####[98]####
@@ -142,11 +142,11 @@ public class TestNestedTask4 {//####[10]####
         taskinfo.setMethod(__pt__runBM_Benchmark_method);//####[98]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[98]####
     }//####[98]####
-    private static TaskID<Void> runBM(BlockingQueue<Benchmark> benchmark) {//####[98]####
+    private static Future<Void> runBM(BlockingQueue<Benchmark> benchmark) {//####[98]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[98]####
-        return runBM(benchmark, new TaskInfo());//####[98]####
+        return runBM(benchmark, new Task());//####[98]####
     }//####[98]####
-    private static TaskID<Void> runBM(BlockingQueue<Benchmark> benchmark, TaskInfo taskinfo) {//####[98]####
+    private static Future<Void> runBM(BlockingQueue<Benchmark> benchmark, Task taskinfo) {//####[98]####
         // ensure Method variable is set//####[98]####
         if (__pt__runBM_Benchmark_method == null) {//####[98]####
             __pt__runBM_Benchmark_ensureMethodVarSet();//####[98]####
@@ -161,8 +161,8 @@ public class TestNestedTask4 {//####[10]####
         try {//####[99]####
             System.out.println("One-off Task [Thread ID " + CurrentTask.currentThreadID() + "] [Thread Local ID " + CurrentTask.currentThreadLocalID() + "] [Task Global ID " + CurrentTask.globalID() + "]  [Task Relative ID " + CurrentTask.relativeID() + "]  [Multi Task Size " + CurrentTask.multiTaskSize() + "] ");//####[100]####
             benchmark.getMethod().invoke(benchmark.getInstance(), benchmark.getArguments());//####[101]####
-            TaskIDGroup tig = new TaskIDGroup(totalNum);//####[103]####
-            TaskID[] taskIDs = new TaskID[totalNum];//####[104]####
+            FutureGroup tig = new FutureGroup(totalNum);//####[103]####
+            Future[] taskIDs = new Future[totalNum];//####[104]####
             for (int i = 0; i < totalNum; i++) //####[106]####
             {//####[106]####
                 taskIDs[i] = runBM_1(createBenchmark(getBenchmarkClass(benchmarkName)));//####[107]####
@@ -200,11 +200,11 @@ public class TestNestedTask4 {//####[10]####
             }//####[132]####
         }//####[132]####
     }//####[132]####
-    private static TaskID<Void> runBM_1(Benchmark benchmark) {//####[132]####
+    private static Future<Void> runBM_1(Benchmark benchmark) {//####[132]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[132]####
-        return runBM_1(benchmark, new TaskInfo());//####[132]####
+        return runBM_1(benchmark, new Task());//####[132]####
     }//####[132]####
-    private static TaskID<Void> runBM_1(Benchmark benchmark, TaskInfo taskinfo) {//####[132]####
+    private static Future<Void> runBM_1(Benchmark benchmark, Task taskinfo) {//####[132]####
         // ensure Method variable is set//####[132]####
         if (__pt__runBM_1_Benchmark_method == null) {//####[132]####
             __pt__runBM_1_Benchmark_ensureMethodVarSet();//####[132]####
@@ -213,11 +213,11 @@ public class TestNestedTask4 {//####[10]####
         taskinfo.setMethod(__pt__runBM_1_Benchmark_method);//####[132]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[132]####
     }//####[132]####
-    private static TaskID<Void> runBM_1(TaskID<Benchmark> benchmark) {//####[132]####
+    private static Future<Void> runBM_1(Future<Benchmark> benchmark) {//####[132]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[132]####
-        return runBM_1(benchmark, new TaskInfo());//####[132]####
+        return runBM_1(benchmark, new Task());//####[132]####
     }//####[132]####
-    private static TaskID<Void> runBM_1(TaskID<Benchmark> benchmark, TaskInfo taskinfo) {//####[132]####
+    private static Future<Void> runBM_1(Future<Benchmark> benchmark, Task taskinfo) {//####[132]####
         // ensure Method variable is set//####[132]####
         if (__pt__runBM_1_Benchmark_method == null) {//####[132]####
             __pt__runBM_1_Benchmark_ensureMethodVarSet();//####[132]####
@@ -228,11 +228,11 @@ public class TestNestedTask4 {//####[10]####
         taskinfo.setMethod(__pt__runBM_1_Benchmark_method);//####[132]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[132]####
     }//####[132]####
-    private static TaskID<Void> runBM_1(BlockingQueue<Benchmark> benchmark) {//####[132]####
+    private static Future<Void> runBM_1(BlockingQueue<Benchmark> benchmark) {//####[132]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[132]####
-        return runBM_1(benchmark, new TaskInfo());//####[132]####
+        return runBM_1(benchmark, new Task());//####[132]####
     }//####[132]####
-    private static TaskID<Void> runBM_1(BlockingQueue<Benchmark> benchmark, TaskInfo taskinfo) {//####[132]####
+    private static Future<Void> runBM_1(BlockingQueue<Benchmark> benchmark, Task taskinfo) {//####[132]####
         // ensure Method variable is set//####[132]####
         if (__pt__runBM_1_Benchmark_method == null) {//####[132]####
             __pt__runBM_1_Benchmark_ensureMethodVarSet();//####[132]####
@@ -247,8 +247,8 @@ public class TestNestedTask4 {//####[10]####
         try {//####[133]####
             System.out.println("One-off Task [Thread ID " + CurrentTask.currentThreadID() + "] [Thread Local ID " + CurrentTask.currentThreadLocalID() + "] [Task Global ID " + CurrentTask.globalID() + "]  [Task Relative ID " + CurrentTask.relativeID() + "]  [Multi Task Size " + CurrentTask.multiTaskSize() + "] ");//####[134]####
             benchmark.getMethod().invoke(benchmark.getInstance(), benchmark.getArguments());//####[135]####
-            TaskIDGroup tig = new TaskIDGroup(totalNum);//####[137]####
-            TaskID[] taskIDs = new TaskID[totalNum];//####[138]####
+            FutureGroup tig = new FutureGroup(totalNum);//####[137]####
+            Future[] taskIDs = new Future[totalNum];//####[138]####
             for (int i = 0; i < totalNum; i++) //####[140]####
             {//####[140]####
                 taskIDs[i] = runBM_2(createBenchmark(getBenchmarkClass(benchmarkName)));//####[141]####
@@ -286,11 +286,11 @@ public class TestNestedTask4 {//####[10]####
             }//####[166]####
         }//####[166]####
     }//####[166]####
-    private static TaskID<Void> runBM_2(Benchmark benchmark) {//####[166]####
+    private static Future<Void> runBM_2(Benchmark benchmark) {//####[166]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[166]####
-        return runBM_2(benchmark, new TaskInfo());//####[166]####
+        return runBM_2(benchmark, new Task());//####[166]####
     }//####[166]####
-    private static TaskID<Void> runBM_2(Benchmark benchmark, TaskInfo taskinfo) {//####[166]####
+    private static Future<Void> runBM_2(Benchmark benchmark, Task taskinfo) {//####[166]####
         // ensure Method variable is set//####[166]####
         if (__pt__runBM_2_Benchmark_method == null) {//####[166]####
             __pt__runBM_2_Benchmark_ensureMethodVarSet();//####[166]####
@@ -299,11 +299,11 @@ public class TestNestedTask4 {//####[10]####
         taskinfo.setMethod(__pt__runBM_2_Benchmark_method);//####[166]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[166]####
     }//####[166]####
-    private static TaskID<Void> runBM_2(TaskID<Benchmark> benchmark) {//####[166]####
+    private static Future<Void> runBM_2(Future<Benchmark> benchmark) {//####[166]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[166]####
-        return runBM_2(benchmark, new TaskInfo());//####[166]####
+        return runBM_2(benchmark, new Task());//####[166]####
     }//####[166]####
-    private static TaskID<Void> runBM_2(TaskID<Benchmark> benchmark, TaskInfo taskinfo) {//####[166]####
+    private static Future<Void> runBM_2(Future<Benchmark> benchmark, Task taskinfo) {//####[166]####
         // ensure Method variable is set//####[166]####
         if (__pt__runBM_2_Benchmark_method == null) {//####[166]####
             __pt__runBM_2_Benchmark_ensureMethodVarSet();//####[166]####
@@ -314,11 +314,11 @@ public class TestNestedTask4 {//####[10]####
         taskinfo.setMethod(__pt__runBM_2_Benchmark_method);//####[166]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[166]####
     }//####[166]####
-    private static TaskID<Void> runBM_2(BlockingQueue<Benchmark> benchmark) {//####[166]####
+    private static Future<Void> runBM_2(BlockingQueue<Benchmark> benchmark) {//####[166]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[166]####
-        return runBM_2(benchmark, new TaskInfo());//####[166]####
+        return runBM_2(benchmark, new Task());//####[166]####
     }//####[166]####
-    private static TaskID<Void> runBM_2(BlockingQueue<Benchmark> benchmark, TaskInfo taskinfo) {//####[166]####
+    private static Future<Void> runBM_2(BlockingQueue<Benchmark> benchmark, Task taskinfo) {//####[166]####
         // ensure Method variable is set//####[166]####
         if (__pt__runBM_2_Benchmark_method == null) {//####[166]####
             __pt__runBM_2_Benchmark_ensureMethodVarSet();//####[166]####
@@ -333,8 +333,8 @@ public class TestNestedTask4 {//####[10]####
         try {//####[167]####
             System.out.println("One-off Task [Thread ID " + CurrentTask.currentThreadID() + "] [Thread Local ID " + CurrentTask.currentThreadLocalID() + "] [Task Global ID " + CurrentTask.globalID() + "]  [Task Relative ID " + CurrentTask.relativeID() + "]  [Multi Task Size " + CurrentTask.multiTaskSize() + "] ");//####[168]####
             benchmark.getMethod().invoke(benchmark.getInstance(), benchmark.getArguments());//####[169]####
-            TaskIDGroup tig = new TaskIDGroup(totalNum);//####[171]####
-            TaskID[] taskIDs = new TaskID[totalNum];//####[172]####
+            FutureGroup tig = new FutureGroup(totalNum);//####[171]####
+            Future[] taskIDs = new Future[totalNum];//####[172]####
             for (int i = 0; i < totalNum; i++) //####[174]####
             {//####[174]####
                 taskIDs[i] = runBM_4(createBenchmark(getBenchmarkClass(benchmarkName)));//####[175]####
@@ -372,11 +372,11 @@ public class TestNestedTask4 {//####[10]####
             }//####[200]####
         }//####[200]####
     }//####[200]####
-    private static TaskID<Void> runBM_3(Benchmark benchmark) {//####[200]####
+    private static Future<Void> runBM_3(Benchmark benchmark) {//####[200]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[200]####
-        return runBM_3(benchmark, new TaskInfo());//####[200]####
+        return runBM_3(benchmark, new Task());//####[200]####
     }//####[200]####
-    private static TaskID<Void> runBM_3(Benchmark benchmark, TaskInfo taskinfo) {//####[200]####
+    private static Future<Void> runBM_3(Benchmark benchmark, Task taskinfo) {//####[200]####
         // ensure Method variable is set//####[200]####
         if (__pt__runBM_3_Benchmark_method == null) {//####[200]####
             __pt__runBM_3_Benchmark_ensureMethodVarSet();//####[200]####
@@ -385,11 +385,11 @@ public class TestNestedTask4 {//####[10]####
         taskinfo.setMethod(__pt__runBM_3_Benchmark_method);//####[200]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[200]####
     }//####[200]####
-    private static TaskID<Void> runBM_3(TaskID<Benchmark> benchmark) {//####[200]####
+    private static Future<Void> runBM_3(Future<Benchmark> benchmark) {//####[200]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[200]####
-        return runBM_3(benchmark, new TaskInfo());//####[200]####
+        return runBM_3(benchmark, new Task());//####[200]####
     }//####[200]####
-    private static TaskID<Void> runBM_3(TaskID<Benchmark> benchmark, TaskInfo taskinfo) {//####[200]####
+    private static Future<Void> runBM_3(Future<Benchmark> benchmark, Task taskinfo) {//####[200]####
         // ensure Method variable is set//####[200]####
         if (__pt__runBM_3_Benchmark_method == null) {//####[200]####
             __pt__runBM_3_Benchmark_ensureMethodVarSet();//####[200]####
@@ -400,11 +400,11 @@ public class TestNestedTask4 {//####[10]####
         taskinfo.setMethod(__pt__runBM_3_Benchmark_method);//####[200]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[200]####
     }//####[200]####
-    private static TaskID<Void> runBM_3(BlockingQueue<Benchmark> benchmark) {//####[200]####
+    private static Future<Void> runBM_3(BlockingQueue<Benchmark> benchmark) {//####[200]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[200]####
-        return runBM_3(benchmark, new TaskInfo());//####[200]####
+        return runBM_3(benchmark, new Task());//####[200]####
     }//####[200]####
-    private static TaskID<Void> runBM_3(BlockingQueue<Benchmark> benchmark, TaskInfo taskinfo) {//####[200]####
+    private static Future<Void> runBM_3(BlockingQueue<Benchmark> benchmark, Task taskinfo) {//####[200]####
         // ensure Method variable is set//####[200]####
         if (__pt__runBM_3_Benchmark_method == null) {//####[200]####
             __pt__runBM_3_Benchmark_ensureMethodVarSet();//####[200]####
@@ -419,8 +419,8 @@ public class TestNestedTask4 {//####[10]####
         try {//####[201]####
             System.out.println("One-off Task [Thread ID " + CurrentTask.currentThreadID() + "] [Thread Local ID " + CurrentTask.currentThreadLocalID() + "] [Task Global ID " + CurrentTask.globalID() + "]  [Task Relative ID " + CurrentTask.relativeID() + "]  [Multi Task Size " + CurrentTask.multiTaskSize() + "] ");//####[202]####
             benchmark.getMethod().invoke(benchmark.getInstance(), benchmark.getArguments());//####[203]####
-            TaskIDGroup tig = new TaskIDGroup(totalNum);//####[205]####
-            TaskID[] taskIDs = new TaskID[totalNum];//####[206]####
+            FutureGroup tig = new FutureGroup(totalNum);//####[205]####
+            Future[] taskIDs = new Future[totalNum];//####[206]####
             for (int i = 0; i < totalNum; i++) //####[208]####
             {//####[208]####
                 taskIDs[i] = runBM_4(createBenchmark(getBenchmarkClass(benchmarkName)));//####[209]####
@@ -458,11 +458,11 @@ public class TestNestedTask4 {//####[10]####
             }//####[234]####
         }//####[234]####
     }//####[234]####
-    private static TaskID<Void> runBM_4(Benchmark benchmark) {//####[234]####
+    private static Future<Void> runBM_4(Benchmark benchmark) {//####[234]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[234]####
-        return runBM_4(benchmark, new TaskInfo());//####[234]####
+        return runBM_4(benchmark, new Task());//####[234]####
     }//####[234]####
-    private static TaskID<Void> runBM_4(Benchmark benchmark, TaskInfo taskinfo) {//####[234]####
+    private static Future<Void> runBM_4(Benchmark benchmark, Task taskinfo) {//####[234]####
         // ensure Method variable is set//####[234]####
         if (__pt__runBM_4_Benchmark_method == null) {//####[234]####
             __pt__runBM_4_Benchmark_ensureMethodVarSet();//####[234]####
@@ -471,11 +471,11 @@ public class TestNestedTask4 {//####[10]####
         taskinfo.setMethod(__pt__runBM_4_Benchmark_method);//####[234]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[234]####
     }//####[234]####
-    private static TaskID<Void> runBM_4(TaskID<Benchmark> benchmark) {//####[234]####
+    private static Future<Void> runBM_4(Future<Benchmark> benchmark) {//####[234]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[234]####
-        return runBM_4(benchmark, new TaskInfo());//####[234]####
+        return runBM_4(benchmark, new Task());//####[234]####
     }//####[234]####
-    private static TaskID<Void> runBM_4(TaskID<Benchmark> benchmark, TaskInfo taskinfo) {//####[234]####
+    private static Future<Void> runBM_4(Future<Benchmark> benchmark, Task taskinfo) {//####[234]####
         // ensure Method variable is set//####[234]####
         if (__pt__runBM_4_Benchmark_method == null) {//####[234]####
             __pt__runBM_4_Benchmark_ensureMethodVarSet();//####[234]####
@@ -486,11 +486,11 @@ public class TestNestedTask4 {//####[10]####
         taskinfo.setMethod(__pt__runBM_4_Benchmark_method);//####[234]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[234]####
     }//####[234]####
-    private static TaskID<Void> runBM_4(BlockingQueue<Benchmark> benchmark) {//####[234]####
+    private static Future<Void> runBM_4(BlockingQueue<Benchmark> benchmark) {//####[234]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[234]####
-        return runBM_4(benchmark, new TaskInfo());//####[234]####
+        return runBM_4(benchmark, new Task());//####[234]####
     }//####[234]####
-    private static TaskID<Void> runBM_4(BlockingQueue<Benchmark> benchmark, TaskInfo taskinfo) {//####[234]####
+    private static Future<Void> runBM_4(BlockingQueue<Benchmark> benchmark, Task taskinfo) {//####[234]####
         // ensure Method variable is set//####[234]####
         if (__pt__runBM_4_Benchmark_method == null) {//####[234]####
             __pt__runBM_4_Benchmark_ensureMethodVarSet();//####[234]####

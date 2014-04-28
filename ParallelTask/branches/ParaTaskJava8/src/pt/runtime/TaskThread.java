@@ -25,10 +25,11 @@ import java.util.Stack;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
+
 public abstract class TaskThread extends Thread {
 
 	//-- TaskThreads could potentially have a stack of currently-processing tasks (e.g. if it blocks on a TaskID that hasn't completed)
-	protected Stack<TaskID> currentTaskStack = new Stack<TaskID>();
+	protected Stack<Future<?>> currentTaskStack = new Stack<Future<?>>();
 	
 	
 	/**
@@ -44,7 +45,7 @@ public abstract class TaskThread extends Thread {
 	 * @since : 02/05/2013
 	 * One-off task threads do not need local thread ID.
 	 * 
-	 * @since £º10/05/2013
+	 * @since ï¿½ï¿½10/05/2013
 	 * Change the name of multiTaskThreadID to threadLocalID
 	 * Change the name of nextMultiTaskThreadID to nextThreadLocalID
 	 * 
@@ -106,15 +107,14 @@ public abstract class TaskThread extends Thread {
 	 * @return	true if task executed successfully, false otherwise
 	 * @throws PoisonPillException 
 	 */
-	protected boolean executeTask(TaskID task){
+	protected boolean executeTask(Future task){
 		currentTaskStack.push(task);
 		
-		TaskInfo info = task.getTaskInfo();
-		Method method = info.getMethod();
-		Object instance = info.getInstance();
-		Object[] args = info.getParameters();
+		Task info = task.getTaskInfo();
 		Object result = null;
 		
+		// TODO
+		/*
 		// retrieve results from implicit taskids
 		int[] taskIdArgIndexes = info.getTaskIdArgIndexes();
 		for (int index : taskIdArgIndexes) {
@@ -126,9 +126,10 @@ public abstract class TaskThread extends Thread {
 				// can't happen, handled somewhere else (eventually will be anyway)
 			}
 		}
+		*/
 		
 		try {
-			result = method.invoke(instance, args);
+			result = info.execute();
 			
 			task.setReturnResult(result);
 			task.enqueueSlots(false);
@@ -137,12 +138,8 @@ public abstract class TaskThread extends Thread {
 			return true;
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
-		} catch (IllegalAccessException e) {
-			e.printStackTrace();
-		} catch (InvocationTargetException e) {
-			task.setException(e.getTargetException());
-			task.enqueueSlots(false);			
 		}
+		
 		currentTaskStack.pop();
 		return false; 
 	}
@@ -151,7 +148,7 @@ public abstract class TaskThread extends Thread {
 	 * Return the currently executing TaskID by this TaskThread 
 	 * @return	The current TaskID, or null if not working on a task
 	 */
-	public TaskID currentExecutingTask() {
+	public Future<?> currentExecutingTask() {
 		return currentTaskStack.peek();
 	}
 	

@@ -23,7 +23,7 @@ import java.util.List;//####[11]####
 public class SearchCompare {//####[13]####
     static{ParaTask.init();}//####[13]####
     /*  ParaTask helper method to access private/protected slots *///####[13]####
-    public void __pt__accessPrivateSlot(Method m, Object instance, TaskID arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[13]####
+    public void __pt__accessPrivateSlot(Method m, Object instance, Future arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[13]####
         if (m.getParameterTypes().length == 0)//####[13]####
             m.invoke(instance);//####[13]####
         else if ((m.getParameterTypes().length == 1))//####[13]####
@@ -81,10 +81,10 @@ public class SearchCompare {//####[13]####
             }//####[61]####
         }//####[62]####
         int CompCount = thumbnailsPanel.getComponentCount();//####[64]####
-        TaskIDGroup group = new TaskIDGroup(CompCount);//####[65]####
+        FutureGroup group = new FutureGroup(CompCount);//####[65]####
         for (int i = 0; i < CompCount; i++) //####[67]####
         {//####[67]####
-            TaskID id = compareHash2Task(thumbnailsPanel, result, compare, imageHash, accuracy, i);//####[68]####
+            Future id = compareHash2Task(thumbnailsPanel, result, compare, imageHash, accuracy, i);//####[68]####
             group.add(id);//####[69]####
         }//####[70]####
         try {//####[72]####
@@ -109,11 +109,11 @@ public class SearchCompare {//####[13]####
             }//####[83]####
         }//####[83]####
     }//####[83]####
-    public static TaskID<Void> compareHash2Task(Object thumbnailsPanel, Object result, Object compare, Object imageHash, Object accuracy, Object i) {//####[83]####
+    public static Future<Void> compareHash2Task(Object thumbnailsPanel, Object result, Object compare, Object imageHash, Object accuracy, Object i) {//####[83]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[83]####
-        return compareHash2Task(thumbnailsPanel, result, compare, imageHash, accuracy, i, new TaskInfo());//####[83]####
+        return compareHash2Task(thumbnailsPanel, result, compare, imageHash, accuracy, i, new Task());//####[83]####
     }//####[83]####
-    public static TaskID<Void> compareHash2Task(Object thumbnailsPanel, Object result, Object compare, Object imageHash, Object accuracy, Object i, TaskInfo taskinfo) {//####[83]####
+    public static Future<Void> compareHash2Task(Object thumbnailsPanel, Object result, Object compare, Object imageHash, Object accuracy, Object i, Task taskinfo) {//####[83]####
         // ensure Method variable is set//####[83]####
         if (__pt__compareHash2Task_JPanel_ListPhotoPanelItem_PhotoPanelItem_long_int_int_method == null) {//####[83]####
             __pt__compareHash2Task_JPanel_ListPhotoPanelItem_PhotoPanelItem_long_int_int_ensureMethodVarSet();//####[83]####
@@ -123,43 +123,43 @@ public class SearchCompare {//####[13]####
         if (thumbnailsPanel instanceof BlockingQueue) {//####[83]####
             __pt__queueIndexList.add(0);//####[83]####
         }//####[83]####
-        if (thumbnailsPanel instanceof TaskID) {//####[83]####
-            taskinfo.addDependsOn((TaskID)thumbnailsPanel);//####[83]####
+        if (thumbnailsPanel instanceof Future) {//####[83]####
+            taskinfo.addDependsOn((Future)thumbnailsPanel);//####[83]####
             __pt__taskIdIndexList.add(0);//####[83]####
         }//####[83]####
         if (result instanceof BlockingQueue) {//####[83]####
             __pt__queueIndexList.add(1);//####[83]####
         }//####[83]####
-        if (result instanceof TaskID) {//####[83]####
-            taskinfo.addDependsOn((TaskID)result);//####[83]####
+        if (result instanceof Future) {//####[83]####
+            taskinfo.addDependsOn((Future)result);//####[83]####
             __pt__taskIdIndexList.add(1);//####[83]####
         }//####[83]####
         if (compare instanceof BlockingQueue) {//####[83]####
             __pt__queueIndexList.add(2);//####[83]####
         }//####[83]####
-        if (compare instanceof TaskID) {//####[83]####
-            taskinfo.addDependsOn((TaskID)compare);//####[83]####
+        if (compare instanceof Future) {//####[83]####
+            taskinfo.addDependsOn((Future)compare);//####[83]####
             __pt__taskIdIndexList.add(2);//####[83]####
         }//####[83]####
         if (imageHash instanceof BlockingQueue) {//####[83]####
             __pt__queueIndexList.add(3);//####[83]####
         }//####[83]####
-        if (imageHash instanceof TaskID) {//####[83]####
-            taskinfo.addDependsOn((TaskID)imageHash);//####[83]####
+        if (imageHash instanceof Future) {//####[83]####
+            taskinfo.addDependsOn((Future)imageHash);//####[83]####
             __pt__taskIdIndexList.add(3);//####[83]####
         }//####[83]####
         if (accuracy instanceof BlockingQueue) {//####[83]####
             __pt__queueIndexList.add(4);//####[83]####
         }//####[83]####
-        if (accuracy instanceof TaskID) {//####[83]####
-            taskinfo.addDependsOn((TaskID)accuracy);//####[83]####
+        if (accuracy instanceof Future) {//####[83]####
+            taskinfo.addDependsOn((Future)accuracy);//####[83]####
             __pt__taskIdIndexList.add(4);//####[83]####
         }//####[83]####
         if (i instanceof BlockingQueue) {//####[83]####
             __pt__queueIndexList.add(5);//####[83]####
         }//####[83]####
-        if (i instanceof TaskID) {//####[83]####
-            taskinfo.addDependsOn((TaskID)i);//####[83]####
+        if (i instanceof Future) {//####[83]####
+            taskinfo.addDependsOn((Future)i);//####[83]####
             __pt__taskIdIndexList.add(5);//####[83]####
         }//####[83]####
         int[] __pt__queueIndexArray = new int[__pt__queueIndexList.size()];//####[83]####
@@ -244,10 +244,10 @@ public class SearchCompare {//####[13]####
         Graphics2D g2 = image.createGraphics();//####[147]####
         g2.drawImage(compare.getSquarePhoto().getScaledInstance(accuracy, accuracy, Image.SCALE_DEFAULT), null, null);//####[148]####
         int compCount = thumbnailsPanel.getComponentCount();//####[150]####
-        TaskIDGroup group = new TaskIDGroup(compCount);//####[151]####
+        FutureGroup group = new FutureGroup(compCount);//####[151]####
         for (int i = 0; i < compCount; i++) //####[153]####
         {//####[153]####
-            TaskID id = compareColor2Task(thumbnailsPanel, result, image, i, sensitivity, accuracy);//####[154]####
+            Future id = compareColor2Task(thumbnailsPanel, result, image, i, sensitivity, accuracy);//####[154]####
             group.add(id);//####[155]####
         }//####[156]####
         try {//####[158]####
@@ -272,11 +272,11 @@ public class SearchCompare {//####[13]####
             }//####[169]####
         }//####[169]####
     }//####[169]####
-    public static TaskID<Void> compareColor2Task(Object thumbnailsPanel, Object result, Object image, Object i, Object sensitivity, Object accuracy) {//####[169]####
+    public static Future<Void> compareColor2Task(Object thumbnailsPanel, Object result, Object image, Object i, Object sensitivity, Object accuracy) {//####[169]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[169]####
-        return compareColor2Task(thumbnailsPanel, result, image, i, sensitivity, accuracy, new TaskInfo());//####[169]####
+        return compareColor2Task(thumbnailsPanel, result, image, i, sensitivity, accuracy, new Task());//####[169]####
     }//####[169]####
-    public static TaskID<Void> compareColor2Task(Object thumbnailsPanel, Object result, Object image, Object i, Object sensitivity, Object accuracy, TaskInfo taskinfo) {//####[169]####
+    public static Future<Void> compareColor2Task(Object thumbnailsPanel, Object result, Object image, Object i, Object sensitivity, Object accuracy, Task taskinfo) {//####[169]####
         // ensure Method variable is set//####[169]####
         if (__pt__compareColor2Task_JPanel_ListPhotoPanelItem_BufferedImage_int_int_int_method == null) {//####[169]####
             __pt__compareColor2Task_JPanel_ListPhotoPanelItem_BufferedImage_int_int_int_ensureMethodVarSet();//####[169]####
@@ -286,43 +286,43 @@ public class SearchCompare {//####[13]####
         if (thumbnailsPanel instanceof BlockingQueue) {//####[169]####
             __pt__queueIndexList.add(0);//####[169]####
         }//####[169]####
-        if (thumbnailsPanel instanceof TaskID) {//####[169]####
-            taskinfo.addDependsOn((TaskID)thumbnailsPanel);//####[169]####
+        if (thumbnailsPanel instanceof Future) {//####[169]####
+            taskinfo.addDependsOn((Future)thumbnailsPanel);//####[169]####
             __pt__taskIdIndexList.add(0);//####[169]####
         }//####[169]####
         if (result instanceof BlockingQueue) {//####[169]####
             __pt__queueIndexList.add(1);//####[169]####
         }//####[169]####
-        if (result instanceof TaskID) {//####[169]####
-            taskinfo.addDependsOn((TaskID)result);//####[169]####
+        if (result instanceof Future) {//####[169]####
+            taskinfo.addDependsOn((Future)result);//####[169]####
             __pt__taskIdIndexList.add(1);//####[169]####
         }//####[169]####
         if (image instanceof BlockingQueue) {//####[169]####
             __pt__queueIndexList.add(2);//####[169]####
         }//####[169]####
-        if (image instanceof TaskID) {//####[169]####
-            taskinfo.addDependsOn((TaskID)image);//####[169]####
+        if (image instanceof Future) {//####[169]####
+            taskinfo.addDependsOn((Future)image);//####[169]####
             __pt__taskIdIndexList.add(2);//####[169]####
         }//####[169]####
         if (i instanceof BlockingQueue) {//####[169]####
             __pt__queueIndexList.add(3);//####[169]####
         }//####[169]####
-        if (i instanceof TaskID) {//####[169]####
-            taskinfo.addDependsOn((TaskID)i);//####[169]####
+        if (i instanceof Future) {//####[169]####
+            taskinfo.addDependsOn((Future)i);//####[169]####
             __pt__taskIdIndexList.add(3);//####[169]####
         }//####[169]####
         if (sensitivity instanceof BlockingQueue) {//####[169]####
             __pt__queueIndexList.add(4);//####[169]####
         }//####[169]####
-        if (sensitivity instanceof TaskID) {//####[169]####
-            taskinfo.addDependsOn((TaskID)sensitivity);//####[169]####
+        if (sensitivity instanceof Future) {//####[169]####
+            taskinfo.addDependsOn((Future)sensitivity);//####[169]####
             __pt__taskIdIndexList.add(4);//####[169]####
         }//####[169]####
         if (accuracy instanceof BlockingQueue) {//####[169]####
             __pt__queueIndexList.add(5);//####[169]####
         }//####[169]####
-        if (accuracy instanceof TaskID) {//####[169]####
-            taskinfo.addDependsOn((TaskID)accuracy);//####[169]####
+        if (accuracy instanceof Future) {//####[169]####
+            taskinfo.addDependsOn((Future)accuracy);//####[169]####
             __pt__taskIdIndexList.add(5);//####[169]####
         }//####[169]####
         int[] __pt__queueIndexArray = new int[__pt__queueIndexList.size()];//####[169]####

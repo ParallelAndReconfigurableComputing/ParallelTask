@@ -13,7 +13,7 @@ import java.util.List;//####[1]####
 public class TestMultiTask2 {//####[3]####
     static{ParaTask.init();}//####[3]####
     /*  ParaTask helper method to access private/protected slots *///####[3]####
-    public void __pt__accessPrivateSlot(Method m, Object instance, TaskID arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[3]####
+    public void __pt__accessPrivateSlot(Method m, Object instance, Future arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[3]####
         if (m.getParameterTypes().length == 0)//####[3]####
             m.invoke(instance);//####[3]####
         else if ((m.getParameterTypes().length == 1))//####[3]####
@@ -23,12 +23,12 @@ public class TestMultiTask2 {//####[3]####
     }//####[3]####
 //####[4]####
     public static void main(String[] args) {//####[4]####
-        TaskID tid_0 = runBM_0();//####[6]####
-        TaskID tid_1 = runBM_1();//####[7]####
-        TaskID tid_2 = runBM_2();//####[8]####
-        TaskID tid_3 = runBM_3();//####[9]####
-        TaskID tid_4 = runBM_4();//####[10]####
-        TaskIDGroup tig = new TaskIDGroup(5);//####[12]####
+        Future tid_0 = runBM_0();//####[6]####
+        Future tid_1 = runBM_1();//####[7]####
+        Future tid_2 = runBM_2();//####[8]####
+        Future tid_3 = runBM_3();//####[9]####
+        Future tid_4 = runBM_4();//####[10]####
+        FutureGroup tig = new FutureGroup(5);//####[12]####
         tig.add(tid_0);//####[14]####
         tig.add(tid_1);//####[15]####
         tig.add(tid_2);//####[16]####
@@ -55,11 +55,11 @@ public class TestMultiTask2 {//####[3]####
             }//####[29]####
         }//####[29]####
     }//####[29]####
-    private static TaskIDGroup<Void> runBM_0() {//####[29]####
+    private static FutureGroup<Void> runBM_0() {//####[29]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[29]####
-        return runBM_0(new TaskInfo());//####[29]####
+        return runBM_0(new Task());//####[29]####
     }//####[29]####
-    private static TaskIDGroup<Void> runBM_0(TaskInfo taskinfo) {//####[29]####
+    private static FutureGroup<Void> runBM_0(Task taskinfo) {//####[29]####
         // ensure Method variable is set//####[29]####
         if (__pt__runBM_0__method == null) {//####[29]####
             __pt__runBM_0__ensureMethodVarSet();//####[29]####
@@ -90,11 +90,11 @@ public class TestMultiTask2 {//####[3]####
             }//####[30]####
         }//####[30]####
     }//####[30]####
-    private static TaskIDGroup<Void> runBM_1() {//####[30]####
+    private static FutureGroup<Void> runBM_1() {//####[30]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[30]####
-        return runBM_1(new TaskInfo());//####[30]####
+        return runBM_1(new Task());//####[30]####
     }//####[30]####
-    private static TaskIDGroup<Void> runBM_1(TaskInfo taskinfo) {//####[30]####
+    private static FutureGroup<Void> runBM_1(Task taskinfo) {//####[30]####
         // ensure Method variable is set//####[30]####
         if (__pt__runBM_1__method == null) {//####[30]####
             __pt__runBM_1__ensureMethodVarSet();//####[30]####
@@ -125,11 +125,11 @@ public class TestMultiTask2 {//####[3]####
             }//####[31]####
         }//####[31]####
     }//####[31]####
-    private static TaskIDGroup<Void> runBM_2() {//####[31]####
+    private static FutureGroup<Void> runBM_2() {//####[31]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[31]####
-        return runBM_2(new TaskInfo());//####[31]####
+        return runBM_2(new Task());//####[31]####
     }//####[31]####
-    private static TaskIDGroup<Void> runBM_2(TaskInfo taskinfo) {//####[31]####
+    private static FutureGroup<Void> runBM_2(Task taskinfo) {//####[31]####
         // ensure Method variable is set//####[31]####
         if (__pt__runBM_2__method == null) {//####[31]####
             __pt__runBM_2__ensureMethodVarSet();//####[31]####
@@ -160,11 +160,11 @@ public class TestMultiTask2 {//####[3]####
             }//####[32]####
         }//####[32]####
     }//####[32]####
-    private static TaskIDGroup<Void> runBM_3() {//####[32]####
+    private static FutureGroup<Void> runBM_3() {//####[32]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[32]####
-        return runBM_3(new TaskInfo());//####[32]####
+        return runBM_3(new Task());//####[32]####
     }//####[32]####
-    private static TaskIDGroup<Void> runBM_3(TaskInfo taskinfo) {//####[32]####
+    private static FutureGroup<Void> runBM_3(Task taskinfo) {//####[32]####
         // ensure Method variable is set//####[32]####
         if (__pt__runBM_3__method == null) {//####[32]####
             __pt__runBM_3__ensureMethodVarSet();//####[32]####
@@ -195,11 +195,11 @@ public class TestMultiTask2 {//####[3]####
             }//####[33]####
         }//####[33]####
     }//####[33]####
-    private static TaskIDGroup<Void> runBM_4() {//####[33]####
+    private static FutureGroup<Void> runBM_4() {//####[33]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[33]####
-        return runBM_4(new TaskInfo());//####[33]####
+        return runBM_4(new Task());//####[33]####
     }//####[33]####
-    private static TaskIDGroup<Void> runBM_4(TaskInfo taskinfo) {//####[33]####
+    private static FutureGroup<Void> runBM_4(Task taskinfo) {//####[33]####
         // ensure Method variable is set//####[33]####
         if (__pt__runBM_4__method == null) {//####[33]####
             __pt__runBM_4__ensureMethodVarSet();//####[33]####

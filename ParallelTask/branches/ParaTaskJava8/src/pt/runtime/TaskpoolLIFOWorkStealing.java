@@ -21,17 +21,10 @@ package pt.runtime;
 
 import java.util.AbstractQueue;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Deque;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.PriorityBlockingQueue;
-
-import pt.compiler.parser.ast.stmt.ForeachStmt;
 
 /**
  *	
@@ -45,7 +38,7 @@ import pt.compiler.parser.ast.stmt.ForeachStmt;
 public class TaskpoolLIFOWorkStealing extends AbstractTaskPool {
 	
 	@Override
-	protected void enqueueReadyTask(TaskID<?> taskID) {
+	protected void enqueueReadyTask(Future<?> taskID) {
 		
 		/**
 		 * 
@@ -72,7 +65,7 @@ public class TaskpoolLIFOWorkStealing extends AbstractTaskPool {
 		 * 
 		 * */
 		
-		if (taskID.getExecuteOnThread() != ParaTaskHelper.ANY_THREAD_TASK || taskID instanceof TaskIDGroup) {
+		if (taskID.getExecuteOnThread() != ParaTaskHelper.ANY_THREAD_TASK || taskID instanceof FutureGroup) {
 			//-- this is a multi-task, so place it on that thread's local queue (if it is wrongly stolen, it then gets placed on private queue)
 			
 			/**
@@ -213,7 +206,7 @@ public class TaskpoolLIFOWorkStealing extends AbstractTaskPool {
 	}
 	
 	@Override
-	public TaskID workerPollNextTask() {
+	public Future workerPollNextTask() {
 		
 		WorkerThread wt = (WorkerThread) Thread.currentThread();
 		
@@ -240,7 +233,7 @@ public class TaskpoolLIFOWorkStealing extends AbstractTaskPool {
 		 * 
 		 * */
 		//TaskID next = privateQueues[workerID].poll();
-		TaskID next = null;
+		Future next = null;
 		
 		if (wt.isMultiTaskWorker()) {
 			/**
@@ -314,12 +307,12 @@ public class TaskpoolLIFOWorkStealing extends AbstractTaskPool {
 				// expand multi task
 				int count = next.getCount();
 				int currentMultiTaskThreadPool = ThreadPool.getMultiTaskThreadPoolSize();
-				TaskInfo taskinfo = next.getTaskInfo();
+				Task taskinfo = next.getTaskInfo();
 				
 				taskinfo.setSubTask(true);
 				
 				for (int i = 0; i < count; i++) {
-					TaskID taskID = new TaskID(taskinfo);
+					Future taskID = new Future(taskinfo);
 					
 					taskID.setRelativeID(i);
 					taskID.setExecuteOnThread(i%currentMultiTaskThreadPool);
@@ -338,8 +331,8 @@ public class TaskpoolLIFOWorkStealing extends AbstractTaskPool {
 					 * @since 10/05/2013
 					 * Set part of group before add a task id into a group.
 					 */
-					taskID.setPartOfGroup(((TaskIDGroup)next));
-					((TaskIDGroup)next).add(taskID);
+					taskID.setPartOfGroup(((FutureGroup)next));
+					((FutureGroup)next).add(taskID);
 					enqueueReadyTask(taskID);
 				}
 				/**
@@ -349,7 +342,7 @@ public class TaskpoolLIFOWorkStealing extends AbstractTaskPool {
 				 * 
 				 * After a multi task worker thread expand a mult task, set the expansion flag.
 				 */
-				((TaskIDGroup)next).setExpanded(true);
+				((FutureGroup)next).setExpanded(true);
 				
 				//Another option on how to implement Later Expansion
 				/*TaskIDGroup group = (TaskIDGroup) next;
@@ -556,7 +549,7 @@ public class TaskpoolLIFOWorkStealing extends AbstractTaskPool {
 				 * When trying to steal from a victim, check if the victim is null first.
 				 * */
 				//Deque<TaskID<?>> victimQueue = localQueues[prevVictim];
-				Deque<TaskID<?>> victimQueue = localOneoffTaskQueues.get(prevVictim);
+				Deque<Future<?>> victimQueue = localOneoffTaskQueues.get(prevVictim);
 				
 				if (null != victimQueue) {
 					next = victimQueue.pollLast();
@@ -670,7 +663,7 @@ public class TaskpoolLIFOWorkStealing extends AbstractTaskPool {
 					 * When trying to steal from a victim, check if the victim is null first.
 					 * */
 					//Deque<TaskID<?>> victimQueue = localQueues[nextVictim];
-					Deque<TaskID<?>> victimQueue = localOneoffTaskQueues.get(nextVictim);
+					Deque<Future<?>> victimQueue = localOneoffTaskQueues.get(nextVictim);
 				
 					if (null != victimQueue) {
 						next = victimQueue.pollLast();
@@ -797,12 +790,12 @@ public class TaskpoolLIFOWorkStealing extends AbstractTaskPool {
 			
 		//For multi task used
 			
-		globalMultiTaskqueue = new PriorityBlockingQueue<TaskID<?>>(
+		globalMultiTaskqueue = new PriorityBlockingQueue<Future<?>>(
 				AbstractTaskPool.INITIAL_QUEUE_CAPACITY,
 				/*AbstractTaskPool.FIFO_TaskID_Comparator*/
 				AbstractTaskPool.LIFO_TaskID_Comparator);
 			
-		privateQueues = new ArrayList<AbstractQueue<TaskID<?>>>();
+		privateQueues = new ArrayList<AbstractQueue<Future<?>>>();
 		//localMultiTaskQueues = new ArrayList<LinkedBlockingDeque<TaskID<?>>>();
 		
 		//Put this create procedure into thread pool 
@@ -820,7 +813,7 @@ public class TaskpoolLIFOWorkStealing extends AbstractTaskPool {
 		
 		//For one-off task used
 		
-		localOneoffTaskQueues = new ConcurrentHashMap<Integer, LinkedBlockingDeque<TaskID<?>>>();
+		localOneoffTaskQueues = new ConcurrentHashMap<Integer, LinkedBlockingDeque<Future<?>>>();
 		
 		initialiseWorkerThreads();
 	}

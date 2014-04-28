@@ -20,7 +20,6 @@
 package pt.runtime;
 
 import java.util.AbstractQueue;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -31,7 +30,7 @@ public interface Taskpool {
 	* now been met and the task is ready to be scheduled for execution. 
 	* @param taskID
 	*/
-	public void nowReady(TaskID<?> taskID);
+	public void nowReady(Future<?> taskID);
 	
 	/**
 	* Returns the count of currently active interactive tasks. This is usually to know how many threads there are.
@@ -43,7 +42,7 @@ public interface Taskpool {
 	* Used to decrement the count of interactive tasks
 	* @param taskID	The task that has just completed
 	*/
-	public void interactiveTaskCompleted(TaskID<?> taskID);
+	public void interactiveTaskCompleted(Future<?> taskID);
 	
 	/**
 	* Enqueues the specified task, whose information is contained in the TaskInfo. It then returns a TaskID
@@ -51,7 +50,7 @@ public interface Taskpool {
 	* @param taskinfo
 	* @return
 	*/
-	public TaskID enqueue(TaskInfo taskinfo);
+	public <T> Future<T> enqueue(Task<T> taskinfo);
 	
 	/**
 	* Enqueues the specified TaskInfo as a multi-task, creates "count" inner tasks and places them in a TaskIDGroup
@@ -63,27 +62,22 @@ public interface Taskpool {
 	* 
 	* */
 	
-	public TaskIDGroup enqueueMulti(TaskInfo taskinfo, int count);
+	public <T> FutureGroup<T> enqueueMulti(Task<T> taskinfo, int count);
 	
 	/**
 	* The worker thread polls the task pool for a task.. If there isn't one, then it returns 
 	* immediately (returns null in such a case).
 	* @return
 	*/
-	public TaskID workerPollNextTask();	
+	public Future<?> workerPollNextTask();	
 	
 	/**
 	*	The worker thread blocks until it gets a task to execute.  
 	* @return
 	*/
-	public TaskID workerTakeNextTask();
+	public Future<?> workerTakeNextTask();
 	
-	public boolean executeSynchronously(int cutoff);
-	
-	public void printDebugInfo();
-	
-	public int totalNumTasksExecuted();
-	
+	public boolean executeSynchronously(int cutoff);	
 	
 	/**
 	 * 
@@ -95,7 +89,7 @@ public interface Taskpool {
 	 * Used to access private task queues by thread pool when initialization.
 	 *  
 	 * */
-	public Map<Integer, LinkedBlockingDeque<TaskID<?>>> getLocalOneoffTaskQueues();
+	public Map<Integer, LinkedBlockingDeque<Future<?>>> getLocalOneoffTaskQueues();
 	
-	public List<AbstractQueue<TaskID<?>>> getPrivateTaskQueues();
+	public List<AbstractQueue<Future<?>>> getPrivateTaskQueues();
 }

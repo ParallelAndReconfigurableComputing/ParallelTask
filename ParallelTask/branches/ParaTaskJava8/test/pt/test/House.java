@@ -23,7 +23,7 @@ import java.util.List;//####[12]####
 public class House extends JApplet {//####[14]####
     static{ParaTask.init();}//####[14]####
     /*  ParaTask helper method to access private/protected slots *///####[14]####
-    public void __pt__accessPrivateSlot(Method m, Object instance, TaskID arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[14]####
+    public void __pt__accessPrivateSlot(Method m, Object instance, Future arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[14]####
         if (m.getParameterTypes().length == 0)//####[14]####
             m.invoke(instance);//####[14]####
         else if ((m.getParameterTypes().length == 1))//####[14]####
@@ -80,11 +80,11 @@ public class House extends JApplet {//####[14]####
             }//####[44]####
         }//####[44]####
     }//####[44]####
-    private TaskIDGroup<Void> buildAllTask(ConcurrentLinkedQueue<BuildingMaterial> items) {//####[44]####
+    private FutureGroup<Void> buildAllTask(ConcurrentLinkedQueue<BuildingMaterial> items) {//####[44]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[44]####
-        return buildAllTask(items, new TaskInfo());//####[44]####
+        return buildAllTask(items, new Task());//####[44]####
     }//####[44]####
-    private TaskIDGroup<Void> buildAllTask(ConcurrentLinkedQueue<BuildingMaterial> items, TaskInfo taskinfo) {//####[44]####
+    private FutureGroup<Void> buildAllTask(ConcurrentLinkedQueue<BuildingMaterial> items, Task taskinfo) {//####[44]####
         // ensure Method variable is set//####[44]####
         if (__pt__buildAllTask_ConcurrentLinkedQueueBuildingMaterial_method == null) {//####[44]####
             __pt__buildAllTask_ConcurrentLinkedQueueBuildingMaterial_ensureMethodVarSet();//####[44]####
@@ -94,11 +94,11 @@ public class House extends JApplet {//####[14]####
         taskinfo.setInstance(this);//####[44]####
         return TaskpoolFactory.getTaskpool().enqueueMulti(taskinfo, -1);//####[44]####
     }//####[44]####
-    private TaskIDGroup<Void> buildAllTask(TaskID<ConcurrentLinkedQueue<BuildingMaterial>> items) {//####[44]####
+    private FutureGroup<Void> buildAllTask(Future<ConcurrentLinkedQueue<BuildingMaterial>> items) {//####[44]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[44]####
-        return buildAllTask(items, new TaskInfo());//####[44]####
+        return buildAllTask(items, new Task());//####[44]####
     }//####[44]####
-    private TaskIDGroup<Void> buildAllTask(TaskID<ConcurrentLinkedQueue<BuildingMaterial>> items, TaskInfo taskinfo) {//####[44]####
+    private FutureGroup<Void> buildAllTask(Future<ConcurrentLinkedQueue<BuildingMaterial>> items, Task taskinfo) {//####[44]####
         // ensure Method variable is set//####[44]####
         if (__pt__buildAllTask_ConcurrentLinkedQueueBuildingMaterial_method == null) {//####[44]####
             __pt__buildAllTask_ConcurrentLinkedQueueBuildingMaterial_ensureMethodVarSet();//####[44]####
@@ -110,11 +110,11 @@ public class House extends JApplet {//####[14]####
         taskinfo.setInstance(this);//####[44]####
         return TaskpoolFactory.getTaskpool().enqueueMulti(taskinfo, -1);//####[44]####
     }//####[44]####
-    private TaskIDGroup<Void> buildAllTask(BlockingQueue<ConcurrentLinkedQueue<BuildingMaterial>> items) {//####[44]####
+    private FutureGroup<Void> buildAllTask(BlockingQueue<ConcurrentLinkedQueue<BuildingMaterial>> items) {//####[44]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[44]####
-        return buildAllTask(items, new TaskInfo());//####[44]####
+        return buildAllTask(items, new Task());//####[44]####
     }//####[44]####
-    private TaskIDGroup<Void> buildAllTask(BlockingQueue<ConcurrentLinkedQueue<BuildingMaterial>> items, TaskInfo taskinfo) {//####[44]####
+    private FutureGroup<Void> buildAllTask(BlockingQueue<ConcurrentLinkedQueue<BuildingMaterial>> items, Task taskinfo) {//####[44]####
         // ensure Method variable is set//####[44]####
         if (__pt__buildAllTask_ConcurrentLinkedQueueBuildingMaterial_method == null) {//####[44]####
             __pt__buildAllTask_ConcurrentLinkedQueueBuildingMaterial_ensureMethodVarSet();//####[44]####
@@ -156,11 +156,11 @@ public class House extends JApplet {//####[14]####
             }//####[60]####
         }//####[60]####
     }//####[60]####
-    public TaskID<Void> buildTask(Color colorWalls, Color colorRoof) {//####[60]####
+    public Future<Void> buildTask(Color colorWalls, Color colorRoof) {//####[60]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[60]####
-        return buildTask(colorWalls, colorRoof, new TaskInfo());//####[60]####
+        return buildTask(colorWalls, colorRoof, new Task());//####[60]####
     }//####[60]####
-    public TaskID<Void> buildTask(Color colorWalls, Color colorRoof, TaskInfo taskinfo) {//####[60]####
+    public Future<Void> buildTask(Color colorWalls, Color colorRoof, Task taskinfo) {//####[60]####
         // ensure Method variable is set//####[60]####
         if (__pt__buildTask_Color_Color_method == null) {//####[60]####
             __pt__buildTask_Color_Color_ensureMethodVarSet();//####[60]####
@@ -170,11 +170,11 @@ public class House extends JApplet {//####[14]####
         taskinfo.setInstance(this);//####[60]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[60]####
     }//####[60]####
-    public TaskID<Void> buildTask(TaskID<Color> colorWalls, Color colorRoof) {//####[60]####
+    public Future<Void> buildTask(Future<Color> colorWalls, Color colorRoof) {//####[60]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[60]####
-        return buildTask(colorWalls, colorRoof, new TaskInfo());//####[60]####
+        return buildTask(colorWalls, colorRoof, new Task());//####[60]####
     }//####[60]####
-    public TaskID<Void> buildTask(TaskID<Color> colorWalls, Color colorRoof, TaskInfo taskinfo) {//####[60]####
+    public Future<Void> buildTask(Future<Color> colorWalls, Color colorRoof, Task taskinfo) {//####[60]####
         // ensure Method variable is set//####[60]####
         if (__pt__buildTask_Color_Color_method == null) {//####[60]####
             __pt__buildTask_Color_Color_ensureMethodVarSet();//####[60]####
@@ -186,11 +186,11 @@ public class House extends JApplet {//####[14]####
         taskinfo.setInstance(this);//####[60]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[60]####
     }//####[60]####
-    public TaskID<Void> buildTask(BlockingQueue<Color> colorWalls, Color colorRoof) {//####[60]####
+    public Future<Void> buildTask(BlockingQueue<Color> colorWalls, Color colorRoof) {//####[60]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[60]####
-        return buildTask(colorWalls, colorRoof, new TaskInfo());//####[60]####
+        return buildTask(colorWalls, colorRoof, new Task());//####[60]####
     }//####[60]####
-    public TaskID<Void> buildTask(BlockingQueue<Color> colorWalls, Color colorRoof, TaskInfo taskinfo) {//####[60]####
+    public Future<Void> buildTask(BlockingQueue<Color> colorWalls, Color colorRoof, Task taskinfo) {//####[60]####
         // ensure Method variable is set//####[60]####
         if (__pt__buildTask_Color_Color_method == null) {//####[60]####
             __pt__buildTask_Color_Color_ensureMethodVarSet();//####[60]####
@@ -202,11 +202,11 @@ public class House extends JApplet {//####[14]####
         taskinfo.setInstance(this);//####[60]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[60]####
     }//####[60]####
-    public TaskID<Void> buildTask(Color colorWalls, TaskID<Color> colorRoof) {//####[60]####
+    public Future<Void> buildTask(Color colorWalls, Future<Color> colorRoof) {//####[60]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[60]####
-        return buildTask(colorWalls, colorRoof, new TaskInfo());//####[60]####
+        return buildTask(colorWalls, colorRoof, new Task());//####[60]####
     }//####[60]####
-    public TaskID<Void> buildTask(Color colorWalls, TaskID<Color> colorRoof, TaskInfo taskinfo) {//####[60]####
+    public Future<Void> buildTask(Color colorWalls, Future<Color> colorRoof, Task taskinfo) {//####[60]####
         // ensure Method variable is set//####[60]####
         if (__pt__buildTask_Color_Color_method == null) {//####[60]####
             __pt__buildTask_Color_Color_ensureMethodVarSet();//####[60]####
@@ -218,11 +218,11 @@ public class House extends JApplet {//####[14]####
         taskinfo.setInstance(this);//####[60]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[60]####
     }//####[60]####
-    public TaskID<Void> buildTask(TaskID<Color> colorWalls, TaskID<Color> colorRoof) {//####[60]####
+    public Future<Void> buildTask(Future<Color> colorWalls, Future<Color> colorRoof) {//####[60]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[60]####
-        return buildTask(colorWalls, colorRoof, new TaskInfo());//####[60]####
+        return buildTask(colorWalls, colorRoof, new Task());//####[60]####
     }//####[60]####
-    public TaskID<Void> buildTask(TaskID<Color> colorWalls, TaskID<Color> colorRoof, TaskInfo taskinfo) {//####[60]####
+    public Future<Void> buildTask(Future<Color> colorWalls, Future<Color> colorRoof, Task taskinfo) {//####[60]####
         // ensure Method variable is set//####[60]####
         if (__pt__buildTask_Color_Color_method == null) {//####[60]####
             __pt__buildTask_Color_Color_ensureMethodVarSet();//####[60]####
@@ -235,11 +235,11 @@ public class House extends JApplet {//####[14]####
         taskinfo.setInstance(this);//####[60]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[60]####
     }//####[60]####
-    public TaskID<Void> buildTask(BlockingQueue<Color> colorWalls, TaskID<Color> colorRoof) {//####[60]####
+    public Future<Void> buildTask(BlockingQueue<Color> colorWalls, Future<Color> colorRoof) {//####[60]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[60]####
-        return buildTask(colorWalls, colorRoof, new TaskInfo());//####[60]####
+        return buildTask(colorWalls, colorRoof, new Task());//####[60]####
     }//####[60]####
-    public TaskID<Void> buildTask(BlockingQueue<Color> colorWalls, TaskID<Color> colorRoof, TaskInfo taskinfo) {//####[60]####
+    public Future<Void> buildTask(BlockingQueue<Color> colorWalls, Future<Color> colorRoof, Task taskinfo) {//####[60]####
         // ensure Method variable is set//####[60]####
         if (__pt__buildTask_Color_Color_method == null) {//####[60]####
             __pt__buildTask_Color_Color_ensureMethodVarSet();//####[60]####
@@ -253,11 +253,11 @@ public class House extends JApplet {//####[14]####
         taskinfo.setInstance(this);//####[60]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[60]####
     }//####[60]####
-    public TaskID<Void> buildTask(Color colorWalls, BlockingQueue<Color> colorRoof) {//####[60]####
+    public Future<Void> buildTask(Color colorWalls, BlockingQueue<Color> colorRoof) {//####[60]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[60]####
-        return buildTask(colorWalls, colorRoof, new TaskInfo());//####[60]####
+        return buildTask(colorWalls, colorRoof, new Task());//####[60]####
     }//####[60]####
-    public TaskID<Void> buildTask(Color colorWalls, BlockingQueue<Color> colorRoof, TaskInfo taskinfo) {//####[60]####
+    public Future<Void> buildTask(Color colorWalls, BlockingQueue<Color> colorRoof, Task taskinfo) {//####[60]####
         // ensure Method variable is set//####[60]####
         if (__pt__buildTask_Color_Color_method == null) {//####[60]####
             __pt__buildTask_Color_Color_ensureMethodVarSet();//####[60]####
@@ -269,11 +269,11 @@ public class House extends JApplet {//####[14]####
         taskinfo.setInstance(this);//####[60]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[60]####
     }//####[60]####
-    public TaskID<Void> buildTask(TaskID<Color> colorWalls, BlockingQueue<Color> colorRoof) {//####[60]####
+    public Future<Void> buildTask(Future<Color> colorWalls, BlockingQueue<Color> colorRoof) {//####[60]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[60]####
-        return buildTask(colorWalls, colorRoof, new TaskInfo());//####[60]####
+        return buildTask(colorWalls, colorRoof, new Task());//####[60]####
     }//####[60]####
-    public TaskID<Void> buildTask(TaskID<Color> colorWalls, BlockingQueue<Color> colorRoof, TaskInfo taskinfo) {//####[60]####
+    public Future<Void> buildTask(Future<Color> colorWalls, BlockingQueue<Color> colorRoof, Task taskinfo) {//####[60]####
         // ensure Method variable is set//####[60]####
         if (__pt__buildTask_Color_Color_method == null) {//####[60]####
             __pt__buildTask_Color_Color_ensureMethodVarSet();//####[60]####
@@ -287,11 +287,11 @@ public class House extends JApplet {//####[14]####
         taskinfo.setInstance(this);//####[60]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[60]####
     }//####[60]####
-    public TaskID<Void> buildTask(BlockingQueue<Color> colorWalls, BlockingQueue<Color> colorRoof) {//####[60]####
+    public Future<Void> buildTask(BlockingQueue<Color> colorWalls, BlockingQueue<Color> colorRoof) {//####[60]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[60]####
-        return buildTask(colorWalls, colorRoof, new TaskInfo());//####[60]####
+        return buildTask(colorWalls, colorRoof, new Task());//####[60]####
     }//####[60]####
-    public TaskID<Void> buildTask(BlockingQueue<Color> colorWalls, BlockingQueue<Color> colorRoof, TaskInfo taskinfo) {//####[60]####
+    public Future<Void> buildTask(BlockingQueue<Color> colorWalls, BlockingQueue<Color> colorRoof, Task taskinfo) {//####[60]####
         // ensure Method variable is set//####[60]####
         if (__pt__buildTask_Color_Color_method == null) {//####[60]####
             __pt__buildTask_Color_Color_ensureMethodVarSet();//####[60]####
@@ -306,39 +306,39 @@ public class House extends JApplet {//####[14]####
     public void __pt__buildTask(Color colorWalls, Color colorRoof) {//####[60]####
         this.colorWalls = colorWalls;//####[61]####
         this.colorRoof = colorRoof;//####[62]####
-        TaskID idFoundation = buildAllTask(new ConcurrentLinkedQueue<BuildingMaterial>(foundation));//####[64]####
-        TaskInfo __pt__idWalls = new TaskInfo();//####[65]####
+        Future idFoundation = buildAllTask(new ConcurrentLinkedQueue<BuildingMaterial>(foundation));//####[64]####
+        Task __pt__idWalls = new Task();//####[65]####
 //####[65]####
         /*  -- ParaTask dependsOn clause for 'idWalls' -- *///####[65]####
         __pt__idWalls.addDependsOn(idFoundation);//####[65]####
 //####[65]####
-        TaskID idWalls = buildAllTask(new ConcurrentLinkedQueue<BuildingMaterial>(wallSiding), __pt__idWalls);//####[65]####
-        TaskInfo __pt__idRoof = new TaskInfo();//####[66]####
+        Future idWalls = buildAllTask(new ConcurrentLinkedQueue<BuildingMaterial>(wallSiding), __pt__idWalls);//####[65]####
+        Task __pt__idRoof = new Task();//####[66]####
 //####[66]####
         /*  -- ParaTask dependsOn clause for 'idRoof' -- *///####[66]####
         __pt__idRoof.addDependsOn(idWalls);//####[66]####
 //####[66]####
-        TaskID idRoof = buildAllTask(new ConcurrentLinkedQueue<BuildingMaterial>(roofTiles), __pt__idRoof);//####[66]####
-        TaskInfo __pt__idDoor = new TaskInfo();//####[67]####
+        Future idRoof = buildAllTask(new ConcurrentLinkedQueue<BuildingMaterial>(roofTiles), __pt__idRoof);//####[66]####
+        Task __pt__idDoor = new Task();//####[67]####
 //####[67]####
         /*  -- ParaTask dependsOn clause for 'idDoor' -- *///####[67]####
         __pt__idDoor.addDependsOn(idWalls);//####[67]####
 //####[67]####
-        TaskID idDoor = buildItemTask(door, __pt__idDoor);//####[67]####
-        TaskInfo __pt__idWindows = new TaskInfo();//####[68]####
+        Future idDoor = buildItemTask(door, __pt__idDoor);//####[67]####
+        Task __pt__idWindows = new Task();//####[68]####
 //####[68]####
         /*  -- ParaTask dependsOn clause for 'idWindows' -- *///####[68]####
         __pt__idWindows.addDependsOn(idWalls);//####[68]####
 //####[68]####
-        TaskID idWindows = buildAllTask(new ConcurrentLinkedQueue<BuildingMaterial>(windows), __pt__idWindows);//####[68]####
-        TaskInfo __pt__idSign = new TaskInfo();//####[69]####
+        Future idWindows = buildAllTask(new ConcurrentLinkedQueue<BuildingMaterial>(windows), __pt__idWindows);//####[68]####
+        Task __pt__idSign = new Task();//####[69]####
 //####[69]####
         /*  -- ParaTask dependsOn clause for 'idSign' -- *///####[69]####
         __pt__idSign.addDependsOn(idRoof);//####[69]####
         __pt__idSign.addDependsOn(idDoor);//####[69]####
         __pt__idSign.addDependsOn(idWindows);//####[69]####
 //####[69]####
-        TaskID idSign = buildItemTask(forSaleSign, __pt__idSign);//####[69]####
+        Future idSign = buildItemTask(forSaleSign, __pt__idSign);//####[69]####
         try {//####[71]####
             idSign.waitTillFinished();//####[72]####
         } catch (ExecutionException e) {//####[73]####
@@ -372,11 +372,11 @@ public class House extends JApplet {//####[14]####
             }//####[92]####
         }//####[92]####
     }//####[92]####
-    private TaskID<Void> buildItemTask(BuildingMaterial item) {//####[92]####
+    private Future<Void> buildItemTask(BuildingMaterial item) {//####[92]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[92]####
-        return buildItemTask(item, new TaskInfo());//####[92]####
+        return buildItemTask(item, new Task());//####[92]####
     }//####[92]####
-    private TaskID<Void> buildItemTask(BuildingMaterial item, TaskInfo taskinfo) {//####[92]####
+    private Future<Void> buildItemTask(BuildingMaterial item, Task taskinfo) {//####[92]####
         // ensure Method variable is set//####[92]####
         if (__pt__buildItemTask_BuildingMaterial_method == null) {//####[92]####
             __pt__buildItemTask_BuildingMaterial_ensureMethodVarSet();//####[92]####
@@ -386,11 +386,11 @@ public class House extends JApplet {//####[14]####
         taskinfo.setInstance(this);//####[92]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[92]####
     }//####[92]####
-    private TaskID<Void> buildItemTask(TaskID<BuildingMaterial> item) {//####[92]####
+    private Future<Void> buildItemTask(Future<BuildingMaterial> item) {//####[92]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[92]####
-        return buildItemTask(item, new TaskInfo());//####[92]####
+        return buildItemTask(item, new Task());//####[92]####
     }//####[92]####
-    private TaskID<Void> buildItemTask(TaskID<BuildingMaterial> item, TaskInfo taskinfo) {//####[92]####
+    private Future<Void> buildItemTask(Future<BuildingMaterial> item, Task taskinfo) {//####[92]####
         // ensure Method variable is set//####[92]####
         if (__pt__buildItemTask_BuildingMaterial_method == null) {//####[92]####
             __pt__buildItemTask_BuildingMaterial_ensureMethodVarSet();//####[92]####
@@ -402,11 +402,11 @@ public class House extends JApplet {//####[14]####
         taskinfo.setInstance(this);//####[92]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[92]####
     }//####[92]####
-    private TaskID<Void> buildItemTask(BlockingQueue<BuildingMaterial> item) {//####[92]####
+    private Future<Void> buildItemTask(BlockingQueue<BuildingMaterial> item) {//####[92]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[92]####
-        return buildItemTask(item, new TaskInfo());//####[92]####
+        return buildItemTask(item, new Task());//####[92]####
     }//####[92]####
-    private TaskID<Void> buildItemTask(BlockingQueue<BuildingMaterial> item, TaskInfo taskinfo) {//####[92]####
+    private Future<Void> buildItemTask(BlockingQueue<BuildingMaterial> item, Task taskinfo) {//####[92]####
         // ensure Method variable is set//####[92]####
         if (__pt__buildItemTask_BuildingMaterial_method == null) {//####[92]####
             __pt__buildItemTask_BuildingMaterial_ensureMethodVarSet();//####[92]####

@@ -29,7 +29,7 @@ import pt.queues.FifoLifoQueue;
 public class TaskpoolMixedScheduling extends AbstractTaskPool {
 	
 	@Override
-	protected void enqueueReadyTask(TaskID<?> taskID) {
+	protected void enqueueReadyTask(Future<?> taskID) {
 		/**
 		 * 
 		 * @Author : Kingsley
@@ -72,7 +72,7 @@ public class TaskpoolMixedScheduling extends AbstractTaskPool {
 				mixedOneoffTaskqueue.addGlobal(taskID);
 		}*/
 		
-		if (taskID.getExecuteOnThread() != ParaTaskHelper.ANY_THREAD_TASK || taskID instanceof TaskIDGroup) {
+		if (taskID.getExecuteOnThread() != ParaTaskHelper.ANY_THREAD_TASK || taskID instanceof FutureGroup) {
 			if (taskID.getExecuteOnThread() == ParaTaskHelper.ANY_THREAD_TASK) {
 				mixedMultiTaskqueue.addGlobal(taskID);
 			} else {
@@ -88,7 +88,7 @@ public class TaskpoolMixedScheduling extends AbstractTaskPool {
 	}
 	
 	@Override
-	public TaskID workerPollNextTask() {
+	public Future workerPollNextTask() {
 		
 		WorkerThread wt = (WorkerThread) Thread.currentThread();
 		int workerID = wt.getThreadID();
@@ -105,7 +105,7 @@ public class TaskpoolMixedScheduling extends AbstractTaskPool {
 		 * 
 		 * */
 		//TaskID next = privateQueues[workerID].poll();
-		TaskID next = null;
+		Future next = null;
 		
 		if (wt.isMultiTaskWorker()) {
 			next = privateQueues.get(workerID).poll();
@@ -159,13 +159,13 @@ public class TaskpoolMixedScheduling extends AbstractTaskPool {
 				// expand multi task
 				int count = next.getCount();
 				int currentMultiTaskThreadPool = ThreadPool.getMultiTaskThreadPoolSize();
-				TaskInfo taskinfo = next.getTaskInfo();
+				Task taskinfo = next.getTaskInfo();
 
 				// indicate this is a sub task
 				taskinfo.setSubTask(true);
 				
 				for (int i = 0; i < count; i++) {
-					TaskID taskID = new TaskID(taskinfo);
+					Future taskID = new Future(taskinfo);
 					
 					taskID.setRelativeID(i);
 					taskID.setExecuteOnThread(i%currentMultiTaskThreadPool);
@@ -175,12 +175,12 @@ public class TaskpoolMixedScheduling extends AbstractTaskPool {
 					
 					taskID.setSubTask(true);
 					
-					taskID.setPartOfGroup(((TaskIDGroup)next));
-					((TaskIDGroup)next).add(taskID);
+					taskID.setPartOfGroup(((FutureGroup)next));
+					((FutureGroup)next).add(taskID);
 					enqueueReadyTask(taskID);
 					
 				}
-				((TaskIDGroup)next).setExpanded(true);
+				((FutureGroup)next).setExpanded(true);
 				
 				/*int savedFor = next.getExecuteOnThread();
 				
@@ -298,9 +298,9 @@ public class TaskpoolMixedScheduling extends AbstractTaskPool {
 		}*/
 		
 		//For multi task
-		mixedMultiTaskqueue = new FifoLifoQueue<TaskID<?>>();
+		mixedMultiTaskqueue = new FifoLifoQueue<Future<?>>();
 		
-		privateQueues = new ArrayList<AbstractQueue<TaskID<?>>>();
+		privateQueues = new ArrayList<AbstractQueue<Future<?>>>();
 		
 		//Put this create procedure into thread pool 
 		/*for (int i = 0; i < numMultiTaskThreads; i++) {
@@ -310,7 +310,7 @@ public class TaskpoolMixedScheduling extends AbstractTaskPool {
 		}*/
 		
 		//For one-off task
-		mixedOneoffTaskqueue = new FifoLifoQueue<TaskID<?>>();
+		mixedOneoffTaskqueue = new FifoLifoQueue<Future<?>>();
 		
 		initialiseWorkerThreads();
 	}

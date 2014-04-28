@@ -53,7 +53,7 @@ import java.util.List;//####[45]####
 public class SearchProjectPanel extends ProjectPanel implements ActionListener {//####[47]####
     static{ParaTask.init();}//####[47]####
     /*  ParaTask helper method to access private/protected slots *///####[47]####
-    public void __pt__accessPrivateSlot(Method m, Object instance, TaskID arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[47]####
+    public void __pt__accessPrivateSlot(Method m, Object instance, Future arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[47]####
         if (m.getParameterTypes().length == 0)//####[47]####
             m.invoke(instance);//####[47]####
         else if ((m.getParameterTypes().length == 1))//####[47]####
@@ -253,7 +253,7 @@ public class SearchProjectPanel extends ProjectPanel implements ActionListener {
         btnPrev.setEnabled(false); else btnPrev.setEnabled(true);//####[260]####
     }//####[263]####
 //####[266]####
-    private void receiveIntermediate(TaskID id, PhotoWithImage pi) {//####[266]####
+    private void receiveIntermediate(Future id, PhotoWithImage pi) {//####[266]####
         addToDisplay(pi);//####[267]####
         progressBar.setValue(id.getProgress());//####[268]####
         updateUI();//####[269]####
@@ -265,7 +265,7 @@ public class SearchProjectPanel extends ProjectPanel implements ActionListener {
         int resPP = (Integer) spnResultsPerPage.getValue();//####[278]####
         if (MainFrame.isParallel) //####[280]####
         {//####[280]####
-            TaskInfo __pt__currentSearch = new TaskInfo();//####[282]####
+            Task __pt__currentSearch = new Task();//####[282]####
 //####[282]####
             boolean isEDT = GuiThread.isEventDispatchThread();//####[282]####
 //####[282]####
@@ -290,8 +290,8 @@ public class SearchProjectPanel extends ProjectPanel implements ActionListener {
             /*  -- ParaTask notify-intermediate clause for 'currentSearch' -- *///####[283]####
             try {//####[283]####
                 Method __pt__currentSearch_inter_slot_0 = null;//####[283]####
-                __pt__currentSearch_inter_slot_0 = ParaTaskHelper.getDeclaredMethod(getClass(), "receiveIntermediate", new Class[] {TaskID.class, PhotoWithImage.class});//####[285]####
-                TaskID __pt__currentSearch_inter_slot_0_dummy_0 = null;//####[285]####
+                __pt__currentSearch_inter_slot_0 = ParaTaskHelper.getDeclaredMethod(getClass(), "receiveIntermediate", new Class[] {Future.class, PhotoWithImage.class});//####[285]####
+                Future __pt__currentSearch_inter_slot_0_dummy_0 = null;//####[285]####
                 PhotoWithImage __pt__currentSearch_inter_slot_0_dummy_1 = null;//####[285]####
                 if (false) receiveIntermediate(__pt__currentSearch_inter_slot_0_dummy_0, __pt__currentSearch_inter_slot_0_dummy_1); //-- ParaTask uses this dummy statement to ensure the slot exists (otherwise Java compiler will complain)//####[285]####
                 __pt__currentSearch.addInterSlotToNotify(new Slot(__pt__currentSearch_inter_slot_0, this, true));//####[285]####
@@ -325,7 +325,7 @@ public class SearchProjectPanel extends ProjectPanel implements ActionListener {
         spnResultsPerPage.setEnabled(false);//####[314]####
     }//####[315]####
 //####[317]####
-    private TaskID<List<PhotoWithImage>> currentSearch = null;//####[317]####
+    private Future<List<PhotoWithImage>> currentSearch = null;//####[317]####
 //####[320]####
     @Override//####[320]####
     public void actionPerformed(ActionEvent e) {//####[320]####
@@ -413,7 +413,7 @@ public class SearchProjectPanel extends ProjectPanel implements ActionListener {
         class accuracySliderListener implements ChangeListener {//####[401]####
 //####[401]####
             /*  ParaTask helper method to access private/protected slots *///####[401]####
-            public void __pt__accessPrivateSlot(Method m, Object instance, TaskID arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[401]####
+            public void __pt__accessPrivateSlot(Method m, Object instance, Future arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[401]####
                 if (m.getParameterTypes().length == 0)//####[401]####
                     m.invoke(instance);//####[401]####
                 else if ((m.getParameterTypes().length == 1))//####[401]####
@@ -441,7 +441,7 @@ public class SearchProjectPanel extends ProjectPanel implements ActionListener {
         class sensitivitySliderListener implements ChangeListener {//####[421]####
 //####[421]####
             /*  ParaTask helper method to access private/protected slots *///####[421]####
-            public void __pt__accessPrivateSlot(Method m, Object instance, TaskID arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[421]####
+            public void __pt__accessPrivateSlot(Method m, Object instance, Future arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[421]####
                 if (m.getParameterTypes().length == 0)//####[421]####
                     m.invoke(instance);//####[421]####
                 else if ((m.getParameterTypes().length == 1))//####[421]####

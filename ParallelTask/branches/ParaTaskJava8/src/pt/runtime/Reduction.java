@@ -25,7 +25,7 @@ import java.util.ArrayList;
  * 
  * Define a reduction of two items into one. This definition may then be used to reduce a collection 
  * of items into one item. This is primarily intended for reducing the results from a multi-task 
- * (see {@link TaskIDGroup#reduce(Reduction)}).
+ * (see {@link FutureGroup#reduce(Reduction)}).
  * <br><br>
  * This approach allows the programmer to easily define complex reductions that could even involve 
  * entire data structures, for example concatenating lists or maps. A reduction must be: 

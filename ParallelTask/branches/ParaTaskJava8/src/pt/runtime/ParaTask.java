@@ -21,9 +21,7 @@ package pt.runtime;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-
-import org.omg.CORBA.PUBLIC_MEMBER;
-
+import java.util.List;
 
 /**
  * 
@@ -237,7 +235,7 @@ public class ParaTask {
 		
 			try {
 				ParaTaskHelper.setCompleteSlot = 
-					ParaTaskHelper.class.getDeclaredMethod("setComplete", new Class[] {TaskID.class});
+					ParaTaskHelper.class.getDeclaredMethod("setComplete", new Class[] {Future.class});
 			} catch (SecurityException e) {
 				e.printStackTrace();
 			} catch (NoSuchMethodException e) {
@@ -291,7 +289,7 @@ public class ParaTask {
 	 * Flattens a list of TaskIDs. Only has an effect if some of the TaskIDs were actually TaskIDGroups.
 	 * @param list	Input list of TaskIDs (with potentially some TaskIDGroups)
 	 * @return	A list containing only TaskIDs (i.e. expanding the TaskIDGroups)
-	 * @see #allTasksInGroup(TaskIDGroup)
+	 * @see #allTasksInGroup(FutureGroup)
 	 * 
 	 * @author Kingsley
 	 * @date 2014/04/08
@@ -302,10 +300,10 @@ public class ParaTask {
 	 * then all its sub-tasks have not been created yet. 
 	 * 
 	 */
-	public static ArrayList<TaskID> allTasksInList(ArrayList<TaskID> list) {
-		ArrayList<TaskID> result = new ArrayList<TaskID>();
+	public static List<Future<?>> allTasksInList(List<Future<?>> list) {
+		ArrayList<Future<?>> result = new ArrayList<>();
 		
-		Iterator<TaskID> it = list.iterator();
+		Iterator<Future<?>> it = list.iterator();
 		while (it.hasNext()) {
 			
 			/*
@@ -327,14 +325,14 @@ public class ParaTask {
 	 * @see #allTasksInList(ArrayList) 
 	 * @return the TaskIDs inside <code>group</code> placed inside a new ArrayList
 	 * */
-	public static ArrayList<TaskID> allTasksInGroup(TaskIDGroup group) {
-		ArrayList<TaskID> list = new ArrayList<TaskID>();
+	public static List<Future<?>> allTasksInGroup(FutureGroup<?> group) {
+		ArrayList<Future<?>> list = new ArrayList<>();
 		 
-		Iterator<TaskID> it = group.groupMembers();
+		Iterator<Future<?>> it = group.groupMembers();
 		while (it.hasNext()) {
-			TaskID id = it.next();
-			if (id instanceof TaskIDGroup) {
-				list.addAll(allTasksInGroup((TaskIDGroup)id));
+			Future<?> id = it.next();
+			if (id instanceof FutureGroup) {
+				list.addAll(allTasksInGroup((FutureGroup<?>)id));
 			} else {
 				list.add(id);
 			}

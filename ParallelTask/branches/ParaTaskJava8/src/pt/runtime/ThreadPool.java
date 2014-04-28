@@ -21,7 +21,7 @@ import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.locks.ReentrantLock;
 
 import pt.runtime.ParaTask;
-import pt.runtime.TaskID;
+import pt.runtime.Future;
 import pt.runtime.Taskpool;
 import pt.runtime.WorkerThread;
 import pt.runtime.ParaTask.ThreadPoolType;
@@ -175,8 +175,8 @@ public class ThreadPool {
 				 * of the queues must has already been initialized. 
 				 * 
 				 * */
-				List<AbstractQueue<TaskID<?>>> privateTaskQueues = taskpool.getPrivateTaskQueues();
-				privateTaskQueues.add(new PriorityBlockingQueue<TaskID<?>>(
+				List<AbstractQueue<Future<?>>> privateTaskQueues = taskpool.getPrivateTaskQueues();
+				privateTaskQueues.add(new PriorityBlockingQueue<Future<?>>(
 						AbstractTaskPool.INITIAL_QUEUE_CAPACITY,
 						AbstractTaskPool.FIFO_TaskID_Comparator));
 				
@@ -211,9 +211,9 @@ public class ThreadPool {
 				 * of the queues has already been initialized. 
 				 * 
 				 * */
-				Map<Integer, LinkedBlockingDeque<TaskID<?>>> localOneoffTaskQueues = taskpool.getLocalOneoffTaskQueues();
+				Map<Integer, LinkedBlockingDeque<Future<?>>> localOneoffTaskQueues = taskpool.getLocalOneoffTaskQueues();
 				if (null != localOneoffTaskQueues) {
-					localOneoffTaskQueues.put(globalID, new LinkedBlockingDeque<TaskID<?>>());
+					localOneoffTaskQueues.put(globalID, new LinkedBlockingDeque<Future<?>>());
 				}
 
 				workers.start();
@@ -374,9 +374,9 @@ public class ThreadPool {
 				workers.setDaemon(true);
 
 				oneoffTaskWorkers.put(globalID, workers);
-				Map<Integer, LinkedBlockingDeque<TaskID<?>>> localOneoffTaskQueues = taskpool.getLocalOneoffTaskQueues();
+				Map<Integer, LinkedBlockingDeque<Future<?>>> localOneoffTaskQueues = taskpool.getLocalOneoffTaskQueues();
 				if (null != localOneoffTaskQueues) {
-					localOneoffTaskQueues.put(globalID, new LinkedBlockingDeque<TaskID<?>>());
+					localOneoffTaskQueues.put(globalID, new LinkedBlockingDeque<Future<?>>());
 				}
 				workers.start();
 			}

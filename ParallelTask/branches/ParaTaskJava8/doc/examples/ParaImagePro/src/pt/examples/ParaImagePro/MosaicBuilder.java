@@ -22,7 +22,7 @@ import java.util.List;//####[10]####
 public class MosaicBuilder {//####[12]####
     static{ParaTask.init();}//####[12]####
     /*  ParaTask helper method to access private/protected slots *///####[12]####
-    public void __pt__accessPrivateSlot(Method m, Object instance, TaskID arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[12]####
+    public void __pt__accessPrivateSlot(Method m, Object instance, Future arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[12]####
         if (m.getParameterTypes().length == 0)//####[12]####
             m.invoke(instance);//####[12]####
         else if ((m.getParameterTypes().length == 1))//####[12]####
@@ -43,11 +43,11 @@ public class MosaicBuilder {//####[12]####
             }//####[14]####
         }//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(ImagePanelItem panel, int density, int size) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(ImagePanelItem panel, int density, int size) {//####[14]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[14]####
-        return buildMosaicTask(panel, density, size, new TaskInfo());//####[14]####
+        return buildMosaicTask(panel, density, size, new Task());//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(ImagePanelItem panel, int density, int size, TaskInfo taskinfo) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(ImagePanelItem panel, int density, int size, Task taskinfo) {//####[14]####
         // ensure Method variable is set//####[14]####
         if (__pt__buildMosaicTask_ImagePanelItem_int_int_method == null) {//####[14]####
             __pt__buildMosaicTask_ImagePanelItem_int_int_ensureMethodVarSet();//####[14]####
@@ -56,11 +56,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicTask_ImagePanelItem_int_int_method);//####[14]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(TaskID<ImagePanelItem> panel, int density, int size) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(Future<ImagePanelItem> panel, int density, int size) {//####[14]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[14]####
-        return buildMosaicTask(panel, density, size, new TaskInfo());//####[14]####
+        return buildMosaicTask(panel, density, size, new Task());//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(TaskID<ImagePanelItem> panel, int density, int size, TaskInfo taskinfo) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(Future<ImagePanelItem> panel, int density, int size, Task taskinfo) {//####[14]####
         // ensure Method variable is set//####[14]####
         if (__pt__buildMosaicTask_ImagePanelItem_int_int_method == null) {//####[14]####
             __pt__buildMosaicTask_ImagePanelItem_int_int_ensureMethodVarSet();//####[14]####
@@ -71,11 +71,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicTask_ImagePanelItem_int_int_method);//####[14]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(BlockingQueue<ImagePanelItem> panel, int density, int size) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(BlockingQueue<ImagePanelItem> panel, int density, int size) {//####[14]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[14]####
-        return buildMosaicTask(panel, density, size, new TaskInfo());//####[14]####
+        return buildMosaicTask(panel, density, size, new Task());//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(BlockingQueue<ImagePanelItem> panel, int density, int size, TaskInfo taskinfo) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(BlockingQueue<ImagePanelItem> panel, int density, int size, Task taskinfo) {//####[14]####
         // ensure Method variable is set//####[14]####
         if (__pt__buildMosaicTask_ImagePanelItem_int_int_method == null) {//####[14]####
             __pt__buildMosaicTask_ImagePanelItem_int_int_ensureMethodVarSet();//####[14]####
@@ -86,11 +86,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicTask_ImagePanelItem_int_int_method);//####[14]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(ImagePanelItem panel, TaskID<Integer> density, int size) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(ImagePanelItem panel, Future<Integer> density, int size) {//####[14]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[14]####
-        return buildMosaicTask(panel, density, size, new TaskInfo());//####[14]####
+        return buildMosaicTask(panel, density, size, new Task());//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(ImagePanelItem panel, TaskID<Integer> density, int size, TaskInfo taskinfo) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(ImagePanelItem panel, Future<Integer> density, int size, Task taskinfo) {//####[14]####
         // ensure Method variable is set//####[14]####
         if (__pt__buildMosaicTask_ImagePanelItem_int_int_method == null) {//####[14]####
             __pt__buildMosaicTask_ImagePanelItem_int_int_ensureMethodVarSet();//####[14]####
@@ -101,11 +101,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicTask_ImagePanelItem_int_int_method);//####[14]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(TaskID<ImagePanelItem> panel, TaskID<Integer> density, int size) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(Future<ImagePanelItem> panel, Future<Integer> density, int size) {//####[14]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[14]####
-        return buildMosaicTask(panel, density, size, new TaskInfo());//####[14]####
+        return buildMosaicTask(panel, density, size, new Task());//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(TaskID<ImagePanelItem> panel, TaskID<Integer> density, int size, TaskInfo taskinfo) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(Future<ImagePanelItem> panel, Future<Integer> density, int size, Task taskinfo) {//####[14]####
         // ensure Method variable is set//####[14]####
         if (__pt__buildMosaicTask_ImagePanelItem_int_int_method == null) {//####[14]####
             __pt__buildMosaicTask_ImagePanelItem_int_int_ensureMethodVarSet();//####[14]####
@@ -117,11 +117,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicTask_ImagePanelItem_int_int_method);//####[14]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(BlockingQueue<ImagePanelItem> panel, TaskID<Integer> density, int size) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(BlockingQueue<ImagePanelItem> panel, Future<Integer> density, int size) {//####[14]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[14]####
-        return buildMosaicTask(panel, density, size, new TaskInfo());//####[14]####
+        return buildMosaicTask(panel, density, size, new Task());//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(BlockingQueue<ImagePanelItem> panel, TaskID<Integer> density, int size, TaskInfo taskinfo) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(BlockingQueue<ImagePanelItem> panel, Future<Integer> density, int size, Task taskinfo) {//####[14]####
         // ensure Method variable is set//####[14]####
         if (__pt__buildMosaicTask_ImagePanelItem_int_int_method == null) {//####[14]####
             __pt__buildMosaicTask_ImagePanelItem_int_int_ensureMethodVarSet();//####[14]####
@@ -134,11 +134,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicTask_ImagePanelItem_int_int_method);//####[14]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(ImagePanelItem panel, BlockingQueue<Integer> density, int size) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(ImagePanelItem panel, BlockingQueue<Integer> density, int size) {//####[14]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[14]####
-        return buildMosaicTask(panel, density, size, new TaskInfo());//####[14]####
+        return buildMosaicTask(panel, density, size, new Task());//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(ImagePanelItem panel, BlockingQueue<Integer> density, int size, TaskInfo taskinfo) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(ImagePanelItem panel, BlockingQueue<Integer> density, int size, Task taskinfo) {//####[14]####
         // ensure Method variable is set//####[14]####
         if (__pt__buildMosaicTask_ImagePanelItem_int_int_method == null) {//####[14]####
             __pt__buildMosaicTask_ImagePanelItem_int_int_ensureMethodVarSet();//####[14]####
@@ -149,11 +149,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicTask_ImagePanelItem_int_int_method);//####[14]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(TaskID<ImagePanelItem> panel, BlockingQueue<Integer> density, int size) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(Future<ImagePanelItem> panel, BlockingQueue<Integer> density, int size) {//####[14]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[14]####
-        return buildMosaicTask(panel, density, size, new TaskInfo());//####[14]####
+        return buildMosaicTask(panel, density, size, new Task());//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(TaskID<ImagePanelItem> panel, BlockingQueue<Integer> density, int size, TaskInfo taskinfo) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(Future<ImagePanelItem> panel, BlockingQueue<Integer> density, int size, Task taskinfo) {//####[14]####
         // ensure Method variable is set//####[14]####
         if (__pt__buildMosaicTask_ImagePanelItem_int_int_method == null) {//####[14]####
             __pt__buildMosaicTask_ImagePanelItem_int_int_ensureMethodVarSet();//####[14]####
@@ -166,11 +166,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicTask_ImagePanelItem_int_int_method);//####[14]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(BlockingQueue<ImagePanelItem> panel, BlockingQueue<Integer> density, int size) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(BlockingQueue<ImagePanelItem> panel, BlockingQueue<Integer> density, int size) {//####[14]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[14]####
-        return buildMosaicTask(panel, density, size, new TaskInfo());//####[14]####
+        return buildMosaicTask(panel, density, size, new Task());//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(BlockingQueue<ImagePanelItem> panel, BlockingQueue<Integer> density, int size, TaskInfo taskinfo) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(BlockingQueue<ImagePanelItem> panel, BlockingQueue<Integer> density, int size, Task taskinfo) {//####[14]####
         // ensure Method variable is set//####[14]####
         if (__pt__buildMosaicTask_ImagePanelItem_int_int_method == null) {//####[14]####
             __pt__buildMosaicTask_ImagePanelItem_int_int_ensureMethodVarSet();//####[14]####
@@ -181,11 +181,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicTask_ImagePanelItem_int_int_method);//####[14]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(ImagePanelItem panel, int density, TaskID<Integer> size) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(ImagePanelItem panel, int density, Future<Integer> size) {//####[14]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[14]####
-        return buildMosaicTask(panel, density, size, new TaskInfo());//####[14]####
+        return buildMosaicTask(panel, density, size, new Task());//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(ImagePanelItem panel, int density, TaskID<Integer> size, TaskInfo taskinfo) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(ImagePanelItem panel, int density, Future<Integer> size, Task taskinfo) {//####[14]####
         // ensure Method variable is set//####[14]####
         if (__pt__buildMosaicTask_ImagePanelItem_int_int_method == null) {//####[14]####
             __pt__buildMosaicTask_ImagePanelItem_int_int_ensureMethodVarSet();//####[14]####
@@ -196,11 +196,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicTask_ImagePanelItem_int_int_method);//####[14]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(TaskID<ImagePanelItem> panel, int density, TaskID<Integer> size) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(Future<ImagePanelItem> panel, int density, Future<Integer> size) {//####[14]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[14]####
-        return buildMosaicTask(panel, density, size, new TaskInfo());//####[14]####
+        return buildMosaicTask(panel, density, size, new Task());//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(TaskID<ImagePanelItem> panel, int density, TaskID<Integer> size, TaskInfo taskinfo) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(Future<ImagePanelItem> panel, int density, Future<Integer> size, Task taskinfo) {//####[14]####
         // ensure Method variable is set//####[14]####
         if (__pt__buildMosaicTask_ImagePanelItem_int_int_method == null) {//####[14]####
             __pt__buildMosaicTask_ImagePanelItem_int_int_ensureMethodVarSet();//####[14]####
@@ -212,11 +212,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicTask_ImagePanelItem_int_int_method);//####[14]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(BlockingQueue<ImagePanelItem> panel, int density, TaskID<Integer> size) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(BlockingQueue<ImagePanelItem> panel, int density, Future<Integer> size) {//####[14]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[14]####
-        return buildMosaicTask(panel, density, size, new TaskInfo());//####[14]####
+        return buildMosaicTask(panel, density, size, new Task());//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(BlockingQueue<ImagePanelItem> panel, int density, TaskID<Integer> size, TaskInfo taskinfo) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(BlockingQueue<ImagePanelItem> panel, int density, Future<Integer> size, Task taskinfo) {//####[14]####
         // ensure Method variable is set//####[14]####
         if (__pt__buildMosaicTask_ImagePanelItem_int_int_method == null) {//####[14]####
             __pt__buildMosaicTask_ImagePanelItem_int_int_ensureMethodVarSet();//####[14]####
@@ -229,11 +229,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicTask_ImagePanelItem_int_int_method);//####[14]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(ImagePanelItem panel, TaskID<Integer> density, TaskID<Integer> size) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(ImagePanelItem panel, Future<Integer> density, Future<Integer> size) {//####[14]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[14]####
-        return buildMosaicTask(panel, density, size, new TaskInfo());//####[14]####
+        return buildMosaicTask(panel, density, size, new Task());//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(ImagePanelItem panel, TaskID<Integer> density, TaskID<Integer> size, TaskInfo taskinfo) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(ImagePanelItem panel, Future<Integer> density, Future<Integer> size, Task taskinfo) {//####[14]####
         // ensure Method variable is set//####[14]####
         if (__pt__buildMosaicTask_ImagePanelItem_int_int_method == null) {//####[14]####
             __pt__buildMosaicTask_ImagePanelItem_int_int_ensureMethodVarSet();//####[14]####
@@ -245,11 +245,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicTask_ImagePanelItem_int_int_method);//####[14]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(TaskID<ImagePanelItem> panel, TaskID<Integer> density, TaskID<Integer> size) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(Future<ImagePanelItem> panel, Future<Integer> density, Future<Integer> size) {//####[14]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[14]####
-        return buildMosaicTask(panel, density, size, new TaskInfo());//####[14]####
+        return buildMosaicTask(panel, density, size, new Task());//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(TaskID<ImagePanelItem> panel, TaskID<Integer> density, TaskID<Integer> size, TaskInfo taskinfo) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(Future<ImagePanelItem> panel, Future<Integer> density, Future<Integer> size, Task taskinfo) {//####[14]####
         // ensure Method variable is set//####[14]####
         if (__pt__buildMosaicTask_ImagePanelItem_int_int_method == null) {//####[14]####
             __pt__buildMosaicTask_ImagePanelItem_int_int_ensureMethodVarSet();//####[14]####
@@ -262,11 +262,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicTask_ImagePanelItem_int_int_method);//####[14]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(BlockingQueue<ImagePanelItem> panel, TaskID<Integer> density, TaskID<Integer> size) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(BlockingQueue<ImagePanelItem> panel, Future<Integer> density, Future<Integer> size) {//####[14]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[14]####
-        return buildMosaicTask(panel, density, size, new TaskInfo());//####[14]####
+        return buildMosaicTask(panel, density, size, new Task());//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(BlockingQueue<ImagePanelItem> panel, TaskID<Integer> density, TaskID<Integer> size, TaskInfo taskinfo) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(BlockingQueue<ImagePanelItem> panel, Future<Integer> density, Future<Integer> size, Task taskinfo) {//####[14]####
         // ensure Method variable is set//####[14]####
         if (__pt__buildMosaicTask_ImagePanelItem_int_int_method == null) {//####[14]####
             __pt__buildMosaicTask_ImagePanelItem_int_int_ensureMethodVarSet();//####[14]####
@@ -280,11 +280,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicTask_ImagePanelItem_int_int_method);//####[14]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(ImagePanelItem panel, BlockingQueue<Integer> density, TaskID<Integer> size) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(ImagePanelItem panel, BlockingQueue<Integer> density, Future<Integer> size) {//####[14]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[14]####
-        return buildMosaicTask(panel, density, size, new TaskInfo());//####[14]####
+        return buildMosaicTask(panel, density, size, new Task());//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(ImagePanelItem panel, BlockingQueue<Integer> density, TaskID<Integer> size, TaskInfo taskinfo) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(ImagePanelItem panel, BlockingQueue<Integer> density, Future<Integer> size, Task taskinfo) {//####[14]####
         // ensure Method variable is set//####[14]####
         if (__pt__buildMosaicTask_ImagePanelItem_int_int_method == null) {//####[14]####
             __pt__buildMosaicTask_ImagePanelItem_int_int_ensureMethodVarSet();//####[14]####
@@ -297,11 +297,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicTask_ImagePanelItem_int_int_method);//####[14]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(TaskID<ImagePanelItem> panel, BlockingQueue<Integer> density, TaskID<Integer> size) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(Future<ImagePanelItem> panel, BlockingQueue<Integer> density, Future<Integer> size) {//####[14]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[14]####
-        return buildMosaicTask(panel, density, size, new TaskInfo());//####[14]####
+        return buildMosaicTask(panel, density, size, new Task());//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(TaskID<ImagePanelItem> panel, BlockingQueue<Integer> density, TaskID<Integer> size, TaskInfo taskinfo) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(Future<ImagePanelItem> panel, BlockingQueue<Integer> density, Future<Integer> size, Task taskinfo) {//####[14]####
         // ensure Method variable is set//####[14]####
         if (__pt__buildMosaicTask_ImagePanelItem_int_int_method == null) {//####[14]####
             __pt__buildMosaicTask_ImagePanelItem_int_int_ensureMethodVarSet();//####[14]####
@@ -315,11 +315,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicTask_ImagePanelItem_int_int_method);//####[14]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(BlockingQueue<ImagePanelItem> panel, BlockingQueue<Integer> density, TaskID<Integer> size) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(BlockingQueue<ImagePanelItem> panel, BlockingQueue<Integer> density, Future<Integer> size) {//####[14]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[14]####
-        return buildMosaicTask(panel, density, size, new TaskInfo());//####[14]####
+        return buildMosaicTask(panel, density, size, new Task());//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(BlockingQueue<ImagePanelItem> panel, BlockingQueue<Integer> density, TaskID<Integer> size, TaskInfo taskinfo) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(BlockingQueue<ImagePanelItem> panel, BlockingQueue<Integer> density, Future<Integer> size, Task taskinfo) {//####[14]####
         // ensure Method variable is set//####[14]####
         if (__pt__buildMosaicTask_ImagePanelItem_int_int_method == null) {//####[14]####
             __pt__buildMosaicTask_ImagePanelItem_int_int_ensureMethodVarSet();//####[14]####
@@ -332,11 +332,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicTask_ImagePanelItem_int_int_method);//####[14]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(ImagePanelItem panel, int density, BlockingQueue<Integer> size) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(ImagePanelItem panel, int density, BlockingQueue<Integer> size) {//####[14]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[14]####
-        return buildMosaicTask(panel, density, size, new TaskInfo());//####[14]####
+        return buildMosaicTask(panel, density, size, new Task());//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(ImagePanelItem panel, int density, BlockingQueue<Integer> size, TaskInfo taskinfo) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(ImagePanelItem panel, int density, BlockingQueue<Integer> size, Task taskinfo) {//####[14]####
         // ensure Method variable is set//####[14]####
         if (__pt__buildMosaicTask_ImagePanelItem_int_int_method == null) {//####[14]####
             __pt__buildMosaicTask_ImagePanelItem_int_int_ensureMethodVarSet();//####[14]####
@@ -347,11 +347,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicTask_ImagePanelItem_int_int_method);//####[14]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(TaskID<ImagePanelItem> panel, int density, BlockingQueue<Integer> size) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(Future<ImagePanelItem> panel, int density, BlockingQueue<Integer> size) {//####[14]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[14]####
-        return buildMosaicTask(panel, density, size, new TaskInfo());//####[14]####
+        return buildMosaicTask(panel, density, size, new Task());//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(TaskID<ImagePanelItem> panel, int density, BlockingQueue<Integer> size, TaskInfo taskinfo) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(Future<ImagePanelItem> panel, int density, BlockingQueue<Integer> size, Task taskinfo) {//####[14]####
         // ensure Method variable is set//####[14]####
         if (__pt__buildMosaicTask_ImagePanelItem_int_int_method == null) {//####[14]####
             __pt__buildMosaicTask_ImagePanelItem_int_int_ensureMethodVarSet();//####[14]####
@@ -364,11 +364,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicTask_ImagePanelItem_int_int_method);//####[14]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(BlockingQueue<ImagePanelItem> panel, int density, BlockingQueue<Integer> size) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(BlockingQueue<ImagePanelItem> panel, int density, BlockingQueue<Integer> size) {//####[14]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[14]####
-        return buildMosaicTask(panel, density, size, new TaskInfo());//####[14]####
+        return buildMosaicTask(panel, density, size, new Task());//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(BlockingQueue<ImagePanelItem> panel, int density, BlockingQueue<Integer> size, TaskInfo taskinfo) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(BlockingQueue<ImagePanelItem> panel, int density, BlockingQueue<Integer> size, Task taskinfo) {//####[14]####
         // ensure Method variable is set//####[14]####
         if (__pt__buildMosaicTask_ImagePanelItem_int_int_method == null) {//####[14]####
             __pt__buildMosaicTask_ImagePanelItem_int_int_ensureMethodVarSet();//####[14]####
@@ -379,11 +379,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicTask_ImagePanelItem_int_int_method);//####[14]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(ImagePanelItem panel, TaskID<Integer> density, BlockingQueue<Integer> size) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(ImagePanelItem panel, Future<Integer> density, BlockingQueue<Integer> size) {//####[14]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[14]####
-        return buildMosaicTask(panel, density, size, new TaskInfo());//####[14]####
+        return buildMosaicTask(panel, density, size, new Task());//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(ImagePanelItem panel, TaskID<Integer> density, BlockingQueue<Integer> size, TaskInfo taskinfo) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(ImagePanelItem panel, Future<Integer> density, BlockingQueue<Integer> size, Task taskinfo) {//####[14]####
         // ensure Method variable is set//####[14]####
         if (__pt__buildMosaicTask_ImagePanelItem_int_int_method == null) {//####[14]####
             __pt__buildMosaicTask_ImagePanelItem_int_int_ensureMethodVarSet();//####[14]####
@@ -396,11 +396,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicTask_ImagePanelItem_int_int_method);//####[14]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(TaskID<ImagePanelItem> panel, TaskID<Integer> density, BlockingQueue<Integer> size) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(Future<ImagePanelItem> panel, Future<Integer> density, BlockingQueue<Integer> size) {//####[14]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[14]####
-        return buildMosaicTask(panel, density, size, new TaskInfo());//####[14]####
+        return buildMosaicTask(panel, density, size, new Task());//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(TaskID<ImagePanelItem> panel, TaskID<Integer> density, BlockingQueue<Integer> size, TaskInfo taskinfo) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(Future<ImagePanelItem> panel, Future<Integer> density, BlockingQueue<Integer> size, Task taskinfo) {//####[14]####
         // ensure Method variable is set//####[14]####
         if (__pt__buildMosaicTask_ImagePanelItem_int_int_method == null) {//####[14]####
             __pt__buildMosaicTask_ImagePanelItem_int_int_ensureMethodVarSet();//####[14]####
@@ -414,11 +414,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicTask_ImagePanelItem_int_int_method);//####[14]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(BlockingQueue<ImagePanelItem> panel, TaskID<Integer> density, BlockingQueue<Integer> size) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(BlockingQueue<ImagePanelItem> panel, Future<Integer> density, BlockingQueue<Integer> size) {//####[14]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[14]####
-        return buildMosaicTask(panel, density, size, new TaskInfo());//####[14]####
+        return buildMosaicTask(panel, density, size, new Task());//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(BlockingQueue<ImagePanelItem> panel, TaskID<Integer> density, BlockingQueue<Integer> size, TaskInfo taskinfo) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(BlockingQueue<ImagePanelItem> panel, Future<Integer> density, BlockingQueue<Integer> size, Task taskinfo) {//####[14]####
         // ensure Method variable is set//####[14]####
         if (__pt__buildMosaicTask_ImagePanelItem_int_int_method == null) {//####[14]####
             __pt__buildMosaicTask_ImagePanelItem_int_int_ensureMethodVarSet();//####[14]####
@@ -431,11 +431,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicTask_ImagePanelItem_int_int_method);//####[14]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(ImagePanelItem panel, BlockingQueue<Integer> density, BlockingQueue<Integer> size) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(ImagePanelItem panel, BlockingQueue<Integer> density, BlockingQueue<Integer> size) {//####[14]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[14]####
-        return buildMosaicTask(panel, density, size, new TaskInfo());//####[14]####
+        return buildMosaicTask(panel, density, size, new Task());//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(ImagePanelItem panel, BlockingQueue<Integer> density, BlockingQueue<Integer> size, TaskInfo taskinfo) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(ImagePanelItem panel, BlockingQueue<Integer> density, BlockingQueue<Integer> size, Task taskinfo) {//####[14]####
         // ensure Method variable is set//####[14]####
         if (__pt__buildMosaicTask_ImagePanelItem_int_int_method == null) {//####[14]####
             __pt__buildMosaicTask_ImagePanelItem_int_int_ensureMethodVarSet();//####[14]####
@@ -446,11 +446,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicTask_ImagePanelItem_int_int_method);//####[14]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(TaskID<ImagePanelItem> panel, BlockingQueue<Integer> density, BlockingQueue<Integer> size) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(Future<ImagePanelItem> panel, BlockingQueue<Integer> density, BlockingQueue<Integer> size) {//####[14]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[14]####
-        return buildMosaicTask(panel, density, size, new TaskInfo());//####[14]####
+        return buildMosaicTask(panel, density, size, new Task());//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(TaskID<ImagePanelItem> panel, BlockingQueue<Integer> density, BlockingQueue<Integer> size, TaskInfo taskinfo) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(Future<ImagePanelItem> panel, BlockingQueue<Integer> density, BlockingQueue<Integer> size, Task taskinfo) {//####[14]####
         // ensure Method variable is set//####[14]####
         if (__pt__buildMosaicTask_ImagePanelItem_int_int_method == null) {//####[14]####
             __pt__buildMosaicTask_ImagePanelItem_int_int_ensureMethodVarSet();//####[14]####
@@ -463,11 +463,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicTask_ImagePanelItem_int_int_method);//####[14]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(BlockingQueue<ImagePanelItem> panel, BlockingQueue<Integer> density, BlockingQueue<Integer> size) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(BlockingQueue<ImagePanelItem> panel, BlockingQueue<Integer> density, BlockingQueue<Integer> size) {//####[14]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[14]####
-        return buildMosaicTask(panel, density, size, new TaskInfo());//####[14]####
+        return buildMosaicTask(panel, density, size, new Task());//####[14]####
     }//####[14]####
-    public static TaskID<ImageCombo> buildMosaicTask(BlockingQueue<ImagePanelItem> panel, BlockingQueue<Integer> density, BlockingQueue<Integer> size, TaskInfo taskinfo) {//####[14]####
+    public static Future<ImageCombo> buildMosaicTask(BlockingQueue<ImagePanelItem> panel, BlockingQueue<Integer> density, BlockingQueue<Integer> size, Task taskinfo) {//####[14]####
         // ensure Method variable is set//####[14]####
         if (__pt__buildMosaicTask_ImagePanelItem_int_int_method == null) {//####[14]####
             __pt__buildMosaicTask_ImagePanelItem_int_int_ensureMethodVarSet();//####[14]####
@@ -593,11 +593,11 @@ public class MosaicBuilder {//####[12]####
             }//####[115]####
         }//####[115]####
     }//####[115]####
-    public static TaskID<ImageCombo> buildImageMosaicTask(Object panel, Object palette, Object density, Object parallelism) {//####[115]####
+    public static Future<ImageCombo> buildImageMosaicTask(Object panel, Object palette, Object density, Object parallelism) {//####[115]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[115]####
-        return buildImageMosaicTask(panel, palette, density, parallelism, new TaskInfo());//####[115]####
+        return buildImageMosaicTask(panel, palette, density, parallelism, new Task());//####[115]####
     }//####[115]####
-    public static TaskID<ImageCombo> buildImageMosaicTask(Object panel, Object palette, Object density, Object parallelism, TaskInfo taskinfo) {//####[115]####
+    public static Future<ImageCombo> buildImageMosaicTask(Object panel, Object palette, Object density, Object parallelism, Task taskinfo) {//####[115]####
         // ensure Method variable is set//####[115]####
         if (__pt__buildImageMosaicTask_ImagePanelItem_ListPaletteItem_int_int_method == null) {//####[115]####
             __pt__buildImageMosaicTask_ImagePanelItem_ListPaletteItem_int_int_ensureMethodVarSet();//####[115]####
@@ -607,29 +607,29 @@ public class MosaicBuilder {//####[12]####
         if (panel instanceof BlockingQueue) {//####[115]####
             __pt__queueIndexList.add(0);//####[115]####
         }//####[115]####
-        if (panel instanceof TaskID) {//####[115]####
-            taskinfo.addDependsOn((TaskID)panel);//####[115]####
+        if (panel instanceof Future) {//####[115]####
+            taskinfo.addDependsOn((Future)panel);//####[115]####
             __pt__taskIdIndexList.add(0);//####[115]####
         }//####[115]####
         if (palette instanceof BlockingQueue) {//####[115]####
             __pt__queueIndexList.add(1);//####[115]####
         }//####[115]####
-        if (palette instanceof TaskID) {//####[115]####
-            taskinfo.addDependsOn((TaskID)palette);//####[115]####
+        if (palette instanceof Future) {//####[115]####
+            taskinfo.addDependsOn((Future)palette);//####[115]####
             __pt__taskIdIndexList.add(1);//####[115]####
         }//####[115]####
         if (density instanceof BlockingQueue) {//####[115]####
             __pt__queueIndexList.add(2);//####[115]####
         }//####[115]####
-        if (density instanceof TaskID) {//####[115]####
-            taskinfo.addDependsOn((TaskID)density);//####[115]####
+        if (density instanceof Future) {//####[115]####
+            taskinfo.addDependsOn((Future)density);//####[115]####
             __pt__taskIdIndexList.add(2);//####[115]####
         }//####[115]####
         if (parallelism instanceof BlockingQueue) {//####[115]####
             __pt__queueIndexList.add(3);//####[115]####
         }//####[115]####
-        if (parallelism instanceof TaskID) {//####[115]####
-            taskinfo.addDependsOn((TaskID)parallelism);//####[115]####
+        if (parallelism instanceof Future) {//####[115]####
+            taskinfo.addDependsOn((Future)parallelism);//####[115]####
             __pt__taskIdIndexList.add(3);//####[115]####
         }//####[115]####
         int[] __pt__queueIndexArray = new int[__pt__queueIndexList.size()];//####[115]####
@@ -666,11 +666,11 @@ public class MosaicBuilder {//####[12]####
             }//####[119]####
         }//####[119]####
     }//####[119]####
-    public static TaskID<ImageCombo> buildImageMosaicTask2(Object panel, Object palette, Object density, Object parallelism) {//####[119]####
+    public static Future<ImageCombo> buildImageMosaicTask2(Object panel, Object palette, Object density, Object parallelism) {//####[119]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[119]####
-        return buildImageMosaicTask2(panel, palette, density, parallelism, new TaskInfo());//####[119]####
+        return buildImageMosaicTask2(panel, palette, density, parallelism, new Task());//####[119]####
     }//####[119]####
-    public static TaskID<ImageCombo> buildImageMosaicTask2(Object panel, Object palette, Object density, Object parallelism, TaskInfo taskinfo) {//####[119]####
+    public static Future<ImageCombo> buildImageMosaicTask2(Object panel, Object palette, Object density, Object parallelism, Task taskinfo) {//####[119]####
         // ensure Method variable is set//####[119]####
         if (__pt__buildImageMosaicTask2_ImagePanelItem_ListPaletteItem_int_int_method == null) {//####[119]####
             __pt__buildImageMosaicTask2_ImagePanelItem_ListPaletteItem_int_int_ensureMethodVarSet();//####[119]####
@@ -680,29 +680,29 @@ public class MosaicBuilder {//####[12]####
         if (panel instanceof BlockingQueue) {//####[119]####
             __pt__queueIndexList.add(0);//####[119]####
         }//####[119]####
-        if (panel instanceof TaskID) {//####[119]####
-            taskinfo.addDependsOn((TaskID)panel);//####[119]####
+        if (panel instanceof Future) {//####[119]####
+            taskinfo.addDependsOn((Future)panel);//####[119]####
             __pt__taskIdIndexList.add(0);//####[119]####
         }//####[119]####
         if (palette instanceof BlockingQueue) {//####[119]####
             __pt__queueIndexList.add(1);//####[119]####
         }//####[119]####
-        if (palette instanceof TaskID) {//####[119]####
-            taskinfo.addDependsOn((TaskID)palette);//####[119]####
+        if (palette instanceof Future) {//####[119]####
+            taskinfo.addDependsOn((Future)palette);//####[119]####
             __pt__taskIdIndexList.add(1);//####[119]####
         }//####[119]####
         if (density instanceof BlockingQueue) {//####[119]####
             __pt__queueIndexList.add(2);//####[119]####
         }//####[119]####
-        if (density instanceof TaskID) {//####[119]####
-            taskinfo.addDependsOn((TaskID)density);//####[119]####
+        if (density instanceof Future) {//####[119]####
+            taskinfo.addDependsOn((Future)density);//####[119]####
             __pt__taskIdIndexList.add(2);//####[119]####
         }//####[119]####
         if (parallelism instanceof BlockingQueue) {//####[119]####
             __pt__queueIndexList.add(3);//####[119]####
         }//####[119]####
-        if (parallelism instanceof TaskID) {//####[119]####
-            taskinfo.addDependsOn((TaskID)parallelism);//####[119]####
+        if (parallelism instanceof Future) {//####[119]####
+            taskinfo.addDependsOn((Future)parallelism);//####[119]####
             __pt__taskIdIndexList.add(3);//####[119]####
         }//####[119]####
         int[] __pt__queueIndexArray = new int[__pt__queueIndexList.size()];//####[119]####
@@ -747,12 +747,12 @@ public class MosaicBuilder {//####[12]####
             g2.drawImage(imageLarge.getScaledInstance(width, height, Image.SCALE_DEFAULT), null, null);//####[138]####
             BufferedImage mosaicLarge = new BufferedImage(width * size, height * size, BufferedImage.TYPE_INT_RGB);//####[139]####
             Graphics2D g3 = mosaicLarge.createGraphics();//####[140]####
-            TaskIDGroup group = new TaskIDGroup(height * width);//####[143]####
+            FutureGroup group = new FutureGroup(height * width);//####[143]####
             for (int y = 0; y < height; y++) //####[145]####
             {//####[145]####
                 for (int x = 0; x < width; x++) //####[146]####
                 {//####[146]####
-                    TaskID id = buildImageMosaic2Task(palette, template, g3, size, x, y);//####[147]####
+                    Future id = buildImageMosaic2Task(palette, template, g3, size, x, y);//####[147]####
                     group.add(id);//####[148]####
                 }//####[149]####
             }//####[150]####
@@ -789,11 +789,11 @@ public class MosaicBuilder {//####[12]####
             }//####[176]####
         }//####[176]####
     }//####[176]####
-    private static TaskID<Void> buildImageMosaic2Task(Object palette, Object template, Object g3, Object size, Object x, Object y) {//####[176]####
+    private static Future<Void> buildImageMosaic2Task(Object palette, Object template, Object g3, Object size, Object x, Object y) {//####[176]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[176]####
-        return buildImageMosaic2Task(palette, template, g3, size, x, y, new TaskInfo());//####[176]####
+        return buildImageMosaic2Task(palette, template, g3, size, x, y, new Task());//####[176]####
     }//####[176]####
-    private static TaskID<Void> buildImageMosaic2Task(Object palette, Object template, Object g3, Object size, Object x, Object y, TaskInfo taskinfo) {//####[176]####
+    private static Future<Void> buildImageMosaic2Task(Object palette, Object template, Object g3, Object size, Object x, Object y, Task taskinfo) {//####[176]####
         // ensure Method variable is set//####[176]####
         if (__pt__buildImageMosaic2Task_ListPaletteItem_BufferedImage_Graphics2D_int_int_int_method == null) {//####[176]####
             __pt__buildImageMosaic2Task_ListPaletteItem_BufferedImage_Graphics2D_int_int_int_ensureMethodVarSet();//####[176]####
@@ -803,43 +803,43 @@ public class MosaicBuilder {//####[12]####
         if (palette instanceof BlockingQueue) {//####[176]####
             __pt__queueIndexList.add(0);//####[176]####
         }//####[176]####
-        if (palette instanceof TaskID) {//####[176]####
-            taskinfo.addDependsOn((TaskID)palette);//####[176]####
+        if (palette instanceof Future) {//####[176]####
+            taskinfo.addDependsOn((Future)palette);//####[176]####
             __pt__taskIdIndexList.add(0);//####[176]####
         }//####[176]####
         if (template instanceof BlockingQueue) {//####[176]####
             __pt__queueIndexList.add(1);//####[176]####
         }//####[176]####
-        if (template instanceof TaskID) {//####[176]####
-            taskinfo.addDependsOn((TaskID)template);//####[176]####
+        if (template instanceof Future) {//####[176]####
+            taskinfo.addDependsOn((Future)template);//####[176]####
             __pt__taskIdIndexList.add(1);//####[176]####
         }//####[176]####
         if (g3 instanceof BlockingQueue) {//####[176]####
             __pt__queueIndexList.add(2);//####[176]####
         }//####[176]####
-        if (g3 instanceof TaskID) {//####[176]####
-            taskinfo.addDependsOn((TaskID)g3);//####[176]####
+        if (g3 instanceof Future) {//####[176]####
+            taskinfo.addDependsOn((Future)g3);//####[176]####
             __pt__taskIdIndexList.add(2);//####[176]####
         }//####[176]####
         if (size instanceof BlockingQueue) {//####[176]####
             __pt__queueIndexList.add(3);//####[176]####
         }//####[176]####
-        if (size instanceof TaskID) {//####[176]####
-            taskinfo.addDependsOn((TaskID)size);//####[176]####
+        if (size instanceof Future) {//####[176]####
+            taskinfo.addDependsOn((Future)size);//####[176]####
             __pt__taskIdIndexList.add(3);//####[176]####
         }//####[176]####
         if (x instanceof BlockingQueue) {//####[176]####
             __pt__queueIndexList.add(4);//####[176]####
         }//####[176]####
-        if (x instanceof TaskID) {//####[176]####
-            taskinfo.addDependsOn((TaskID)x);//####[176]####
+        if (x instanceof Future) {//####[176]####
+            taskinfo.addDependsOn((Future)x);//####[176]####
             __pt__taskIdIndexList.add(4);//####[176]####
         }//####[176]####
         if (y instanceof BlockingQueue) {//####[176]####
             __pt__queueIndexList.add(5);//####[176]####
         }//####[176]####
-        if (y instanceof TaskID) {//####[176]####
-            taskinfo.addDependsOn((TaskID)y);//####[176]####
+        if (y instanceof Future) {//####[176]####
+            taskinfo.addDependsOn((Future)y);//####[176]####
             __pt__taskIdIndexList.add(5);//####[176]####
         }//####[176]####
         int[] __pt__queueIndexArray = new int[__pt__queueIndexList.size()];//####[176]####
@@ -899,11 +899,11 @@ public class MosaicBuilder {//####[12]####
             }//####[200]####
         }//####[200]####
     }//####[200]####
-    public static TaskID<ImageCombo> buildImageMosaicTask3(Object panel, Object palette, Object density, Object parallelism) {//####[200]####
+    public static Future<ImageCombo> buildImageMosaicTask3(Object panel, Object palette, Object density, Object parallelism) {//####[200]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[200]####
-        return buildImageMosaicTask3(panel, palette, density, parallelism, new TaskInfo());//####[200]####
+        return buildImageMosaicTask3(panel, palette, density, parallelism, new Task());//####[200]####
     }//####[200]####
-    public static TaskID<ImageCombo> buildImageMosaicTask3(Object panel, Object palette, Object density, Object parallelism, TaskInfo taskinfo) {//####[200]####
+    public static Future<ImageCombo> buildImageMosaicTask3(Object panel, Object palette, Object density, Object parallelism, Task taskinfo) {//####[200]####
         // ensure Method variable is set//####[200]####
         if (__pt__buildImageMosaicTask3_ImagePanelItem_ListPaletteItem_int_int_method == null) {//####[200]####
             __pt__buildImageMosaicTask3_ImagePanelItem_ListPaletteItem_int_int_ensureMethodVarSet();//####[200]####
@@ -913,29 +913,29 @@ public class MosaicBuilder {//####[12]####
         if (panel instanceof BlockingQueue) {//####[200]####
             __pt__queueIndexList.add(0);//####[200]####
         }//####[200]####
-        if (panel instanceof TaskID) {//####[200]####
-            taskinfo.addDependsOn((TaskID)panel);//####[200]####
+        if (panel instanceof Future) {//####[200]####
+            taskinfo.addDependsOn((Future)panel);//####[200]####
             __pt__taskIdIndexList.add(0);//####[200]####
         }//####[200]####
         if (palette instanceof BlockingQueue) {//####[200]####
             __pt__queueIndexList.add(1);//####[200]####
         }//####[200]####
-        if (palette instanceof TaskID) {//####[200]####
-            taskinfo.addDependsOn((TaskID)palette);//####[200]####
+        if (palette instanceof Future) {//####[200]####
+            taskinfo.addDependsOn((Future)palette);//####[200]####
             __pt__taskIdIndexList.add(1);//####[200]####
         }//####[200]####
         if (density instanceof BlockingQueue) {//####[200]####
             __pt__queueIndexList.add(2);//####[200]####
         }//####[200]####
-        if (density instanceof TaskID) {//####[200]####
-            taskinfo.addDependsOn((TaskID)density);//####[200]####
+        if (density instanceof Future) {//####[200]####
+            taskinfo.addDependsOn((Future)density);//####[200]####
             __pt__taskIdIndexList.add(2);//####[200]####
         }//####[200]####
         if (parallelism instanceof BlockingQueue) {//####[200]####
             __pt__queueIndexList.add(3);//####[200]####
         }//####[200]####
-        if (parallelism instanceof TaskID) {//####[200]####
-            taskinfo.addDependsOn((TaskID)parallelism);//####[200]####
+        if (parallelism instanceof Future) {//####[200]####
+            taskinfo.addDependsOn((Future)parallelism);//####[200]####
             __pt__taskIdIndexList.add(3);//####[200]####
         }//####[200]####
         int[] __pt__queueIndexArray = new int[__pt__queueIndexList.size()];//####[200]####
@@ -980,10 +980,10 @@ public class MosaicBuilder {//####[12]####
             g2.drawImage(imageLarge.getScaledInstance(width, height, Image.SCALE_DEFAULT), null, null);//####[219]####
             BufferedImage mosaicLarge = new BufferedImage(width * size, height * size, BufferedImage.TYPE_INT_RGB);//####[220]####
             Graphics2D g3 = mosaicLarge.createGraphics();//####[221]####
-            TaskIDGroup group = new TaskIDGroup(height);//####[223]####
+            FutureGroup group = new FutureGroup(height);//####[223]####
             for (int y = 0; y < height; y++) //####[225]####
             {//####[225]####
-                TaskID id = buildImageMosaic3Task(palette, template, g3, size, width, y);//####[226]####
+                Future id = buildImageMosaic3Task(palette, template, g3, size, width, y);//####[226]####
                 group.add(id);//####[227]####
             }//####[228]####
             try {//####[230]####
@@ -1019,11 +1019,11 @@ public class MosaicBuilder {//####[12]####
             }//####[254]####
         }//####[254]####
     }//####[254]####
-    private static TaskID<Void> buildImageMosaic3Task(Object palette, Object template, Object g3, Object size, Object width, Object y) {//####[254]####
+    private static Future<Void> buildImageMosaic3Task(Object palette, Object template, Object g3, Object size, Object width, Object y) {//####[254]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[254]####
-        return buildImageMosaic3Task(palette, template, g3, size, width, y, new TaskInfo());//####[254]####
+        return buildImageMosaic3Task(palette, template, g3, size, width, y, new Task());//####[254]####
     }//####[254]####
-    private static TaskID<Void> buildImageMosaic3Task(Object palette, Object template, Object g3, Object size, Object width, Object y, TaskInfo taskinfo) {//####[254]####
+    private static Future<Void> buildImageMosaic3Task(Object palette, Object template, Object g3, Object size, Object width, Object y, Task taskinfo) {//####[254]####
         // ensure Method variable is set//####[254]####
         if (__pt__buildImageMosaic3Task_ListPaletteItem_BufferedImage_Graphics2D_int_int_int_method == null) {//####[254]####
             __pt__buildImageMosaic3Task_ListPaletteItem_BufferedImage_Graphics2D_int_int_int_ensureMethodVarSet();//####[254]####
@@ -1033,43 +1033,43 @@ public class MosaicBuilder {//####[12]####
         if (palette instanceof BlockingQueue) {//####[254]####
             __pt__queueIndexList.add(0);//####[254]####
         }//####[254]####
-        if (palette instanceof TaskID) {//####[254]####
-            taskinfo.addDependsOn((TaskID)palette);//####[254]####
+        if (palette instanceof Future) {//####[254]####
+            taskinfo.addDependsOn((Future)palette);//####[254]####
             __pt__taskIdIndexList.add(0);//####[254]####
         }//####[254]####
         if (template instanceof BlockingQueue) {//####[254]####
             __pt__queueIndexList.add(1);//####[254]####
         }//####[254]####
-        if (template instanceof TaskID) {//####[254]####
-            taskinfo.addDependsOn((TaskID)template);//####[254]####
+        if (template instanceof Future) {//####[254]####
+            taskinfo.addDependsOn((Future)template);//####[254]####
             __pt__taskIdIndexList.add(1);//####[254]####
         }//####[254]####
         if (g3 instanceof BlockingQueue) {//####[254]####
             __pt__queueIndexList.add(2);//####[254]####
         }//####[254]####
-        if (g3 instanceof TaskID) {//####[254]####
-            taskinfo.addDependsOn((TaskID)g3);//####[254]####
+        if (g3 instanceof Future) {//####[254]####
+            taskinfo.addDependsOn((Future)g3);//####[254]####
             __pt__taskIdIndexList.add(2);//####[254]####
         }//####[254]####
         if (size instanceof BlockingQueue) {//####[254]####
             __pt__queueIndexList.add(3);//####[254]####
         }//####[254]####
-        if (size instanceof TaskID) {//####[254]####
-            taskinfo.addDependsOn((TaskID)size);//####[254]####
+        if (size instanceof Future) {//####[254]####
+            taskinfo.addDependsOn((Future)size);//####[254]####
             __pt__taskIdIndexList.add(3);//####[254]####
         }//####[254]####
         if (width instanceof BlockingQueue) {//####[254]####
             __pt__queueIndexList.add(4);//####[254]####
         }//####[254]####
-        if (width instanceof TaskID) {//####[254]####
-            taskinfo.addDependsOn((TaskID)width);//####[254]####
+        if (width instanceof Future) {//####[254]####
+            taskinfo.addDependsOn((Future)width);//####[254]####
             __pt__taskIdIndexList.add(4);//####[254]####
         }//####[254]####
         if (y instanceof BlockingQueue) {//####[254]####
             __pt__queueIndexList.add(5);//####[254]####
         }//####[254]####
-        if (y instanceof TaskID) {//####[254]####
-            taskinfo.addDependsOn((TaskID)y);//####[254]####
+        if (y instanceof Future) {//####[254]####
+            taskinfo.addDependsOn((Future)y);//####[254]####
             __pt__taskIdIndexList.add(5);//####[254]####
         }//####[254]####
         int[] __pt__queueIndexArray = new int[__pt__queueIndexList.size()];//####[254]####
@@ -1132,11 +1132,11 @@ public class MosaicBuilder {//####[12]####
             }//####[280]####
         }//####[280]####
     }//####[280]####
-    public static TaskID<ImageCombo> buildImageMosaicTask4(Object panel, Object palette, Object density, Object parallelism) {//####[280]####
+    public static Future<ImageCombo> buildImageMosaicTask4(Object panel, Object palette, Object density, Object parallelism) {//####[280]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[280]####
-        return buildImageMosaicTask4(panel, palette, density, parallelism, new TaskInfo());//####[280]####
+        return buildImageMosaicTask4(panel, palette, density, parallelism, new Task());//####[280]####
     }//####[280]####
-    public static TaskID<ImageCombo> buildImageMosaicTask4(Object panel, Object palette, Object density, Object parallelism, TaskInfo taskinfo) {//####[280]####
+    public static Future<ImageCombo> buildImageMosaicTask4(Object panel, Object palette, Object density, Object parallelism, Task taskinfo) {//####[280]####
         // ensure Method variable is set//####[280]####
         if (__pt__buildImageMosaicTask4_ImagePanelItem_ListPaletteItem_int_int_method == null) {//####[280]####
             __pt__buildImageMosaicTask4_ImagePanelItem_ListPaletteItem_int_int_ensureMethodVarSet();//####[280]####
@@ -1146,29 +1146,29 @@ public class MosaicBuilder {//####[12]####
         if (panel instanceof BlockingQueue) {//####[280]####
             __pt__queueIndexList.add(0);//####[280]####
         }//####[280]####
-        if (panel instanceof TaskID) {//####[280]####
-            taskinfo.addDependsOn((TaskID)panel);//####[280]####
+        if (panel instanceof Future) {//####[280]####
+            taskinfo.addDependsOn((Future)panel);//####[280]####
             __pt__taskIdIndexList.add(0);//####[280]####
         }//####[280]####
         if (palette instanceof BlockingQueue) {//####[280]####
             __pt__queueIndexList.add(1);//####[280]####
         }//####[280]####
-        if (palette instanceof TaskID) {//####[280]####
-            taskinfo.addDependsOn((TaskID)palette);//####[280]####
+        if (palette instanceof Future) {//####[280]####
+            taskinfo.addDependsOn((Future)palette);//####[280]####
             __pt__taskIdIndexList.add(1);//####[280]####
         }//####[280]####
         if (density instanceof BlockingQueue) {//####[280]####
             __pt__queueIndexList.add(2);//####[280]####
         }//####[280]####
-        if (density instanceof TaskID) {//####[280]####
-            taskinfo.addDependsOn((TaskID)density);//####[280]####
+        if (density instanceof Future) {//####[280]####
+            taskinfo.addDependsOn((Future)density);//####[280]####
             __pt__taskIdIndexList.add(2);//####[280]####
         }//####[280]####
         if (parallelism instanceof BlockingQueue) {//####[280]####
             __pt__queueIndexList.add(3);//####[280]####
         }//####[280]####
-        if (parallelism instanceof TaskID) {//####[280]####
-            taskinfo.addDependsOn((TaskID)parallelism);//####[280]####
+        if (parallelism instanceof Future) {//####[280]####
+            taskinfo.addDependsOn((Future)parallelism);//####[280]####
             __pt__taskIdIndexList.add(3);//####[280]####
         }//####[280]####
         int[] __pt__queueIndexArray = new int[__pt__queueIndexList.size()];//####[280]####
@@ -1213,10 +1213,10 @@ public class MosaicBuilder {//####[12]####
             g2.drawImage(imageLarge.getScaledInstance(width, height, Image.SCALE_DEFAULT), null, null);//####[299]####
             BufferedImage mosaicLarge = new BufferedImage(width * size, height * size, BufferedImage.TYPE_INT_RGB);//####[300]####
             Graphics2D g3 = mosaicLarge.createGraphics();//####[301]####
-            TaskIDGroup group = new TaskIDGroup(width);//####[303]####
+            FutureGroup group = new FutureGroup(width);//####[303]####
             for (int x = 0; x < width; x++) //####[305]####
             {//####[305]####
-                TaskID id = buildImageMosaic4Task(palette, template, g3, size, height, x);//####[306]####
+                Future id = buildImageMosaic4Task(palette, template, g3, size, height, x);//####[306]####
                 group.add(id);//####[307]####
             }//####[308]####
             try {//####[310]####
@@ -1252,11 +1252,11 @@ public class MosaicBuilder {//####[12]####
             }//####[334]####
         }//####[334]####
     }//####[334]####
-    private static TaskID<Void> buildImageMosaic4Task(Object palette, Object template, Object g3, Object size, Object height, Object x) {//####[334]####
+    private static Future<Void> buildImageMosaic4Task(Object palette, Object template, Object g3, Object size, Object height, Object x) {//####[334]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[334]####
-        return buildImageMosaic4Task(palette, template, g3, size, height, x, new TaskInfo());//####[334]####
+        return buildImageMosaic4Task(palette, template, g3, size, height, x, new Task());//####[334]####
     }//####[334]####
-    private static TaskID<Void> buildImageMosaic4Task(Object palette, Object template, Object g3, Object size, Object height, Object x, TaskInfo taskinfo) {//####[334]####
+    private static Future<Void> buildImageMosaic4Task(Object palette, Object template, Object g3, Object size, Object height, Object x, Task taskinfo) {//####[334]####
         // ensure Method variable is set//####[334]####
         if (__pt__buildImageMosaic4Task_ListPaletteItem_BufferedImage_Graphics2D_int_int_int_method == null) {//####[334]####
             __pt__buildImageMosaic4Task_ListPaletteItem_BufferedImage_Graphics2D_int_int_int_ensureMethodVarSet();//####[334]####
@@ -1266,43 +1266,43 @@ public class MosaicBuilder {//####[12]####
         if (palette instanceof BlockingQueue) {//####[334]####
             __pt__queueIndexList.add(0);//####[334]####
         }//####[334]####
-        if (palette instanceof TaskID) {//####[334]####
-            taskinfo.addDependsOn((TaskID)palette);//####[334]####
+        if (palette instanceof Future) {//####[334]####
+            taskinfo.addDependsOn((Future)palette);//####[334]####
             __pt__taskIdIndexList.add(0);//####[334]####
         }//####[334]####
         if (template instanceof BlockingQueue) {//####[334]####
             __pt__queueIndexList.add(1);//####[334]####
         }//####[334]####
-        if (template instanceof TaskID) {//####[334]####
-            taskinfo.addDependsOn((TaskID)template);//####[334]####
+        if (template instanceof Future) {//####[334]####
+            taskinfo.addDependsOn((Future)template);//####[334]####
             __pt__taskIdIndexList.add(1);//####[334]####
         }//####[334]####
         if (g3 instanceof BlockingQueue) {//####[334]####
             __pt__queueIndexList.add(2);//####[334]####
         }//####[334]####
-        if (g3 instanceof TaskID) {//####[334]####
-            taskinfo.addDependsOn((TaskID)g3);//####[334]####
+        if (g3 instanceof Future) {//####[334]####
+            taskinfo.addDependsOn((Future)g3);//####[334]####
             __pt__taskIdIndexList.add(2);//####[334]####
         }//####[334]####
         if (size instanceof BlockingQueue) {//####[334]####
             __pt__queueIndexList.add(3);//####[334]####
         }//####[334]####
-        if (size instanceof TaskID) {//####[334]####
-            taskinfo.addDependsOn((TaskID)size);//####[334]####
+        if (size instanceof Future) {//####[334]####
+            taskinfo.addDependsOn((Future)size);//####[334]####
             __pt__taskIdIndexList.add(3);//####[334]####
         }//####[334]####
         if (height instanceof BlockingQueue) {//####[334]####
             __pt__queueIndexList.add(4);//####[334]####
         }//####[334]####
-        if (height instanceof TaskID) {//####[334]####
-            taskinfo.addDependsOn((TaskID)height);//####[334]####
+        if (height instanceof Future) {//####[334]####
+            taskinfo.addDependsOn((Future)height);//####[334]####
             __pt__taskIdIndexList.add(4);//####[334]####
         }//####[334]####
         if (x instanceof BlockingQueue) {//####[334]####
             __pt__queueIndexList.add(5);//####[334]####
         }//####[334]####
-        if (x instanceof TaskID) {//####[334]####
-            taskinfo.addDependsOn((TaskID)x);//####[334]####
+        if (x instanceof Future) {//####[334]####
+            taskinfo.addDependsOn((Future)x);//####[334]####
             __pt__taskIdIndexList.add(5);//####[334]####
         }//####[334]####
         int[] __pt__queueIndexArray = new int[__pt__queueIndexList.size()];//####[334]####
@@ -1365,11 +1365,11 @@ public class MosaicBuilder {//####[12]####
             }//####[361]####
         }//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(ImagePanelItem panel, List<PaletteItem> palette, int size) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(ImagePanelItem panel, List<PaletteItem> palette, int size) {//####[361]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[361]####
-        return buildMosaicPaletteItemTask(panel, palette, size, new TaskInfo());//####[361]####
+        return buildMosaicPaletteItemTask(panel, palette, size, new Task());//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(ImagePanelItem panel, List<PaletteItem> palette, int size, TaskInfo taskinfo) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(ImagePanelItem panel, List<PaletteItem> palette, int size, Task taskinfo) {//####[361]####
         // ensure Method variable is set//####[361]####
         if (__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method == null) {//####[361]####
             __pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_ensureMethodVarSet();//####[361]####
@@ -1378,11 +1378,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method);//####[361]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(TaskID<ImagePanelItem> panel, List<PaletteItem> palette, int size) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(Future<ImagePanelItem> panel, List<PaletteItem> palette, int size) {//####[361]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[361]####
-        return buildMosaicPaletteItemTask(panel, palette, size, new TaskInfo());//####[361]####
+        return buildMosaicPaletteItemTask(panel, palette, size, new Task());//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(TaskID<ImagePanelItem> panel, List<PaletteItem> palette, int size, TaskInfo taskinfo) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(Future<ImagePanelItem> panel, List<PaletteItem> palette, int size, Task taskinfo) {//####[361]####
         // ensure Method variable is set//####[361]####
         if (__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method == null) {//####[361]####
             __pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_ensureMethodVarSet();//####[361]####
@@ -1393,11 +1393,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method);//####[361]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(BlockingQueue<ImagePanelItem> panel, List<PaletteItem> palette, int size) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(BlockingQueue<ImagePanelItem> panel, List<PaletteItem> palette, int size) {//####[361]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[361]####
-        return buildMosaicPaletteItemTask(panel, palette, size, new TaskInfo());//####[361]####
+        return buildMosaicPaletteItemTask(panel, palette, size, new Task());//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(BlockingQueue<ImagePanelItem> panel, List<PaletteItem> palette, int size, TaskInfo taskinfo) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(BlockingQueue<ImagePanelItem> panel, List<PaletteItem> palette, int size, Task taskinfo) {//####[361]####
         // ensure Method variable is set//####[361]####
         if (__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method == null) {//####[361]####
             __pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_ensureMethodVarSet();//####[361]####
@@ -1408,11 +1408,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method);//####[361]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(ImagePanelItem panel, TaskID<List<PaletteItem>> palette, int size) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(ImagePanelItem panel, Future<List<PaletteItem>> palette, int size) {//####[361]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[361]####
-        return buildMosaicPaletteItemTask(panel, palette, size, new TaskInfo());//####[361]####
+        return buildMosaicPaletteItemTask(panel, palette, size, new Task());//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(ImagePanelItem panel, TaskID<List<PaletteItem>> palette, int size, TaskInfo taskinfo) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(ImagePanelItem panel, Future<List<PaletteItem>> palette, int size, Task taskinfo) {//####[361]####
         // ensure Method variable is set//####[361]####
         if (__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method == null) {//####[361]####
             __pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_ensureMethodVarSet();//####[361]####
@@ -1423,11 +1423,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method);//####[361]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(TaskID<ImagePanelItem> panel, TaskID<List<PaletteItem>> palette, int size) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(Future<ImagePanelItem> panel, Future<List<PaletteItem>> palette, int size) {//####[361]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[361]####
-        return buildMosaicPaletteItemTask(panel, palette, size, new TaskInfo());//####[361]####
+        return buildMosaicPaletteItemTask(panel, palette, size, new Task());//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(TaskID<ImagePanelItem> panel, TaskID<List<PaletteItem>> palette, int size, TaskInfo taskinfo) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(Future<ImagePanelItem> panel, Future<List<PaletteItem>> palette, int size, Task taskinfo) {//####[361]####
         // ensure Method variable is set//####[361]####
         if (__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method == null) {//####[361]####
             __pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_ensureMethodVarSet();//####[361]####
@@ -1439,11 +1439,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method);//####[361]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(BlockingQueue<ImagePanelItem> panel, TaskID<List<PaletteItem>> palette, int size) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(BlockingQueue<ImagePanelItem> panel, Future<List<PaletteItem>> palette, int size) {//####[361]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[361]####
-        return buildMosaicPaletteItemTask(panel, palette, size, new TaskInfo());//####[361]####
+        return buildMosaicPaletteItemTask(panel, palette, size, new Task());//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(BlockingQueue<ImagePanelItem> panel, TaskID<List<PaletteItem>> palette, int size, TaskInfo taskinfo) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(BlockingQueue<ImagePanelItem> panel, Future<List<PaletteItem>> palette, int size, Task taskinfo) {//####[361]####
         // ensure Method variable is set//####[361]####
         if (__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method == null) {//####[361]####
             __pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_ensureMethodVarSet();//####[361]####
@@ -1456,11 +1456,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method);//####[361]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(ImagePanelItem panel, BlockingQueue<List<PaletteItem>> palette, int size) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(ImagePanelItem panel, BlockingQueue<List<PaletteItem>> palette, int size) {//####[361]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[361]####
-        return buildMosaicPaletteItemTask(panel, palette, size, new TaskInfo());//####[361]####
+        return buildMosaicPaletteItemTask(panel, palette, size, new Task());//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(ImagePanelItem panel, BlockingQueue<List<PaletteItem>> palette, int size, TaskInfo taskinfo) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(ImagePanelItem panel, BlockingQueue<List<PaletteItem>> palette, int size, Task taskinfo) {//####[361]####
         // ensure Method variable is set//####[361]####
         if (__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method == null) {//####[361]####
             __pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_ensureMethodVarSet();//####[361]####
@@ -1471,11 +1471,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method);//####[361]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(TaskID<ImagePanelItem> panel, BlockingQueue<List<PaletteItem>> palette, int size) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(Future<ImagePanelItem> panel, BlockingQueue<List<PaletteItem>> palette, int size) {//####[361]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[361]####
-        return buildMosaicPaletteItemTask(panel, palette, size, new TaskInfo());//####[361]####
+        return buildMosaicPaletteItemTask(panel, palette, size, new Task());//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(TaskID<ImagePanelItem> panel, BlockingQueue<List<PaletteItem>> palette, int size, TaskInfo taskinfo) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(Future<ImagePanelItem> panel, BlockingQueue<List<PaletteItem>> palette, int size, Task taskinfo) {//####[361]####
         // ensure Method variable is set//####[361]####
         if (__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method == null) {//####[361]####
             __pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_ensureMethodVarSet();//####[361]####
@@ -1488,11 +1488,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method);//####[361]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(BlockingQueue<ImagePanelItem> panel, BlockingQueue<List<PaletteItem>> palette, int size) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(BlockingQueue<ImagePanelItem> panel, BlockingQueue<List<PaletteItem>> palette, int size) {//####[361]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[361]####
-        return buildMosaicPaletteItemTask(panel, palette, size, new TaskInfo());//####[361]####
+        return buildMosaicPaletteItemTask(panel, palette, size, new Task());//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(BlockingQueue<ImagePanelItem> panel, BlockingQueue<List<PaletteItem>> palette, int size, TaskInfo taskinfo) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(BlockingQueue<ImagePanelItem> panel, BlockingQueue<List<PaletteItem>> palette, int size, Task taskinfo) {//####[361]####
         // ensure Method variable is set//####[361]####
         if (__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method == null) {//####[361]####
             __pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_ensureMethodVarSet();//####[361]####
@@ -1503,11 +1503,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method);//####[361]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(ImagePanelItem panel, List<PaletteItem> palette, TaskID<Integer> size) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(ImagePanelItem panel, List<PaletteItem> palette, Future<Integer> size) {//####[361]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[361]####
-        return buildMosaicPaletteItemTask(panel, palette, size, new TaskInfo());//####[361]####
+        return buildMosaicPaletteItemTask(panel, palette, size, new Task());//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(ImagePanelItem panel, List<PaletteItem> palette, TaskID<Integer> size, TaskInfo taskinfo) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(ImagePanelItem panel, List<PaletteItem> palette, Future<Integer> size, Task taskinfo) {//####[361]####
         // ensure Method variable is set//####[361]####
         if (__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method == null) {//####[361]####
             __pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_ensureMethodVarSet();//####[361]####
@@ -1518,11 +1518,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method);//####[361]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(TaskID<ImagePanelItem> panel, List<PaletteItem> palette, TaskID<Integer> size) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(Future<ImagePanelItem> panel, List<PaletteItem> palette, Future<Integer> size) {//####[361]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[361]####
-        return buildMosaicPaletteItemTask(panel, palette, size, new TaskInfo());//####[361]####
+        return buildMosaicPaletteItemTask(panel, palette, size, new Task());//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(TaskID<ImagePanelItem> panel, List<PaletteItem> palette, TaskID<Integer> size, TaskInfo taskinfo) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(Future<ImagePanelItem> panel, List<PaletteItem> palette, Future<Integer> size, Task taskinfo) {//####[361]####
         // ensure Method variable is set//####[361]####
         if (__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method == null) {//####[361]####
             __pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_ensureMethodVarSet();//####[361]####
@@ -1534,11 +1534,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method);//####[361]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(BlockingQueue<ImagePanelItem> panel, List<PaletteItem> palette, TaskID<Integer> size) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(BlockingQueue<ImagePanelItem> panel, List<PaletteItem> palette, Future<Integer> size) {//####[361]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[361]####
-        return buildMosaicPaletteItemTask(panel, palette, size, new TaskInfo());//####[361]####
+        return buildMosaicPaletteItemTask(panel, palette, size, new Task());//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(BlockingQueue<ImagePanelItem> panel, List<PaletteItem> palette, TaskID<Integer> size, TaskInfo taskinfo) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(BlockingQueue<ImagePanelItem> panel, List<PaletteItem> palette, Future<Integer> size, Task taskinfo) {//####[361]####
         // ensure Method variable is set//####[361]####
         if (__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method == null) {//####[361]####
             __pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_ensureMethodVarSet();//####[361]####
@@ -1551,11 +1551,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method);//####[361]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(ImagePanelItem panel, TaskID<List<PaletteItem>> palette, TaskID<Integer> size) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(ImagePanelItem panel, Future<List<PaletteItem>> palette, Future<Integer> size) {//####[361]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[361]####
-        return buildMosaicPaletteItemTask(panel, palette, size, new TaskInfo());//####[361]####
+        return buildMosaicPaletteItemTask(panel, palette, size, new Task());//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(ImagePanelItem panel, TaskID<List<PaletteItem>> palette, TaskID<Integer> size, TaskInfo taskinfo) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(ImagePanelItem panel, Future<List<PaletteItem>> palette, Future<Integer> size, Task taskinfo) {//####[361]####
         // ensure Method variable is set//####[361]####
         if (__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method == null) {//####[361]####
             __pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_ensureMethodVarSet();//####[361]####
@@ -1567,11 +1567,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method);//####[361]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(TaskID<ImagePanelItem> panel, TaskID<List<PaletteItem>> palette, TaskID<Integer> size) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(Future<ImagePanelItem> panel, Future<List<PaletteItem>> palette, Future<Integer> size) {//####[361]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[361]####
-        return buildMosaicPaletteItemTask(panel, palette, size, new TaskInfo());//####[361]####
+        return buildMosaicPaletteItemTask(panel, palette, size, new Task());//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(TaskID<ImagePanelItem> panel, TaskID<List<PaletteItem>> palette, TaskID<Integer> size, TaskInfo taskinfo) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(Future<ImagePanelItem> panel, Future<List<PaletteItem>> palette, Future<Integer> size, Task taskinfo) {//####[361]####
         // ensure Method variable is set//####[361]####
         if (__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method == null) {//####[361]####
             __pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_ensureMethodVarSet();//####[361]####
@@ -1584,11 +1584,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method);//####[361]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(BlockingQueue<ImagePanelItem> panel, TaskID<List<PaletteItem>> palette, TaskID<Integer> size) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(BlockingQueue<ImagePanelItem> panel, Future<List<PaletteItem>> palette, Future<Integer> size) {//####[361]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[361]####
-        return buildMosaicPaletteItemTask(panel, palette, size, new TaskInfo());//####[361]####
+        return buildMosaicPaletteItemTask(panel, palette, size, new Task());//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(BlockingQueue<ImagePanelItem> panel, TaskID<List<PaletteItem>> palette, TaskID<Integer> size, TaskInfo taskinfo) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(BlockingQueue<ImagePanelItem> panel, Future<List<PaletteItem>> palette, Future<Integer> size, Task taskinfo) {//####[361]####
         // ensure Method variable is set//####[361]####
         if (__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method == null) {//####[361]####
             __pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_ensureMethodVarSet();//####[361]####
@@ -1602,11 +1602,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method);//####[361]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(ImagePanelItem panel, BlockingQueue<List<PaletteItem>> palette, TaskID<Integer> size) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(ImagePanelItem panel, BlockingQueue<List<PaletteItem>> palette, Future<Integer> size) {//####[361]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[361]####
-        return buildMosaicPaletteItemTask(panel, palette, size, new TaskInfo());//####[361]####
+        return buildMosaicPaletteItemTask(panel, palette, size, new Task());//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(ImagePanelItem panel, BlockingQueue<List<PaletteItem>> palette, TaskID<Integer> size, TaskInfo taskinfo) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(ImagePanelItem panel, BlockingQueue<List<PaletteItem>> palette, Future<Integer> size, Task taskinfo) {//####[361]####
         // ensure Method variable is set//####[361]####
         if (__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method == null) {//####[361]####
             __pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_ensureMethodVarSet();//####[361]####
@@ -1619,11 +1619,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method);//####[361]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(TaskID<ImagePanelItem> panel, BlockingQueue<List<PaletteItem>> palette, TaskID<Integer> size) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(Future<ImagePanelItem> panel, BlockingQueue<List<PaletteItem>> palette, Future<Integer> size) {//####[361]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[361]####
-        return buildMosaicPaletteItemTask(panel, palette, size, new TaskInfo());//####[361]####
+        return buildMosaicPaletteItemTask(panel, palette, size, new Task());//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(TaskID<ImagePanelItem> panel, BlockingQueue<List<PaletteItem>> palette, TaskID<Integer> size, TaskInfo taskinfo) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(Future<ImagePanelItem> panel, BlockingQueue<List<PaletteItem>> palette, Future<Integer> size, Task taskinfo) {//####[361]####
         // ensure Method variable is set//####[361]####
         if (__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method == null) {//####[361]####
             __pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_ensureMethodVarSet();//####[361]####
@@ -1637,11 +1637,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method);//####[361]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(BlockingQueue<ImagePanelItem> panel, BlockingQueue<List<PaletteItem>> palette, TaskID<Integer> size) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(BlockingQueue<ImagePanelItem> panel, BlockingQueue<List<PaletteItem>> palette, Future<Integer> size) {//####[361]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[361]####
-        return buildMosaicPaletteItemTask(panel, palette, size, new TaskInfo());//####[361]####
+        return buildMosaicPaletteItemTask(panel, palette, size, new Task());//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(BlockingQueue<ImagePanelItem> panel, BlockingQueue<List<PaletteItem>> palette, TaskID<Integer> size, TaskInfo taskinfo) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(BlockingQueue<ImagePanelItem> panel, BlockingQueue<List<PaletteItem>> palette, Future<Integer> size, Task taskinfo) {//####[361]####
         // ensure Method variable is set//####[361]####
         if (__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method == null) {//####[361]####
             __pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_ensureMethodVarSet();//####[361]####
@@ -1654,11 +1654,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method);//####[361]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(ImagePanelItem panel, List<PaletteItem> palette, BlockingQueue<Integer> size) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(ImagePanelItem panel, List<PaletteItem> palette, BlockingQueue<Integer> size) {//####[361]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[361]####
-        return buildMosaicPaletteItemTask(panel, palette, size, new TaskInfo());//####[361]####
+        return buildMosaicPaletteItemTask(panel, palette, size, new Task());//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(ImagePanelItem panel, List<PaletteItem> palette, BlockingQueue<Integer> size, TaskInfo taskinfo) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(ImagePanelItem panel, List<PaletteItem> palette, BlockingQueue<Integer> size, Task taskinfo) {//####[361]####
         // ensure Method variable is set//####[361]####
         if (__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method == null) {//####[361]####
             __pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_ensureMethodVarSet();//####[361]####
@@ -1669,11 +1669,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method);//####[361]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(TaskID<ImagePanelItem> panel, List<PaletteItem> palette, BlockingQueue<Integer> size) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(Future<ImagePanelItem> panel, List<PaletteItem> palette, BlockingQueue<Integer> size) {//####[361]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[361]####
-        return buildMosaicPaletteItemTask(panel, palette, size, new TaskInfo());//####[361]####
+        return buildMosaicPaletteItemTask(panel, palette, size, new Task());//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(TaskID<ImagePanelItem> panel, List<PaletteItem> palette, BlockingQueue<Integer> size, TaskInfo taskinfo) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(Future<ImagePanelItem> panel, List<PaletteItem> palette, BlockingQueue<Integer> size, Task taskinfo) {//####[361]####
         // ensure Method variable is set//####[361]####
         if (__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method == null) {//####[361]####
             __pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_ensureMethodVarSet();//####[361]####
@@ -1686,11 +1686,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method);//####[361]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(BlockingQueue<ImagePanelItem> panel, List<PaletteItem> palette, BlockingQueue<Integer> size) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(BlockingQueue<ImagePanelItem> panel, List<PaletteItem> palette, BlockingQueue<Integer> size) {//####[361]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[361]####
-        return buildMosaicPaletteItemTask(panel, palette, size, new TaskInfo());//####[361]####
+        return buildMosaicPaletteItemTask(panel, palette, size, new Task());//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(BlockingQueue<ImagePanelItem> panel, List<PaletteItem> palette, BlockingQueue<Integer> size, TaskInfo taskinfo) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(BlockingQueue<ImagePanelItem> panel, List<PaletteItem> palette, BlockingQueue<Integer> size, Task taskinfo) {//####[361]####
         // ensure Method variable is set//####[361]####
         if (__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method == null) {//####[361]####
             __pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_ensureMethodVarSet();//####[361]####
@@ -1701,11 +1701,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method);//####[361]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(ImagePanelItem panel, TaskID<List<PaletteItem>> palette, BlockingQueue<Integer> size) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(ImagePanelItem panel, Future<List<PaletteItem>> palette, BlockingQueue<Integer> size) {//####[361]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[361]####
-        return buildMosaicPaletteItemTask(panel, palette, size, new TaskInfo());//####[361]####
+        return buildMosaicPaletteItemTask(panel, palette, size, new Task());//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(ImagePanelItem panel, TaskID<List<PaletteItem>> palette, BlockingQueue<Integer> size, TaskInfo taskinfo) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(ImagePanelItem panel, Future<List<PaletteItem>> palette, BlockingQueue<Integer> size, Task taskinfo) {//####[361]####
         // ensure Method variable is set//####[361]####
         if (__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method == null) {//####[361]####
             __pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_ensureMethodVarSet();//####[361]####
@@ -1718,11 +1718,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method);//####[361]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(TaskID<ImagePanelItem> panel, TaskID<List<PaletteItem>> palette, BlockingQueue<Integer> size) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(Future<ImagePanelItem> panel, Future<List<PaletteItem>> palette, BlockingQueue<Integer> size) {//####[361]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[361]####
-        return buildMosaicPaletteItemTask(panel, palette, size, new TaskInfo());//####[361]####
+        return buildMosaicPaletteItemTask(panel, palette, size, new Task());//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(TaskID<ImagePanelItem> panel, TaskID<List<PaletteItem>> palette, BlockingQueue<Integer> size, TaskInfo taskinfo) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(Future<ImagePanelItem> panel, Future<List<PaletteItem>> palette, BlockingQueue<Integer> size, Task taskinfo) {//####[361]####
         // ensure Method variable is set//####[361]####
         if (__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method == null) {//####[361]####
             __pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_ensureMethodVarSet();//####[361]####
@@ -1736,11 +1736,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method);//####[361]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(BlockingQueue<ImagePanelItem> panel, TaskID<List<PaletteItem>> palette, BlockingQueue<Integer> size) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(BlockingQueue<ImagePanelItem> panel, Future<List<PaletteItem>> palette, BlockingQueue<Integer> size) {//####[361]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[361]####
-        return buildMosaicPaletteItemTask(panel, palette, size, new TaskInfo());//####[361]####
+        return buildMosaicPaletteItemTask(panel, palette, size, new Task());//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(BlockingQueue<ImagePanelItem> panel, TaskID<List<PaletteItem>> palette, BlockingQueue<Integer> size, TaskInfo taskinfo) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(BlockingQueue<ImagePanelItem> panel, Future<List<PaletteItem>> palette, BlockingQueue<Integer> size, Task taskinfo) {//####[361]####
         // ensure Method variable is set//####[361]####
         if (__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method == null) {//####[361]####
             __pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_ensureMethodVarSet();//####[361]####
@@ -1753,11 +1753,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method);//####[361]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(ImagePanelItem panel, BlockingQueue<List<PaletteItem>> palette, BlockingQueue<Integer> size) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(ImagePanelItem panel, BlockingQueue<List<PaletteItem>> palette, BlockingQueue<Integer> size) {//####[361]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[361]####
-        return buildMosaicPaletteItemTask(panel, palette, size, new TaskInfo());//####[361]####
+        return buildMosaicPaletteItemTask(panel, palette, size, new Task());//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(ImagePanelItem panel, BlockingQueue<List<PaletteItem>> palette, BlockingQueue<Integer> size, TaskInfo taskinfo) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(ImagePanelItem panel, BlockingQueue<List<PaletteItem>> palette, BlockingQueue<Integer> size, Task taskinfo) {//####[361]####
         // ensure Method variable is set//####[361]####
         if (__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method == null) {//####[361]####
             __pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_ensureMethodVarSet();//####[361]####
@@ -1768,11 +1768,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method);//####[361]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(TaskID<ImagePanelItem> panel, BlockingQueue<List<PaletteItem>> palette, BlockingQueue<Integer> size) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(Future<ImagePanelItem> panel, BlockingQueue<List<PaletteItem>> palette, BlockingQueue<Integer> size) {//####[361]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[361]####
-        return buildMosaicPaletteItemTask(panel, palette, size, new TaskInfo());//####[361]####
+        return buildMosaicPaletteItemTask(panel, palette, size, new Task());//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(TaskID<ImagePanelItem> panel, BlockingQueue<List<PaletteItem>> palette, BlockingQueue<Integer> size, TaskInfo taskinfo) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(Future<ImagePanelItem> panel, BlockingQueue<List<PaletteItem>> palette, BlockingQueue<Integer> size, Task taskinfo) {//####[361]####
         // ensure Method variable is set//####[361]####
         if (__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method == null) {//####[361]####
             __pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_ensureMethodVarSet();//####[361]####
@@ -1785,11 +1785,11 @@ public class MosaicBuilder {//####[12]####
         taskinfo.setMethod(__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method);//####[361]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(BlockingQueue<ImagePanelItem> panel, BlockingQueue<List<PaletteItem>> palette, BlockingQueue<Integer> size) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(BlockingQueue<ImagePanelItem> panel, BlockingQueue<List<PaletteItem>> palette, BlockingQueue<Integer> size) {//####[361]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[361]####
-        return buildMosaicPaletteItemTask(panel, palette, size, new TaskInfo());//####[361]####
+        return buildMosaicPaletteItemTask(panel, palette, size, new Task());//####[361]####
     }//####[361]####
-    public static TaskID<List<PaletteItem>> buildMosaicPaletteItemTask(BlockingQueue<ImagePanelItem> panel, BlockingQueue<List<PaletteItem>> palette, BlockingQueue<Integer> size, TaskInfo taskinfo) {//####[361]####
+    public static Future<List<PaletteItem>> buildMosaicPaletteItemTask(BlockingQueue<ImagePanelItem> panel, BlockingQueue<List<PaletteItem>> palette, BlockingQueue<Integer> size, Task taskinfo) {//####[361]####
         // ensure Method variable is set//####[361]####
         if (__pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_method == null) {//####[361]####
             __pt__buildMosaicPaletteItemTask_ImagePanelItem_ListPaletteItem_int_ensureMethodVarSet();//####[361]####

@@ -31,7 +31,7 @@ import java.util.List;//####[20]####
 public class Build extends JFrame {//####[22]####
     static{ParaTask.init();}//####[22]####
     /*  ParaTask helper method to access private/protected slots *///####[22]####
-    public void __pt__accessPrivateSlot(Method m, Object instance, TaskID arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[22]####
+    public void __pt__accessPrivateSlot(Method m, Object instance, Future arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[22]####
         if (m.getParameterTypes().length == 0)//####[22]####
             m.invoke(instance);//####[22]####
         else if ((m.getParameterTypes().length == 1))//####[22]####
@@ -132,7 +132,7 @@ public class Build extends JFrame {//####[22]####
                 houseApplet.reset();//####[110]####
                 if (isParallel) //####[114]####
                 {//####[114]####
-                    TaskInfo __pt__id = new TaskInfo();//####[115]####
+                    Task __pt__id = new Task();//####[115]####
 //####[115]####
                     boolean isEDT = GuiThread.isEventDispatchThread();//####[115]####
 //####[115]####
@@ -148,7 +148,7 @@ public class Build extends JFrame {//####[22]####
                         System.err.println("Problem registering method in clause:");//####[115]####
                         __pt__e.printStackTrace();//####[115]####
                     }//####[115]####
-                    TaskID id = houseApplet.buildTask(colorWalls, colorRoof, __pt__id);//####[115]####
+                    Future id = houseApplet.buildTask(colorWalls, colorRoof, __pt__id);//####[115]####
                 } else {//####[116]####
                     houseApplet.build(colorWalls, colorRoof);//####[117]####
                     Build.this.finishedBuilding();//####[118]####

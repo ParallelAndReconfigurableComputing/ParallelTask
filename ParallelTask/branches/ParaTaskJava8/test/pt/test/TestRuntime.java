@@ -20,7 +20,7 @@ import java.util.List;//####[8]####
 public class TestRuntime {//####[10]####
     static{ParaTask.init();}//####[10]####
     /*  ParaTask helper method to access private/protected slots *///####[10]####
-    public void __pt__accessPrivateSlot(Method m, Object instance, TaskID arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[10]####
+    public void __pt__accessPrivateSlot(Method m, Object instance, Future arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[10]####
         if (m.getParameterTypes().length == 0)//####[10]####
             m.invoke(instance);//####[10]####
         else if ((m.getParameterTypes().length == 1))//####[10]####
@@ -89,8 +89,8 @@ public class TestRuntime {//####[10]####
                     e.printStackTrace();//####[69]####
                 }//####[70]####
             }//####[71]####
-            TaskID tid = execute(concurrentLinkedQueue);//####[73]####
-            TaskIDGroup tig = new TaskIDGroup(1);//####[74]####
+            Future tid = execute(concurrentLinkedQueue);//####[73]####
+            FutureGroup tig = new FutureGroup(1);//####[74]####
             tig.add(tid);//####[75]####
             tig.waitTillFinished();//####[76]####
         } catch (NumberFormatException e) {//####[78]####
@@ -122,11 +122,11 @@ public class TestRuntime {//####[10]####
             }//####[96]####
         }//####[96]####
     }//####[96]####
-    private static TaskIDGroup<Void> execute(ConcurrentLinkedQueue<Benchmark> benchmarkQueue) {//####[96]####
+    private static FutureGroup<Void> execute(ConcurrentLinkedQueue<Benchmark> benchmarkQueue) {//####[96]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[96]####
-        return execute(benchmarkQueue, new TaskInfo());//####[96]####
+        return execute(benchmarkQueue, new Task());//####[96]####
     }//####[96]####
-    private static TaskIDGroup<Void> execute(ConcurrentLinkedQueue<Benchmark> benchmarkQueue, TaskInfo taskinfo) {//####[96]####
+    private static FutureGroup<Void> execute(ConcurrentLinkedQueue<Benchmark> benchmarkQueue, Task taskinfo) {//####[96]####
         // ensure Method variable is set//####[96]####
         if (__pt__execute_ConcurrentLinkedQueueBenchmark_method == null) {//####[96]####
             __pt__execute_ConcurrentLinkedQueueBenchmark_ensureMethodVarSet();//####[96]####
@@ -135,11 +135,11 @@ public class TestRuntime {//####[10]####
         taskinfo.setMethod(__pt__execute_ConcurrentLinkedQueueBenchmark_method);//####[96]####
         return TaskpoolFactory.getTaskpool().enqueueMulti(taskinfo, -1);//####[96]####
     }//####[96]####
-    private static TaskIDGroup<Void> execute(TaskID<ConcurrentLinkedQueue<Benchmark>> benchmarkQueue) {//####[96]####
+    private static FutureGroup<Void> execute(Future<ConcurrentLinkedQueue<Benchmark>> benchmarkQueue) {//####[96]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[96]####
-        return execute(benchmarkQueue, new TaskInfo());//####[96]####
+        return execute(benchmarkQueue, new Task());//####[96]####
     }//####[96]####
-    private static TaskIDGroup<Void> execute(TaskID<ConcurrentLinkedQueue<Benchmark>> benchmarkQueue, TaskInfo taskinfo) {//####[96]####
+    private static FutureGroup<Void> execute(Future<ConcurrentLinkedQueue<Benchmark>> benchmarkQueue, Task taskinfo) {//####[96]####
         // ensure Method variable is set//####[96]####
         if (__pt__execute_ConcurrentLinkedQueueBenchmark_method == null) {//####[96]####
             __pt__execute_ConcurrentLinkedQueueBenchmark_ensureMethodVarSet();//####[96]####
@@ -150,11 +150,11 @@ public class TestRuntime {//####[10]####
         taskinfo.setMethod(__pt__execute_ConcurrentLinkedQueueBenchmark_method);//####[96]####
         return TaskpoolFactory.getTaskpool().enqueueMulti(taskinfo, -1);//####[96]####
     }//####[96]####
-    private static TaskIDGroup<Void> execute(BlockingQueue<ConcurrentLinkedQueue<Benchmark>> benchmarkQueue) {//####[96]####
+    private static FutureGroup<Void> execute(BlockingQueue<ConcurrentLinkedQueue<Benchmark>> benchmarkQueue) {//####[96]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[96]####
-        return execute(benchmarkQueue, new TaskInfo());//####[96]####
+        return execute(benchmarkQueue, new Task());//####[96]####
     }//####[96]####
-    private static TaskIDGroup<Void> execute(BlockingQueue<ConcurrentLinkedQueue<Benchmark>> benchmarkQueue, TaskInfo taskinfo) {//####[96]####
+    private static FutureGroup<Void> execute(BlockingQueue<ConcurrentLinkedQueue<Benchmark>> benchmarkQueue, Task taskinfo) {//####[96]####
         // ensure Method variable is set//####[96]####
         if (__pt__execute_ConcurrentLinkedQueueBenchmark_method == null) {//####[96]####
             __pt__execute_ConcurrentLinkedQueueBenchmark_ensureMethodVarSet();//####[96]####

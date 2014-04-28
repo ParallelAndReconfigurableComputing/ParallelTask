@@ -15,7 +15,7 @@ import java.util.List;//####[3]####
 public class TestNestedTask2 {//####[5]####
     static{ParaTask.init();}//####[5]####
     /*  ParaTask helper method to access private/protected slots *///####[5]####
-    public void __pt__accessPrivateSlot(Method m, Object instance, TaskID arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[5]####
+    public void __pt__accessPrivateSlot(Method m, Object instance, Future arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[5]####
         if (m.getParameterTypes().length == 0)//####[5]####
             m.invoke(instance);//####[5]####
         else if ((m.getParameterTypes().length == 1))//####[5]####
@@ -29,8 +29,8 @@ public class TestNestedTask2 {//####[5]####
 	 *///####[10]####
     public static void main(String[] args) {//####[10]####
         TestNestedTask2 task = new TestNestedTask2();//####[12]####
-        TaskID tid = task.task_1();//####[13]####
-        TaskIDGroup tig = new TaskIDGroup(1);//####[14]####
+        Future tid = task.task_1();//####[13]####
+        FutureGroup tig = new FutureGroup(1);//####[14]####
         tig.add(tid);//####[15]####
         try {//####[19]####
             tig.waitTillFinished();//####[20]####
@@ -53,11 +53,11 @@ public class TestNestedTask2 {//####[5]####
             }//####[29]####
         }//####[29]####
     }//####[29]####
-    private TaskID<Void> task_1() {//####[29]####
+    private Future<Void> task_1() {//####[29]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[29]####
-        return task_1(new TaskInfo());//####[29]####
+        return task_1(new Task());//####[29]####
     }//####[29]####
-    private TaskID<Void> task_1(TaskInfo taskinfo) {//####[29]####
+    private Future<Void> task_1(Task taskinfo) {//####[29]####
         // ensure Method variable is set//####[29]####
         if (__pt__task_1__method == null) {//####[29]####
             __pt__task_1__ensureMethodVarSet();//####[29]####
@@ -74,8 +74,8 @@ public class TestNestedTask2 {//####[5]####
         } catch (InterruptedException e) {//####[35]####
             e.printStackTrace();//####[36]####
         }//####[37]####
-        TaskID tid = task_2();//####[39]####
-        TaskIDGroup tig = new TaskIDGroup(1);//####[40]####
+        Future tid = task_2();//####[39]####
+        FutureGroup tig = new FutureGroup(1);//####[40]####
         tig.add(tid);//####[41]####
         try {//####[43]####
             Thread.sleep(1000 * 5);//####[44]####
@@ -105,11 +105,11 @@ public class TestNestedTask2 {//####[5]####
             }//####[63]####
         }//####[63]####
     }//####[63]####
-    private TaskID<Void> task_2() {//####[63]####
+    private Future<Void> task_2() {//####[63]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[63]####
-        return task_2(new TaskInfo());//####[63]####
+        return task_2(new Task());//####[63]####
     }//####[63]####
-    private TaskID<Void> task_2(TaskInfo taskinfo) {//####[63]####
+    private Future<Void> task_2(Task taskinfo) {//####[63]####
         // ensure Method variable is set//####[63]####
         if (__pt__task_2__method == null) {//####[63]####
             __pt__task_2__ensureMethodVarSet();//####[63]####
@@ -126,8 +126,8 @@ public class TestNestedTask2 {//####[5]####
         } catch (InterruptedException e) {//####[69]####
             e.printStackTrace();//####[70]####
         }//####[71]####
-        TaskID tid = task_3();//####[73]####
-        TaskIDGroup tig = new TaskIDGroup(1);//####[74]####
+        Future tid = task_3();//####[73]####
+        FutureGroup tig = new FutureGroup(1);//####[74]####
         tig.add(tid);//####[75]####
         try {//####[77]####
             Thread.sleep(1000 * 5);//####[78]####
@@ -157,11 +157,11 @@ public class TestNestedTask2 {//####[5]####
             }//####[94]####
         }//####[94]####
     }//####[94]####
-    private TaskID<Void> task_3() {//####[94]####
+    private Future<Void> task_3() {//####[94]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[94]####
-        return task_3(new TaskInfo());//####[94]####
+        return task_3(new Task());//####[94]####
     }//####[94]####
-    private TaskID<Void> task_3(TaskInfo taskinfo) {//####[94]####
+    private Future<Void> task_3(Task taskinfo) {//####[94]####
         // ensure Method variable is set//####[94]####
         if (__pt__task_3__method == null) {//####[94]####
             __pt__task_3__ensureMethodVarSet();//####[94]####

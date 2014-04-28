@@ -13,7 +13,7 @@ import java.util.List;//####[1]####
 public class TestDeadLock {//####[3]####
     static{ParaTask.init();}//####[3]####
     /*  ParaTask helper method to access private/protected slots *///####[3]####
-    public void __pt__accessPrivateSlot(Method m, Object instance, TaskID arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[3]####
+    public void __pt__accessPrivateSlot(Method m, Object instance, Future arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[3]####
         if (m.getParameterTypes().length == 0)//####[3]####
             m.invoke(instance);//####[3]####
         else if ((m.getParameterTypes().length == 1))//####[3]####
@@ -24,21 +24,21 @@ public class TestDeadLock {//####[3]####
 //####[4]####
     public static void main(String[] args) {//####[4]####
         TestDeadLock testDeadLock = new TestDeadLock();//####[5]####
-        TaskID tid_1 = null;//####[7]####
-        TaskID tid_2 = null;//####[8]####
-        TaskInfo __pt__tid_1 = new TaskInfo();//####[10]####
+        Future tid_1 = null;//####[7]####
+        Future tid_2 = null;//####[8]####
+        Task __pt__tid_1 = new Task();//####[10]####
 //####[10]####
         /*  -- ParaTask dependsOn clause for 'tid_1' -- *///####[10]####
         __pt__tid_1.addDependsOn(tid_2);//####[10]####
 //####[10]####
         tid_1 = testDeadLock.task_1(__pt__tid_1);//####[10]####
-        TaskInfo __pt__tid_2 = new TaskInfo();//####[11]####
+        Task __pt__tid_2 = new Task();//####[11]####
 //####[11]####
         /*  -- ParaTask dependsOn clause for 'tid_2' -- *///####[11]####
         __pt__tid_2.addDependsOn(tid_1);//####[11]####
 //####[11]####
         tid_2 = testDeadLock.task_2(__pt__tid_2);//####[11]####
-        TaskIDGroup tig = new TaskIDGroup(2);//####[12]####
+        FutureGroup tig = new FutureGroup(2);//####[12]####
         tig.add(tid_1);//####[13]####
         tig.add(tid_2);//####[14]####
         try {//####[16]####
@@ -62,11 +62,11 @@ public class TestDeadLock {//####[3]####
             }//####[25]####
         }//####[25]####
     }//####[25]####
-    private TaskID<Void> task_1() {//####[25]####
+    private Future<Void> task_1() {//####[25]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[25]####
-        return task_1(new TaskInfo());//####[25]####
+        return task_1(new Task());//####[25]####
     }//####[25]####
-    private TaskID<Void> task_1(TaskInfo taskinfo) {//####[25]####
+    private Future<Void> task_1(Task taskinfo) {//####[25]####
         // ensure Method variable is set//####[25]####
         if (__pt__task_1__method == null) {//####[25]####
             __pt__task_1__ensureMethodVarSet();//####[25]####
@@ -93,11 +93,11 @@ public class TestDeadLock {//####[3]####
             }//####[29]####
         }//####[29]####
     }//####[29]####
-    private TaskID<Void> task_2() {//####[29]####
+    private Future<Void> task_2() {//####[29]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[29]####
-        return task_2(new TaskInfo());//####[29]####
+        return task_2(new Task());//####[29]####
     }//####[29]####
-    private TaskID<Void> task_2(TaskInfo taskinfo) {//####[29]####
+    private Future<Void> task_2(Task taskinfo) {//####[29]####
         // ensure Method variable is set//####[29]####
         if (__pt__task_2__method == null) {//####[29]####
             __pt__task_2__ensureMethodVarSet();//####[29]####

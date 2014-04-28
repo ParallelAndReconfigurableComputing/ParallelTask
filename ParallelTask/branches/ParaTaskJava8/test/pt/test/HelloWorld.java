@@ -13,7 +13,7 @@ import java.util.List;//####[1]####
 public class HelloWorld {//####[3]####
     static{ParaTask.init();}//####[3]####
     /*  ParaTask helper method to access private/protected slots *///####[3]####
-    public void __pt__accessPrivateSlot(Method m, Object instance, TaskID arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[3]####
+    public void __pt__accessPrivateSlot(Method m, Object instance, Future arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[3]####
         if (m.getParameterTypes().length == 0)//####[3]####
             m.invoke(instance);//####[3]####
         else if ((m.getParameterTypes().length == 1))//####[3]####
@@ -26,15 +26,15 @@ public class HelloWorld {//####[3]####
         System.out.println("(1)");//####[6]####
         hello("Sequential");//####[8]####
         System.out.println("(2)");//####[10]####
-        TaskID id1 = oneoff_hello();//####[12]####
+        Future id1 = oneoff_hello();//####[12]####
         System.out.println("(3)");//####[14]####
-        TaskIDGroup id2 = multi_hello();//####[16]####
+        FutureGroup id2 = multi_hello();//####[16]####
         System.out.println("(4)");//####[18]####
-        TaskID id3 = interactive_hello();//####[20]####
+        Future id3 = interactive_hello();//####[20]####
         System.out.println("(5)");//####[22]####
-        TaskID id4 = new HelloWorld().oneoff_hello2();//####[24]####
+        Future id4 = new HelloWorld().oneoff_hello2();//####[24]####
         System.out.println("(6)");//####[26]####
-        TaskIDGroup g = new TaskIDGroup(4);//####[28]####
+        FutureGroup g = new FutureGroup(4);//####[28]####
         g.add(id1);//####[29]####
         g.add(id2);//####[30]####
         g.add(id3);//####[31]####
@@ -66,11 +66,11 @@ public class HelloWorld {//####[3]####
             }//####[48]####
         }//####[48]####
     }//####[48]####
-    private static TaskID<Void> oneoff_hello() {//####[48]####
+    private static Future<Void> oneoff_hello() {//####[48]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[48]####
-        return oneoff_hello(new TaskInfo());//####[48]####
+        return oneoff_hello(new Task());//####[48]####
     }//####[48]####
-    private static TaskID<Void> oneoff_hello(TaskInfo taskinfo) {//####[48]####
+    private static Future<Void> oneoff_hello(Task taskinfo) {//####[48]####
         // ensure Method variable is set//####[48]####
         if (__pt__oneoff_hello__method == null) {//####[48]####
             __pt__oneoff_hello__ensureMethodVarSet();//####[48]####
@@ -96,11 +96,11 @@ public class HelloWorld {//####[3]####
             }//####[52]####
         }//####[52]####
     }//####[52]####
-    private TaskID<Void> oneoff_hello2() {//####[52]####
+    private Future<Void> oneoff_hello2() {//####[52]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[52]####
-        return oneoff_hello2(new TaskInfo());//####[52]####
+        return oneoff_hello2(new Task());//####[52]####
     }//####[52]####
-    private TaskID<Void> oneoff_hello2(TaskInfo taskinfo) {//####[52]####
+    private Future<Void> oneoff_hello2(Task taskinfo) {//####[52]####
         // ensure Method variable is set//####[52]####
         if (__pt__oneoff_hello2__method == null) {//####[52]####
             __pt__oneoff_hello2__ensureMethodVarSet();//####[52]####
@@ -127,11 +127,11 @@ public class HelloWorld {//####[3]####
             }//####[56]####
         }//####[56]####
     }//####[56]####
-    private static TaskIDGroup<Void> multi_hello() {//####[56]####
+    private static FutureGroup<Void> multi_hello() {//####[56]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[56]####
-        return multi_hello(new TaskInfo());//####[56]####
+        return multi_hello(new Task());//####[56]####
     }//####[56]####
-    private static TaskIDGroup<Void> multi_hello(TaskInfo taskinfo) {//####[56]####
+    private static FutureGroup<Void> multi_hello(Task taskinfo) {//####[56]####
         // ensure Method variable is set//####[56]####
         if (__pt__multi_hello__method == null) {//####[56]####
             __pt__multi_hello__ensureMethodVarSet();//####[56]####
@@ -157,11 +157,11 @@ public class HelloWorld {//####[3]####
             }//####[60]####
         }//####[60]####
     }//####[60]####
-    public static TaskID<Void> interactive_hello() {//####[60]####
+    public static Future<Void> interactive_hello() {//####[60]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[60]####
-        return interactive_hello(new TaskInfo());//####[60]####
+        return interactive_hello(new Task());//####[60]####
     }//####[60]####
-    public static TaskID<Void> interactive_hello(TaskInfo taskinfo) {//####[60]####
+    public static Future<Void> interactive_hello(Task taskinfo) {//####[60]####
         // ensure Method variable is set//####[60]####
         if (__pt__interactive_hello__method == null) {//####[60]####
             __pt__interactive_hello__ensureMethodVarSet();//####[60]####

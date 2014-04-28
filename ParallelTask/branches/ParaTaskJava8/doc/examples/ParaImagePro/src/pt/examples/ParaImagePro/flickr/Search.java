@@ -30,7 +30,7 @@ import java.util.List;//####[22]####
 public class Search {//####[24]####
     static{ParaTask.init();}//####[24]####
     /*  ParaTask helper method to access private/protected slots *///####[24]####
-    public void __pt__accessPrivateSlot(Method m, Object instance, TaskID arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[24]####
+    public void __pt__accessPrivateSlot(Method m, Object instance, Future arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[24]####
         if (m.getParameterTypes().length == 0)//####[24]####
             m.invoke(instance);//####[24]####
         else if ((m.getParameterTypes().length == 1))//####[24]####
@@ -57,11 +57,11 @@ public class Search {//####[24]####
             }//####[46]####
         }//####[46]####
     }//####[46]####
-    public static TaskID<Image> getSquareImageTask(Photo p) {//####[46]####
+    public static Future<Image> getSquareImageTask(Photo p) {//####[46]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[46]####
-        return getSquareImageTask(p, new TaskInfo());//####[46]####
+        return getSquareImageTask(p, new Task());//####[46]####
     }//####[46]####
-    public static TaskID<Image> getSquareImageTask(Photo p, TaskInfo taskinfo) {//####[46]####
+    public static Future<Image> getSquareImageTask(Photo p, Task taskinfo) {//####[46]####
         // ensure Method variable is set//####[46]####
         if (__pt__getSquareImageTask_Photo_method == null) {//####[46]####
             __pt__getSquareImageTask_Photo_ensureMethodVarSet();//####[46]####
@@ -71,11 +71,11 @@ public class Search {//####[24]####
         taskinfo.setInteractive(true);//####[46]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[46]####
     }//####[46]####
-    public static TaskID<Image> getSquareImageTask(TaskID<Photo> p) {//####[46]####
+    public static Future<Image> getSquareImageTask(Future<Photo> p) {//####[46]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[46]####
-        return getSquareImageTask(p, new TaskInfo());//####[46]####
+        return getSquareImageTask(p, new Task());//####[46]####
     }//####[46]####
-    public static TaskID<Image> getSquareImageTask(TaskID<Photo> p, TaskInfo taskinfo) {//####[46]####
+    public static Future<Image> getSquareImageTask(Future<Photo> p, Task taskinfo) {//####[46]####
         // ensure Method variable is set//####[46]####
         if (__pt__getSquareImageTask_Photo_method == null) {//####[46]####
             __pt__getSquareImageTask_Photo_ensureMethodVarSet();//####[46]####
@@ -87,11 +87,11 @@ public class Search {//####[24]####
         taskinfo.setInteractive(true);//####[46]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[46]####
     }//####[46]####
-    public static TaskID<Image> getSquareImageTask(BlockingQueue<Photo> p) {//####[46]####
+    public static Future<Image> getSquareImageTask(BlockingQueue<Photo> p) {//####[46]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[46]####
-        return getSquareImageTask(p, new TaskInfo());//####[46]####
+        return getSquareImageTask(p, new Task());//####[46]####
     }//####[46]####
-    public static TaskID<Image> getSquareImageTask(BlockingQueue<Photo> p, TaskInfo taskinfo) {//####[46]####
+    public static Future<Image> getSquareImageTask(BlockingQueue<Photo> p, Task taskinfo) {//####[46]####
         // ensure Method variable is set//####[46]####
         if (__pt__getSquareImageTask_Photo_method == null) {//####[46]####
             __pt__getSquareImageTask_Photo_ensureMethodVarSet();//####[46]####
@@ -144,11 +144,11 @@ public class Search {//####[24]####
             }//####[74]####
         }//####[74]####
     }//####[74]####
-    public static TaskID<Image> getMediumImageTask(Photo p) {//####[74]####
+    public static Future<Image> getMediumImageTask(Photo p) {//####[74]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[74]####
-        return getMediumImageTask(p, new TaskInfo());//####[74]####
+        return getMediumImageTask(p, new Task());//####[74]####
     }//####[74]####
-    public static TaskID<Image> getMediumImageTask(Photo p, TaskInfo taskinfo) {//####[74]####
+    public static Future<Image> getMediumImageTask(Photo p, Task taskinfo) {//####[74]####
         // ensure Method variable is set//####[74]####
         if (__pt__getMediumImageTask_Photo_method == null) {//####[74]####
             __pt__getMediumImageTask_Photo_ensureMethodVarSet();//####[74]####
@@ -158,11 +158,11 @@ public class Search {//####[24]####
         taskinfo.setInteractive(true);//####[74]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[74]####
     }//####[74]####
-    public static TaskID<Image> getMediumImageTask(TaskID<Photo> p) {//####[74]####
+    public static Future<Image> getMediumImageTask(Future<Photo> p) {//####[74]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[74]####
-        return getMediumImageTask(p, new TaskInfo());//####[74]####
+        return getMediumImageTask(p, new Task());//####[74]####
     }//####[74]####
-    public static TaskID<Image> getMediumImageTask(TaskID<Photo> p, TaskInfo taskinfo) {//####[74]####
+    public static Future<Image> getMediumImageTask(Future<Photo> p, Task taskinfo) {//####[74]####
         // ensure Method variable is set//####[74]####
         if (__pt__getMediumImageTask_Photo_method == null) {//####[74]####
             __pt__getMediumImageTask_Photo_ensureMethodVarSet();//####[74]####
@@ -174,11 +174,11 @@ public class Search {//####[24]####
         taskinfo.setInteractive(true);//####[74]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[74]####
     }//####[74]####
-    public static TaskID<Image> getMediumImageTask(BlockingQueue<Photo> p) {//####[74]####
+    public static Future<Image> getMediumImageTask(BlockingQueue<Photo> p) {//####[74]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[74]####
-        return getMediumImageTask(p, new TaskInfo());//####[74]####
+        return getMediumImageTask(p, new Task());//####[74]####
     }//####[74]####
-    public static TaskID<Image> getMediumImageTask(BlockingQueue<Photo> p, TaskInfo taskinfo) {//####[74]####
+    public static Future<Image> getMediumImageTask(BlockingQueue<Photo> p, Task taskinfo) {//####[74]####
         // ensure Method variable is set//####[74]####
         if (__pt__getMediumImageTask_Photo_method == null) {//####[74]####
             __pt__getMediumImageTask_Photo_ensureMethodVarSet();//####[74]####
@@ -243,11 +243,11 @@ public class Search {//####[24]####
             }//####[139]####
         }//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(String str, int picsPerPage, int pageOffset) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(String str, int picsPerPage, int pageOffset) {//####[139]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[139]####
-        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[139]####
+        return searchTask(str, picsPerPage, pageOffset, new Task());//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(String str, int picsPerPage, int pageOffset, TaskInfo taskinfo) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(String str, int picsPerPage, int pageOffset, Task taskinfo) {//####[139]####
         // ensure Method variable is set//####[139]####
         if (__pt__searchTask_String_int_int_method == null) {//####[139]####
             __pt__searchTask_String_int_int_ensureMethodVarSet();//####[139]####
@@ -257,11 +257,11 @@ public class Search {//####[24]####
         taskinfo.setInteractive(true);//####[139]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(TaskID<String> str, int picsPerPage, int pageOffset) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(Future<String> str, int picsPerPage, int pageOffset) {//####[139]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[139]####
-        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[139]####
+        return searchTask(str, picsPerPage, pageOffset, new Task());//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(TaskID<String> str, int picsPerPage, int pageOffset, TaskInfo taskinfo) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(Future<String> str, int picsPerPage, int pageOffset, Task taskinfo) {//####[139]####
         // ensure Method variable is set//####[139]####
         if (__pt__searchTask_String_int_int_method == null) {//####[139]####
             __pt__searchTask_String_int_int_ensureMethodVarSet();//####[139]####
@@ -273,11 +273,11 @@ public class Search {//####[24]####
         taskinfo.setInteractive(true);//####[139]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, int picsPerPage, int pageOffset) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, int picsPerPage, int pageOffset) {//####[139]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[139]####
-        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[139]####
+        return searchTask(str, picsPerPage, pageOffset, new Task());//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, int picsPerPage, int pageOffset, TaskInfo taskinfo) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, int picsPerPage, int pageOffset, Task taskinfo) {//####[139]####
         // ensure Method variable is set//####[139]####
         if (__pt__searchTask_String_int_int_method == null) {//####[139]####
             __pt__searchTask_String_int_int_ensureMethodVarSet();//####[139]####
@@ -289,11 +289,11 @@ public class Search {//####[24]####
         taskinfo.setInteractive(true);//####[139]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(String str, TaskID<Integer> picsPerPage, int pageOffset) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(String str, Future<Integer> picsPerPage, int pageOffset) {//####[139]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[139]####
-        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[139]####
+        return searchTask(str, picsPerPage, pageOffset, new Task());//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(String str, TaskID<Integer> picsPerPage, int pageOffset, TaskInfo taskinfo) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(String str, Future<Integer> picsPerPage, int pageOffset, Task taskinfo) {//####[139]####
         // ensure Method variable is set//####[139]####
         if (__pt__searchTask_String_int_int_method == null) {//####[139]####
             __pt__searchTask_String_int_int_ensureMethodVarSet();//####[139]####
@@ -305,11 +305,11 @@ public class Search {//####[24]####
         taskinfo.setInteractive(true);//####[139]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(TaskID<String> str, TaskID<Integer> picsPerPage, int pageOffset) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(Future<String> str, Future<Integer> picsPerPage, int pageOffset) {//####[139]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[139]####
-        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[139]####
+        return searchTask(str, picsPerPage, pageOffset, new Task());//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(TaskID<String> str, TaskID<Integer> picsPerPage, int pageOffset, TaskInfo taskinfo) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(Future<String> str, Future<Integer> picsPerPage, int pageOffset, Task taskinfo) {//####[139]####
         // ensure Method variable is set//####[139]####
         if (__pt__searchTask_String_int_int_method == null) {//####[139]####
             __pt__searchTask_String_int_int_ensureMethodVarSet();//####[139]####
@@ -322,11 +322,11 @@ public class Search {//####[24]####
         taskinfo.setInteractive(true);//####[139]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, TaskID<Integer> picsPerPage, int pageOffset) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, Future<Integer> picsPerPage, int pageOffset) {//####[139]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[139]####
-        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[139]####
+        return searchTask(str, picsPerPage, pageOffset, new Task());//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, TaskID<Integer> picsPerPage, int pageOffset, TaskInfo taskinfo) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, Future<Integer> picsPerPage, int pageOffset, Task taskinfo) {//####[139]####
         // ensure Method variable is set//####[139]####
         if (__pt__searchTask_String_int_int_method == null) {//####[139]####
             __pt__searchTask_String_int_int_ensureMethodVarSet();//####[139]####
@@ -340,11 +340,11 @@ public class Search {//####[24]####
         taskinfo.setInteractive(true);//####[139]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(String str, BlockingQueue<Integer> picsPerPage, int pageOffset) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(String str, BlockingQueue<Integer> picsPerPage, int pageOffset) {//####[139]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[139]####
-        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[139]####
+        return searchTask(str, picsPerPage, pageOffset, new Task());//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(String str, BlockingQueue<Integer> picsPerPage, int pageOffset, TaskInfo taskinfo) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(String str, BlockingQueue<Integer> picsPerPage, int pageOffset, Task taskinfo) {//####[139]####
         // ensure Method variable is set//####[139]####
         if (__pt__searchTask_String_int_int_method == null) {//####[139]####
             __pt__searchTask_String_int_int_ensureMethodVarSet();//####[139]####
@@ -356,11 +356,11 @@ public class Search {//####[24]####
         taskinfo.setInteractive(true);//####[139]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(TaskID<String> str, BlockingQueue<Integer> picsPerPage, int pageOffset) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(Future<String> str, BlockingQueue<Integer> picsPerPage, int pageOffset) {//####[139]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[139]####
-        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[139]####
+        return searchTask(str, picsPerPage, pageOffset, new Task());//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(TaskID<String> str, BlockingQueue<Integer> picsPerPage, int pageOffset, TaskInfo taskinfo) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(Future<String> str, BlockingQueue<Integer> picsPerPage, int pageOffset, Task taskinfo) {//####[139]####
         // ensure Method variable is set//####[139]####
         if (__pt__searchTask_String_int_int_method == null) {//####[139]####
             __pt__searchTask_String_int_int_ensureMethodVarSet();//####[139]####
@@ -374,11 +374,11 @@ public class Search {//####[24]####
         taskinfo.setInteractive(true);//####[139]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, BlockingQueue<Integer> picsPerPage, int pageOffset) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, BlockingQueue<Integer> picsPerPage, int pageOffset) {//####[139]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[139]####
-        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[139]####
+        return searchTask(str, picsPerPage, pageOffset, new Task());//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, BlockingQueue<Integer> picsPerPage, int pageOffset, TaskInfo taskinfo) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, BlockingQueue<Integer> picsPerPage, int pageOffset, Task taskinfo) {//####[139]####
         // ensure Method variable is set//####[139]####
         if (__pt__searchTask_String_int_int_method == null) {//####[139]####
             __pt__searchTask_String_int_int_ensureMethodVarSet();//####[139]####
@@ -390,11 +390,11 @@ public class Search {//####[24]####
         taskinfo.setInteractive(true);//####[139]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(String str, int picsPerPage, TaskID<Integer> pageOffset) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(String str, int picsPerPage, Future<Integer> pageOffset) {//####[139]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[139]####
-        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[139]####
+        return searchTask(str, picsPerPage, pageOffset, new Task());//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(String str, int picsPerPage, TaskID<Integer> pageOffset, TaskInfo taskinfo) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(String str, int picsPerPage, Future<Integer> pageOffset, Task taskinfo) {//####[139]####
         // ensure Method variable is set//####[139]####
         if (__pt__searchTask_String_int_int_method == null) {//####[139]####
             __pt__searchTask_String_int_int_ensureMethodVarSet();//####[139]####
@@ -406,11 +406,11 @@ public class Search {//####[24]####
         taskinfo.setInteractive(true);//####[139]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(TaskID<String> str, int picsPerPage, TaskID<Integer> pageOffset) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(Future<String> str, int picsPerPage, Future<Integer> pageOffset) {//####[139]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[139]####
-        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[139]####
+        return searchTask(str, picsPerPage, pageOffset, new Task());//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(TaskID<String> str, int picsPerPage, TaskID<Integer> pageOffset, TaskInfo taskinfo) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(Future<String> str, int picsPerPage, Future<Integer> pageOffset, Task taskinfo) {//####[139]####
         // ensure Method variable is set//####[139]####
         if (__pt__searchTask_String_int_int_method == null) {//####[139]####
             __pt__searchTask_String_int_int_ensureMethodVarSet();//####[139]####
@@ -423,11 +423,11 @@ public class Search {//####[24]####
         taskinfo.setInteractive(true);//####[139]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, int picsPerPage, TaskID<Integer> pageOffset) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, int picsPerPage, Future<Integer> pageOffset) {//####[139]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[139]####
-        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[139]####
+        return searchTask(str, picsPerPage, pageOffset, new Task());//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, int picsPerPage, TaskID<Integer> pageOffset, TaskInfo taskinfo) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, int picsPerPage, Future<Integer> pageOffset, Task taskinfo) {//####[139]####
         // ensure Method variable is set//####[139]####
         if (__pt__searchTask_String_int_int_method == null) {//####[139]####
             __pt__searchTask_String_int_int_ensureMethodVarSet();//####[139]####
@@ -441,11 +441,11 @@ public class Search {//####[24]####
         taskinfo.setInteractive(true);//####[139]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(String str, TaskID<Integer> picsPerPage, TaskID<Integer> pageOffset) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(String str, Future<Integer> picsPerPage, Future<Integer> pageOffset) {//####[139]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[139]####
-        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[139]####
+        return searchTask(str, picsPerPage, pageOffset, new Task());//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(String str, TaskID<Integer> picsPerPage, TaskID<Integer> pageOffset, TaskInfo taskinfo) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(String str, Future<Integer> picsPerPage, Future<Integer> pageOffset, Task taskinfo) {//####[139]####
         // ensure Method variable is set//####[139]####
         if (__pt__searchTask_String_int_int_method == null) {//####[139]####
             __pt__searchTask_String_int_int_ensureMethodVarSet();//####[139]####
@@ -458,11 +458,11 @@ public class Search {//####[24]####
         taskinfo.setInteractive(true);//####[139]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(TaskID<String> str, TaskID<Integer> picsPerPage, TaskID<Integer> pageOffset) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(Future<String> str, Future<Integer> picsPerPage, Future<Integer> pageOffset) {//####[139]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[139]####
-        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[139]####
+        return searchTask(str, picsPerPage, pageOffset, new Task());//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(TaskID<String> str, TaskID<Integer> picsPerPage, TaskID<Integer> pageOffset, TaskInfo taskinfo) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(Future<String> str, Future<Integer> picsPerPage, Future<Integer> pageOffset, Task taskinfo) {//####[139]####
         // ensure Method variable is set//####[139]####
         if (__pt__searchTask_String_int_int_method == null) {//####[139]####
             __pt__searchTask_String_int_int_ensureMethodVarSet();//####[139]####
@@ -476,11 +476,11 @@ public class Search {//####[24]####
         taskinfo.setInteractive(true);//####[139]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, TaskID<Integer> picsPerPage, TaskID<Integer> pageOffset) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, Future<Integer> picsPerPage, Future<Integer> pageOffset) {//####[139]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[139]####
-        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[139]####
+        return searchTask(str, picsPerPage, pageOffset, new Task());//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, TaskID<Integer> picsPerPage, TaskID<Integer> pageOffset, TaskInfo taskinfo) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, Future<Integer> picsPerPage, Future<Integer> pageOffset, Task taskinfo) {//####[139]####
         // ensure Method variable is set//####[139]####
         if (__pt__searchTask_String_int_int_method == null) {//####[139]####
             __pt__searchTask_String_int_int_ensureMethodVarSet();//####[139]####
@@ -495,11 +495,11 @@ public class Search {//####[24]####
         taskinfo.setInteractive(true);//####[139]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(String str, BlockingQueue<Integer> picsPerPage, TaskID<Integer> pageOffset) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(String str, BlockingQueue<Integer> picsPerPage, Future<Integer> pageOffset) {//####[139]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[139]####
-        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[139]####
+        return searchTask(str, picsPerPage, pageOffset, new Task());//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(String str, BlockingQueue<Integer> picsPerPage, TaskID<Integer> pageOffset, TaskInfo taskinfo) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(String str, BlockingQueue<Integer> picsPerPage, Future<Integer> pageOffset, Task taskinfo) {//####[139]####
         // ensure Method variable is set//####[139]####
         if (__pt__searchTask_String_int_int_method == null) {//####[139]####
             __pt__searchTask_String_int_int_ensureMethodVarSet();//####[139]####
@@ -513,11 +513,11 @@ public class Search {//####[24]####
         taskinfo.setInteractive(true);//####[139]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(TaskID<String> str, BlockingQueue<Integer> picsPerPage, TaskID<Integer> pageOffset) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(Future<String> str, BlockingQueue<Integer> picsPerPage, Future<Integer> pageOffset) {//####[139]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[139]####
-        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[139]####
+        return searchTask(str, picsPerPage, pageOffset, new Task());//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(TaskID<String> str, BlockingQueue<Integer> picsPerPage, TaskID<Integer> pageOffset, TaskInfo taskinfo) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(Future<String> str, BlockingQueue<Integer> picsPerPage, Future<Integer> pageOffset, Task taskinfo) {//####[139]####
         // ensure Method variable is set//####[139]####
         if (__pt__searchTask_String_int_int_method == null) {//####[139]####
             __pt__searchTask_String_int_int_ensureMethodVarSet();//####[139]####
@@ -532,11 +532,11 @@ public class Search {//####[24]####
         taskinfo.setInteractive(true);//####[139]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, BlockingQueue<Integer> picsPerPage, TaskID<Integer> pageOffset) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, BlockingQueue<Integer> picsPerPage, Future<Integer> pageOffset) {//####[139]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[139]####
-        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[139]####
+        return searchTask(str, picsPerPage, pageOffset, new Task());//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, BlockingQueue<Integer> picsPerPage, TaskID<Integer> pageOffset, TaskInfo taskinfo) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, BlockingQueue<Integer> picsPerPage, Future<Integer> pageOffset, Task taskinfo) {//####[139]####
         // ensure Method variable is set//####[139]####
         if (__pt__searchTask_String_int_int_method == null) {//####[139]####
             __pt__searchTask_String_int_int_ensureMethodVarSet();//####[139]####
@@ -550,11 +550,11 @@ public class Search {//####[24]####
         taskinfo.setInteractive(true);//####[139]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(String str, int picsPerPage, BlockingQueue<Integer> pageOffset) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(String str, int picsPerPage, BlockingQueue<Integer> pageOffset) {//####[139]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[139]####
-        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[139]####
+        return searchTask(str, picsPerPage, pageOffset, new Task());//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(String str, int picsPerPage, BlockingQueue<Integer> pageOffset, TaskInfo taskinfo) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(String str, int picsPerPage, BlockingQueue<Integer> pageOffset, Task taskinfo) {//####[139]####
         // ensure Method variable is set//####[139]####
         if (__pt__searchTask_String_int_int_method == null) {//####[139]####
             __pt__searchTask_String_int_int_ensureMethodVarSet();//####[139]####
@@ -566,11 +566,11 @@ public class Search {//####[24]####
         taskinfo.setInteractive(true);//####[139]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(TaskID<String> str, int picsPerPage, BlockingQueue<Integer> pageOffset) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(Future<String> str, int picsPerPage, BlockingQueue<Integer> pageOffset) {//####[139]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[139]####
-        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[139]####
+        return searchTask(str, picsPerPage, pageOffset, new Task());//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(TaskID<String> str, int picsPerPage, BlockingQueue<Integer> pageOffset, TaskInfo taskinfo) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(Future<String> str, int picsPerPage, BlockingQueue<Integer> pageOffset, Task taskinfo) {//####[139]####
         // ensure Method variable is set//####[139]####
         if (__pt__searchTask_String_int_int_method == null) {//####[139]####
             __pt__searchTask_String_int_int_ensureMethodVarSet();//####[139]####
@@ -584,11 +584,11 @@ public class Search {//####[24]####
         taskinfo.setInteractive(true);//####[139]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, int picsPerPage, BlockingQueue<Integer> pageOffset) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, int picsPerPage, BlockingQueue<Integer> pageOffset) {//####[139]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[139]####
-        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[139]####
+        return searchTask(str, picsPerPage, pageOffset, new Task());//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, int picsPerPage, BlockingQueue<Integer> pageOffset, TaskInfo taskinfo) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, int picsPerPage, BlockingQueue<Integer> pageOffset, Task taskinfo) {//####[139]####
         // ensure Method variable is set//####[139]####
         if (__pt__searchTask_String_int_int_method == null) {//####[139]####
             __pt__searchTask_String_int_int_ensureMethodVarSet();//####[139]####
@@ -600,11 +600,11 @@ public class Search {//####[24]####
         taskinfo.setInteractive(true);//####[139]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(String str, TaskID<Integer> picsPerPage, BlockingQueue<Integer> pageOffset) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(String str, Future<Integer> picsPerPage, BlockingQueue<Integer> pageOffset) {//####[139]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[139]####
-        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[139]####
+        return searchTask(str, picsPerPage, pageOffset, new Task());//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(String str, TaskID<Integer> picsPerPage, BlockingQueue<Integer> pageOffset, TaskInfo taskinfo) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(String str, Future<Integer> picsPerPage, BlockingQueue<Integer> pageOffset, Task taskinfo) {//####[139]####
         // ensure Method variable is set//####[139]####
         if (__pt__searchTask_String_int_int_method == null) {//####[139]####
             __pt__searchTask_String_int_int_ensureMethodVarSet();//####[139]####
@@ -618,11 +618,11 @@ public class Search {//####[24]####
         taskinfo.setInteractive(true);//####[139]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(TaskID<String> str, TaskID<Integer> picsPerPage, BlockingQueue<Integer> pageOffset) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(Future<String> str, Future<Integer> picsPerPage, BlockingQueue<Integer> pageOffset) {//####[139]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[139]####
-        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[139]####
+        return searchTask(str, picsPerPage, pageOffset, new Task());//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(TaskID<String> str, TaskID<Integer> picsPerPage, BlockingQueue<Integer> pageOffset, TaskInfo taskinfo) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(Future<String> str, Future<Integer> picsPerPage, BlockingQueue<Integer> pageOffset, Task taskinfo) {//####[139]####
         // ensure Method variable is set//####[139]####
         if (__pt__searchTask_String_int_int_method == null) {//####[139]####
             __pt__searchTask_String_int_int_ensureMethodVarSet();//####[139]####
@@ -637,11 +637,11 @@ public class Search {//####[24]####
         taskinfo.setInteractive(true);//####[139]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, TaskID<Integer> picsPerPage, BlockingQueue<Integer> pageOffset) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, Future<Integer> picsPerPage, BlockingQueue<Integer> pageOffset) {//####[139]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[139]####
-        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[139]####
+        return searchTask(str, picsPerPage, pageOffset, new Task());//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, TaskID<Integer> picsPerPage, BlockingQueue<Integer> pageOffset, TaskInfo taskinfo) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, Future<Integer> picsPerPage, BlockingQueue<Integer> pageOffset, Task taskinfo) {//####[139]####
         // ensure Method variable is set//####[139]####
         if (__pt__searchTask_String_int_int_method == null) {//####[139]####
             __pt__searchTask_String_int_int_ensureMethodVarSet();//####[139]####
@@ -655,11 +655,11 @@ public class Search {//####[24]####
         taskinfo.setInteractive(true);//####[139]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(String str, BlockingQueue<Integer> picsPerPage, BlockingQueue<Integer> pageOffset) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(String str, BlockingQueue<Integer> picsPerPage, BlockingQueue<Integer> pageOffset) {//####[139]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[139]####
-        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[139]####
+        return searchTask(str, picsPerPage, pageOffset, new Task());//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(String str, BlockingQueue<Integer> picsPerPage, BlockingQueue<Integer> pageOffset, TaskInfo taskinfo) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(String str, BlockingQueue<Integer> picsPerPage, BlockingQueue<Integer> pageOffset, Task taskinfo) {//####[139]####
         // ensure Method variable is set//####[139]####
         if (__pt__searchTask_String_int_int_method == null) {//####[139]####
             __pt__searchTask_String_int_int_ensureMethodVarSet();//####[139]####
@@ -671,11 +671,11 @@ public class Search {//####[24]####
         taskinfo.setInteractive(true);//####[139]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(TaskID<String> str, BlockingQueue<Integer> picsPerPage, BlockingQueue<Integer> pageOffset) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(Future<String> str, BlockingQueue<Integer> picsPerPage, BlockingQueue<Integer> pageOffset) {//####[139]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[139]####
-        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[139]####
+        return searchTask(str, picsPerPage, pageOffset, new Task());//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(TaskID<String> str, BlockingQueue<Integer> picsPerPage, BlockingQueue<Integer> pageOffset, TaskInfo taskinfo) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(Future<String> str, BlockingQueue<Integer> picsPerPage, BlockingQueue<Integer> pageOffset, Task taskinfo) {//####[139]####
         // ensure Method variable is set//####[139]####
         if (__pt__searchTask_String_int_int_method == null) {//####[139]####
             __pt__searchTask_String_int_int_ensureMethodVarSet();//####[139]####
@@ -689,11 +689,11 @@ public class Search {//####[24]####
         taskinfo.setInteractive(true);//####[139]####
         return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, BlockingQueue<Integer> picsPerPage, BlockingQueue<Integer> pageOffset) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, BlockingQueue<Integer> picsPerPage, BlockingQueue<Integer> pageOffset) {//####[139]####
         //-- execute asynchronously by enqueuing onto the taskpool//####[139]####
-        return searchTask(str, picsPerPage, pageOffset, new TaskInfo());//####[139]####
+        return searchTask(str, picsPerPage, pageOffset, new Task());//####[139]####
     }//####[139]####
-    public static TaskID<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, BlockingQueue<Integer> picsPerPage, BlockingQueue<Integer> pageOffset, TaskInfo taskinfo) {//####[139]####
+    public static Future<List<PhotoWithImage>> searchTask(BlockingQueue<String> str, BlockingQueue<Integer> picsPerPage, BlockingQueue<Integer> pageOffset, Task taskinfo) {//####[139]####
         // ensure Method variable is set//####[139]####
         if (__pt__searchTask_String_int_int_method == null) {//####[139]####
             __pt__searchTask_String_int_int_ensureMethodVarSet();//####[139]####

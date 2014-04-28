@@ -30,7 +30,7 @@ import java.util.concurrent.PriorityBlockingQueue;
 public class TaskpoolFIFOWorkSharing extends AbstractTaskPool {
 	
 	@Override
-	protected void enqueueReadyTask(TaskID taskID) {
+	protected void enqueueReadyTask(Future taskID) {
 		//-- multi-tasks are added here first because this scheduling is fully FIFO according to the enqueuing timestamp
 		
 		/**
@@ -64,7 +64,7 @@ public class TaskpoolFIFOWorkSharing extends AbstractTaskPool {
 		 * */
 		//globalTaskqueue.add(taskID);		/* this will wake up any blocking worker threads if necessary */
 	
-		if (taskID.getExecuteOnThread() != ParaTaskHelper.ANY_THREAD_TASK || taskID instanceof TaskIDGroup) {
+		if (taskID.getExecuteOnThread() != ParaTaskHelper.ANY_THREAD_TASK || taskID instanceof FutureGroup) {
 			if (taskID.getExecuteOnThread() == ParaTaskHelper.ANY_THREAD_TASK) {
 				globalMultiTaskqueue.add(taskID);
 			} else {
@@ -98,7 +98,7 @@ public class TaskpoolFIFOWorkSharing extends AbstractTaskPool {
 	 * 
 	 */
 	@Override
-	public TaskID workerPollNextTask() {
+	public Future workerPollNextTask() {
 		
 		WorkerThread wt = (WorkerThread) Thread.currentThread();
 		int workerID = wt.getThreadID();
@@ -117,7 +117,7 @@ public class TaskpoolFIFOWorkSharing extends AbstractTaskPool {
 		 * */
 		//TaskID next = privateQueues[workerID].poll();
 		
-		TaskID next = null;
+		Future next = null;
 		
 		if (wt.isMultiTaskWorker()) {
 			next = privateQueues.get(workerID).poll();
@@ -212,13 +212,13 @@ public class TaskpoolFIFOWorkSharing extends AbstractTaskPool {
 				// expand multi task
 				int count = next.getCount();
 				int currentMultiTaskThreadPool = ThreadPool.getMultiTaskThreadPoolSize();
-				TaskInfo taskinfo = next.getTaskInfo();
+				Task taskinfo = next.getTaskInfo();
 
 				// indicate this is a sub task
 				taskinfo.setSubTask(true);
 				
 				for (int i = 0; i < count; i++) {
-					TaskID taskID = new TaskID(taskinfo);
+					Future taskID = new Future(taskinfo);
 					
 					taskID.setRelativeID(i);
 					taskID.setExecuteOnThread(i%currentMultiTaskThreadPool);
@@ -237,8 +237,8 @@ public class TaskpoolFIFOWorkSharing extends AbstractTaskPool {
 					 * @since 10/05/2013
 					 * Set part of group before add a task id into a group.
 					 */
-					taskID.setPartOfGroup(((TaskIDGroup)next));
-					((TaskIDGroup)next).add(taskID);
+					taskID.setPartOfGroup(((FutureGroup)next));
+					((FutureGroup)next).add(taskID);
 					enqueueReadyTask(taskID);
 					
 				}
@@ -249,7 +249,7 @@ public class TaskpoolFIFOWorkSharing extends AbstractTaskPool {
 				 * 
 				 * After a multi task worker thread expand a mult task, set the expansion flag.
 				 */
-				((TaskIDGroup)next).setExpanded(true);
+				((FutureGroup)next).setExpanded(true);
 				
 				//Another option on how to implement Later Expansion
 				/*TaskIDGroup group = (TaskIDGroup) next;
@@ -403,11 +403,11 @@ public class TaskpoolFIFOWorkSharing extends AbstractTaskPool {
 		globalTaskqueue = new PriorityBlockingQueue<TaskID<?>>(INITIAL_QUEUE_CAPACITY, FIFO_TaskID_Comparator);*/
 		
 		//For multi task used
-		globalMultiTaskqueue = new PriorityBlockingQueue<TaskID<?>>(
+		globalMultiTaskqueue = new PriorityBlockingQueue<Future<?>>(
 				AbstractTaskPool.INITIAL_QUEUE_CAPACITY,
 				AbstractTaskPool.FIFO_TaskID_Comparator);
 		
-		privateQueues = new ArrayList<AbstractQueue<TaskID<?>>>();
+		privateQueues = new ArrayList<AbstractQueue<Future<?>>>();
 		
 		//Put this create procedure into thread pool 
 		/*for (int i = 0; i < numMultiTaskThreads; i++) {
@@ -417,7 +417,7 @@ public class TaskpoolFIFOWorkSharing extends AbstractTaskPool {
 		}*/
 		
 		//For one-off task used
-		globalOne0ffTaskqueue = new PriorityBlockingQueue<TaskID<?>>(
+		globalOne0ffTaskqueue = new PriorityBlockingQueue<Future<?>>(
 				AbstractTaskPool.INITIAL_QUEUE_CAPACITY,
 				AbstractTaskPool.FIFO_TaskID_Comparator);
 		

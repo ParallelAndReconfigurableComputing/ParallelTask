@@ -39,7 +39,7 @@ import java.util.List;//####[31]####
 public class PhotoPanelItem extends JPanel implements ActionListener {//####[33]####
     static{ParaTask.init();}//####[33]####
     /*  ParaTask helper method to access private/protected slots *///####[33]####
-    public void __pt__accessPrivateSlot(Method m, Object instance, TaskID arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[33]####
+    public void __pt__accessPrivateSlot(Method m, Object instance, Future arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[33]####
         if (m.getParameterTypes().length == 0)//####[33]####
             m.invoke(instance);//####[33]####
         else if ((m.getParameterTypes().length == 1))//####[33]####
@@ -133,7 +133,7 @@ public class PhotoPanelItem extends JPanel implements ActionListener {//####[33]
         return imageSquare;//####[119]####
     }//####[120]####
 //####[122]####
-    private void downloadCompleteTask(TaskID<Image> id) {//####[122]####
+    private void downloadCompleteTask(Future<Image> id) {//####[122]####
         try {//####[123]####
             downloadComplete(id.getReturnResult());//####[124]####
         } catch (ExecutionException e) {//####[125]####
@@ -157,7 +157,7 @@ public class PhotoPanelItem extends JPanel implements ActionListener {//####[33]
             btnDownload.setEnabled(false);//####[142]####
             if (MainFrame.isParallel) //####[143]####
             {//####[143]####
-                TaskInfo __pt__id = new TaskInfo();//####[144]####
+                Task __pt__id = new Task();//####[144]####
 //####[144]####
                 boolean isEDT = GuiThread.isEventDispatchThread();//####[144]####
 //####[144]####
@@ -165,8 +165,8 @@ public class PhotoPanelItem extends JPanel implements ActionListener {//####[33]
                 /*  -- ParaTask notify clause for 'id' -- *///####[144]####
                 try {//####[144]####
                     Method __pt__id_slot_0 = null;//####[144]####
-                    __pt__id_slot_0 = ParaTaskHelper.getDeclaredMethod(getClass(), "downloadCompleteTask", new Class[] { TaskID.class });//####[144]####
-                    TaskID __pt__id_slot_0_dummy_0 = null;//####[144]####
+                    __pt__id_slot_0 = ParaTaskHelper.getDeclaredMethod(getClass(), "downloadCompleteTask", new Class[] { Future.class });//####[144]####
+                    Future __pt__id_slot_0_dummy_0 = null;//####[144]####
                     if (false) downloadCompleteTask(__pt__id_slot_0_dummy_0); //-- ParaTask uses this dummy statement to ensure the slot exists (otherwise Java compiler will complain)//####[144]####
                     __pt__id.addSlotToNotify(new Slot(__pt__id_slot_0, this, false));//####[144]####
 //####[144]####
@@ -179,7 +179,7 @@ public class PhotoPanelItem extends JPanel implements ActionListener {//####[33]
                     System.err.println("Problem registering method in clause:");//####[144]####
                     __pt__e.printStackTrace();//####[144]####
                 }//####[144]####
-                TaskID<Image> id = Search.getMediumImageTask(photo, __pt__id);//####[144]####
+                Future<Image> id = Search.getMediumImageTask(photo, __pt__id);//####[144]####
             } else {//####[145]####
                 setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));//####[146]####
                 Image result = Search.getMediumImage(photo);//####[147]####
