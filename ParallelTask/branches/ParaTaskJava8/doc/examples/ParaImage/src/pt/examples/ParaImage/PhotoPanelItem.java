@@ -22,7 +22,7 @@ import javax.swing.JPanel;
 import javax.swing.UIManager;
 
 import pt.examples.ParaImage.flickr.Search;
-import pt.runtime.Future;
+import pt.runtime.TaskID;
 import static pt.runtime.Task.*;
 
 import com.aetrion.flickr.photos.Photo;
@@ -101,7 +101,7 @@ public class PhotoPanelItem extends JPanel implements ActionListener {
 		return imageSquare;
 	}
 
-	private void downloadCompleteTask(Future<Image> id) {
+	private void downloadCompleteTask(TaskID<Image> id) {
 		try {
 			downloadComplete(id.getReturnResult());
 		} catch (ExecutionException e) {
@@ -123,8 +123,8 @@ public class PhotoPanelItem extends JPanel implements ActionListener {
 			btnDownload.setEnabled(false);
 			if (MainFrame.isParallel) {
 				//TaskID<Image> id = Search.getMediumImageTask(photo) notify(downloadCompleteTask(TaskID));
-				Future<Image> id = asIOTask(() -> Search.getMediumImageTask(photo))
-						.withHandler(future -> downloadCompleteTask((Future<Image>)future))
+				TaskID<Image> id = asIOTask(() -> Search.getMediumImageTask(photo))
+						.withHandler(future -> downloadCompleteTask((TaskID<Image>)future))
 						.run();
 			} else {
         		setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));

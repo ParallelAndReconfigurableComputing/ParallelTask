@@ -47,7 +47,7 @@ public class Task<T> {
 	private Thread registeringThread;
 	private List<Slot> slotsToNotify;
 	private List<Slot> interSlotsToNotify;
-	private List<Future<?>> dependences;
+	private List<TaskID<?>> dependences;
 
 	// for implicit results/dequeuing
 	private int[] taskIdArgIndexes = new int[] {};
@@ -133,7 +133,7 @@ public class Task<T> {
 		return registeringThread;
 	}
 
-	public void setTaskIDForSlotsAndHandlers(Future<T> taskID) {
+	public void setTaskIDForSlotsAndHandlers(TaskID<T> taskID) {
 		if (slotsToNotify != null) {
 			for (Iterator<Slot> it = slotsToNotify.iterator(); it.hasNext();) {
 				it.next().setTaskID(taskID);
@@ -197,7 +197,7 @@ public class Task<T> {
 		return slotsToNotify;
 	}
 
-	public List<Future<?>> getDependences() {
+	public List<TaskID<?>> getDependences() {
 		return dependences;
 	}
 
@@ -271,7 +271,7 @@ public class Task<T> {
 		return this;
 	}
 
-	public Task<T> withHandler(FunctorVoidWithOneArg<Future<?>> handler) {
+	public Task<T> withHandler(FunctorVoidWithOneArg<TaskID<?>> handler) {
 		if (slotsToNotify == null)
 			slotsToNotify = new ArrayList<Slot>();
 		this.slotsToNotify.add(new Slot(handler));
@@ -287,17 +287,17 @@ public class Task<T> {
 		return this;
 	}
 	
-	public Task<T> withInterimHandler(FunctorVoidWithTwoArgs<Future<?>, Object> handler) {
+	public Task<T> withInterimHandler(FunctorVoidWithTwoArgs<TaskID<?>, Object> handler) {
 		if (interSlotsToNotify == null)
 			interSlotsToNotify = new ArrayList<Slot>();
 		interSlotsToNotify.add(new Slot(handler));
 		return this;
 	}
 
-	public Task<T> dependsOn(Future<?>... taskIDs) {
+	public Task<T> dependsOn(TaskID<?>... taskIDs) {
 		this.dependences = Arrays.asList(taskIDs);
 
-		for (Future<?> t : taskIDs) {
+		for (TaskID<?> t : taskIDs) {
 			if (t.isPipeline()) {
 				isPipeline = true;
 				break;
@@ -307,7 +307,7 @@ public class Task<T> {
 		return this;
 	}
 
-	public Future<T> run() {
+	public TaskID<T> run() {
 		if(this.taskCount == 1)
 			return TaskpoolFactory.getTaskpool().enqueue(this);
 		else

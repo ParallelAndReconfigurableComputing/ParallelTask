@@ -21,7 +21,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.*;
 
 import pt.examples.ParaImage.flickr.PhotoWithImage;
-import pt.runtime.Future;
+import pt.runtime.TaskID;
 import static pt.runtime.Task.*;
 
 import javax.swing.BoxLayout;
@@ -44,7 +44,7 @@ import com.aetrion.flickr.photos.Photo;
 import com.aetrion.flickr.photos.PhotoList;
 
 import pt.examples.ParaImage.flickr.Search;
-import pt.runtime.Future;
+import pt.runtime.TaskID;
 
 public class SearchProjectPanel extends ProjectPanel implements ActionListener {
 	
@@ -262,7 +262,7 @@ public class SearchProjectPanel extends ProjectPanel implements ActionListener {
     }
     
     // intermediate result
-    private void receiveIntermediate(Future id, PhotoWithImage pi) {
+    private void receiveIntermediate(TaskID id, PhotoWithImage pi) {
     	addToDisplay(pi);
         progressBar.setValue(id.getProgress());
         updateUI();
@@ -284,7 +284,7 @@ public class SearchProjectPanel extends ProjectPanel implements ActionListener {
 			
 			currentSearch = asIOTask(() -> Search.searchTask(search, resPP, currentOffset))
 					.withHandler(this::finishedSearch)
-					.withInterimHandler((future, result) -> receiveIntermediate((Future)future, (PhotoWithImage)result))
+					.withInterimHandler((future, result) -> receiveIntermediate((TaskID)future, (PhotoWithImage)result))
 					.run();
 				
 		} else {
@@ -316,7 +316,7 @@ public class SearchProjectPanel extends ProjectPanel implements ActionListener {
         spnResultsPerPage.setEnabled(false);
     }
 
-    private Future<List<PhotoWithImage>> currentSearch = null;
+    private TaskID<List<PhotoWithImage>> currentSearch = null;
     
     @Override
     public void actionPerformed(ActionEvent e) {

@@ -107,7 +107,7 @@ public class WorkerThread extends TaskThread {
 	 */
 	public boolean executeAnotherTaskOrSleep() {
 
-		Future task = taskpool.workerPollNextTask();
+		TaskID task = taskpool.workerPollNextTask();
 		if (task != null) {
 			//isWaiting = true;
 			
@@ -139,7 +139,7 @@ public class WorkerThread extends TaskThread {
 	@Override
 	public void run() {
 		while (true) {
-			Future task = taskpool.workerTakeNextTask();
+			TaskID task = taskpool.workerTakeNextTask();
 			//- execute the task
 			
 			boolean success = executeTask(task);

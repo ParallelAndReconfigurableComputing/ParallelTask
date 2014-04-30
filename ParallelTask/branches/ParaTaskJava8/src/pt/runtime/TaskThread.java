@@ -29,7 +29,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public abstract class TaskThread extends Thread {
 
 	//-- TaskThreads could potentially have a stack of currently-processing tasks (e.g. if it blocks on a TaskID that hasn't completed)
-	protected Stack<Future<?>> currentTaskStack = new Stack<Future<?>>();
+	protected Stack<TaskID<?>> currentTaskStack = new Stack<TaskID<?>>();
 	
 	
 	/**
@@ -107,7 +107,7 @@ public abstract class TaskThread extends Thread {
 	 * @return	true if task executed successfully, false otherwise
 	 * @throws PoisonPillException 
 	 */
-	protected boolean executeTask(Future task){
+	protected boolean executeTask(TaskID task){
 		currentTaskStack.push(task);
 		
 		Task info = task.getTaskInfo();
@@ -148,7 +148,7 @@ public abstract class TaskThread extends Thread {
 	 * Return the currently executing TaskID by this TaskThread 
 	 * @return	The current TaskID, or null if not working on a task
 	 */
-	public Future<?> currentExecutingTask() {
+	public TaskID<?> currentExecutingTask() {
 		return currentTaskStack.peek();
 	}
 	

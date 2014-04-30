@@ -46,7 +46,7 @@ public class ImagePanelItem extends JPanel implements ChangeListener {
 	private Image imageMediumOriginal;
 	private Image imageMedium;
 
-	private ArrayList<Future> history = new ArrayList<Future>();
+	private ArrayList<TaskID> history = new ArrayList<TaskID>();
 //	private TaskIDGroup<Image> history = new TaskIDGroup<Image>();
 	
 	public static int imageSize = 180;
@@ -56,15 +56,15 @@ public class ImagePanelItem extends JPanel implements ChangeListener {
 	
 	private static int height = 250;
 	
-	public FutureGroup<Image> getHistory() {
+	public TaskIDGroup<Image> getHistory() {
 		int size = history.size();
-		FutureGroup<Image> grp = new FutureGroup<Image>(size);
+		TaskIDGroup<Image> grp = new TaskIDGroup<Image>(size);
 		for (int i = 0; i < size; i++)
 			grp.add(history.get(i));
 		return grp;
 	}
 	
-	public void addToHistory(Future job) {
+	public void addToHistory(TaskID job) {
 		history.add(job);
 	}
 	
@@ -94,7 +94,7 @@ public class ImagePanelItem extends JPanel implements ChangeListener {
 		return checkBox.isSelected();
 	}
 
-	public void setImageTask(Future<ImageCombo> id) {
+	public void setImageTask(TaskID<ImageCombo> id) {
 		try {
 			setImage(id.getReturnResult());
 		} catch (ExecutionException e) {

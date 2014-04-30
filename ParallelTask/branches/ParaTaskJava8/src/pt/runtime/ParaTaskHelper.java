@@ -49,13 +49,13 @@ public class ParaTaskHelper {
 	/**
 	 * [This is only intended for internal use of the ParaTask compiler and runtime]
 	 */
-    public static FutureGroup dummyTaskID = null;
+    public static TaskIDGroup dummyTaskID = null;
 	
     
 	/*
 	 * a wrapper function, since setComplete is not public inside TaskID
 	 */
-	public static void setComplete(Future id) {
+	public static void setComplete(TaskID id) {
 		id.setComplete();
 	}
 	

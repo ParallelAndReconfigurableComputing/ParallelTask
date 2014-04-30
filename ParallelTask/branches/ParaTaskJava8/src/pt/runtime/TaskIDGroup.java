@@ -39,9 +39,9 @@ import java.util.concurrent.locks.ReentrantLock;
  *
  * @param <T>
  */
-public class FutureGroup<T> extends Future<T> {
+public class TaskIDGroup<T> extends TaskID<T> {
 	
-	private ArrayList<Future<?>> innerTasks = new ArrayList<>();
+	private ArrayList<TaskID<?>> innerTasks = new ArrayList<>();
 	
 	private AtomicInteger numTaskCompleted = new AtomicInteger(0);
 	
@@ -81,12 +81,12 @@ public class FutureGroup<T> extends Future<T> {
 	 * may include one-off task or multi task, should not give any id to this 
 	 * group.
 	 * */
-	public FutureGroup(int groupSize) {
+	public TaskIDGroup(int groupSize) {
 		this.groupSize = groupSize;
 	}
 	
 	//-- this is only used to create a multi-task (the size is known before adding the inner tasks)
-	FutureGroup(int groupSize, Task<T> taskInfo) {
+	TaskIDGroup(int groupSize, Task<T> taskInfo) {
 		super(taskInfo);
 		this.isMultiTask = true;
 		this.groupSize = groupSize;
@@ -125,7 +125,7 @@ public class FutureGroup<T> extends Future<T> {
 	 * Maybe a good idea that only allow to call this method paratask runtime internally, which means
 	 * it is used for multi task group only but not user defined group.
 	 * */
-	public void add(Future<?> id) {
+	public void add(TaskID<?> id) {
 		innerTasks.add(id);
 		//id.setPartOfGroup(this);
 		//id.setRelativeID(nextRelativeID++);
@@ -171,7 +171,7 @@ public class FutureGroup<T> extends Future<T> {
 	 * Returns the result of a particular task.
 	 * @param relativeID The relative ID of the task whose result is wanted.
 	 * @see CurrentTask#relativeID()
-	 * @see Future#relativeID()
+	 * @see TaskID#relativeID()
 	 * @return The result for that task.
 	 */
 	@SuppressWarnings("unchecked")
@@ -183,7 +183,7 @@ public class FutureGroup<T> extends Future<T> {
 	 * Return an iterator for the set of <code>TaskID</code>s contained in this group.
 	 * @return	An iterator for this group of TaskIDs.
 	 */
-	public Iterator<Future<?>> groupMembers() {
+	public Iterator<TaskID<?>> groupMembers() {
 		return innerTasks.iterator();
 	}
 	
@@ -205,8 +205,8 @@ public class FutureGroup<T> extends Future<T> {
 				
 				// TODO at the moment, the handler uses the group's TaskID rather than the one for the specific task.. needs to be fixed!!
 
-				for (Iterator<Future<?>> it = groupMembers(); it.hasNext(); ) {
-					Future<?> task = it.next();
+				for (Iterator<TaskID<?>> it = groupMembers(); it.hasNext(); ) {
+					TaskID<?> task = it.next();
 					Throwable ex = task.getException();
 					if (ex != null) {
 						Slot handler = getExceptionHandler(ex.getClass());
@@ -244,7 +244,7 @@ public class FutureGroup<T> extends Future<T> {
 	 *  invocation on the inner TaskIDs in the group (to simplify implementation). 
 	 */
 	@Override
-	void dependenceFinished(Future<?> otherTask) {
+	void dependenceFinished(TaskID<?> otherTask) {
 		throw new UnsupportedOperationException("TODO: Not implemented!");
 	}
 
@@ -357,9 +357,9 @@ public class FutureGroup<T> extends Future<T> {
 				 * */
 				//innerTasks.get(i).waitTillFinished();
 				
-				Future<?> taskID = innerTasks.get(i);
-				if (taskID instanceof FutureGroup) {
-					FutureGroup<?> taskIDGroup = (FutureGroup<?>) taskID;
+				TaskID<?> taskID = innerTasks.get(i);
+				if (taskID instanceof TaskIDGroup) {
+					TaskIDGroup<?> taskIDGroup = (TaskIDGroup<?>) taskID;
 					while (!taskIDGroup.getExpanded()) {
 						Thread.sleep(1);
 					}

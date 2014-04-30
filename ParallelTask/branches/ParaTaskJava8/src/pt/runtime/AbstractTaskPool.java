@@ -34,16 +34,16 @@ public abstract class AbstractTaskPool implements Taskpool {
 	
 	protected final static int INITIAL_QUEUE_CAPACITY = 11;  
 	
-	protected final static Comparator<Future<?>> FIFO_TaskID_Comparator = new Comparator<Future<?>>() {
+	protected final static Comparator<TaskID<?>> FIFO_TaskID_Comparator = new Comparator<TaskID<?>>() {
 		@Override
-		public int compare(Future<?> o1, Future<?> o2) {
+		public int compare(TaskID<?> o1, TaskID<?> o2) {
 			return o1.globalID - o2.globalID;
 		}
 	};
 	
-	protected final static Comparator<Future<?>> LIFO_TaskID_Comparator = new Comparator<Future<?>>() {
+	protected final static Comparator<TaskID<?>> LIFO_TaskID_Comparator = new Comparator<TaskID<?>>() {
 		@Override
-		public int compare(Future<?> o1, Future<?> o2) {
+		public int compare(TaskID<?> o1, TaskID<?> o2) {
 			return o2.globalID - o1.globalID;
 		}
 	};
@@ -84,7 +84,7 @@ public abstract class AbstractTaskPool implements Taskpool {
 	//protected WorkerThread[] workers;
 	
 	/* Tasks that are not ready to be executed yet, still waiting for dependences to be met */
-	protected ConcurrentHashMap<Future<?>, Object> waitingTasks = new ConcurrentHashMap<Future<?>, Object>();
+	protected ConcurrentHashMap<TaskID<?>, Object> waitingTasks = new ConcurrentHashMap<TaskID<?>, Object>();
 	
 	/* Ready tasks, in a shared global queue (for work-sharing implementations) */
 	/**
@@ -95,8 +95,8 @@ public abstract class AbstractTaskPool implements Taskpool {
 	 * 
 	 * */
 	//protected PriorityBlockingQueue<TaskID<?>> globalTaskqueue = null;
-	protected PriorityBlockingQueue<Future<?>> globalMultiTaskqueue = null;
-	protected PriorityBlockingQueue<Future<?>> globalOne0ffTaskqueue = null;
+	protected PriorityBlockingQueue<TaskID<?>> globalMultiTaskqueue = null;
+	protected PriorityBlockingQueue<TaskID<?>> globalOne0ffTaskqueue = null;
 	
 	
 	/**
@@ -108,8 +108,8 @@ public abstract class AbstractTaskPool implements Taskpool {
 	 * */
 	/* Ready tasks (for mixed-scheduling implementation) */
 	//protected FifoLifoQueue<TaskID<?>> mixedQueue = null;
-	protected FifoLifoQueue<Future<?>> mixedMultiTaskqueue = null;
-	protected FifoLifoQueue<Future<?>> mixedOneoffTaskqueue = null;
+	protected FifoLifoQueue<TaskID<?>> mixedMultiTaskqueue = null;
+	protected FifoLifoQueue<TaskID<?>> mixedOneoffTaskqueue = null;
 	
 	/* Ready tasks, in private queues (stores multi-tasks) - no stealing occurs within these queues */
 	/**
@@ -124,7 +124,7 @@ public abstract class AbstractTaskPool implements Taskpool {
 	 * 
 	 * */
 	//protected AbstractQueue<TaskID<?>>[] privateQueues;
-	protected List<AbstractQueue<Future<?>>> privateQueues;
+	protected List<AbstractQueue<TaskID<?>>> privateQueues;
 	
 	/* Ready tasks, for each worker thread. If empty, workers steal from another worker within these queues (for work-stealing implementations) */ 
 	/**
@@ -153,7 +153,7 @@ public abstract class AbstractTaskPool implements Taskpool {
 	//protected List<LinkedBlockingDeque<TaskID<?>>> localQueues = null;
 	//protected List<LinkedBlockingDeque<TaskID<?>>> localMultiTaskQueues = null;
 	//protected List<LinkedBlockingDeque<TaskID<?>>> localOneoffTaskQueues = null;
-	protected Map<Integer, LinkedBlockingDeque<Future<?>>> localOneoffTaskQueues = null;
+	protected Map<Integer, LinkedBlockingDeque<TaskID<?>>> localOneoffTaskQueues = null;
 	
 	
 	protected ThreadLocal<Integer> lastStolenFrom = null;	
@@ -194,13 +194,13 @@ public abstract class AbstractTaskPool implements Taskpool {
 	 * the task was waiting for other tasks to complete).
 	 *  
 	 */
-	protected abstract void enqueueReadyTask(Future<?> taskID/* , boolean wasWaiting  */); // this last parameter could be used to fine-tune performance
+	protected abstract void enqueueReadyTask(TaskID<?> taskID/* , boolean wasWaiting  */); // this last parameter could be used to fine-tune performance
 	
 	/*
 	 * (schedule-specific) 
 	 * The worker thread polls for a task to execute. If there currently isn't one, then it returns null.
 	 */
-	public abstract Future<?> workerPollNextTask();	
+	public abstract TaskID<?> workerPollNextTask();	
 	
 	/*
 	 * (schedule-specific)
@@ -212,12 +212,12 @@ public abstract class AbstractTaskPool implements Taskpool {
 	 * Creates a TaskID for the specified task (whose details are contained in the TaskInfo). It then returns the TaskID after 
 	 * the task has been queued. This method is generic and not schedule-specific. 
 	 */
-	public <T> Future<T> enqueue(Task<T> taskinfo) {
-		List<Future<?>> allDependences = null;
+	public <T> TaskID<T> enqueue(Task<T> taskinfo) {
+		List<TaskID<?>> allDependences = null;
 		if (taskinfo.getDependences() != null)
 			allDependences = ParaTask.allTasksInList(taskinfo.getDependences());
 		
-		Future<T> taskID = new Future<>(taskinfo);
+		TaskID<T> taskID = new TaskID<>(taskinfo);
 		
 		//-- determine if this task is being enqueued from within another task.. if so, set the enclosing task (needed to 
 		//--		propogate exceptions to outer tasks (in case they have a suitable handler))
@@ -247,15 +247,15 @@ public abstract class AbstractTaskPool implements Taskpool {
 		return taskID;
 	}	
 	
-	public FutureGroup enqueueMulti(Task taskinfo, int count){
+	public TaskIDGroup enqueueMulti(Task taskinfo, int count){
 		
 		if (count == Task.STAR)
 			count = ThreadPool.getMultiTaskThreadPoolSize();
 		
-		FutureGroup group = new FutureGroup(count, taskinfo);
+		TaskIDGroup group = new TaskIDGroup(count, taskinfo);
 		group.setCount(count);
 		
-		List<Future<?>> allDependences = null;
+		List<TaskID<?>> allDependences = null;
 		if (taskinfo.getDependences() != null)
 			allDependences = ParaTask.allTasksInList(taskinfo.getDependences());
 			
@@ -287,9 +287,9 @@ public abstract class AbstractTaskPool implements Taskpool {
 	 * sleeps before trying again, and again.
 	 * 
 	 */
-	public Future workerTakeNextTask() {
+	public TaskID workerTakeNextTask() {
 		while (true) {
-			Future next = workerPollNextTask();
+			TaskID next = workerPollNextTask();
 			
 			if (next != null) 
 				return next;
@@ -312,11 +312,11 @@ public abstract class AbstractTaskPool implements Taskpool {
 	/*
 	 * Used to decrement the count of interactive tasks
 	 */
-	public void interactiveTaskCompleted(Future<?> taskID) {
+	public void interactiveTaskCompleted(TaskID<?> taskID) {
 		interactiveTaskCount.decrementAndGet();
 	}
 	
-	protected void startInteractiveTask(Future taskID) {
+	protected void startInteractiveTask(TaskID taskID) {
 		InteractiveThread it = new InteractiveThread(this, taskID);
 		interactiveTaskCount.incrementAndGet();
 		it.start();
@@ -334,7 +334,7 @@ public abstract class AbstractTaskPool implements Taskpool {
 	/*
 	 * There is just one waiting queue, therefore adding to the waiting queue is not schedule-specific.
 	 */
-	protected void enqueueWaitingTask(Future<?> taskID, List<Future<?>> allDependences) {
+	protected void enqueueWaitingTask(TaskID<?> taskID, List<TaskID<?>> allDependences) {
 
 		if (allDependences.size() > 0) {
 			waitingTasks.put(taskID, "");
@@ -352,7 +352,7 @@ public abstract class AbstractTaskPool implements Taskpool {
 	/*
 	 * Removes the specified task off the waiting queue and onto the ready-queue. 
 	 */
-	public void nowReady(Future<?> waiter) {
+	public void nowReady(TaskID<?> waiter) {
 		/*
 		 * remove 'waiter' from the waiting collection, and put it onto the ready queue
 		 * ensures that it is only enqueued once (so that enqueuing it a second time will fail)
@@ -397,11 +397,11 @@ public abstract class AbstractTaskPool implements Taskpool {
 	 * Used to access private task queues by thread pool when initialization.
 	 *  
 	 * */
-	public Map<Integer, LinkedBlockingDeque<Future<?>>> getLocalOneoffTaskQueues() {
+	public Map<Integer, LinkedBlockingDeque<TaskID<?>>> getLocalOneoffTaskQueues() {
 		return localOneoffTaskQueues;
 	}
 	
-	public List<AbstractQueue<Future<?>>> getPrivateTaskQueues() {
+	public List<AbstractQueue<TaskID<?>>> getPrivateTaskQueues() {
 		return privateQueues;
 	}
 }

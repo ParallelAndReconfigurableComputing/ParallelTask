@@ -30,14 +30,14 @@ public class Slot {
 	private boolean isIntermediateResultSlot;
 	private boolean isASetCompleteSlot;
 	
-	private Future<?> taskID = null; 	// this is the task for which this slot is attached to (who should assign it?)
+	private TaskID<?> taskID = null; 	// this is the task for which this slot is attached to (who should assign it?)
 				// cannot be assigned at the time the slot is created (since the TaskID wasn't created just yet)
 	
 	private Functor<?> handler;
-	private FunctorVoidWithOneArg<Future<?>> handlerWithArg;
+	private FunctorVoidWithOneArg<TaskID<?>> handlerWithArg;
 	private FunctorVoid voidHandler;
 	private FunctionInterExceptionHandler exceptionHanlder;
-	private FunctorVoidWithTwoArgs<Future<?>, Object> interimHandler;
+	private FunctorVoidWithTwoArgs<TaskID<?>, Object> interimHandler;
 	
 	private Slot() {
 	}
@@ -50,7 +50,7 @@ public class Slot {
 		this.voidHandler = handler;
 	}
 	
-	public Slot(FunctorVoidWithOneArg<Future<?>> handlerWithArg) {
+	public Slot(FunctorVoidWithOneArg<TaskID<?>> handlerWithArg) {
 		this.handlerWithArg = handlerWithArg;
 	}
 	
@@ -58,7 +58,7 @@ public class Slot {
 		this.exceptionHanlder = handler;
 	}
 	
-	public Slot(FunctorVoidWithTwoArgs<Future<?>, Object> interimHandler) {
+	public Slot(FunctorVoidWithTwoArgs<TaskID<?>, Object> interimHandler) {
 		this.interimHandler = interimHandler;
 		this.isIntermediateResultSlot = true;
 	}
@@ -88,11 +88,11 @@ public class Slot {
 		return interResultType;
 	}
 
-	public Future<?> getTaskID() {
+	public TaskID<?> getTaskID() {
 		return taskID;
 	}
 
-	public void setTaskID(Future<?> taskID) {
+	public void setTaskID(TaskID<?> taskID) {
 		this.taskID = taskID;
 	}
 

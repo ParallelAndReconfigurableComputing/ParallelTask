@@ -41,14 +41,14 @@ import pt.queues.PipelineQueue;
  *
  * @param <T> The task's return type
  */
-public class Future<T> {
+public class TaskID<T> {
 	
 	static protected AtomicInteger nextGlobalID = new AtomicInteger(-1);
 	
 	protected int globalID = -1;
 	protected int relativeID = 0;
 	
-	protected Future<?> enclosingTask = null;	// this is used in case we need to find an asynchrous exception handler
+	protected TaskID<?> enclosingTask = null;	// this is used in case we need to find an asynchrous exception handler
 	
 	private int executeOnThread = ParaTaskHelper.ANY_THREAD_TASK;
 	
@@ -74,10 +74,10 @@ public class Future<T> {
 	
 	private boolean isInteractive = false;
 	
-	private ConcurrentLinkedQueue<Future<?>> waitingTasks = null;	//-- TaskIDs waiting for this task 
-	private ConcurrentHashMap<Future<?>, Object> remainingDependences = null;	//-- TaskIDs this task is waiting for
+	private ConcurrentLinkedQueue<TaskID<?>> waitingTasks = null;	//-- TaskIDs waiting for this task 
+	private ConcurrentHashMap<TaskID<?>, Object> remainingDependences = null;	//-- TaskIDs this task is waiting for
 	
-	protected FutureGroup<?> group = null;
+	protected TaskIDGroup<?> group = null;
 	
 	protected boolean hasSlots = false;
 
@@ -193,7 +193,7 @@ public class Future<T> {
 	 * 
 	 * Thread-safe.
 	 */
-	protected BlockingQueue<T> getOutputQueue(Future<?> requester) {
+	protected BlockingQueue<T> getOutputQueue(TaskID<?> requester) {
 		//if (!isPipeline())
 		return null;
 		//TODO add pipeline support
@@ -331,7 +331,7 @@ public class Future<T> {
 		return cancelRequested.get();
 	}
 	
-	Future(boolean alreadyCompleted) {
+	TaskID(boolean alreadyCompleted) {
 		if (alreadyCompleted) {
 			globalID = nextGlobalID.incrementAndGet();
 			completedLatch = new CountDownLatch(0);
@@ -363,7 +363,7 @@ public class Future<T> {
 	 * 
 	 * */
 	
-	Future() {
+	TaskID() {
 		//globalID = nextGlobalID.incrementAndGet();
 		completedLatch = new CountDownLatch(1);
 		hasCompleted = new AtomicBoolean(false);
@@ -371,7 +371,7 @@ public class Future<T> {
 		changeStatusLock = new ReentrantLock();
 	}
 	
-	Future(Task<T> taskInfo) {
+	TaskID(Task<T> taskInfo) {
 		this();
 		
 		/*if(!taskInfo.isSubTask()){
@@ -432,7 +432,7 @@ public class Future<T> {
 	 * @return	Returns the group associated with this task. If not part of a multi-task, then
 	 * returns <code>null</code>.
 	 */
-	public FutureGroup<?> getGroup() {
+	public TaskIDGroup<?> getGroup() {
 		return group;
 	}
 	
@@ -443,15 +443,15 @@ public class Future<T> {
 		return prevStatus == CREATED;
 	}
 	
-	void setEnclosingTask(Future<?> enclosingTask) {
+	void setEnclosingTask(TaskID<?> enclosingTask) {
 		this.enclosingTask = enclosingTask;
 	}
 	
-	Future<?> getEnclosingTask() {
+	TaskID<?> getEnclosingTask() {
 		return enclosingTask;
 	}
 	
-	void addWaiter(Future<?> waiter) {
+	void addWaiter(TaskID<?> waiter) {
 		if (hasCompleted.get()) {
 			waiter.dependenceFinished(this);
 		} else {
@@ -474,16 +474,16 @@ public class Future<T> {
 	 * if that was the last Task we were waiting for, inform the taskpool
 	 * 
 	 * */
-	void dependenceFinished(Future<?> otherTask) {
+	void dependenceFinished(TaskID<?> otherTask) {
 		remainingDependences.remove(otherTask);
 		if (remainingDependences.isEmpty()) {
 			TaskpoolFactory.getTaskpool().nowReady(this);
 		}
 	}
 	
-	void setRemainingDependences(List<Future<?>> deps) {
+	void setRemainingDependences(List<TaskID<?>> deps) {
 		remainingDependences = new ConcurrentHashMap<>();
-		Iterator<Future<?>> it = deps.iterator();
+		Iterator<TaskID<?>> it = deps.iterator();
 		while (it.hasNext()) {
 			remainingDependences.put(it.next(), "");
 		}
@@ -669,7 +669,7 @@ public class Future<T> {
 		
 		/* dependences (gotta be atomic) */
 		changeStatusLock.lock();
-		Future<?> waiter = null;
+		TaskID<?> waiter = null;
 		
 		if (waitingTasks != null) {
 			while ((waiter = waitingTasks.poll()) != null) {
@@ -685,16 +685,16 @@ public class Future<T> {
 		
 		if (group != null) {
 			
-			Future<?> groupWaiter = null;
+			TaskID<?> groupWaiter = null;
 			
-			if (((Future<?>)group).waitingTasks != null) {
-				ConcurrentLinkedQueue<Future<?>> groupWaitingTaskIDs = ((Future<?>)group).waitingTasks;
+			if (((TaskID<?>)group).waitingTasks != null) {
+				ConcurrentLinkedQueue<TaskID<?>> groupWaitingTaskIDs = ((TaskID<?>)group).waitingTasks;
 				
 				while ((groupWaiter = groupWaitingTaskIDs.poll()) != null) {
 					// removes the waiter from the queue
 					//groupWaiter.dependenceFinished(group);
 					
-					ConcurrentHashMap<Future<?>, Object> groupRemainingDependences = groupWaiter.remainingDependences;
+					ConcurrentHashMap<TaskID<?>, Object> groupRemainingDependences = groupWaiter.remainingDependences;
 									
 					groupRemainingDependences.remove(group);
 					if (groupRemainingDependences.isEmpty()) {
@@ -753,7 +753,7 @@ public class Future<T> {
 		//-- first, try to get handler defined immediately for this task
 		Slot handler = taskInfo.getExceptionHandler(occurredException);
 		
-		Future<?> curTask = this;
+		TaskID<?> curTask = this;
 		//-- while we have not found a handler, and while there are other enclosing tasks
 		while (handler == null && curTask.getEnclosingTask() != null) {
 			curTask = curTask.getEnclosingTask();
@@ -795,7 +795,7 @@ public class Future<T> {
 		return taskInfo.getSlotsToNotify().size();
 	}
 	
-	void setPartOfGroup(FutureGroup<?> group) {
+	void setPartOfGroup(TaskIDGroup<?> group) {
 		this.group = group;
 	}
 	

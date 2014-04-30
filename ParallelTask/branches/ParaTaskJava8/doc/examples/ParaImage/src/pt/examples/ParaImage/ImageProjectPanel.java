@@ -25,8 +25,8 @@ import javax.swing.JScrollPane;
 import javax.swing.UIManager;
 import javax.swing.SwingUtilities;
 
-import pt.runtime.Future;
-import pt.runtime.FutureGroup;
+import pt.runtime.TaskID;
+import pt.runtime.TaskIDGroup;
 import static pt.runtime.Task.*;
 
 public class ImageProjectPanel extends ProjectPanel {
@@ -34,7 +34,7 @@ public class ImageProjectPanel extends ProjectPanel {
 	private JPanel thumbnailsPanel;
 	
     //TASK 
-	private void addToThumbnailsPanelTask(final File file, final Future<Image> large, final Future<Image> square, final Future<Image> med) {
+	private void addToThumbnailsPanelTask(final File file, final TaskID<Image> large, final TaskID<Image> square, final TaskID<Image> med) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -85,29 +85,29 @@ public class ImageProjectPanel extends ProjectPanel {
             if (retValue == JFileChooser.APPROVE_OPTION) {
                 File[] inputImages = fc.getSelectedFiles();
                 if (MainFrame.isParallel) {
-                	FutureGroup<?> grp = new FutureGroup<>(inputImages.length);
+                	TaskIDGroup<?> grp = new TaskIDGroup<>(inputImages.length);
                 	for (int i = 0; i < inputImages.length; i++) {
                 		final int index = i;
                     	//TaskID<Image> idImage = ImageManipulation.getImageFullTask(inputImages[i]);
-                    	Future<Image> idImage = asTask(() -> ImageManipulation.getImageFullTask(inputImages[index])).run();
+                    	TaskID<Image> idImage = asTask(() -> ImageManipulation.getImageFullTask(inputImages[index])).run();
                     	                    	
                     	//TaskID<Image> idMedium = ImageManipulation.getMediumTask(idImage) dependsOn(idImage);
-                    	Future<Image> idMedium = asTask(() -> ImageManipulation.getMediumTask(idImage))
+                    	TaskID<Image> idMedium = asTask(() -> ImageManipulation.getMediumTask(idImage))
                     			.dependsOn(idImage).run();
                     	
                     	//TaskID<Image> idSmall = ImageManipulation.getSmallSquareTask(idImage) dependsOn(idImage);
-                    	Future<Image> idSmall = asTask(() -> ImageManipulation.getSmallSquareTask(idImage))
+                    	TaskID<Image> idSmall = asTask(() -> ImageManipulation.getSmallSquareTask(idImage))
                     			.dependsOn(idImage).run();
                     	
                     	//TaskID id = addToThumbnailsPanelTask(inputImages[i], idImage, idSmall, idMedium) dependsOn(idSmall, idMedium);
-                    	Future<Void> id = asTask(() -> addToThumbnailsPanelTask(inputImages[index], idImage, idSmall, idMedium))
+                    	TaskID<Void> id = asTask(() -> addToThumbnailsPanelTask(inputImages[index], idImage, idSmall, idMedium))
                     			.dependsOn(idSmall, idMedium)
                     			.run();
                     	grp.add(id);
                 	}
                 	
                 	//TaskID finalTask = finishedAddingNewPanelItemsTask() dependsOn(grp);
-                	Future<Void> finalTask = asTask(() -> finishedAddingNewPanelItemsTask()).dependsOn(grp).run();
+                	TaskID<Void> finalTask = asTask(() -> finishedAddingNewPanelItemsTask()).dependsOn(grp).run();
                 } else {
         			setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                 	for (int i = 0; i < inputImages.length; i++) {
@@ -216,8 +216,8 @@ public class ImageProjectPanel extends ProjectPanel {
 					//		notify(panel::setImageTask(TaskID), ImageProjectPanel.this::guiChanged()) 
 					//		dependsOn(panel.getHistory());
 					
-					Future<ImageCombo> id = asTask(() -> ImageManipulation.invertTask(panel))
-							.withHandler(future -> panel.setImageTask((Future<ImageCombo>)future))
+					TaskID<ImageCombo> id = asTask(() -> ImageManipulation.invertTask(panel))
+							.withHandler(future -> panel.setImageTask((TaskID<ImageCombo>)future))
 							.withHandler(ImageProjectPanel.this::guiChanged)
 							.dependsOn(panel.getHistory())
 							.run();
@@ -262,8 +262,8 @@ public class ImageProjectPanel extends ProjectPanel {
 					//		notify(panel::setImageTask(TaskID), ImageProjectPanel.this::guiChanged()) 
 					//		dependsOn(panel.getHistory());
 					
-					Future<ImageCombo> id = asTask(() -> ImageManipulation.blurTask(panel))
-							.withHandler(future -> panel.setImageTask((Future<ImageCombo>)future))
+					TaskID<ImageCombo> id = asTask(() -> ImageManipulation.blurTask(panel))
+							.withHandler(future -> panel.setImageTask((TaskID<ImageCombo>)future))
 							.withHandler(ImageProjectPanel.this::guiChanged)
 							.dependsOn(panel.getHistory())
 							.run();
@@ -299,8 +299,8 @@ public class ImageProjectPanel extends ProjectPanel {
 					//		notify(panel::setImageTask(TaskID), ImageProjectPanel.this::guiChanged()) 
 					//		dependsOn(panel.getHistory());
 					
-					Future<ImageCombo> id = asTask(() -> ImageManipulation.sharpenTask(panel))
-							.withHandler(future -> panel.setImageTask((Future<ImageCombo>) future))
+					TaskID<ImageCombo> id = asTask(() -> ImageManipulation.sharpenTask(panel))
+							.withHandler(future -> panel.setImageTask((TaskID<ImageCombo>) future))
 							.withHandler(ImageProjectPanel.this::guiChanged)
 							.dependsOn(panel.getHistory())
 							.run();
@@ -358,8 +358,8 @@ public class ImageProjectPanel extends ProjectPanel {
 					//		notify(panel::setImageTask(TaskID), ImageProjectPanel.this::guiChanged()) 
 					//		dependsOn(panel.getHistory());
 					
-					Future<ImageCombo> id = asTask(() -> ImageManipulation.edgeDetectTask(panel))
-							.withHandler(future -> panel.setImageTask((Future<ImageCombo>)future))
+					TaskID<ImageCombo> id = asTask(() -> ImageManipulation.edgeDetectTask(panel))
+							.withHandler(future -> panel.setImageTask((TaskID<ImageCombo>)future))
 							.withHandler(ImageProjectPanel.this::guiChanged)
 							.dependsOn(panel.getHistory())
 							.run();

@@ -2,33 +2,33 @@ package pt.queues;
 
 import java.util.concurrent.LinkedBlockingDeque;
 
-import pt.runtime.Future;
+import pt.runtime.TaskID;
 
 public class PipelineQueue<E> extends LinkedBlockingDeque<E> {
 
 	private static final long serialVersionUID = -838176089092483753L;
 
-	private Future head;
-	private Future tail;
+	private TaskID head;
+	private TaskID tail;
 
-	public PipelineQueue(Future head, Future tail) {
+	public PipelineQueue(TaskID head, TaskID tail) {
 		this.head = head;
 		this.tail = tail;
 	}
 	
-	public Future getHeadTask() {
+	public TaskID getHeadTask() {
 		return head;
 	}
 	
-	public Future getTailTask() {
+	public TaskID getTailTask() {
 		return tail;
 	}
 	
-	public void setHeadTask(Future tid) {
+	public void setHeadTask(TaskID tid) {
 		head = tid;
 	}
 	
-	public void setTailTask(Future tid) {
+	public void setTailTask(TaskID tid) {
 		tail = tid;
 	}
 }

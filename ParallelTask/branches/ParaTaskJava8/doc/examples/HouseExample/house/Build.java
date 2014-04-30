@@ -19,7 +19,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
 
-import pt.runtime.Future;
+import pt.runtime.TaskID;
 import pt.runtime.ParaTask;
 import static pt.runtime.Task.*;
 
@@ -79,13 +79,13 @@ public class Build extends JFrame implements ActionListener {
 		} else if (btnParSeq.getText().equals(concurrent)) {
 			currentJob = "Concurrent";
 			//TaskID id = houseApplet.buildSingleTask(colorWalls, colorRoof) notify(finishedBuilding());
-			Future id = asTask(() -> houseApplet.buildSingleTask(colorWalls, colorRoof))
+			TaskID id = asTask(() -> houseApplet.buildSingleTask(colorWalls, colorRoof))
 					.withHandler(this::finishedBuilding).run();
 			
 		} else {
 			currentJob = "Parallel";
 			//TaskID id = houseApplet.buildTask(colorWalls, colorRoof) notify(finishedBuilding());
-			Future id = asTask(() -> houseApplet.buildTask(colorWalls, colorRoof))
+			TaskID id = asTask(() -> houseApplet.buildTask(colorWalls, colorRoof))
 					.withHandler(this::finishedBuilding).run();
 		}
 	}

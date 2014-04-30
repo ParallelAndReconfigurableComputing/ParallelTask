@@ -23,9 +23,9 @@ import java.util.concurrent.ExecutionException;
 
 public class InteractiveThread extends TaskThread {
 
-	private Future task = null;
+	private TaskID task = null;
 	
-	public InteractiveThread(Taskpool taskpool, Future task) {
+	public InteractiveThread(Taskpool taskpool, TaskID task) {
 		/* interactive threads don't need access to the taskpool */
 		super(taskpool);
 		this.task = task;

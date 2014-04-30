@@ -15,7 +15,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import javax.swing.JApplet;
 import javax.swing.SwingUtilities;
 
-import pt.runtime.Future;
+import pt.runtime.TaskID;
 import static pt.runtime.Task.*;
 
 public class House extends JApplet {
@@ -73,21 +73,21 @@ public class House extends JApplet {
 		initialiseMaterial();
 		
 		//TaskID idFoundation = buildAllTask(foundation);
-		Future idFoundation = asMultiTask(() -> buildAllTask(foundation)).run();
+		TaskID idFoundation = asMultiTask(() -> buildAllTask(foundation)).run();
 		//TaskID idWalls = buildAllTask(wallSiding) dependsOn(idFoundation);
-		Future idWalls = asMultiTask(() -> buildAllTask(wallSiding))
+		TaskID idWalls = asMultiTask(() -> buildAllTask(wallSiding))
 				.dependsOn(idFoundation).run();
 		//TaskID idRoof = buildAllTask(roofTiles) dependsOn(idWalls);
-		Future idRoof = asMultiTask(() -> buildAllTask(roofTiles))
+		TaskID idRoof = asMultiTask(() -> buildAllTask(roofTiles))
 				.dependsOn(idWalls).run();
 		//TaskID idDoor = buildItemTask(door) dependsOn(idWalls);
-		Future idDoor = asTask(() -> buildItemTask(door))
+		TaskID idDoor = asTask(() -> buildItemTask(door))
 				.dependsOn(idWalls).run();
 		//TaskID idWindows = buildAllTask(windows) dependsOn(idWalls);
-		Future idWindows = asMultiTask(() -> buildAllTask(windows))
+		TaskID idWindows = asMultiTask(() -> buildAllTask(windows))
 				.dependsOn(idWalls).run();
 		//TaskID idSign = buildItemTask(forSaleSign) dependsOn(idRoof, idDoor, idWindows);
-		Future idSign = asTask(() -> buildItemTask(forSaleSign))
+		TaskID idSign = asTask(() -> buildItemTask(forSaleSign))
 				.dependsOn(idRoof, idDoor, idWindows).run();
 		
         try {

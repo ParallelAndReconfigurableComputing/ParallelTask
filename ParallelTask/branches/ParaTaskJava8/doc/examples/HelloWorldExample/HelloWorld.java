@@ -3,8 +3,8 @@ import static pt.runtime.Task.*;
 import java.util.concurrent.ExecutionException;
 
 import pt.runtime.CurrentTask;
-import pt.runtime.Future;
-import pt.runtime.FutureGroup;
+import pt.runtime.TaskID;
+import pt.runtime.TaskIDGroup;
 
 public class HelloWorld {
 	
@@ -20,26 +20,26 @@ public class HelloWorld {
 		
 		System.out.println("(2)");
 		
-		Future<Void> id1 = asTask(HelloWorld::oneoff_hello).run();
+		TaskID<Void> id1 = asTask(HelloWorld::oneoff_hello).run();
 		
 		System.out.println("(3)");
 		
 		HelloWorld hw = new HelloWorld();
 		
-		Future<Void> id2 = asMultiTask(HelloWorld::multi_hello, 8)
+		TaskID<Void> id2 = asMultiTask(HelloWorld::multi_hello, 8)
 				.withHandler(hw::notifyFunc).run();
 
 		System.out.println("(4)");
 		
-		Future<Void> id3 = asIOTask(HelloWorld::interactive_hello).run();
+		TaskID<Void> id3 = asIOTask(HelloWorld::interactive_hello).run();
 		
 		System.out.println("(5)");
 		
-		Future<Void> id4 = asTask(new HelloWorld()::oneoff_hello2).run();
+		TaskID<Void> id4 = asTask(new HelloWorld()::oneoff_hello2).run();
 		
 		System.out.println("(6)");
 		
-		FutureGroup<Void> g = new FutureGroup<>(4);
+		TaskIDGroup<Void> g = new TaskIDGroup<>(4);
 		g.add(id1);
 		g.add(id2);
 		g.add(id3);

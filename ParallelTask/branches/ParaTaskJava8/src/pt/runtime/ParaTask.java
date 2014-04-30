@@ -235,7 +235,7 @@ public class ParaTask {
 		
 			try {
 				ParaTaskHelper.setCompleteSlot = 
-					ParaTaskHelper.class.getDeclaredMethod("setComplete", new Class[] {Future.class});
+					ParaTaskHelper.class.getDeclaredMethod("setComplete", new Class[] {TaskID.class});
 			} catch (SecurityException e) {
 				e.printStackTrace();
 			} catch (NoSuchMethodException e) {
@@ -289,7 +289,7 @@ public class ParaTask {
 	 * Flattens a list of TaskIDs. Only has an effect if some of the TaskIDs were actually TaskIDGroups.
 	 * @param list	Input list of TaskIDs (with potentially some TaskIDGroups)
 	 * @return	A list containing only TaskIDs (i.e. expanding the TaskIDGroups)
-	 * @see #allTasksInGroup(FutureGroup)
+	 * @see #allTasksInGroup(TaskIDGroup)
 	 * 
 	 * @author Kingsley
 	 * @date 2014/04/08
@@ -300,10 +300,10 @@ public class ParaTask {
 	 * then all its sub-tasks have not been created yet. 
 	 * 
 	 */
-	public static List<Future<?>> allTasksInList(List<Future<?>> list) {
-		ArrayList<Future<?>> result = new ArrayList<>();
+	public static List<TaskID<?>> allTasksInList(List<TaskID<?>> list) {
+		ArrayList<TaskID<?>> result = new ArrayList<>();
 		
-		Iterator<Future<?>> it = list.iterator();
+		Iterator<TaskID<?>> it = list.iterator();
 		while (it.hasNext()) {
 			
 			/*
@@ -325,14 +325,14 @@ public class ParaTask {
 	 * @see #allTasksInList(ArrayList) 
 	 * @return the TaskIDs inside <code>group</code> placed inside a new ArrayList
 	 * */
-	public static List<Future<?>> allTasksInGroup(FutureGroup<?> group) {
-		ArrayList<Future<?>> list = new ArrayList<>();
+	public static List<TaskID<?>> allTasksInGroup(TaskIDGroup<?> group) {
+		ArrayList<TaskID<?>> list = new ArrayList<>();
 		 
-		Iterator<Future<?>> it = group.groupMembers();
+		Iterator<TaskID<?>> it = group.groupMembers();
 		while (it.hasNext()) {
-			Future<?> id = it.next();
-			if (id instanceof FutureGroup) {
-				list.addAll(allTasksInGroup((FutureGroup<?>)id));
+			TaskID<?> id = it.next();
+			if (id instanceof TaskIDGroup) {
+				list.addAll(allTasksInGroup((TaskIDGroup<?>)id));
 			} else {
 				list.add(id);
 			}

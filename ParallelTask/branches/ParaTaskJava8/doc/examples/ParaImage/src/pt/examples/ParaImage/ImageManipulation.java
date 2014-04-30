@@ -12,7 +12,7 @@ import java.awt.image.Kernel;
 import java.awt.image.LookupOp;
 import java.awt.image.ShortLookupTable;
 
-import pt.runtime.Future;
+import pt.runtime.TaskID;
 
 public class ImageManipulation {
 	
@@ -90,7 +90,7 @@ public class ImageManipulation {
     }
     
     //TASK 
-    public static Image getSmallSquareTask(Future<Image> image) {
+    public static Image getSmallSquareTask(TaskID<Image> image) {
     	try {
     		return getSmallSquare(image.getReturnResult());
 		} catch(Exception e) {
@@ -100,7 +100,7 @@ public class ImageManipulation {
     }
     
     //TASK 
-    public static Image getMediumTask(Future<Image> image) {
+    public static Image getMediumTask(TaskID<Image> image) {
     	try {
     		return getMedium(image.getReturnResult());
 		} catch(Exception e) {

@@ -30,7 +30,7 @@ public interface Taskpool {
 	* now been met and the task is ready to be scheduled for execution. 
 	* @param taskID
 	*/
-	public void nowReady(Future<?> taskID);
+	public void nowReady(TaskID<?> taskID);
 	
 	/**
 	* Returns the count of currently active interactive tasks. This is usually to know how many threads there are.
@@ -42,7 +42,7 @@ public interface Taskpool {
 	* Used to decrement the count of interactive tasks
 	* @param taskID	The task that has just completed
 	*/
-	public void interactiveTaskCompleted(Future<?> taskID);
+	public void interactiveTaskCompleted(TaskID<?> taskID);
 	
 	/**
 	* Enqueues the specified task, whose information is contained in the TaskInfo. It then returns a TaskID
@@ -50,7 +50,7 @@ public interface Taskpool {
 	* @param taskinfo
 	* @return
 	*/
-	public <T> Future<T> enqueue(Task<T> taskinfo);
+	public <T> TaskID<T> enqueue(Task<T> taskinfo);
 	
 	/**
 	* Enqueues the specified TaskInfo as a multi-task, creates "count" inner tasks and places them in a TaskIDGroup
@@ -62,20 +62,20 @@ public interface Taskpool {
 	* 
 	* */
 	
-	public <T> FutureGroup<T> enqueueMulti(Task<T> taskinfo, int count);
+	public <T> TaskIDGroup<T> enqueueMulti(Task<T> taskinfo, int count);
 	
 	/**
 	* The worker thread polls the task pool for a task.. If there isn't one, then it returns 
 	* immediately (returns null in such a case).
 	* @return
 	*/
-	public Future<?> workerPollNextTask();	
+	public TaskID<?> workerPollNextTask();	
 	
 	/**
 	*	The worker thread blocks until it gets a task to execute.  
 	* @return
 	*/
-	public Future<?> workerTakeNextTask();
+	public TaskID<?> workerTakeNextTask();
 	
 	public boolean executeSynchronously(int cutoff);	
 	
@@ -89,7 +89,7 @@ public interface Taskpool {
 	 * Used to access private task queues by thread pool when initialization.
 	 *  
 	 * */
-	public Map<Integer, LinkedBlockingDeque<Future<?>>> getLocalOneoffTaskQueues();
+	public Map<Integer, LinkedBlockingDeque<TaskID<?>>> getLocalOneoffTaskQueues();
 	
-	public List<AbstractQueue<Future<?>>> getPrivateTaskQueues();
+	public List<AbstractQueue<TaskID<?>>> getPrivateTaskQueues();
 }
