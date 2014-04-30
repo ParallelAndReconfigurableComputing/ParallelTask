@@ -89,25 +89,25 @@ public class ImageProjectPanel extends ProjectPanel {
                 	for (int i = 0; i < inputImages.length; i++) {
                 		final int index = i;
                     	//TaskID<Image> idImage = ImageManipulation.getImageFullTask(inputImages[i]);
-                    	TaskID<Image> idImage = asTask(() -> ImageManipulation.getImageFullTask(inputImages[index])).run();
+                    	TaskID<Image> idImage = asTask(() -> ImageManipulation.getImageFullTask(inputImages[index])).start();
                     	                    	
                     	//TaskID<Image> idMedium = ImageManipulation.getMediumTask(idImage) dependsOn(idImage);
                     	TaskID<Image> idMedium = asTask(() -> ImageManipulation.getMediumTask(idImage))
-                    			.dependsOn(idImage).run();
+                    			.dependsOn(idImage).start();
                     	
                     	//TaskID<Image> idSmall = ImageManipulation.getSmallSquareTask(idImage) dependsOn(idImage);
                     	TaskID<Image> idSmall = asTask(() -> ImageManipulation.getSmallSquareTask(idImage))
-                    			.dependsOn(idImage).run();
+                    			.dependsOn(idImage).start();
                     	
                     	//TaskID id = addToThumbnailsPanelTask(inputImages[i], idImage, idSmall, idMedium) dependsOn(idSmall, idMedium);
                     	TaskID<Void> id = asTask(() -> addToThumbnailsPanelTask(inputImages[index], idImage, idSmall, idMedium))
                     			.dependsOn(idSmall, idMedium)
-                    			.run();
+                    			.start();
                     	grp.add(id);
                 	}
                 	
                 	//TaskID finalTask = finishedAddingNewPanelItemsTask() dependsOn(grp);
-                	TaskID<Void> finalTask = asTask(() -> finishedAddingNewPanelItemsTask()).dependsOn(grp).run();
+                	TaskID<Void> finalTask = asTask(() -> finishedAddingNewPanelItemsTask()).dependsOn(grp).start();
                 } else {
         			setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                 	for (int i = 0; i < inputImages.length; i++) {
@@ -220,7 +220,7 @@ public class ImageProjectPanel extends ProjectPanel {
 							.withHandler(future -> panel.setImageTask((TaskID<ImageCombo>)future))
 							.withHandler(ImageProjectPanel.this::guiChanged)
 							.dependsOn(panel.getHistory())
-							.run();
+							.start();
 					panel.addToHistory(id);
 					
 					// grp.add(id) ...
@@ -266,7 +266,7 @@ public class ImageProjectPanel extends ProjectPanel {
 							.withHandler(future -> panel.setImageTask((TaskID<ImageCombo>)future))
 							.withHandler(ImageProjectPanel.this::guiChanged)
 							.dependsOn(panel.getHistory())
-							.run();
+							.start();
 					
 					panel.addToHistory(id);
 					
@@ -303,7 +303,7 @@ public class ImageProjectPanel extends ProjectPanel {
 							.withHandler(future -> panel.setImageTask((TaskID<ImageCombo>) future))
 							.withHandler(ImageProjectPanel.this::guiChanged)
 							.dependsOn(panel.getHistory())
-							.run();
+							.start();
 					
 					panel.addToHistory(id);
 					// grp.add(id) ...
@@ -362,7 +362,7 @@ public class ImageProjectPanel extends ProjectPanel {
 							.withHandler(future -> panel.setImageTask((TaskID<ImageCombo>)future))
 							.withHandler(ImageProjectPanel.this::guiChanged)
 							.dependsOn(panel.getHistory())
-							.run();
+							.start();
 					
 					panel.addToHistory(id);
 					// grp.add(id) ...

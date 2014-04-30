@@ -44,7 +44,7 @@ public class ExperimentJava8 {
         // 2. asTask, asIOTask are are static function in Task.java,
         //   and they are imported by "import static pt.experiments.Task.*;",
         //   then we can call them in other classes directly as follows:
-		Future id1 = asTask(this::task).run();
+		Future id1 = asTask(this::task).start();
 
         // 1. "() -> taskInt(3)" is a lambda in Java 8.
         // 2. asIOTask can be removed, if we use annotations like @Task(type="IOTask"):
@@ -52,16 +52,16 @@ public class ExperimentJava8 {
         //  public int taskInt(int i) { ... }
 		Future id2 = asIOTask(() -> taskInt(3))
 				.dependsOn(id1)     // set up a dependency this way
-				.run();
+				.start();
 		
 		Future id3 = asTask(this::task)
 				.dependsOn(id1, id2) // multiple dependencies
-				.run();
+				.start();
 		
 		ExperimentJava8 anotherObj = new ExperimentJava8();
 		Future id4 = asTask(() -> anotherObj.task())
 				.dependsOn(id2)
-				.run();
+				.start();
 
         // we can also specify a Method Reference of other object:
         // anotherObj::task, which is exact the same as the notify clause of ParaTask
@@ -75,6 +75,6 @@ public class ExperimentJava8 {
 			.asyncCatch(RuntimeException.class, e -> handleException(e)) //handle an exception
             .asyncCatch(IOException.class, ex -> handleIOException(ex)) // handle another exception
             .asyncCatch(IOException.class, this::handleException2)
-			.run();
+			.start();
 	}
 }

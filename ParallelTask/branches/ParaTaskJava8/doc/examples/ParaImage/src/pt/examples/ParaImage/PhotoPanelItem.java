@@ -125,7 +125,7 @@ public class PhotoPanelItem extends JPanel implements ActionListener {
 				//TaskID<Image> id = Search.getMediumImageTask(photo) notify(downloadCompleteTask(TaskID));
 				TaskID<Image> id = asIOTask(() -> Search.getMediumImageTask(photo))
 						.withHandler(future -> downloadCompleteTask((TaskID<Image>)future))
-						.run();
+						.start();
 			} else {
         		setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 				Image result = Search.getMediumImage(photo);

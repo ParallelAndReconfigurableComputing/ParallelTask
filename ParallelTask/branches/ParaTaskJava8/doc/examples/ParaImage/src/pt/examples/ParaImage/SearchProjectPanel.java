@@ -285,7 +285,7 @@ public class SearchProjectPanel extends ProjectPanel implements ActionListener {
 			currentSearch = asIOTask(() -> Search.searchTask(search, resPP, currentOffset))
 					.withHandler(this::finishedSearch)
 					.withInterimHandler((future, result) -> receiveIntermediate((TaskID)future, (PhotoWithImage)result))
-					.run();
+					.start();
 				
 		} else {
 		

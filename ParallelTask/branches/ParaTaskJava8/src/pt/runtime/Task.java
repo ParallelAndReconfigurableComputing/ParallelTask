@@ -307,7 +307,7 @@ public class Task<T> {
 		return this;
 	}
 
-	public TaskID<T> run() {
+	public TaskID<T> start() {
 		if(this.taskCount == 1)
 			return TaskpoolFactory.getTaskpool().enqueue(this);
 		else

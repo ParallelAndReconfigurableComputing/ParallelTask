@@ -20,22 +20,22 @@ public class HelloWorld {
 		
 		System.out.println("(2)");
 		
-		TaskID<Void> id1 = asTask(HelloWorld::oneoff_hello).run();
+		TaskID<Void> id1 = asTask(HelloWorld::oneoff_hello).start();
 		
 		System.out.println("(3)");
 		
 		HelloWorld hw = new HelloWorld();
 		
 		TaskID<Void> id2 = asMultiTask(HelloWorld::multi_hello, 8)
-				.withHandler(hw::notifyFunc).run();
+				.withHandler(hw::notifyFunc).start();
 
 		System.out.println("(4)");
 		
-		TaskID<Void> id3 = asIOTask(HelloWorld::interactive_hello).run();
+		TaskID<Void> id3 = asIOTask(HelloWorld::interactive_hello).start();
 		
 		System.out.println("(5)");
 		
-		TaskID<Void> id4 = asTask(new HelloWorld()::oneoff_hello2).run();
+		TaskID<Void> id4 = asTask(new HelloWorld()::oneoff_hello2).start();
 		
 		System.out.println("(6)");
 		

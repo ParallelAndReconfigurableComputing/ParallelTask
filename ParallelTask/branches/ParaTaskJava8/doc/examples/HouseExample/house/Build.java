@@ -80,13 +80,13 @@ public class Build extends JFrame implements ActionListener {
 			currentJob = "Concurrent";
 			//TaskID id = houseApplet.buildSingleTask(colorWalls, colorRoof) notify(finishedBuilding());
 			TaskID id = asTask(() -> houseApplet.buildSingleTask(colorWalls, colorRoof))
-					.withHandler(this::finishedBuilding).run();
+					.withHandler(this::finishedBuilding).start();
 			
 		} else {
 			currentJob = "Parallel";
 			//TaskID id = houseApplet.buildTask(colorWalls, colorRoof) notify(finishedBuilding());
 			TaskID id = asTask(() -> houseApplet.buildTask(colorWalls, colorRoof))
-					.withHandler(this::finishedBuilding).run();
+					.withHandler(this::finishedBuilding).start();
 		}
 	}
 	

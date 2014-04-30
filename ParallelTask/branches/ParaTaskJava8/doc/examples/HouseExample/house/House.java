@@ -73,22 +73,22 @@ public class House extends JApplet {
 		initialiseMaterial();
 		
 		//TaskID idFoundation = buildAllTask(foundation);
-		TaskID idFoundation = asMultiTask(() -> buildAllTask(foundation)).run();
+		TaskID idFoundation = asMultiTask(() -> buildAllTask(foundation)).start();
 		//TaskID idWalls = buildAllTask(wallSiding) dependsOn(idFoundation);
 		TaskID idWalls = asMultiTask(() -> buildAllTask(wallSiding))
-				.dependsOn(idFoundation).run();
+				.dependsOn(idFoundation).start();
 		//TaskID idRoof = buildAllTask(roofTiles) dependsOn(idWalls);
 		TaskID idRoof = asMultiTask(() -> buildAllTask(roofTiles))
-				.dependsOn(idWalls).run();
+				.dependsOn(idWalls).start();
 		//TaskID idDoor = buildItemTask(door) dependsOn(idWalls);
 		TaskID idDoor = asTask(() -> buildItemTask(door))
-				.dependsOn(idWalls).run();
+				.dependsOn(idWalls).start();
 		//TaskID idWindows = buildAllTask(windows) dependsOn(idWalls);
 		TaskID idWindows = asMultiTask(() -> buildAllTask(windows))
-				.dependsOn(idWalls).run();
+				.dependsOn(idWalls).start();
 		//TaskID idSign = buildItemTask(forSaleSign) dependsOn(idRoof, idDoor, idWindows);
 		TaskID idSign = asTask(() -> buildItemTask(forSaleSign))
-				.dependsOn(idRoof, idDoor, idWindows).run();
+				.dependsOn(idRoof, idDoor, idWindows).start();
 		
         try {
         	idSign.waitTillFinished();
