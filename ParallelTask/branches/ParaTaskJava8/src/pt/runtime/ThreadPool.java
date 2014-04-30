@@ -3,24 +3,18 @@
  */
 package pt.runtime;
 
-import java.lang.reflect.Method;
 import java.util.AbstractQueue;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.TreeMap;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.locks.ReentrantLock;
 
-import pt.runtime.ParaTask;
 import pt.runtime.TaskID;
 import pt.runtime.Taskpool;
 import pt.runtime.WorkerThread;

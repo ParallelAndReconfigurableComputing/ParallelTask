@@ -21,7 +21,6 @@ package pt.runtime;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
@@ -29,8 +28,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
-
-import pt.queues.PipelineQueue;
 
 /**
  * A future object representing a task invocation. As well as containing the return result for non-<code>void</code> tasks, 
@@ -86,14 +83,6 @@ public class TaskID<T> {
 	static final protected int STARTED = 2;
 	protected AtomicInteger status = new AtomicInteger(CREATED);
 	
-	// pipeline stuff
-	// TODO add pipeline support
-	/*
-	private List<PipelineQueue<E>> outputQueues = new ArrayList<PipelineQueue<E>>();
-	private boolean firstQueueClaimed = false;
-	private PipelineThread pipelineThread = null; 
-	*/
-	
 	/**
 	 * 
 	 * @Author  Kingsley
@@ -147,154 +136,6 @@ public class TaskID<T> {
 	 */
 	public boolean isInteractive() {
 		return isInteractive;
-	}
-	
-	/**
-	 * Checks to see if this task if a part of a pipeline.
-	 */
-	public boolean isPipeline() {
-		if (this.taskInfo == null)
-			return false;
-		else
-			return taskInfo.isPipeline();
-	}
-	
-	/**
-	 * Assigns the thread for this stage of the pipeline. Used for cancelling
-	 * the stage via PipelineThread.cancel().
-	 */
-	/*
-	//TODO add pipeline support
-	protected void setPipelineThread(PipelineThread pt) {
-		if (!isPipeline()) 
-			throw new IllegalStateException("trying to assign PipelineThread to non-pipeline task");
-		
-		this.pipelineThread = pt;
-	}
-	*/
-	
-	/**
-	 * If this is a pipeline stage, get a queue from which all future results
-	 * can be retrieved. If not, returns null.
-	 * 
-	 * Thread-safe.
-	 */
-	public BlockingQueue<T> getOutputQueue() {
-		return getOutputQueue(null);
-	}
-	
-	/**
-	 * If this is a pipeline stage, get a queue from which all future results
-	 * can be retrieved. If not, returns null.
-	 * 
-	 * Intended for internal use only. Must pass the TaskID of the task
-	 * requesting the queue in order to associate the queue with the tasks it
-	 * connects.
-	 * 
-	 * Thread-safe.
-	 */
-	protected BlockingQueue<T> getOutputQueue(TaskID<?> requester) {
-		//if (!isPipeline())
-		return null;
-		//TODO add pipeline support
-		/*
-		synchronized(outputQueues) {
-			if (!firstQueueClaimed) {
-				firstQueueClaimed = true;
-				if (outputQueues.size() == 0) {
-					PipelineQueue<E> queue = new PipelineQueue<E>(this, requester);
-					outputQueues.add(queue);
-					return queue;
-				} else {
-					PipelineQueue<E> queue = outputQueues.get(0);
-					queue.setTailTask(requester);
-					return queue;
-				}
-			} else {
-				PipelineQueue<E> queue = new PipelineQueue<E>(this, requester);
-				outputQueues.add(queue);
-				return queue;
-			}
-		}
-		*/
-	}
-	
-	/**
-	 * Unregisters a queue from a pipeline stage so that new results are no
-	 * longer written to it. Also, releases the reference so it can be GC'd.
-	 * 
-	 * For internal use only.
-	 * 
-	 * Thread-safe.
-	 */
-	protected void unregisterOutputQueue(PipelineQueue<T> queue) {
-		//TODO add pipeline support
-		/*
-		if (!isPipeline()) {
-			// maybe replace this with "return;"
-			throw new IllegalStateException("trying to remove a queue from non-pipeline");
-		}
-		
-		synchronized(outputQueues) {
-			if (!outputQueues.contains(queue))
-				throw new IllegalArgumentException(pipelineThread.getName() + ": queue to unregister not in outputQueues");
-			
-			outputQueues.remove(queue);
-			
-			// prevent this from being called again
-			queue.setHeadTask(null);
-			
-			// reset firstQueueClaimed flag
-			if (outputQueues.size() == 0)
-				firstQueueClaimed = false;
-		}
-		*/
-	}
-	
-	/**
-	 * Write something into the output queue(s) handled by this TaskID. Only
-	 * existing queues will get the object.
-	 * 
-	 * Thread-safe.
-	 */
-	protected void writeToOutputQueues(T value) {
-		//TODO add pipeline support
-		/*
-		if (!isPipeline()) {
-			// maybe replace this with "return;"
-			throw new IllegalStateException("trying to write to output queue when not a pipeline");
-		}
-		
-		synchronized(outputQueues) {
-			if (outputQueues.size() == 0) {
-				outputQueues.add(new PipelineQueue<E>(this, null));
-			}
-			
-			for (PipelineQueue<E> queue : outputQueues) {
-				queue.add(value);
-			}
-		}
-		*/
-	}
-	
-	/**
-	 * For internal use only. Cancel all child stages if this is a pipeline.
-	 */
-	//TODO add pipeline support
-	protected void cancelChildTasks() {
-		/*
-		if (!isPipeline()) {
-			// maybe replace this with "return;"
-			throw new IllegalStateException("trying to cancel child stages when not a pipeline");
-		}
-		
-		synchronized(outputQueues) {
-			for (PipelineQueue<E> queue : outputQueues) {
-				if (queue.getTailTask() != null)
-					queue.getTailTask().cancelAttempt();
-			}
-		}
-		*/
 	}
 	
 	/**
@@ -404,16 +245,6 @@ public class TaskID<T> {
 	 */
 	public boolean cancelAttempt() {
 		cancelRequested.set(true);
-		
-		//TODO add pipeline support
-		/*
-		if (isPipeline()) {
-			// this tells PipelineThread that some parent has requested cancel
-			// it can be called more than once because of multiple parent stages
-			pipelineThread.cancel();
-			cancelled = true;
-		}
-		*/
 		
 		int prevStatus = status.getAndSet(CANCELLED);
 		

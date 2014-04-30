@@ -54,7 +54,6 @@ public class Task<T> {
 	private int[] queueArgIndexes = new int[] {};
 
 	private boolean hasAnySlots = false;
-	private boolean isPipeline = false;
 
 	// -- Should always ensure that the registered exceptions are kept lined up
 	// with the handlers
@@ -93,20 +92,12 @@ public class Task<T> {
 		return this;
 	}
 
-	public boolean isPipeline() {
-		return isPipeline;
-	}
-
 	public int[] getTaskIdArgIndexes() {
 		return taskIdArgIndexes;
 	}
 
 	public int[] getQueueArgIndexes() {
 		return queueArgIndexes;
-	}
-
-	public void setIsPipeline(boolean isPipeline) {
-		this.isPipeline = isPipeline;
 	}
 
 	public void setTaskIdArgIndexes(int... indexes) {
@@ -296,14 +287,6 @@ public class Task<T> {
 
 	public Task<T> dependsOn(TaskID<?>... taskIDs) {
 		this.dependences = Arrays.asList(taskIDs);
-
-		for (TaskID<?> t : taskIDs) {
-			if (t.isPipeline()) {
-				isPipeline = true;
-				break;
-			}
-		}
-
 		return this;
 	}
 
