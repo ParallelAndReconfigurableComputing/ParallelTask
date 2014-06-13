@@ -30,7 +30,7 @@ public class Slot {
 	private boolean isIntermediateResultSlot;
 	private boolean isASetCompleteSlot;
 	
-	private TaskID<?> taskID = null; 	// this is the task for which this slot is attached to (who should assign it?)
+	protected TaskID<?> taskID = null; 	// this is the task for which this slot is attached to (who should assign it?)
 				// cannot be assigned at the time the slot is created (since the TaskID wasn't created just yet)
 	
 	private Functor<?> handler;
@@ -39,7 +39,7 @@ public class Slot {
 	private FunctionInterExceptionHandler exceptionHanlder;
 	private FunctorVoidWithTwoArgs<TaskID<?>, Object> interimHandler;
 	
-	private Slot() {
+	protected Slot() {
 	}
 	
 	public Slot(Functor<?> handler) {

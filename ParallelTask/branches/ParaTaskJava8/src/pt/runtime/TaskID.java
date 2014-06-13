@@ -365,6 +365,16 @@ public class TaskID<T> {
 		return returnResult;
 	}
 	
+	public T getResult() {
+		T result = null;
+		try {
+			result = getReturnResult();
+		} catch (Exception e) {
+			throw new ParaTaskRuntimeException(e);
+		}
+		return result;
+	}
+	
 	/**
 	 * Blocks the current thread until the task finishes. If the blocking thread is a 
 	 * ParaTask worker thread, then other tasks are executed until this task completes. 

@@ -41,6 +41,9 @@ public class Task<T> {
 	// for ParaTask in Java 8
 	private Functor<?> lambda;
 	private FunctorVoid lambdaVoid;
+	private FunctorWithOneArg<?> lambdaWithOneArg;
+	
+	
 	
 	private int taskCount = 1;
 
@@ -48,6 +51,8 @@ public class Task<T> {
 	private List<Slot> slotsToNotify;
 	private List<Slot> interSlotsToNotify;
 	private List<TaskID<?>> dependences;
+	
+	private List<TaskID<?>> pipelineArgs;
 
 	// for implicit results/dequeuing
 	private int[] taskIdArgIndexes = new int[] {};
@@ -78,6 +83,10 @@ public class Task<T> {
 
 	private Task(FunctorVoid lambda) {
 		this.lambdaVoid = lambda;
+	}
+	
+	private Task(FunctorWithOneArg<?> fun) {
+		this.lambdaWithOneArg = fun;
 	}
 
 	public boolean hasAnySlots() {
@@ -230,6 +239,10 @@ public class Task<T> {
 		return new Task<Void>(fun);
 	}
 	
+	public static <T> Task<T> asTask(FunctorWithOneArg<T> fun) {
+		return new Task<T>(fun);
+	}
+	
 	public static <T> Task<T> asMultiTask(Functor<T> fun, int count) {
 		return new Task<T>(fun).setCount(count);
 	}
@@ -270,6 +283,14 @@ public class Task<T> {
 		return this;
 	}
 	
+	public Task<T> withPipelineHandler(FunctorVoidWithOneArg<T> handler) {
+		if (slotsToNotify == null)
+			slotsToNotify = new ArrayList<Slot>();
+		this.slotsToNotify.add(new PipelineSlot<T>(handler));
+		hasAnySlots = true;
+		return this;
+	}
+	
 	public Task<T> withHandler(FunctorVoid handler) {
 		if (slotsToNotify == null)
 			slotsToNotify = new ArrayList<Slot>();
@@ -286,7 +307,21 @@ public class Task<T> {
 	}
 
 	public Task<T> dependsOn(TaskID<?>... taskIDs) {
-		this.dependences = Arrays.asList(taskIDs);
+		if(this.dependences == null)
+			this.dependences = new ArrayList<>();
+		this.dependences.addAll(Arrays.asList(taskIDs));
+		return this;
+	}
+	
+	public Task<T> dependsOnAsArg(TaskID<?> taskID) {
+		if(this.dependences == null)
+			this.dependences = new ArrayList<>();
+		this.dependences.add(taskID);
+		
+		if(this.pipelineArgs == null)
+			this.pipelineArgs = new ArrayList<>();
+		this.pipelineArgs.add(taskID);
+		
 		return this;
 	}
 
@@ -300,9 +335,12 @@ public class Task<T> {
 	Object execute() {
 		if (this.lambda != null)
 			return this.lambda.exec();
-		else {
+		else if (this.lambdaVoid != null){
 			this.lambdaVoid.exec();
 			return null;
+		} else if (this.lambdaWithOneArg != null) {
+			return this.lambdaWithOneArg.exec(this.pipelineArgs.get(0).getResult());
 		}
+		return null;
 	}
 }
