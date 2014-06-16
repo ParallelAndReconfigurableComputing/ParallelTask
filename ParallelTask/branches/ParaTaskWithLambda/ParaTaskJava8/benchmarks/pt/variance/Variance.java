@@ -6,6 +6,8 @@ import java.util.concurrent.*;
 import java.util.function.Function;
 import java.util.stream.DoubleStream;
 
+import static pt.runtime.Task.*;
+import pt.runtime.*;
 
 public class Variance {
 
@@ -15,17 +17,25 @@ public class Variance {
     private static final int POPULATION_SIZE = 30_000_000;
     public static final int NUMBER_OF_RUNS = 20;
     
+    public static final long THRESHOLD = 1_000_000;
+    
     public static double[] generatePopulation(int populationSize) {
+    	ParaTask.init();
         return DoubleStream.generate(Variance::randInt).limit(populationSize).toArray();
     }
     
     public static void main(String... args) {
 // generate a population with different ages
-        double[] population = DoubleStream.generate(Variance::randInt).limit(POPULATION_SIZE).toArray();
-
-        System.out.println("Imperative version done in: " + measurePerf(Variance::varianceImperative, population) + " msecs" );
-        System.out.println("Parallel streams version done in : " + measurePerf(Variance::varianceStreams, population) + " msecs");
-        System.out.println("ForkJoin version done in : " + measurePerf(Variance::varianceForkJoin, population) + " msecs");
+        double[] population = generatePopulation(POPULATION_SIZE);
+        
+        System.out.println("varianceStreams: " + varianceStreams(population));
+        System.out.println("varianceImperative: " + varianceImperative(population));
+        System.out.println("varianceForkJoin: " + varianceForkJoin(population));
+        System.out.println("varianceParaTaskWithLambda: " + varianceParaTaskWithLambda(population));
+        
+        //System.out.println("Imperative version done in: " + measurePerf(Variance::varianceImperative, population) + " msecs" );
+        //System.out.println("Parallel streams version done in : " + measurePerf(Variance::varianceStreams, population) + " msecs");
+        //System.out.println("ForkJoin version done in : " + measurePerf(Variance::varianceForkJoin, population) + " msecs");
     }
 
     public static int randInt() {
@@ -53,7 +63,58 @@ public class Variance {
                                 .sum() / population.length;
         return variance;
     }
+    
+    public static double varianceParaTaskWithLambda(double[] population) {
+    	double total = computeSumByParaTaskWithLambda(population, 0, population.length);
+    	double mean = total / population.length;
+    	double varSum = computeVarianceSumByParaTaskWithLambda(population, 0, population.length, mean);
+    	return varSum / population.length;
+    }
+    
+    private static double computeSumByParaTaskWithLambda(double[] numbers, int start, int end) {
+    	int length = end - start;
+        if (length <= THRESHOLD) {
+            return computeSumSequentially(numbers, start, end);
+        }
 
+        TaskID<Double> left = asTask(() -> computeSumByParaTaskWithLambda(numbers, 
+        		start, start + length/2)).start();
+        
+        double rightSum = computeSumByParaTaskWithLambda(numbers, start + length/2, end);
+        
+    	return left.getResult() + rightSum;
+    }
+    
+    private static double computeVarianceSumByParaTaskWithLambda(double[] numbers, int start, int end, double mean) {
+    	int length = end - start;
+        if (length <= THRESHOLD) {
+            return computeVarianceSumSequentially(numbers, start, end, mean);
+        }
+
+        TaskID<Double> left = asTask(() -> computeVarianceSumByParaTaskWithLambda(numbers, 
+        		start, start + length/2, mean)).start();
+        
+        double rightSum = computeVarianceSumByParaTaskWithLambda(numbers, start + length/2, end, mean);
+        
+    	return left.getResult() + rightSum;
+    }
+
+    private static double computeSumSequentially(double[] numbers, int start, int end) {
+    	double total = 0;
+        for (int i = start; i < end; i++) {
+            total += numbers[i];
+        }
+        return total;
+    }
+    
+    private static double computeVarianceSumSequentially(double[] numbers, int start, int end, double average) {
+    	double variance = 0;
+        for (int i = start; i < end; i++) {
+            variance += (numbers[i] - average) * (numbers[i] - average);
+        }
+        return variance;
+    }
+    
     public static double varianceForkJoin(double[] population){
         final ForkJoinPool forkJoinPool = new ForkJoinPool();
         double total = forkJoinPool.invoke(new ForkJoinCalculator(population, new SequentialCalculator() {
@@ -97,8 +158,6 @@ public class Variance {
     }
 
     public static class ForkJoinCalculator extends RecursiveTask<Double> {
-
-        public static final long THRESHOLD = 1_000_000;
 
         private final SequentialCalculator sequentialCalculator;
         private final double[] numbers;

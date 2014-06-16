@@ -18,4 +18,8 @@ public class VarianceWrapper {
 	public static double varianceForkJoin(double[] population) {
 		return Variance.varianceForkJoin(population);
 	}
+	
+	public static double varianceParaTaskWithLambda(double[] population) {
+		return Variance.varianceParaTaskWithLambda(population);
+	}
 }
