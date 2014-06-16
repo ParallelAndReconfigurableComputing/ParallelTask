@@ -1,4 +1,4 @@
-package pt.variance;
+package pt.benchmarks;
 
 import java.util.Arrays;
 import java.util.Random;

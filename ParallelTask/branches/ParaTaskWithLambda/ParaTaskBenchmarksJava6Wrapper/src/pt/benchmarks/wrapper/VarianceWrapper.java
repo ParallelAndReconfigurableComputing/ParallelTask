@@ -1,6 +1,6 @@
 package pt.benchmarks.wrapper;
 
-import pt.variance.Variance;
+import pt.benchmarks.Variance;
 
 public class VarianceWrapper {
 	public static double[] generatePopulation(int populationSize) {
