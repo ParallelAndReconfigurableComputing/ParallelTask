@@ -74,7 +74,11 @@ public class Variance {
     private static double computeSumByParaTaskWithLambda(double[] numbers, int start, int end) {
     	int length = end - start;
         if (length <= THRESHOLD) {
-            return computeSumSequentially(numbers, start, end);
+        	double total = 0;
+            for (int i = start; i < end; i++) {
+                total += numbers[i];
+            }
+            return total;
         }
 
         TaskID<Double> left = asTask(() -> computeSumByParaTaskWithLambda(numbers, 
@@ -88,7 +92,11 @@ public class Variance {
     private static double computeVarianceSumByParaTaskWithLambda(double[] numbers, int start, int end, double mean) {
     	int length = end - start;
         if (length <= THRESHOLD) {
-            return computeVarianceSumSequentially(numbers, start, end, mean);
+        	double variance = 0;
+            for (int i = start; i < end; i++) {
+                variance += (numbers[i] - mean) * (numbers[i] - mean);
+            }
+            return variance;
         }
 
         TaskID<Double> left = asTask(() -> computeVarianceSumByParaTaskWithLambda(numbers, 
@@ -97,22 +105,6 @@ public class Variance {
         double rightSum = computeVarianceSumByParaTaskWithLambda(numbers, start + length/2, end, mean);
         
     	return left.getResult() + rightSum;
-    }
-
-    private static double computeSumSequentially(double[] numbers, int start, int end) {
-    	double total = 0;
-        for (int i = start; i < end; i++) {
-            total += numbers[i];
-        }
-        return total;
-    }
-    
-    private static double computeVarianceSumSequentially(double[] numbers, int start, int end, double average) {
-    	double variance = 0;
-        for (int i = start; i < end; i++) {
-            variance += (numbers[i] - average) * (numbers[i] - average);
-        }
-        return variance;
     }
     
     public static double varianceForkJoin(double[] population){
