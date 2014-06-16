@@ -5,32 +5,19 @@ import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 
+import pt.benchmarks.wrapper.ParaTaskWrapper;
 import pt.benchmarks.wrapper.VarianceWrapper;
 
 
 @State(Scope.Thread)
-public class MyBenchmark {
+public class MyBenchmarkThread8 {
 
     double[] population;
 
     @Setup
     public void init() {
         population = VarianceWrapper.generatePopulation(VarianceConfig.POPULATION_SIZE);
-    }
-
-    @GenerateMicroBenchmark
-    public double testVarianceImperative() {
-        return VarianceWrapper.varianceImperative(population);
-    }
-
-    @GenerateMicroBenchmark
-    public double testVarianceStreams() {
-        return VarianceWrapper.varianceStreams(population);
-    }
-
-    @GenerateMicroBenchmark
-    public double testVarianceForkJoin() {
-        return VarianceWrapper.varianceForkJoin(population);
+        ParaTaskWrapper.setThreadPoolSize(8);
     }
     
     @GenerateMicroBenchmark
