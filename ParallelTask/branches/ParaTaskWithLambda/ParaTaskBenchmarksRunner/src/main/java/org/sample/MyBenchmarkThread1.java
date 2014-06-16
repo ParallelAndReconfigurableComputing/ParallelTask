@@ -22,7 +22,7 @@ public class MyBenchmarkThread1 {
     
     @GenerateMicroBenchmark
     public double testVarianceParaTaskWithLambda() {
-        return VarianceWrapper.varianceParaTaskWithLambda(population);
+        return VarianceWrapper.varianceParaTaskWithLambda(population, VarianceConfig.THRESHOLD);
     }
     
 
