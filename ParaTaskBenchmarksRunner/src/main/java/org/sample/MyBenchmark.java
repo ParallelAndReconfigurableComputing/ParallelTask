@@ -30,12 +30,12 @@ public class MyBenchmark {
 
     @GenerateMicroBenchmark
     public double testVarianceForkJoin() {
-        return VarianceWrapper.varianceForkJoin(population);
+        return VarianceWrapper.varianceForkJoin(population, VarianceConfig.THRESHOLD);
     }
     
     @GenerateMicroBenchmark
     public double testVarianceParaTaskWithLambda() {
-        return VarianceWrapper.varianceParaTaskWithLambda(population);
+        return VarianceWrapper.varianceParaTaskWithLambda(population, VarianceConfig.THRESHOLD);
     }
     
 

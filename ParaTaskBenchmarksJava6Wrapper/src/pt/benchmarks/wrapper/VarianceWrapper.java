@@ -15,11 +15,11 @@ public class VarianceWrapper {
 		return Variance.varianceStreams(population);
 	}
 	
-	public static double varianceForkJoin(double[] population) {
-		return Variance.varianceForkJoin(population);
+	public static double varianceForkJoin(double[] population, int threshold) {
+		return Variance.varianceForkJoin(population, threshold);
 	}
 	
-	public static double varianceParaTaskWithLambda(double[] population) {
-		return Variance.varianceParaTaskWithLambda(population);
+	public static double varianceParaTaskWithLambda(double[] population, int threshold) {
+		return Variance.varianceParaTaskWithLambda(population, threshold);
 	}
 }
