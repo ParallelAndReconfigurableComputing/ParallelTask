@@ -12,17 +12,15 @@ import pt.benchmarks.wrapper.VarianceWrapper;
 @State(Scope.Thread)
 public class MyBenchmarkThread8 {
 
-    double[] population;
-
     @Setup
     public void init() {
-        population = VarianceWrapper.generatePopulation(VarianceConfig.POPULATION_SIZE);
+    	VarianceConfig.init();
         ParaTaskWrapper.setThreadPoolSize(8);
     }
     
     @GenerateMicroBenchmark
     public double testVarianceParaTaskWithLambda() {
-        return VarianceWrapper.varianceParaTaskWithLambda(population, VarianceConfig.THRESHOLD);
+        return VarianceWrapper.varianceParaTaskWithLambda(VarianceConfig.population, VarianceConfig.THRESHOLD);
     }
     
 
