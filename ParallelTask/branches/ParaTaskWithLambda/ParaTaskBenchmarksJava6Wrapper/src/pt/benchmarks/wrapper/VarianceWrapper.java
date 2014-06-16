@@ -1,5 +1,6 @@
 package pt.benchmarks.wrapper;
 
+import pt.benchmarks.TrivalComputation;
 import pt.benchmarks.Variance;
 
 public class VarianceWrapper {
@@ -21,5 +22,13 @@ public class VarianceWrapper {
 	
 	public static double varianceParaTaskWithLambda(double[] population, int threshold) {
 		return Variance.varianceParaTaskWithLambda(population, threshold);
+	}
+	
+	public static void trivalComputationByParaTaskWithLambda(double[] population) {
+		TrivalComputation.trivalComputationByParaTaskWithLambda();
+	}
+	
+	public static int getTrivalComputationCurrentValue() {
+		return TrivalComputation.getCurrentValue();
 	}
 }
