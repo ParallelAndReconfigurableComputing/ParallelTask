@@ -18,6 +18,11 @@ public class QueensBenchmark {
 	}
 	
 	@GenerateMicroBenchmark
+	public void testQueens_n12_sequential() {
+		Queens.solveQueensPuzzleSequentially(12, 0);
+	}
+	
+	@GenerateMicroBenchmark
 	public void testQueens_n12_threads01_sharing_threshold8() {
 		Queens.solveQueensPuzzleWithThreshold(12, 1, ScheduleType.WorkSharing, 8);
 	}
