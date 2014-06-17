@@ -1,9 +1,9 @@
 package pt.benchmarks.wrapper;
 
-import pt.benchmarks.TrivalComputation;
+import pt.benchmarks.TrivialComputation;
 import pt.benchmarks.Variance;
 
-public class VarianceWrapper {
+public class BenchmarksWrapper {
 	public static double[] generatePopulation(int populationSize) {
 		return Variance.generatePopulation(populationSize);
 	}
@@ -25,10 +25,10 @@ public class VarianceWrapper {
 	}
 	
 	public static void trivalComputationByParaTaskWithLambda(double[] population) {
-		TrivalComputation.trivalComputationByParaTaskWithLambda();
+		TrivialComputation.trivalComputationByParaTaskWithLambda();
 	}
 	
 	public static int getTrivalComputationCurrentValue() {
-		return TrivalComputation.getCurrentValue();
+		return TrivialComputation.getCurrentValue();
 	}
 }

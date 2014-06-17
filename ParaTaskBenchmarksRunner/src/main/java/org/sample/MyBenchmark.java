@@ -6,7 +6,7 @@ import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.TearDown;
 
-import pt.benchmarks.wrapper.VarianceWrapper;
+import pt.benchmarks.wrapper.BenchmarksWrapper;
 
 @State(Scope.Thread)
 public class MyBenchmark {
@@ -19,34 +19,34 @@ public class MyBenchmark {
 	@TearDown
 	public void tearDown() {
 		System.out.println("\nTrivialComputation iterations (warmup included) run: " + 
-				VarianceWrapper.getTrivalComputationCurrentValue());
+				BenchmarksWrapper.getTrivalComputationCurrentValue());
 	}
 
 	@GenerateMicroBenchmark
 	public double testVarianceImperative() {
-		return VarianceWrapper.varianceImperative(VarianceConfig.population);
+		return BenchmarksWrapper.varianceImperative(VarianceConfig.population);
 	}
 
 	@GenerateMicroBenchmark
 	public double testVarianceStreams() {
-		return VarianceWrapper.varianceStreams(VarianceConfig.population);
+		return BenchmarksWrapper.varianceStreams(VarianceConfig.population);
 	}
 
 	@GenerateMicroBenchmark
 	public double testVarianceForkJoin() {
-		return VarianceWrapper.varianceForkJoin(VarianceConfig.population,
+		return BenchmarksWrapper.varianceForkJoin(VarianceConfig.population,
 				VarianceConfig.THRESHOLD);
 	}
 
 	@GenerateMicroBenchmark
 	public double testVarianceParaTaskWithLambda() {
-		return VarianceWrapper.varianceParaTaskWithLambda(
+		return BenchmarksWrapper.varianceParaTaskWithLambda(
 				VarianceConfig.population, VarianceConfig.THRESHOLD);
 	}
 
 	@GenerateMicroBenchmark
 	public void testTrivialComputation() {
-		VarianceWrapper
+		BenchmarksWrapper
 				.trivalComputationByParaTaskWithLambda(VarianceConfig.dataForTrivalComputation);
 	}
 }
