@@ -6,7 +6,7 @@ import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 
 import pt.benchmarks.wrapper.ParaTaskWrapper;
-import pt.benchmarks.wrapper.VarianceWrapper;
+import pt.benchmarks.wrapper.BenchmarksWrapper;
 
 
 @State(Scope.Thread)
@@ -20,7 +20,7 @@ public class MyBenchmarkThread3 {
     
     @GenerateMicroBenchmark
     public double testVarianceParaTaskWithLambda() {
-        return VarianceWrapper.varianceParaTaskWithLambda(VarianceConfig.population, VarianceConfig.THRESHOLD);
+        return BenchmarksWrapper.varianceParaTaskWithLambda(VarianceConfig.population, VarianceConfig.THRESHOLD);
     }
     
 

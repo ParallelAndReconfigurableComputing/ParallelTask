@@ -1,6 +1,6 @@
 package org.sample;
 
-import pt.benchmarks.wrapper.VarianceWrapper;
+import pt.benchmarks.wrapper.BenchmarksWrapper;
 
 public class VarianceConfig {
 
@@ -13,9 +13,9 @@ public class VarianceConfig {
 	public static double[] dataForTrivalComputation;
 	
 	public static void init() {
-		population = VarianceWrapper
+		population = BenchmarksWrapper
 				.generatePopulation(VarianceConfig.POPULATION_SIZE);
-		dataForTrivalComputation = VarianceWrapper
+		dataForTrivalComputation = BenchmarksWrapper
 				.generatePopulation(VarianceConfig.POPULATION_SIZE);
 	}
 }
