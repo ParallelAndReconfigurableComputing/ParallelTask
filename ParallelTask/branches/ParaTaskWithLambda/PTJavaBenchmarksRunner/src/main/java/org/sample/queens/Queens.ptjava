@@ -1,0 +1,199 @@
+package org.sample.queens;
+
+import java.util.concurrent.ConcurrentLinkedQueue;
+import pt.runtime.ParaTask.ScheduleType;
+import pt.runtime.ParaTask.ThreadPoolType;
+
+public class Queens {
+       
+    private final int n;
+	//private ConcurrentLinkedQueue<int[]> results = new ConcurrentLinkedQueue<int[]>();
+
+    public Queens(int n) {
+        this.n = n;
+    }
+	
+    private boolean safe(int i, int j, int[] config) {
+		for(int r = 0; r < i; r++) {
+		    int s = config[r];
+		    if(j == s || i-r == j-s || i-r == s-j) {
+			return false;
+		    }
+		}
+		return true;
+    }
+    
+    
+    private int[] nqueensSeq(int[] config, int i)  {
+    
+    	new NewtonChaos().newtonPartial(newtonNValue);  //-- adding dummy computation to show some speedup
+    	
+		if(i == n) {
+        	//results.add(config);
+		    return config;
+		}
+		for(int j = 0; j < n; j++) {
+		    int[] nconfig = new int[n];
+		    System.arraycopy(config, 0, nconfig, 0, n);
+		    nconfig[i] = j;
+	
+		    if(safe(i, j, nconfig)) {		
+				 nqueensSeq(nconfig, i+1);
+		    }
+		}
+		return null;	// dummy return?
+    }
+	
+	
+    TASK private int[] nqueens(int[] config, int i)  {
+    
+    	new NewtonChaos().newtonPartial(newtonNValue);  //-- adding dummy computation to show some speedup
+    
+		if(i == n) {
+        //	results.add(config);
+		    return config;
+		}
+		
+		int groupSize = 0;
+		for(int j = 0; j < n; j++) {
+		    int[] nconfig = new int[n];
+		    System.arraycopy(config, 0, nconfig, 0, n);
+		    nconfig[i] = j;
+	
+		    if(safe(i, j, nconfig)) {		
+				groupSize++;
+		    }
+		} 
+		
+        TaskIDGroup<int[]> group = new TaskIDGroup<int[]>(groupSize);
+		
+		for(int j = 0; j < n; j++) {
+		    int[] nconfig = new int[n];
+		    System.arraycopy(config, 0, nconfig, 0, n);
+		    nconfig[i] = j;
+	
+		    if(safe(i, j, nconfig)) {		
+				TaskID<int[]> id = nqueens(nconfig, i+1);
+       //         System.out.println(ParaTask.globalID()+"  created subtask "+id.getGlobalID());
+				group.add(id);
+		    }
+		} 
+		try {
+			group.waitTillFinished();
+			
+			if(shouldPrint) {
+	            Reduction<int[]> red = new Reduction<int[]>() {
+					@Override
+					public int[] combine(int[] a, int[] b) {
+						return a != null ? a : b;
+					}
+	            };
+	            int[] finalRes = group.reduce(red);
+	            if (finalRes != null) {
+	            	System.out.println("GOT A RESULT: ");
+	            	for (int f = 0; f < n; f++) {
+		                System.out.print(finalRes[f] + " ");
+		            }
+		          //  System.out.println();
+	            //	System.exit(0);
+	            	return finalRes;
+	            }
+			}
+            
+		} catch (ExecutionException e) {
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		return null;	// dummy return?
+    }
+	
+	
+	public static void mainss(String argv[]) {
+		for (int i = 0; i < 30; i++) {
+		//	mainx(argv);
+			System.out.println("--------------------------------------------------- " + i);
+		}
+	}
+	
+ //   public int resultSize() {
+    	//return results.size();
+    //}
+	
+    public static int newtonNValue = 2;
+    
+    private static boolean shouldPrint = false;
+    
+    public static void main(String[] args) {
+        String appType = "pt-steal";
+        //appType = "seq";
+        int nValue = 11;
+        int numThreads = 3;
+        if (args.length == 0) {
+        } else if (args.length != 4) {
+            System.out.println("Usage: (pt-steal|pt-mix|seq|jv-max) (Nvalue) (numThreads) (newtonValue)");
+            System.exit(0);
+        } else {
+            appType = args[0];
+            nValue = Integer.parseInt(args[1]);
+            numThreads = Integer.parseInt(args[2]);
+            newtonNValue = Integer.parseInt(args[3]);
+        }
+        if (appType.equals("pt-share")) {
+            ParaTask.setScheduling(ScheduleType.WorkSharing);
+        } else if (appType.equals("pt-steal")) {
+            ParaTask.setScheduling(ScheduleType.WorkStealing);
+        }
+        if (numThreads > 0) ParaTask.setThreadPoolSize(ThreadPoolType.ALL, numThreads);
+        Queens queens = new Queens(nValue);
+        System.gc();
+        
+        int[] config = new int[nValue];
+        int[] result = null;
+        System.out.print("CountQueens(" + nValue + ")  ");
+        if (appType.startsWith("pt-")) {
+            long start = System.currentTimeMillis();
+            TaskID<int[]> id = queens.nqueens(config, 0);
+            try {
+                result = id.getReturnResult();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            long end = System.currentTimeMillis();
+            if (appType.equals("pt-share")) {
+                System.out.print("PT (work-sharing) ");
+            } else if (appType.equals("pt-steal")){
+                System.out.print("PT (work-stealing) ");
+            } else {
+            	System.out.print("PT (mixed-schedule) ");
+            }
+            System.out.println(numThreads + " threads = " + (end - start));
+        } else if (appType.equals("seq")) {
+            long start = System.currentTimeMillis();
+            result = queens.nqueensSeq(config, 0);
+            long end = System.currentTimeMillis();
+            System.out.println("seq = " + (end - start));
+        } else if (appType.equals("jv-max")) {
+            long start = System.currentTimeMillis();
+            long end = System.currentTimeMillis();
+            System.out.println("Java-max = " + (end - start));
+        } else if (appType.equals("jv-min")) {
+            long start = System.currentTimeMillis();
+            long end = System.currentTimeMillis();
+            System.out.println("Java-min " + numThreads + " threads = " + (end - start));
+        } else if (appType.equals("sw")) {
+            long start = System.currentTimeMillis();
+            long end = System.currentTimeMillis();
+            System.out.println("SW = " + (end - start));
+        } else {
+            System.err.println("Aborting performance testing, unknown application: " + appType);
+            System.exit(-1);
+        }
+    }
+}
+
+
+
+
