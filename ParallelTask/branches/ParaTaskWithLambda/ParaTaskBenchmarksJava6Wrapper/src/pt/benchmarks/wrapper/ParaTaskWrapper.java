@@ -11,18 +11,25 @@ public class ParaTaskWrapper {
 		MixedSchedule 
 	};
 	
+	public static void init() {
+		ParaTask.init();
+	}
 	
 	public static void setThreadPoolSize(int size) {
 		ParaTask.setThreadPoolSize(ThreadPoolType.ALL, size);
 	}
 	
-	public static void setScheduling(ScheduleType type) {
+	
+	public static ParaTask.ScheduleType getSchedulingType(ScheduleType type) {
 		ParaTask.ScheduleType t = ParaTask.ScheduleType.WorkSharing;
 		if(type == ScheduleType.WorkStealing)
 			t = ParaTask.ScheduleType.WorkStealing;
 		if(type == ScheduleType.MixedSchedule)
 			t = ParaTask.ScheduleType.MixedSchedule;
-		
-		ParaTask.setScheduling(t);
+		return t;
+	}
+	
+	public static void setScheduling(ScheduleType type) {
+		ParaTask.setScheduling(getSchedulingType(type));
 	}
 }

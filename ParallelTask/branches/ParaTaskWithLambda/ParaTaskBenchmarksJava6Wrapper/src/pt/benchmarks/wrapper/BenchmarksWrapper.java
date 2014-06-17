@@ -2,6 +2,8 @@ package pt.benchmarks.wrapper;
 
 import pt.benchmarks.TrivialComputation;
 import pt.benchmarks.Variance;
+import pt.benchmarks.queens.Queens;
+import pt.benchmarks.wrapper.ParaTaskWrapper.ScheduleType;
 
 public class BenchmarksWrapper {
 	public static double[] generatePopulation(int populationSize) {
@@ -30,5 +32,21 @@ public class BenchmarksWrapper {
 	
 	public static int getTrivalComputationCurrentValue() {
 		return TrivialComputation.getCurrentValue();
+	}
+	
+	public static void solveQueensPuzzleWithThreshold(int nQueen, int numThreads, 
+    		ScheduleType schedule, int threshold) {
+		Queens.solveQueensPuzzleWithThreshold(nQueen, numThreads, 
+				ParaTaskWrapper.getSchedulingType(schedule), threshold);
+	}
+	
+	public static void solveQueensPuzzleSequentially(int nQueen, int nNewton) {
+		Queens.solveQueensPuzzleSequentially(nQueen, nNewton);
+	}
+	
+	public static void solveQueensPuzzleWithNewtonChaos(int nQueen, int numThreads, 
+    		ScheduleType schedule, int nNewton) {
+		Queens.solveQueensPuzzleWithNewtonChaos(nQueen, numThreads, 
+				ParaTaskWrapper.getSchedulingType(schedule), nNewton);
 	}
 }
