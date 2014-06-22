@@ -13,7 +13,7 @@ public class Variance {
     private static final Random rand = new Random();
     private static final int MIN = 1;
     private static final int MAX = 140;
-    private static final int POPULATION_SIZE = 60000000;
+    private static final int POPULATION_SIZE = 90000000;
 
     public static long THRESHOLD = 1000;
     
@@ -37,8 +37,11 @@ public class Variance {
 // generate a population with different ages
         population = generatePopulation(POPULATION_SIZE);
         
-        System.out.println("varianceImperative: " + varianceImperative());
-        System.out.println("varianceParaTaskWithLambda: " + varianceParaTask());
+        computeMeanParaTask(2, ScheduleType.WorkSharing);
+        computeMeanParaTask(7, ScheduleType.WorkSharing);
+        
+        //System.out.println("varianceImperative: " + varianceImperative());
+        //System.out.println("varianceParaTaskWithLambda: " + varianceParaTask());
         
         //System.out.println("Imperative version done in: " + measurePerf(Variance::varianceImperative, population) + " msecs" );
         //System.out.println("Parallel streams version done in : " + measurePerf(Variance::varianceStreams, population) + " msecs");
@@ -86,6 +89,24 @@ public class Variance {
     	ParaTask.setThreadPoolSize(ThreadPoolType.ALL, numThreads);
     	THRESHOLD = threshold;
     	varianceParaTask();
+    }
+
+    public static double meanRecusive(int numThreads, 
+    		ScheduleType schedule, int threshold) {
+    	ParaTask.setScheduling(schedule);
+    	ParaTask.setThreadPoolSize(ThreadPoolType.ONEOFF, numThreads);
+    	
+    	if(numThreads == 1) {
+    		double total = 0;
+            for (int i = 0; i < population.length; i++) {
+                total += population[i];
+            }
+            return total / population.length;
+    	}
+    	    	
+    	THRESHOLD = threshold;
+    	double total = computeSum(0, population.length);
+    	return total / population.length;
     }
     
     private static double computeSum(int start, int end) {
@@ -147,7 +168,7 @@ public class Variance {
             for (int i = 0; i < population.length; i++) {
                 total += population[i];
             }
-            return total;
+            return total / population.length;
     	}
     	
     	int lenPerTask = population.length / numThreads;
@@ -175,6 +196,7 @@ public class Variance {
             };    		    
             
             sum += group.reduce(red);
+                        
             return sum / population.length;
             
     	} catch (Exception e) {
