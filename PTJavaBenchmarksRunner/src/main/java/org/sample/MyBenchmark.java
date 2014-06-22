@@ -33,6 +33,6 @@ public class MyBenchmark {
 
 	@GenerateMicroBenchmark
 	public void testTrivialComputation() {
-		TrivialComputation.trivalComputationByParaTaskWithLambda();
+		TrivialComputation.trivalComputationByParaTask();
 	}
 }

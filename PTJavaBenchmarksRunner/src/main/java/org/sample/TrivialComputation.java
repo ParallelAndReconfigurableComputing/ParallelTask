@@ -26,7 +26,7 @@ public class TrivialComputation {//####[5]####
 //####[6]####
     private static AtomicInteger index = new AtomicInteger(0);//####[6]####
 //####[8]####
-    public static void trivalComputationByParaTaskWithLambda() {//####[8]####
+    public static void trivalComputationByParaTask() {//####[8]####
         TaskID id = trivalComputation();//####[9]####
         try {//####[11]####
             id.getReturnResult();//####[12]####
