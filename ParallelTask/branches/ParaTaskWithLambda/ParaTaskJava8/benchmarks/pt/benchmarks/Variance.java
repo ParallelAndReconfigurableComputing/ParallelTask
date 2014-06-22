@@ -8,13 +8,15 @@ import java.util.stream.DoubleStream;
 
 import static pt.runtime.Task.*;
 import pt.runtime.*;
+import pt.runtime.ParaTask.ScheduleType;
+import pt.runtime.ParaTask.ThreadPoolType;
 
 public class Variance {
 
     private static final Random rand = new Random();
     private static final int MIN = 1;
     private static final int MAX = 140;
-    private static final int POPULATION_SIZE = 30_000_000;
+    private static final int POPULATION_SIZE = 90_000_000;
     public static final int NUMBER_OF_RUNS = 20;
     
     //public static final long THRESHOLD = 1_000_000;
@@ -185,5 +187,61 @@ public class Variance {
             Double leftResult = leftTask.join();
             return leftResult + rightResult;
         }
+    }
+    
+    private static double computeNewSumTask(double[] population, int start, int end) {
+    	double total = 0;
+        for (int i = start; i < end; i++) {
+            total += population[i];
+        }
+        return total;
+    }
+    
+    public static double computeMeanParaTask(double[] population, int numThreads, ScheduleType schedule) {
+
+    	ParaTask.setScheduling(schedule);
+    	ParaTask.setThreadPoolSize(ThreadPoolType.ALL, numThreads);
+    	
+    	if(numThreads == 1) {
+    		double total = 0;
+            for (int i = 0; i < population.length; i++) {
+                total += population[i];
+            }
+            return total / population.length;
+    	}
+    	
+    	int lenPerTask = population.length / numThreads;
+    	TaskIDGroup<Double> group = new TaskIDGroup<Double>(numThreads - 1);
+    	
+    	int start = 0;
+    	for(int i = 0; i < numThreads - 1; i++) {
+    		final int s = start;
+    		TaskID<Double> sum = asTask(() -> computeNewSumTask(population, s, s + lenPerTask))
+    				.start();
+    		start += lenPerTask;
+    		group.add(sum);
+    	}
+
+    	double sum = 0;
+    	for(int i = start; i < population.length; ++i) {
+    		sum += population[i];
+    	}
+    	try {
+    		group.waitTillFinished();
+    		
+    		Reduction<Double> red = new Reduction<Double>() {
+				@Override
+				public Double combine(Double a, Double b) {
+					return a + b;
+				}
+            };    		    
+            
+            sum += group.reduce(red);
+                        
+            return sum / population.length;
+            
+    	} catch (Exception e) {
+			throw new RuntimeException(e.getMessage());
+		}
     }
 }

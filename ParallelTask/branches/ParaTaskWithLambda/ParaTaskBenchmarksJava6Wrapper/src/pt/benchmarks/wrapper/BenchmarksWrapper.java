@@ -49,4 +49,11 @@ public class BenchmarksWrapper {
 		Queens.solveQueensPuzzleWithNewtonChaos(nQueen, numThreads, 
 				ParaTaskWrapper.getSchedulingType(schedule), nNewton);
 	}
+	
+	public static void computeMeanParaTask(double[] population, int numThreads, 
+			ScheduleType schedule) {
+		Variance.computeMeanParaTask(population, numThreads, 
+				ParaTaskWrapper.getSchedulingType(schedule));
+	}
+
 }
