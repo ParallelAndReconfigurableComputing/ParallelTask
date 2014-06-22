@@ -3,735 +3,945 @@ package org.sample;//####[1]####
 import java.util.Arrays;//####[3]####
 import java.util.Random;//####[4]####
 import java.util.concurrent.*;//####[5]####
-//####[5]####
-//-- ParaTask related imports//####[5]####
-import pt.runtime.*;//####[5]####
-import java.util.concurrent.ExecutionException;//####[5]####
-import java.util.concurrent.locks.*;//####[5]####
-import java.lang.reflect.*;//####[5]####
-import pt.runtime.GuiThread;//####[5]####
-import java.util.concurrent.BlockingQueue;//####[5]####
-import java.util.ArrayList;//####[5]####
-import java.util.List;//####[5]####
-//####[5]####
-public class Variance {//####[8]####
-    static{ParaTask.init();}//####[8]####
-    /*  ParaTask helper method to access private/protected slots *///####[8]####
-    public void __pt__accessPrivateSlot(Method m, Object instance, TaskID arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[8]####
-        if (m.getParameterTypes().length == 0)//####[8]####
-            m.invoke(instance);//####[8]####
-        else if ((m.getParameterTypes().length == 1))//####[8]####
-            m.invoke(instance, arg);//####[8]####
-        else //####[8]####
-            m.invoke(instance, arg, interResult);//####[8]####
-    }//####[8]####
-//####[10]####
-    private static final Random rand = new Random();//####[10]####
-//####[11]####
-    private static final int MIN = 1;//####[11]####
-//####[12]####
-    private static final int MAX = 140;//####[12]####
+import pt.runtime.TaskIDGroup;//####[7]####
+import pt.runtime.ParaTask.ScheduleType;//####[8]####
+import pt.runtime.ParaTask.ThreadPoolType;//####[9]####
+//####[9]####
+//-- ParaTask related imports//####[9]####
+import pt.runtime.*;//####[9]####
+import java.util.concurrent.ExecutionException;//####[9]####
+import java.util.concurrent.locks.*;//####[9]####
+import java.lang.reflect.*;//####[9]####
+import pt.runtime.GuiThread;//####[9]####
+import java.util.concurrent.BlockingQueue;//####[9]####
+import java.util.ArrayList;//####[9]####
+import java.util.List;//####[9]####
+//####[9]####
+public class Variance {//####[11]####
+    static{ParaTask.init();}//####[11]####
+    /*  ParaTask helper method to access private/protected slots *///####[11]####
+    public void __pt__accessPrivateSlot(Method m, Object instance, TaskID arg, Object interResult ) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {//####[11]####
+        if (m.getParameterTypes().length == 0)//####[11]####
+            m.invoke(instance);//####[11]####
+        else if ((m.getParameterTypes().length == 1))//####[11]####
+            m.invoke(instance, arg);//####[11]####
+        else //####[11]####
+            m.invoke(instance, arg, interResult);//####[11]####
+    }//####[11]####
 //####[13]####
-    private static final int POPULATION_SIZE = 30000000;//####[13]####
+    private static final Random rand = new Random();//####[13]####
 //####[14]####
-    public static final int NUMBER_OF_RUNS = 20;//####[14]####
+    private static final int MIN = 1;//####[14]####
+//####[15]####
+    private static final int MAX = 140;//####[15]####
 //####[16]####
-    public static final long THRESHOLD = 10;//####[16]####
+    private static final int POPULATION_SIZE = 60000000;//####[16]####
 //####[18]####
-    public static void init() {//####[18]####
-        population = generatePopulation(POPULATION_SIZE);//####[19]####
-    }//####[20]####
-//####[22]####
-    public static double[] generatePopulation(int populationSize) {//####[22]####
-        ParaTask.init();//####[23]####
-        double[] data = new double[populationSize];//####[25]####
-        for (int i = 0; i < populationSize; ++i) //####[26]####
-        {//####[26]####
-            data[i] = randInt();//####[27]####
-        }//####[28]####
-        return data;//####[29]####
-    }//####[30]####
-//####[32]####
-    private static double[] population;//####[32]####
+    public static long THRESHOLD = 1000;//####[18]####
+//####[20]####
+    public static void init() {//####[20]####
+        population = generatePopulation(POPULATION_SIZE);//####[21]####
+    }//####[22]####
+//####[24]####
+    public static double[] generatePopulation(int populationSize) {//####[24]####
+        ParaTask.init();//####[25]####
+        double[] data = new double[populationSize];//####[27]####
+        for (int i = 0; i < populationSize; ++i) //####[28]####
+        {//####[28]####
+            data[i] = randInt();//####[29]####
+        }//####[30]####
+        return data;//####[31]####
+    }//####[32]####
 //####[34]####
-    public static void main(String... args) {//####[34]####
-        population = generatePopulation(POPULATION_SIZE);//####[36]####
-        System.out.println("varianceImperative: " + varianceImperative());//####[38]####
-        System.out.println("varianceParaTaskWithLambda: " + varianceParaTask());//####[39]####
-    }//####[44]####
-//####[46]####
-    public static int randInt() {//####[46]####
-        return rand.nextInt((MAX - MIN) + 1) + MIN;//####[47]####
-    }//####[48]####
-//####[50]####
-    public static double varianceImperative() {//####[50]####
-        double average = 0.0;//####[51]####
-        for (double p : population) //####[52]####
-        {//####[52]####
-            average += p;//####[53]####
-        }//####[54]####
-        average /= population.length;//####[55]####
-        double variance = 0.0;//####[57]####
-        for (double p : population) //####[58]####
-        {//####[58]####
-            variance += (p - average) * (p - average);//####[59]####
-        }//####[60]####
-        return variance / population.length;//####[61]####
-    }//####[62]####
-//####[64]####
-    private static double getResult(TaskID<Double> t) {//####[64]####
-        Double result = null;//####[65]####
-        try {//####[66]####
-            result = t.getReturnResult();//####[67]####
-        } catch (Exception e) {//####[68]####
-            throw new ParaTaskRuntimeException(e.getMessage());//####[69]####
-        }//####[70]####
-        return result;//####[71]####
-    }//####[72]####
-//####[74]####
-    public static double varianceParaTask() {//####[74]####
-        double total = computeSum(0, population.length);//####[75]####
-        double mean = total / population.length;//####[76]####
-        double varSum = computeVarianceSum(0, population.length, mean);//####[77]####
-        return varSum / population.length;//####[78]####
-    }//####[79]####
-//####[81]####
-    private static double computeSum(int start, int end) {//####[81]####
-        int length = end - start;//####[82]####
-        if (length <= THRESHOLD) //####[83]####
-        {//####[83]####
-            double total = 0;//####[84]####
-            for (int i = start; i < end; i++) //####[85]####
-            {//####[85]####
-                total += population[i];//####[86]####
-            }//####[87]####
-            return total;//####[88]####
-        }//####[89]####
-        TaskID<Double> left = computeSumTask(start, start + length / 2);//####[91]####
-        double rightSum = computeSum(start + length / 2, end);//####[93]####
-        return getResult(left) + rightSum;//####[95]####
-    }//####[96]####
-//####[98]####
-    private static volatile Method __pt__computeSumTask_int_int_method = null;//####[98]####
-    private synchronized static void __pt__computeSumTask_int_int_ensureMethodVarSet() {//####[98]####
-        if (__pt__computeSumTask_int_int_method == null) {//####[98]####
-            try {//####[98]####
-                __pt__computeSumTask_int_int_method = ParaTaskHelper.getDeclaredMethod(new ParaTaskHelper.ClassGetter().getCurrentClass(), "__pt__computeSumTask", new Class[] {//####[98]####
-                    int.class, int.class//####[98]####
-                });//####[98]####
-            } catch (Exception e) {//####[98]####
-                e.printStackTrace();//####[98]####
-            }//####[98]####
-        }//####[98]####
-    }//####[98]####
-    private static TaskID<Double> computeSumTask(int start, int end) {//####[98]####
-        //-- execute asynchronously by enqueuing onto the taskpool//####[98]####
-        return computeSumTask(start, end, new TaskInfo());//####[98]####
-    }//####[98]####
-    private static TaskID<Double> computeSumTask(int start, int end, TaskInfo taskinfo) {//####[98]####
-        // ensure Method variable is set//####[98]####
-        if (__pt__computeSumTask_int_int_method == null) {//####[98]####
-            __pt__computeSumTask_int_int_ensureMethodVarSet();//####[98]####
-        }//####[98]####
-        taskinfo.setParameters(start, end);//####[98]####
-        taskinfo.setMethod(__pt__computeSumTask_int_int_method);//####[98]####
-        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[98]####
-    }//####[98]####
-    private static TaskID<Double> computeSumTask(TaskID<Integer> start, int end) {//####[98]####
-        //-- execute asynchronously by enqueuing onto the taskpool//####[98]####
-        return computeSumTask(start, end, new TaskInfo());//####[98]####
-    }//####[98]####
-    private static TaskID<Double> computeSumTask(TaskID<Integer> start, int end, TaskInfo taskinfo) {//####[98]####
-        // ensure Method variable is set//####[98]####
-        if (__pt__computeSumTask_int_int_method == null) {//####[98]####
-            __pt__computeSumTask_int_int_ensureMethodVarSet();//####[98]####
-        }//####[98]####
-        taskinfo.setTaskIdArgIndexes(0);//####[98]####
-        taskinfo.addDependsOn(start);//####[98]####
-        taskinfo.setParameters(start, end);//####[98]####
-        taskinfo.setMethod(__pt__computeSumTask_int_int_method);//####[98]####
-        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[98]####
-    }//####[98]####
-    private static TaskID<Double> computeSumTask(BlockingQueue<Integer> start, int end) {//####[98]####
-        //-- execute asynchronously by enqueuing onto the taskpool//####[98]####
-        return computeSumTask(start, end, new TaskInfo());//####[98]####
-    }//####[98]####
-    private static TaskID<Double> computeSumTask(BlockingQueue<Integer> start, int end, TaskInfo taskinfo) {//####[98]####
-        // ensure Method variable is set//####[98]####
-        if (__pt__computeSumTask_int_int_method == null) {//####[98]####
-            __pt__computeSumTask_int_int_ensureMethodVarSet();//####[98]####
-        }//####[98]####
-        taskinfo.setQueueArgIndexes(0);//####[98]####
-        taskinfo.setIsPipeline(true);//####[98]####
-        taskinfo.setParameters(start, end);//####[98]####
-        taskinfo.setMethod(__pt__computeSumTask_int_int_method);//####[98]####
-        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[98]####
-    }//####[98]####
-    private static TaskID<Double> computeSumTask(int start, TaskID<Integer> end) {//####[98]####
-        //-- execute asynchronously by enqueuing onto the taskpool//####[98]####
-        return computeSumTask(start, end, new TaskInfo());//####[98]####
-    }//####[98]####
-    private static TaskID<Double> computeSumTask(int start, TaskID<Integer> end, TaskInfo taskinfo) {//####[98]####
-        // ensure Method variable is set//####[98]####
-        if (__pt__computeSumTask_int_int_method == null) {//####[98]####
-            __pt__computeSumTask_int_int_ensureMethodVarSet();//####[98]####
-        }//####[98]####
-        taskinfo.setTaskIdArgIndexes(1);//####[98]####
-        taskinfo.addDependsOn(end);//####[98]####
-        taskinfo.setParameters(start, end);//####[98]####
-        taskinfo.setMethod(__pt__computeSumTask_int_int_method);//####[98]####
-        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[98]####
-    }//####[98]####
-    private static TaskID<Double> computeSumTask(TaskID<Integer> start, TaskID<Integer> end) {//####[98]####
-        //-- execute asynchronously by enqueuing onto the taskpool//####[98]####
-        return computeSumTask(start, end, new TaskInfo());//####[98]####
-    }//####[98]####
-    private static TaskID<Double> computeSumTask(TaskID<Integer> start, TaskID<Integer> end, TaskInfo taskinfo) {//####[98]####
-        // ensure Method variable is set//####[98]####
-        if (__pt__computeSumTask_int_int_method == null) {//####[98]####
-            __pt__computeSumTask_int_int_ensureMethodVarSet();//####[98]####
-        }//####[98]####
-        taskinfo.setTaskIdArgIndexes(0, 1);//####[98]####
-        taskinfo.addDependsOn(start);//####[98]####
-        taskinfo.addDependsOn(end);//####[98]####
-        taskinfo.setParameters(start, end);//####[98]####
-        taskinfo.setMethod(__pt__computeSumTask_int_int_method);//####[98]####
-        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[98]####
-    }//####[98]####
-    private static TaskID<Double> computeSumTask(BlockingQueue<Integer> start, TaskID<Integer> end) {//####[98]####
-        //-- execute asynchronously by enqueuing onto the taskpool//####[98]####
-        return computeSumTask(start, end, new TaskInfo());//####[98]####
-    }//####[98]####
-    private static TaskID<Double> computeSumTask(BlockingQueue<Integer> start, TaskID<Integer> end, TaskInfo taskinfo) {//####[98]####
-        // ensure Method variable is set//####[98]####
-        if (__pt__computeSumTask_int_int_method == null) {//####[98]####
-            __pt__computeSumTask_int_int_ensureMethodVarSet();//####[98]####
-        }//####[98]####
-        taskinfo.setQueueArgIndexes(0);//####[98]####
-        taskinfo.setIsPipeline(true);//####[98]####
-        taskinfo.setTaskIdArgIndexes(1);//####[98]####
-        taskinfo.addDependsOn(end);//####[98]####
-        taskinfo.setParameters(start, end);//####[98]####
-        taskinfo.setMethod(__pt__computeSumTask_int_int_method);//####[98]####
-        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[98]####
-    }//####[98]####
-    private static TaskID<Double> computeSumTask(int start, BlockingQueue<Integer> end) {//####[98]####
-        //-- execute asynchronously by enqueuing onto the taskpool//####[98]####
-        return computeSumTask(start, end, new TaskInfo());//####[98]####
-    }//####[98]####
-    private static TaskID<Double> computeSumTask(int start, BlockingQueue<Integer> end, TaskInfo taskinfo) {//####[98]####
-        // ensure Method variable is set//####[98]####
-        if (__pt__computeSumTask_int_int_method == null) {//####[98]####
-            __pt__computeSumTask_int_int_ensureMethodVarSet();//####[98]####
-        }//####[98]####
-        taskinfo.setQueueArgIndexes(1);//####[98]####
-        taskinfo.setIsPipeline(true);//####[98]####
-        taskinfo.setParameters(start, end);//####[98]####
-        taskinfo.setMethod(__pt__computeSumTask_int_int_method);//####[98]####
-        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[98]####
-    }//####[98]####
-    private static TaskID<Double> computeSumTask(TaskID<Integer> start, BlockingQueue<Integer> end) {//####[98]####
-        //-- execute asynchronously by enqueuing onto the taskpool//####[98]####
-        return computeSumTask(start, end, new TaskInfo());//####[98]####
-    }//####[98]####
-    private static TaskID<Double> computeSumTask(TaskID<Integer> start, BlockingQueue<Integer> end, TaskInfo taskinfo) {//####[98]####
-        // ensure Method variable is set//####[98]####
-        if (__pt__computeSumTask_int_int_method == null) {//####[98]####
-            __pt__computeSumTask_int_int_ensureMethodVarSet();//####[98]####
-        }//####[98]####
-        taskinfo.setQueueArgIndexes(1);//####[98]####
-        taskinfo.setIsPipeline(true);//####[98]####
-        taskinfo.setTaskIdArgIndexes(0);//####[98]####
-        taskinfo.addDependsOn(start);//####[98]####
-        taskinfo.setParameters(start, end);//####[98]####
-        taskinfo.setMethod(__pt__computeSumTask_int_int_method);//####[98]####
-        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[98]####
-    }//####[98]####
-    private static TaskID<Double> computeSumTask(BlockingQueue<Integer> start, BlockingQueue<Integer> end) {//####[98]####
-        //-- execute asynchronously by enqueuing onto the taskpool//####[98]####
-        return computeSumTask(start, end, new TaskInfo());//####[98]####
-    }//####[98]####
-    private static TaskID<Double> computeSumTask(BlockingQueue<Integer> start, BlockingQueue<Integer> end, TaskInfo taskinfo) {//####[98]####
-        // ensure Method variable is set//####[98]####
-        if (__pt__computeSumTask_int_int_method == null) {//####[98]####
-            __pt__computeSumTask_int_int_ensureMethodVarSet();//####[98]####
-        }//####[98]####
-        taskinfo.setQueueArgIndexes(0, 1);//####[98]####
-        taskinfo.setIsPipeline(true);//####[98]####
-        taskinfo.setParameters(start, end);//####[98]####
-        taskinfo.setMethod(__pt__computeSumTask_int_int_method);//####[98]####
-        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[98]####
-    }//####[98]####
-    public static double __pt__computeSumTask(int start, int end) {//####[98]####
-        return computeSum(start, end);//####[99]####
-    }//####[100]####
-//####[100]####
-//####[102]####
-    private static volatile Method __pt__computeVarianceSumTask_int_int_double_method = null;//####[102]####
-    private synchronized static void __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet() {//####[102]####
-        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[102]####
-            try {//####[102]####
-                __pt__computeVarianceSumTask_int_int_double_method = ParaTaskHelper.getDeclaredMethod(new ParaTaskHelper.ClassGetter().getCurrentClass(), "__pt__computeVarianceSumTask", new Class[] {//####[102]####
-                    int.class, int.class, double.class//####[102]####
-                });//####[102]####
-            } catch (Exception e) {//####[102]####
-                e.printStackTrace();//####[102]####
-            }//####[102]####
-        }//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(int start, int end, double mean) {//####[102]####
-        //-- execute asynchronously by enqueuing onto the taskpool//####[102]####
-        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(int start, int end, double mean, TaskInfo taskinfo) {//####[102]####
-        // ensure Method variable is set//####[102]####
-        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[102]####
-            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[102]####
-        }//####[102]####
-        taskinfo.setParameters(start, end, mean);//####[102]####
-        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[102]####
-        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(TaskID<Integer> start, int end, double mean) {//####[102]####
-        //-- execute asynchronously by enqueuing onto the taskpool//####[102]####
-        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(TaskID<Integer> start, int end, double mean, TaskInfo taskinfo) {//####[102]####
-        // ensure Method variable is set//####[102]####
-        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[102]####
-            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[102]####
-        }//####[102]####
-        taskinfo.setTaskIdArgIndexes(0);//####[102]####
-        taskinfo.addDependsOn(start);//####[102]####
-        taskinfo.setParameters(start, end, mean);//####[102]####
-        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[102]####
-        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(BlockingQueue<Integer> start, int end, double mean) {//####[102]####
-        //-- execute asynchronously by enqueuing onto the taskpool//####[102]####
-        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(BlockingQueue<Integer> start, int end, double mean, TaskInfo taskinfo) {//####[102]####
-        // ensure Method variable is set//####[102]####
-        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[102]####
-            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[102]####
-        }//####[102]####
-        taskinfo.setQueueArgIndexes(0);//####[102]####
-        taskinfo.setIsPipeline(true);//####[102]####
-        taskinfo.setParameters(start, end, mean);//####[102]####
-        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[102]####
-        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(int start, TaskID<Integer> end, double mean) {//####[102]####
-        //-- execute asynchronously by enqueuing onto the taskpool//####[102]####
-        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(int start, TaskID<Integer> end, double mean, TaskInfo taskinfo) {//####[102]####
-        // ensure Method variable is set//####[102]####
-        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[102]####
-            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[102]####
-        }//####[102]####
-        taskinfo.setTaskIdArgIndexes(1);//####[102]####
-        taskinfo.addDependsOn(end);//####[102]####
-        taskinfo.setParameters(start, end, mean);//####[102]####
-        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[102]####
-        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(TaskID<Integer> start, TaskID<Integer> end, double mean) {//####[102]####
-        //-- execute asynchronously by enqueuing onto the taskpool//####[102]####
-        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(TaskID<Integer> start, TaskID<Integer> end, double mean, TaskInfo taskinfo) {//####[102]####
-        // ensure Method variable is set//####[102]####
-        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[102]####
-            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[102]####
-        }//####[102]####
-        taskinfo.setTaskIdArgIndexes(0, 1);//####[102]####
-        taskinfo.addDependsOn(start);//####[102]####
-        taskinfo.addDependsOn(end);//####[102]####
-        taskinfo.setParameters(start, end, mean);//####[102]####
-        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[102]####
-        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(BlockingQueue<Integer> start, TaskID<Integer> end, double mean) {//####[102]####
-        //-- execute asynchronously by enqueuing onto the taskpool//####[102]####
-        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(BlockingQueue<Integer> start, TaskID<Integer> end, double mean, TaskInfo taskinfo) {//####[102]####
-        // ensure Method variable is set//####[102]####
-        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[102]####
-            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[102]####
-        }//####[102]####
-        taskinfo.setQueueArgIndexes(0);//####[102]####
-        taskinfo.setIsPipeline(true);//####[102]####
-        taskinfo.setTaskIdArgIndexes(1);//####[102]####
-        taskinfo.addDependsOn(end);//####[102]####
-        taskinfo.setParameters(start, end, mean);//####[102]####
-        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[102]####
-        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(int start, BlockingQueue<Integer> end, double mean) {//####[102]####
-        //-- execute asynchronously by enqueuing onto the taskpool//####[102]####
-        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(int start, BlockingQueue<Integer> end, double mean, TaskInfo taskinfo) {//####[102]####
-        // ensure Method variable is set//####[102]####
-        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[102]####
-            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[102]####
-        }//####[102]####
-        taskinfo.setQueueArgIndexes(1);//####[102]####
-        taskinfo.setIsPipeline(true);//####[102]####
-        taskinfo.setParameters(start, end, mean);//####[102]####
-        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[102]####
-        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(TaskID<Integer> start, BlockingQueue<Integer> end, double mean) {//####[102]####
-        //-- execute asynchronously by enqueuing onto the taskpool//####[102]####
-        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(TaskID<Integer> start, BlockingQueue<Integer> end, double mean, TaskInfo taskinfo) {//####[102]####
-        // ensure Method variable is set//####[102]####
-        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[102]####
-            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[102]####
-        }//####[102]####
-        taskinfo.setQueueArgIndexes(1);//####[102]####
-        taskinfo.setIsPipeline(true);//####[102]####
-        taskinfo.setTaskIdArgIndexes(0);//####[102]####
-        taskinfo.addDependsOn(start);//####[102]####
-        taskinfo.setParameters(start, end, mean);//####[102]####
-        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[102]####
-        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(BlockingQueue<Integer> start, BlockingQueue<Integer> end, double mean) {//####[102]####
-        //-- execute asynchronously by enqueuing onto the taskpool//####[102]####
-        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(BlockingQueue<Integer> start, BlockingQueue<Integer> end, double mean, TaskInfo taskinfo) {//####[102]####
-        // ensure Method variable is set//####[102]####
-        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[102]####
-            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[102]####
-        }//####[102]####
-        taskinfo.setQueueArgIndexes(0, 1);//####[102]####
-        taskinfo.setIsPipeline(true);//####[102]####
-        taskinfo.setParameters(start, end, mean);//####[102]####
-        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[102]####
-        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(int start, int end, TaskID<Double> mean) {//####[102]####
-        //-- execute asynchronously by enqueuing onto the taskpool//####[102]####
-        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(int start, int end, TaskID<Double> mean, TaskInfo taskinfo) {//####[102]####
-        // ensure Method variable is set//####[102]####
-        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[102]####
-            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[102]####
-        }//####[102]####
-        taskinfo.setTaskIdArgIndexes(2);//####[102]####
-        taskinfo.addDependsOn(mean);//####[102]####
-        taskinfo.setParameters(start, end, mean);//####[102]####
-        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[102]####
-        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(TaskID<Integer> start, int end, TaskID<Double> mean) {//####[102]####
-        //-- execute asynchronously by enqueuing onto the taskpool//####[102]####
-        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(TaskID<Integer> start, int end, TaskID<Double> mean, TaskInfo taskinfo) {//####[102]####
-        // ensure Method variable is set//####[102]####
-        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[102]####
-            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[102]####
-        }//####[102]####
-        taskinfo.setTaskIdArgIndexes(0, 2);//####[102]####
-        taskinfo.addDependsOn(start);//####[102]####
-        taskinfo.addDependsOn(mean);//####[102]####
-        taskinfo.setParameters(start, end, mean);//####[102]####
-        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[102]####
-        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(BlockingQueue<Integer> start, int end, TaskID<Double> mean) {//####[102]####
-        //-- execute asynchronously by enqueuing onto the taskpool//####[102]####
-        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(BlockingQueue<Integer> start, int end, TaskID<Double> mean, TaskInfo taskinfo) {//####[102]####
-        // ensure Method variable is set//####[102]####
-        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[102]####
-            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[102]####
-        }//####[102]####
-        taskinfo.setQueueArgIndexes(0);//####[102]####
-        taskinfo.setIsPipeline(true);//####[102]####
-        taskinfo.setTaskIdArgIndexes(2);//####[102]####
-        taskinfo.addDependsOn(mean);//####[102]####
-        taskinfo.setParameters(start, end, mean);//####[102]####
-        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[102]####
-        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(int start, TaskID<Integer> end, TaskID<Double> mean) {//####[102]####
-        //-- execute asynchronously by enqueuing onto the taskpool//####[102]####
-        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(int start, TaskID<Integer> end, TaskID<Double> mean, TaskInfo taskinfo) {//####[102]####
-        // ensure Method variable is set//####[102]####
-        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[102]####
-            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[102]####
-        }//####[102]####
-        taskinfo.setTaskIdArgIndexes(1, 2);//####[102]####
-        taskinfo.addDependsOn(end);//####[102]####
-        taskinfo.addDependsOn(mean);//####[102]####
-        taskinfo.setParameters(start, end, mean);//####[102]####
-        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[102]####
-        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(TaskID<Integer> start, TaskID<Integer> end, TaskID<Double> mean) {//####[102]####
-        //-- execute asynchronously by enqueuing onto the taskpool//####[102]####
-        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(TaskID<Integer> start, TaskID<Integer> end, TaskID<Double> mean, TaskInfo taskinfo) {//####[102]####
-        // ensure Method variable is set//####[102]####
-        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[102]####
-            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[102]####
-        }//####[102]####
-        taskinfo.setTaskIdArgIndexes(0, 1, 2);//####[102]####
-        taskinfo.addDependsOn(start);//####[102]####
-        taskinfo.addDependsOn(end);//####[102]####
-        taskinfo.addDependsOn(mean);//####[102]####
-        taskinfo.setParameters(start, end, mean);//####[102]####
-        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[102]####
-        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(BlockingQueue<Integer> start, TaskID<Integer> end, TaskID<Double> mean) {//####[102]####
-        //-- execute asynchronously by enqueuing onto the taskpool//####[102]####
-        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(BlockingQueue<Integer> start, TaskID<Integer> end, TaskID<Double> mean, TaskInfo taskinfo) {//####[102]####
-        // ensure Method variable is set//####[102]####
-        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[102]####
-            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[102]####
-        }//####[102]####
-        taskinfo.setQueueArgIndexes(0);//####[102]####
-        taskinfo.setIsPipeline(true);//####[102]####
-        taskinfo.setTaskIdArgIndexes(1, 2);//####[102]####
-        taskinfo.addDependsOn(end);//####[102]####
-        taskinfo.addDependsOn(mean);//####[102]####
-        taskinfo.setParameters(start, end, mean);//####[102]####
-        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[102]####
-        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(int start, BlockingQueue<Integer> end, TaskID<Double> mean) {//####[102]####
-        //-- execute asynchronously by enqueuing onto the taskpool//####[102]####
-        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(int start, BlockingQueue<Integer> end, TaskID<Double> mean, TaskInfo taskinfo) {//####[102]####
-        // ensure Method variable is set//####[102]####
-        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[102]####
-            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[102]####
-        }//####[102]####
-        taskinfo.setQueueArgIndexes(1);//####[102]####
-        taskinfo.setIsPipeline(true);//####[102]####
-        taskinfo.setTaskIdArgIndexes(2);//####[102]####
-        taskinfo.addDependsOn(mean);//####[102]####
-        taskinfo.setParameters(start, end, mean);//####[102]####
-        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[102]####
-        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(TaskID<Integer> start, BlockingQueue<Integer> end, TaskID<Double> mean) {//####[102]####
-        //-- execute asynchronously by enqueuing onto the taskpool//####[102]####
-        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(TaskID<Integer> start, BlockingQueue<Integer> end, TaskID<Double> mean, TaskInfo taskinfo) {//####[102]####
-        // ensure Method variable is set//####[102]####
-        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[102]####
-            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[102]####
-        }//####[102]####
-        taskinfo.setQueueArgIndexes(1);//####[102]####
-        taskinfo.setIsPipeline(true);//####[102]####
-        taskinfo.setTaskIdArgIndexes(0, 2);//####[102]####
-        taskinfo.addDependsOn(start);//####[102]####
-        taskinfo.addDependsOn(mean);//####[102]####
-        taskinfo.setParameters(start, end, mean);//####[102]####
-        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[102]####
-        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(BlockingQueue<Integer> start, BlockingQueue<Integer> end, TaskID<Double> mean) {//####[102]####
-        //-- execute asynchronously by enqueuing onto the taskpool//####[102]####
-        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(BlockingQueue<Integer> start, BlockingQueue<Integer> end, TaskID<Double> mean, TaskInfo taskinfo) {//####[102]####
-        // ensure Method variable is set//####[102]####
-        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[102]####
-            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[102]####
-        }//####[102]####
-        taskinfo.setQueueArgIndexes(0, 1);//####[102]####
-        taskinfo.setIsPipeline(true);//####[102]####
-        taskinfo.setTaskIdArgIndexes(2);//####[102]####
-        taskinfo.addDependsOn(mean);//####[102]####
-        taskinfo.setParameters(start, end, mean);//####[102]####
-        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[102]####
-        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(int start, int end, BlockingQueue<Double> mean) {//####[102]####
-        //-- execute asynchronously by enqueuing onto the taskpool//####[102]####
-        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(int start, int end, BlockingQueue<Double> mean, TaskInfo taskinfo) {//####[102]####
-        // ensure Method variable is set//####[102]####
-        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[102]####
-            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[102]####
-        }//####[102]####
-        taskinfo.setQueueArgIndexes(2);//####[102]####
-        taskinfo.setIsPipeline(true);//####[102]####
-        taskinfo.setParameters(start, end, mean);//####[102]####
-        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[102]####
-        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(TaskID<Integer> start, int end, BlockingQueue<Double> mean) {//####[102]####
-        //-- execute asynchronously by enqueuing onto the taskpool//####[102]####
-        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(TaskID<Integer> start, int end, BlockingQueue<Double> mean, TaskInfo taskinfo) {//####[102]####
-        // ensure Method variable is set//####[102]####
-        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[102]####
-            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[102]####
-        }//####[102]####
-        taskinfo.setQueueArgIndexes(2);//####[102]####
-        taskinfo.setIsPipeline(true);//####[102]####
-        taskinfo.setTaskIdArgIndexes(0);//####[102]####
-        taskinfo.addDependsOn(start);//####[102]####
-        taskinfo.setParameters(start, end, mean);//####[102]####
-        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[102]####
-        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(BlockingQueue<Integer> start, int end, BlockingQueue<Double> mean) {//####[102]####
-        //-- execute asynchronously by enqueuing onto the taskpool//####[102]####
-        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(BlockingQueue<Integer> start, int end, BlockingQueue<Double> mean, TaskInfo taskinfo) {//####[102]####
-        // ensure Method variable is set//####[102]####
-        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[102]####
-            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[102]####
-        }//####[102]####
-        taskinfo.setQueueArgIndexes(0, 2);//####[102]####
-        taskinfo.setIsPipeline(true);//####[102]####
-        taskinfo.setParameters(start, end, mean);//####[102]####
-        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[102]####
-        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(int start, TaskID<Integer> end, BlockingQueue<Double> mean) {//####[102]####
-        //-- execute asynchronously by enqueuing onto the taskpool//####[102]####
-        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(int start, TaskID<Integer> end, BlockingQueue<Double> mean, TaskInfo taskinfo) {//####[102]####
-        // ensure Method variable is set//####[102]####
-        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[102]####
-            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[102]####
-        }//####[102]####
-        taskinfo.setQueueArgIndexes(2);//####[102]####
-        taskinfo.setIsPipeline(true);//####[102]####
-        taskinfo.setTaskIdArgIndexes(1);//####[102]####
-        taskinfo.addDependsOn(end);//####[102]####
-        taskinfo.setParameters(start, end, mean);//####[102]####
-        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[102]####
-        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(TaskID<Integer> start, TaskID<Integer> end, BlockingQueue<Double> mean) {//####[102]####
-        //-- execute asynchronously by enqueuing onto the taskpool//####[102]####
-        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(TaskID<Integer> start, TaskID<Integer> end, BlockingQueue<Double> mean, TaskInfo taskinfo) {//####[102]####
-        // ensure Method variable is set//####[102]####
-        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[102]####
-            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[102]####
-        }//####[102]####
-        taskinfo.setQueueArgIndexes(2);//####[102]####
-        taskinfo.setIsPipeline(true);//####[102]####
-        taskinfo.setTaskIdArgIndexes(0, 1);//####[102]####
-        taskinfo.addDependsOn(start);//####[102]####
-        taskinfo.addDependsOn(end);//####[102]####
-        taskinfo.setParameters(start, end, mean);//####[102]####
-        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[102]####
-        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(BlockingQueue<Integer> start, TaskID<Integer> end, BlockingQueue<Double> mean) {//####[102]####
-        //-- execute asynchronously by enqueuing onto the taskpool//####[102]####
-        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(BlockingQueue<Integer> start, TaskID<Integer> end, BlockingQueue<Double> mean, TaskInfo taskinfo) {//####[102]####
-        // ensure Method variable is set//####[102]####
-        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[102]####
-            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[102]####
-        }//####[102]####
-        taskinfo.setQueueArgIndexes(0, 2);//####[102]####
-        taskinfo.setIsPipeline(true);//####[102]####
-        taskinfo.setTaskIdArgIndexes(1);//####[102]####
-        taskinfo.addDependsOn(end);//####[102]####
-        taskinfo.setParameters(start, end, mean);//####[102]####
-        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[102]####
-        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(int start, BlockingQueue<Integer> end, BlockingQueue<Double> mean) {//####[102]####
-        //-- execute asynchronously by enqueuing onto the taskpool//####[102]####
-        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(int start, BlockingQueue<Integer> end, BlockingQueue<Double> mean, TaskInfo taskinfo) {//####[102]####
-        // ensure Method variable is set//####[102]####
-        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[102]####
-            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[102]####
-        }//####[102]####
-        taskinfo.setQueueArgIndexes(1, 2);//####[102]####
-        taskinfo.setIsPipeline(true);//####[102]####
-        taskinfo.setParameters(start, end, mean);//####[102]####
-        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[102]####
-        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(TaskID<Integer> start, BlockingQueue<Integer> end, BlockingQueue<Double> mean) {//####[102]####
-        //-- execute asynchronously by enqueuing onto the taskpool//####[102]####
-        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(TaskID<Integer> start, BlockingQueue<Integer> end, BlockingQueue<Double> mean, TaskInfo taskinfo) {//####[102]####
-        // ensure Method variable is set//####[102]####
-        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[102]####
-            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[102]####
-        }//####[102]####
-        taskinfo.setQueueArgIndexes(1, 2);//####[102]####
-        taskinfo.setIsPipeline(true);//####[102]####
-        taskinfo.setTaskIdArgIndexes(0);//####[102]####
-        taskinfo.addDependsOn(start);//####[102]####
-        taskinfo.setParameters(start, end, mean);//####[102]####
-        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[102]####
-        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(BlockingQueue<Integer> start, BlockingQueue<Integer> end, BlockingQueue<Double> mean) {//####[102]####
-        //-- execute asynchronously by enqueuing onto the taskpool//####[102]####
-        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[102]####
-    }//####[102]####
-    private static TaskID<Double> computeVarianceSumTask(BlockingQueue<Integer> start, BlockingQueue<Integer> end, BlockingQueue<Double> mean, TaskInfo taskinfo) {//####[102]####
-        // ensure Method variable is set//####[102]####
-        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[102]####
-            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[102]####
-        }//####[102]####
-        taskinfo.setQueueArgIndexes(0, 1, 2);//####[102]####
-        taskinfo.setIsPipeline(true);//####[102]####
-        taskinfo.setParameters(start, end, mean);//####[102]####
-        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[102]####
-        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[102]####
-    }//####[102]####
-    public static double __pt__computeVarianceSumTask(int start, int end, double mean) {//####[102]####
-        return computeVarianceSum(start, end, mean);//####[103]####
-    }//####[104]####
-//####[104]####
-//####[106]####
-    private static double computeVarianceSum(int start, int end, double mean) {//####[106]####
-        int length = end - start;//####[107]####
-        if (length <= THRESHOLD) //####[108]####
-        {//####[108]####
-            double variance = 0;//####[109]####
-            for (int i = start; i < end; i++) //####[110]####
-            {//####[110]####
-                variance += (population[i] - mean) * (population[i] - mean);//####[111]####
+    private static double[] population;//####[34]####
+//####[36]####
+    public static void main(String... args) {//####[36]####
+        population = generatePopulation(POPULATION_SIZE);//####[38]####
+        System.out.println("varianceImperative: " + varianceImperative());//####[40]####
+        System.out.println("varianceParaTaskWithLambda: " + varianceParaTask());//####[41]####
+    }//####[46]####
+//####[48]####
+    public static int randInt() {//####[48]####
+        return rand.nextInt((MAX - MIN) + 1) + MIN;//####[49]####
+    }//####[50]####
+//####[52]####
+    public static double varianceImperative() {//####[52]####
+        double average = 0.0;//####[53]####
+        for (double p : population) //####[54]####
+        {//####[54]####
+            average += p;//####[55]####
+        }//####[56]####
+        average /= population.length;//####[57]####
+        double variance = 0.0;//####[59]####
+        for (double p : population) //####[60]####
+        {//####[60]####
+            variance += (p - average) * (p - average);//####[61]####
+        }//####[62]####
+        return variance / population.length;//####[63]####
+    }//####[64]####
+//####[66]####
+    private static double getResult(TaskID<Double> t) {//####[66]####
+        Double result = null;//####[67]####
+        try {//####[68]####
+            result = t.getReturnResult();//####[69]####
+        } catch (Exception e) {//####[70]####
+            throw new ParaTaskRuntimeException(e.getMessage());//####[71]####
+        }//####[72]####
+        return result;//####[73]####
+    }//####[74]####
+//####[76]####
+    public static double varianceParaTask() {//####[76]####
+        double total = computeSum(0, population.length);//####[77]####
+        double mean = total / population.length;//####[78]####
+        double varSum = computeVarianceSum(0, population.length, mean);//####[79]####
+        return varSum / population.length;//####[80]####
+    }//####[81]####
+//####[83]####
+    public static void varianceWithThreshold(int numThreads, ScheduleType schedule, int threshold) {//####[84]####
+        ParaTask.setScheduling(schedule);//####[85]####
+        ParaTask.setThreadPoolSize(ThreadPoolType.ALL, numThreads);//####[86]####
+        THRESHOLD = threshold;//####[87]####
+        varianceParaTask();//####[88]####
+    }//####[89]####
+//####[91]####
+    private static double computeSum(int start, int end) {//####[91]####
+        int length = end - start;//####[92]####
+        if (length <= THRESHOLD) //####[93]####
+        {//####[93]####
+            double total = 0;//####[94]####
+            for (int i = start; i < end; i++) //####[95]####
+            {//####[95]####
+                total += population[i];//####[96]####
+            }//####[97]####
+            return total;//####[98]####
+        }//####[99]####
+        TaskID<Double> left = computeSumTask(start, start + length / 2);//####[101]####
+        double rightSum = computeSum(start + length / 2, end);//####[103]####
+        return getResult(left) + rightSum;//####[105]####
+    }//####[106]####
+//####[108]####
+    private static volatile Method __pt__computeSumTask_int_int_method = null;//####[108]####
+    private synchronized static void __pt__computeSumTask_int_int_ensureMethodVarSet() {//####[108]####
+        if (__pt__computeSumTask_int_int_method == null) {//####[108]####
+            try {//####[108]####
+                __pt__computeSumTask_int_int_method = ParaTaskHelper.getDeclaredMethod(new ParaTaskHelper.ClassGetter().getCurrentClass(), "__pt__computeSumTask", new Class[] {//####[108]####
+                    int.class, int.class//####[108]####
+                });//####[108]####
+            } catch (Exception e) {//####[108]####
+                e.printStackTrace();//####[108]####
+            }//####[108]####
+        }//####[108]####
+    }//####[108]####
+    private static TaskID<Double> computeSumTask(int start, int end) {//####[108]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[108]####
+        return computeSumTask(start, end, new TaskInfo());//####[108]####
+    }//####[108]####
+    private static TaskID<Double> computeSumTask(int start, int end, TaskInfo taskinfo) {//####[108]####
+        // ensure Method variable is set//####[108]####
+        if (__pt__computeSumTask_int_int_method == null) {//####[108]####
+            __pt__computeSumTask_int_int_ensureMethodVarSet();//####[108]####
+        }//####[108]####
+        taskinfo.setParameters(start, end);//####[108]####
+        taskinfo.setMethod(__pt__computeSumTask_int_int_method);//####[108]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[108]####
+    }//####[108]####
+    private static TaskID<Double> computeSumTask(TaskID<Integer> start, int end) {//####[108]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[108]####
+        return computeSumTask(start, end, new TaskInfo());//####[108]####
+    }//####[108]####
+    private static TaskID<Double> computeSumTask(TaskID<Integer> start, int end, TaskInfo taskinfo) {//####[108]####
+        // ensure Method variable is set//####[108]####
+        if (__pt__computeSumTask_int_int_method == null) {//####[108]####
+            __pt__computeSumTask_int_int_ensureMethodVarSet();//####[108]####
+        }//####[108]####
+        taskinfo.setTaskIdArgIndexes(0);//####[108]####
+        taskinfo.addDependsOn(start);//####[108]####
+        taskinfo.setParameters(start, end);//####[108]####
+        taskinfo.setMethod(__pt__computeSumTask_int_int_method);//####[108]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[108]####
+    }//####[108]####
+    private static TaskID<Double> computeSumTask(BlockingQueue<Integer> start, int end) {//####[108]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[108]####
+        return computeSumTask(start, end, new TaskInfo());//####[108]####
+    }//####[108]####
+    private static TaskID<Double> computeSumTask(BlockingQueue<Integer> start, int end, TaskInfo taskinfo) {//####[108]####
+        // ensure Method variable is set//####[108]####
+        if (__pt__computeSumTask_int_int_method == null) {//####[108]####
+            __pt__computeSumTask_int_int_ensureMethodVarSet();//####[108]####
+        }//####[108]####
+        taskinfo.setQueueArgIndexes(0);//####[108]####
+        taskinfo.setIsPipeline(true);//####[108]####
+        taskinfo.setParameters(start, end);//####[108]####
+        taskinfo.setMethod(__pt__computeSumTask_int_int_method);//####[108]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[108]####
+    }//####[108]####
+    private static TaskID<Double> computeSumTask(int start, TaskID<Integer> end) {//####[108]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[108]####
+        return computeSumTask(start, end, new TaskInfo());//####[108]####
+    }//####[108]####
+    private static TaskID<Double> computeSumTask(int start, TaskID<Integer> end, TaskInfo taskinfo) {//####[108]####
+        // ensure Method variable is set//####[108]####
+        if (__pt__computeSumTask_int_int_method == null) {//####[108]####
+            __pt__computeSumTask_int_int_ensureMethodVarSet();//####[108]####
+        }//####[108]####
+        taskinfo.setTaskIdArgIndexes(1);//####[108]####
+        taskinfo.addDependsOn(end);//####[108]####
+        taskinfo.setParameters(start, end);//####[108]####
+        taskinfo.setMethod(__pt__computeSumTask_int_int_method);//####[108]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[108]####
+    }//####[108]####
+    private static TaskID<Double> computeSumTask(TaskID<Integer> start, TaskID<Integer> end) {//####[108]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[108]####
+        return computeSumTask(start, end, new TaskInfo());//####[108]####
+    }//####[108]####
+    private static TaskID<Double> computeSumTask(TaskID<Integer> start, TaskID<Integer> end, TaskInfo taskinfo) {//####[108]####
+        // ensure Method variable is set//####[108]####
+        if (__pt__computeSumTask_int_int_method == null) {//####[108]####
+            __pt__computeSumTask_int_int_ensureMethodVarSet();//####[108]####
+        }//####[108]####
+        taskinfo.setTaskIdArgIndexes(0, 1);//####[108]####
+        taskinfo.addDependsOn(start);//####[108]####
+        taskinfo.addDependsOn(end);//####[108]####
+        taskinfo.setParameters(start, end);//####[108]####
+        taskinfo.setMethod(__pt__computeSumTask_int_int_method);//####[108]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[108]####
+    }//####[108]####
+    private static TaskID<Double> computeSumTask(BlockingQueue<Integer> start, TaskID<Integer> end) {//####[108]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[108]####
+        return computeSumTask(start, end, new TaskInfo());//####[108]####
+    }//####[108]####
+    private static TaskID<Double> computeSumTask(BlockingQueue<Integer> start, TaskID<Integer> end, TaskInfo taskinfo) {//####[108]####
+        // ensure Method variable is set//####[108]####
+        if (__pt__computeSumTask_int_int_method == null) {//####[108]####
+            __pt__computeSumTask_int_int_ensureMethodVarSet();//####[108]####
+        }//####[108]####
+        taskinfo.setQueueArgIndexes(0);//####[108]####
+        taskinfo.setIsPipeline(true);//####[108]####
+        taskinfo.setTaskIdArgIndexes(1);//####[108]####
+        taskinfo.addDependsOn(end);//####[108]####
+        taskinfo.setParameters(start, end);//####[108]####
+        taskinfo.setMethod(__pt__computeSumTask_int_int_method);//####[108]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[108]####
+    }//####[108]####
+    private static TaskID<Double> computeSumTask(int start, BlockingQueue<Integer> end) {//####[108]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[108]####
+        return computeSumTask(start, end, new TaskInfo());//####[108]####
+    }//####[108]####
+    private static TaskID<Double> computeSumTask(int start, BlockingQueue<Integer> end, TaskInfo taskinfo) {//####[108]####
+        // ensure Method variable is set//####[108]####
+        if (__pt__computeSumTask_int_int_method == null) {//####[108]####
+            __pt__computeSumTask_int_int_ensureMethodVarSet();//####[108]####
+        }//####[108]####
+        taskinfo.setQueueArgIndexes(1);//####[108]####
+        taskinfo.setIsPipeline(true);//####[108]####
+        taskinfo.setParameters(start, end);//####[108]####
+        taskinfo.setMethod(__pt__computeSumTask_int_int_method);//####[108]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[108]####
+    }//####[108]####
+    private static TaskID<Double> computeSumTask(TaskID<Integer> start, BlockingQueue<Integer> end) {//####[108]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[108]####
+        return computeSumTask(start, end, new TaskInfo());//####[108]####
+    }//####[108]####
+    private static TaskID<Double> computeSumTask(TaskID<Integer> start, BlockingQueue<Integer> end, TaskInfo taskinfo) {//####[108]####
+        // ensure Method variable is set//####[108]####
+        if (__pt__computeSumTask_int_int_method == null) {//####[108]####
+            __pt__computeSumTask_int_int_ensureMethodVarSet();//####[108]####
+        }//####[108]####
+        taskinfo.setQueueArgIndexes(1);//####[108]####
+        taskinfo.setIsPipeline(true);//####[108]####
+        taskinfo.setTaskIdArgIndexes(0);//####[108]####
+        taskinfo.addDependsOn(start);//####[108]####
+        taskinfo.setParameters(start, end);//####[108]####
+        taskinfo.setMethod(__pt__computeSumTask_int_int_method);//####[108]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[108]####
+    }//####[108]####
+    private static TaskID<Double> computeSumTask(BlockingQueue<Integer> start, BlockingQueue<Integer> end) {//####[108]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[108]####
+        return computeSumTask(start, end, new TaskInfo());//####[108]####
+    }//####[108]####
+    private static TaskID<Double> computeSumTask(BlockingQueue<Integer> start, BlockingQueue<Integer> end, TaskInfo taskinfo) {//####[108]####
+        // ensure Method variable is set//####[108]####
+        if (__pt__computeSumTask_int_int_method == null) {//####[108]####
+            __pt__computeSumTask_int_int_ensureMethodVarSet();//####[108]####
+        }//####[108]####
+        taskinfo.setQueueArgIndexes(0, 1);//####[108]####
+        taskinfo.setIsPipeline(true);//####[108]####
+        taskinfo.setParameters(start, end);//####[108]####
+        taskinfo.setMethod(__pt__computeSumTask_int_int_method);//####[108]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[108]####
+    }//####[108]####
+    public static double __pt__computeSumTask(int start, int end) {//####[108]####
+        return computeSum(start, end);//####[109]####
+    }//####[110]####
+//####[110]####
+//####[112]####
+    private static volatile Method __pt__computeVarianceSumTask_int_int_double_method = null;//####[112]####
+    private synchronized static void __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet() {//####[112]####
+        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[112]####
+            try {//####[112]####
+                __pt__computeVarianceSumTask_int_int_double_method = ParaTaskHelper.getDeclaredMethod(new ParaTaskHelper.ClassGetter().getCurrentClass(), "__pt__computeVarianceSumTask", new Class[] {//####[112]####
+                    int.class, int.class, double.class//####[112]####
+                });//####[112]####
+            } catch (Exception e) {//####[112]####
+                e.printStackTrace();//####[112]####
             }//####[112]####
-            return variance;//####[113]####
-        }//####[114]####
-        TaskID<Double> left = computeVarianceSumTask(start, start + length / 2, mean);//####[116]####
-        double rightSum = computeVarianceSum(start + length / 2, end, mean);//####[119]####
-        return getResult(left) + rightSum;//####[121]####
-    }//####[122]####
-}//####[122]####
+        }//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(int start, int end, double mean) {//####[112]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[112]####
+        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(int start, int end, double mean, TaskInfo taskinfo) {//####[112]####
+        // ensure Method variable is set//####[112]####
+        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[112]####
+            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[112]####
+        }//####[112]####
+        taskinfo.setParameters(start, end, mean);//####[112]####
+        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[112]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(TaskID<Integer> start, int end, double mean) {//####[112]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[112]####
+        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(TaskID<Integer> start, int end, double mean, TaskInfo taskinfo) {//####[112]####
+        // ensure Method variable is set//####[112]####
+        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[112]####
+            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[112]####
+        }//####[112]####
+        taskinfo.setTaskIdArgIndexes(0);//####[112]####
+        taskinfo.addDependsOn(start);//####[112]####
+        taskinfo.setParameters(start, end, mean);//####[112]####
+        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[112]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(BlockingQueue<Integer> start, int end, double mean) {//####[112]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[112]####
+        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(BlockingQueue<Integer> start, int end, double mean, TaskInfo taskinfo) {//####[112]####
+        // ensure Method variable is set//####[112]####
+        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[112]####
+            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[112]####
+        }//####[112]####
+        taskinfo.setQueueArgIndexes(0);//####[112]####
+        taskinfo.setIsPipeline(true);//####[112]####
+        taskinfo.setParameters(start, end, mean);//####[112]####
+        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[112]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(int start, TaskID<Integer> end, double mean) {//####[112]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[112]####
+        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(int start, TaskID<Integer> end, double mean, TaskInfo taskinfo) {//####[112]####
+        // ensure Method variable is set//####[112]####
+        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[112]####
+            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[112]####
+        }//####[112]####
+        taskinfo.setTaskIdArgIndexes(1);//####[112]####
+        taskinfo.addDependsOn(end);//####[112]####
+        taskinfo.setParameters(start, end, mean);//####[112]####
+        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[112]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(TaskID<Integer> start, TaskID<Integer> end, double mean) {//####[112]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[112]####
+        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(TaskID<Integer> start, TaskID<Integer> end, double mean, TaskInfo taskinfo) {//####[112]####
+        // ensure Method variable is set//####[112]####
+        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[112]####
+            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[112]####
+        }//####[112]####
+        taskinfo.setTaskIdArgIndexes(0, 1);//####[112]####
+        taskinfo.addDependsOn(start);//####[112]####
+        taskinfo.addDependsOn(end);//####[112]####
+        taskinfo.setParameters(start, end, mean);//####[112]####
+        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[112]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(BlockingQueue<Integer> start, TaskID<Integer> end, double mean) {//####[112]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[112]####
+        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(BlockingQueue<Integer> start, TaskID<Integer> end, double mean, TaskInfo taskinfo) {//####[112]####
+        // ensure Method variable is set//####[112]####
+        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[112]####
+            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[112]####
+        }//####[112]####
+        taskinfo.setQueueArgIndexes(0);//####[112]####
+        taskinfo.setIsPipeline(true);//####[112]####
+        taskinfo.setTaskIdArgIndexes(1);//####[112]####
+        taskinfo.addDependsOn(end);//####[112]####
+        taskinfo.setParameters(start, end, mean);//####[112]####
+        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[112]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(int start, BlockingQueue<Integer> end, double mean) {//####[112]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[112]####
+        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(int start, BlockingQueue<Integer> end, double mean, TaskInfo taskinfo) {//####[112]####
+        // ensure Method variable is set//####[112]####
+        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[112]####
+            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[112]####
+        }//####[112]####
+        taskinfo.setQueueArgIndexes(1);//####[112]####
+        taskinfo.setIsPipeline(true);//####[112]####
+        taskinfo.setParameters(start, end, mean);//####[112]####
+        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[112]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(TaskID<Integer> start, BlockingQueue<Integer> end, double mean) {//####[112]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[112]####
+        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(TaskID<Integer> start, BlockingQueue<Integer> end, double mean, TaskInfo taskinfo) {//####[112]####
+        // ensure Method variable is set//####[112]####
+        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[112]####
+            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[112]####
+        }//####[112]####
+        taskinfo.setQueueArgIndexes(1);//####[112]####
+        taskinfo.setIsPipeline(true);//####[112]####
+        taskinfo.setTaskIdArgIndexes(0);//####[112]####
+        taskinfo.addDependsOn(start);//####[112]####
+        taskinfo.setParameters(start, end, mean);//####[112]####
+        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[112]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(BlockingQueue<Integer> start, BlockingQueue<Integer> end, double mean) {//####[112]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[112]####
+        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(BlockingQueue<Integer> start, BlockingQueue<Integer> end, double mean, TaskInfo taskinfo) {//####[112]####
+        // ensure Method variable is set//####[112]####
+        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[112]####
+            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[112]####
+        }//####[112]####
+        taskinfo.setQueueArgIndexes(0, 1);//####[112]####
+        taskinfo.setIsPipeline(true);//####[112]####
+        taskinfo.setParameters(start, end, mean);//####[112]####
+        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[112]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(int start, int end, TaskID<Double> mean) {//####[112]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[112]####
+        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(int start, int end, TaskID<Double> mean, TaskInfo taskinfo) {//####[112]####
+        // ensure Method variable is set//####[112]####
+        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[112]####
+            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[112]####
+        }//####[112]####
+        taskinfo.setTaskIdArgIndexes(2);//####[112]####
+        taskinfo.addDependsOn(mean);//####[112]####
+        taskinfo.setParameters(start, end, mean);//####[112]####
+        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[112]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(TaskID<Integer> start, int end, TaskID<Double> mean) {//####[112]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[112]####
+        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(TaskID<Integer> start, int end, TaskID<Double> mean, TaskInfo taskinfo) {//####[112]####
+        // ensure Method variable is set//####[112]####
+        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[112]####
+            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[112]####
+        }//####[112]####
+        taskinfo.setTaskIdArgIndexes(0, 2);//####[112]####
+        taskinfo.addDependsOn(start);//####[112]####
+        taskinfo.addDependsOn(mean);//####[112]####
+        taskinfo.setParameters(start, end, mean);//####[112]####
+        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[112]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(BlockingQueue<Integer> start, int end, TaskID<Double> mean) {//####[112]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[112]####
+        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(BlockingQueue<Integer> start, int end, TaskID<Double> mean, TaskInfo taskinfo) {//####[112]####
+        // ensure Method variable is set//####[112]####
+        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[112]####
+            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[112]####
+        }//####[112]####
+        taskinfo.setQueueArgIndexes(0);//####[112]####
+        taskinfo.setIsPipeline(true);//####[112]####
+        taskinfo.setTaskIdArgIndexes(2);//####[112]####
+        taskinfo.addDependsOn(mean);//####[112]####
+        taskinfo.setParameters(start, end, mean);//####[112]####
+        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[112]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(int start, TaskID<Integer> end, TaskID<Double> mean) {//####[112]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[112]####
+        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(int start, TaskID<Integer> end, TaskID<Double> mean, TaskInfo taskinfo) {//####[112]####
+        // ensure Method variable is set//####[112]####
+        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[112]####
+            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[112]####
+        }//####[112]####
+        taskinfo.setTaskIdArgIndexes(1, 2);//####[112]####
+        taskinfo.addDependsOn(end);//####[112]####
+        taskinfo.addDependsOn(mean);//####[112]####
+        taskinfo.setParameters(start, end, mean);//####[112]####
+        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[112]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(TaskID<Integer> start, TaskID<Integer> end, TaskID<Double> mean) {//####[112]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[112]####
+        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(TaskID<Integer> start, TaskID<Integer> end, TaskID<Double> mean, TaskInfo taskinfo) {//####[112]####
+        // ensure Method variable is set//####[112]####
+        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[112]####
+            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[112]####
+        }//####[112]####
+        taskinfo.setTaskIdArgIndexes(0, 1, 2);//####[112]####
+        taskinfo.addDependsOn(start);//####[112]####
+        taskinfo.addDependsOn(end);//####[112]####
+        taskinfo.addDependsOn(mean);//####[112]####
+        taskinfo.setParameters(start, end, mean);//####[112]####
+        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[112]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(BlockingQueue<Integer> start, TaskID<Integer> end, TaskID<Double> mean) {//####[112]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[112]####
+        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(BlockingQueue<Integer> start, TaskID<Integer> end, TaskID<Double> mean, TaskInfo taskinfo) {//####[112]####
+        // ensure Method variable is set//####[112]####
+        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[112]####
+            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[112]####
+        }//####[112]####
+        taskinfo.setQueueArgIndexes(0);//####[112]####
+        taskinfo.setIsPipeline(true);//####[112]####
+        taskinfo.setTaskIdArgIndexes(1, 2);//####[112]####
+        taskinfo.addDependsOn(end);//####[112]####
+        taskinfo.addDependsOn(mean);//####[112]####
+        taskinfo.setParameters(start, end, mean);//####[112]####
+        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[112]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(int start, BlockingQueue<Integer> end, TaskID<Double> mean) {//####[112]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[112]####
+        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(int start, BlockingQueue<Integer> end, TaskID<Double> mean, TaskInfo taskinfo) {//####[112]####
+        // ensure Method variable is set//####[112]####
+        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[112]####
+            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[112]####
+        }//####[112]####
+        taskinfo.setQueueArgIndexes(1);//####[112]####
+        taskinfo.setIsPipeline(true);//####[112]####
+        taskinfo.setTaskIdArgIndexes(2);//####[112]####
+        taskinfo.addDependsOn(mean);//####[112]####
+        taskinfo.setParameters(start, end, mean);//####[112]####
+        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[112]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(TaskID<Integer> start, BlockingQueue<Integer> end, TaskID<Double> mean) {//####[112]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[112]####
+        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(TaskID<Integer> start, BlockingQueue<Integer> end, TaskID<Double> mean, TaskInfo taskinfo) {//####[112]####
+        // ensure Method variable is set//####[112]####
+        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[112]####
+            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[112]####
+        }//####[112]####
+        taskinfo.setQueueArgIndexes(1);//####[112]####
+        taskinfo.setIsPipeline(true);//####[112]####
+        taskinfo.setTaskIdArgIndexes(0, 2);//####[112]####
+        taskinfo.addDependsOn(start);//####[112]####
+        taskinfo.addDependsOn(mean);//####[112]####
+        taskinfo.setParameters(start, end, mean);//####[112]####
+        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[112]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(BlockingQueue<Integer> start, BlockingQueue<Integer> end, TaskID<Double> mean) {//####[112]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[112]####
+        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(BlockingQueue<Integer> start, BlockingQueue<Integer> end, TaskID<Double> mean, TaskInfo taskinfo) {//####[112]####
+        // ensure Method variable is set//####[112]####
+        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[112]####
+            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[112]####
+        }//####[112]####
+        taskinfo.setQueueArgIndexes(0, 1);//####[112]####
+        taskinfo.setIsPipeline(true);//####[112]####
+        taskinfo.setTaskIdArgIndexes(2);//####[112]####
+        taskinfo.addDependsOn(mean);//####[112]####
+        taskinfo.setParameters(start, end, mean);//####[112]####
+        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[112]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(int start, int end, BlockingQueue<Double> mean) {//####[112]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[112]####
+        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(int start, int end, BlockingQueue<Double> mean, TaskInfo taskinfo) {//####[112]####
+        // ensure Method variable is set//####[112]####
+        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[112]####
+            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[112]####
+        }//####[112]####
+        taskinfo.setQueueArgIndexes(2);//####[112]####
+        taskinfo.setIsPipeline(true);//####[112]####
+        taskinfo.setParameters(start, end, mean);//####[112]####
+        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[112]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(TaskID<Integer> start, int end, BlockingQueue<Double> mean) {//####[112]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[112]####
+        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(TaskID<Integer> start, int end, BlockingQueue<Double> mean, TaskInfo taskinfo) {//####[112]####
+        // ensure Method variable is set//####[112]####
+        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[112]####
+            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[112]####
+        }//####[112]####
+        taskinfo.setQueueArgIndexes(2);//####[112]####
+        taskinfo.setIsPipeline(true);//####[112]####
+        taskinfo.setTaskIdArgIndexes(0);//####[112]####
+        taskinfo.addDependsOn(start);//####[112]####
+        taskinfo.setParameters(start, end, mean);//####[112]####
+        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[112]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(BlockingQueue<Integer> start, int end, BlockingQueue<Double> mean) {//####[112]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[112]####
+        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(BlockingQueue<Integer> start, int end, BlockingQueue<Double> mean, TaskInfo taskinfo) {//####[112]####
+        // ensure Method variable is set//####[112]####
+        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[112]####
+            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[112]####
+        }//####[112]####
+        taskinfo.setQueueArgIndexes(0, 2);//####[112]####
+        taskinfo.setIsPipeline(true);//####[112]####
+        taskinfo.setParameters(start, end, mean);//####[112]####
+        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[112]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(int start, TaskID<Integer> end, BlockingQueue<Double> mean) {//####[112]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[112]####
+        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(int start, TaskID<Integer> end, BlockingQueue<Double> mean, TaskInfo taskinfo) {//####[112]####
+        // ensure Method variable is set//####[112]####
+        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[112]####
+            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[112]####
+        }//####[112]####
+        taskinfo.setQueueArgIndexes(2);//####[112]####
+        taskinfo.setIsPipeline(true);//####[112]####
+        taskinfo.setTaskIdArgIndexes(1);//####[112]####
+        taskinfo.addDependsOn(end);//####[112]####
+        taskinfo.setParameters(start, end, mean);//####[112]####
+        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[112]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(TaskID<Integer> start, TaskID<Integer> end, BlockingQueue<Double> mean) {//####[112]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[112]####
+        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(TaskID<Integer> start, TaskID<Integer> end, BlockingQueue<Double> mean, TaskInfo taskinfo) {//####[112]####
+        // ensure Method variable is set//####[112]####
+        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[112]####
+            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[112]####
+        }//####[112]####
+        taskinfo.setQueueArgIndexes(2);//####[112]####
+        taskinfo.setIsPipeline(true);//####[112]####
+        taskinfo.setTaskIdArgIndexes(0, 1);//####[112]####
+        taskinfo.addDependsOn(start);//####[112]####
+        taskinfo.addDependsOn(end);//####[112]####
+        taskinfo.setParameters(start, end, mean);//####[112]####
+        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[112]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(BlockingQueue<Integer> start, TaskID<Integer> end, BlockingQueue<Double> mean) {//####[112]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[112]####
+        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(BlockingQueue<Integer> start, TaskID<Integer> end, BlockingQueue<Double> mean, TaskInfo taskinfo) {//####[112]####
+        // ensure Method variable is set//####[112]####
+        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[112]####
+            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[112]####
+        }//####[112]####
+        taskinfo.setQueueArgIndexes(0, 2);//####[112]####
+        taskinfo.setIsPipeline(true);//####[112]####
+        taskinfo.setTaskIdArgIndexes(1);//####[112]####
+        taskinfo.addDependsOn(end);//####[112]####
+        taskinfo.setParameters(start, end, mean);//####[112]####
+        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[112]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(int start, BlockingQueue<Integer> end, BlockingQueue<Double> mean) {//####[112]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[112]####
+        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(int start, BlockingQueue<Integer> end, BlockingQueue<Double> mean, TaskInfo taskinfo) {//####[112]####
+        // ensure Method variable is set//####[112]####
+        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[112]####
+            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[112]####
+        }//####[112]####
+        taskinfo.setQueueArgIndexes(1, 2);//####[112]####
+        taskinfo.setIsPipeline(true);//####[112]####
+        taskinfo.setParameters(start, end, mean);//####[112]####
+        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[112]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(TaskID<Integer> start, BlockingQueue<Integer> end, BlockingQueue<Double> mean) {//####[112]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[112]####
+        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(TaskID<Integer> start, BlockingQueue<Integer> end, BlockingQueue<Double> mean, TaskInfo taskinfo) {//####[112]####
+        // ensure Method variable is set//####[112]####
+        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[112]####
+            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[112]####
+        }//####[112]####
+        taskinfo.setQueueArgIndexes(1, 2);//####[112]####
+        taskinfo.setIsPipeline(true);//####[112]####
+        taskinfo.setTaskIdArgIndexes(0);//####[112]####
+        taskinfo.addDependsOn(start);//####[112]####
+        taskinfo.setParameters(start, end, mean);//####[112]####
+        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[112]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(BlockingQueue<Integer> start, BlockingQueue<Integer> end, BlockingQueue<Double> mean) {//####[112]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[112]####
+        return computeVarianceSumTask(start, end, mean, new TaskInfo());//####[112]####
+    }//####[112]####
+    private static TaskID<Double> computeVarianceSumTask(BlockingQueue<Integer> start, BlockingQueue<Integer> end, BlockingQueue<Double> mean, TaskInfo taskinfo) {//####[112]####
+        // ensure Method variable is set//####[112]####
+        if (__pt__computeVarianceSumTask_int_int_double_method == null) {//####[112]####
+            __pt__computeVarianceSumTask_int_int_double_ensureMethodVarSet();//####[112]####
+        }//####[112]####
+        taskinfo.setQueueArgIndexes(0, 1, 2);//####[112]####
+        taskinfo.setIsPipeline(true);//####[112]####
+        taskinfo.setParameters(start, end, mean);//####[112]####
+        taskinfo.setMethod(__pt__computeVarianceSumTask_int_int_double_method);//####[112]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[112]####
+    }//####[112]####
+    public static double __pt__computeVarianceSumTask(int start, int end, double mean) {//####[112]####
+        return computeVarianceSum(start, end, mean);//####[113]####
+    }//####[114]####
+//####[114]####
+//####[116]####
+    private static double computeVarianceSum(int start, int end, double mean) {//####[116]####
+        int length = end - start;//####[117]####
+        if (length <= THRESHOLD) //####[118]####
+        {//####[118]####
+            double variance = 0;//####[119]####
+            for (int i = start; i < end; i++) //####[120]####
+            {//####[120]####
+                variance += (population[i] - mean) * (population[i] - mean);//####[121]####
+            }//####[122]####
+            return variance;//####[123]####
+        }//####[124]####
+        TaskID<Double> left = computeVarianceSumTask(start, start + length / 2, mean);//####[126]####
+        double rightSum = computeVarianceSum(start + length / 2, end, mean);//####[129]####
+        return getResult(left) + rightSum;//####[131]####
+    }//####[132]####
+//####[134]####
+    private static volatile Method __pt__computeNewSumTask_int_int_method = null;//####[134]####
+    private synchronized static void __pt__computeNewSumTask_int_int_ensureMethodVarSet() {//####[134]####
+        if (__pt__computeNewSumTask_int_int_method == null) {//####[134]####
+            try {//####[134]####
+                __pt__computeNewSumTask_int_int_method = ParaTaskHelper.getDeclaredMethod(new ParaTaskHelper.ClassGetter().getCurrentClass(), "__pt__computeNewSumTask", new Class[] {//####[134]####
+                    int.class, int.class//####[134]####
+                });//####[134]####
+            } catch (Exception e) {//####[134]####
+                e.printStackTrace();//####[134]####
+            }//####[134]####
+        }//####[134]####
+    }//####[134]####
+    private static TaskID<Double> computeNewSumTask(int start, int end) {//####[134]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[134]####
+        return computeNewSumTask(start, end, new TaskInfo());//####[134]####
+    }//####[134]####
+    private static TaskID<Double> computeNewSumTask(int start, int end, TaskInfo taskinfo) {//####[134]####
+        // ensure Method variable is set//####[134]####
+        if (__pt__computeNewSumTask_int_int_method == null) {//####[134]####
+            __pt__computeNewSumTask_int_int_ensureMethodVarSet();//####[134]####
+        }//####[134]####
+        taskinfo.setParameters(start, end);//####[134]####
+        taskinfo.setMethod(__pt__computeNewSumTask_int_int_method);//####[134]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[134]####
+    }//####[134]####
+    private static TaskID<Double> computeNewSumTask(TaskID<Integer> start, int end) {//####[134]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[134]####
+        return computeNewSumTask(start, end, new TaskInfo());//####[134]####
+    }//####[134]####
+    private static TaskID<Double> computeNewSumTask(TaskID<Integer> start, int end, TaskInfo taskinfo) {//####[134]####
+        // ensure Method variable is set//####[134]####
+        if (__pt__computeNewSumTask_int_int_method == null) {//####[134]####
+            __pt__computeNewSumTask_int_int_ensureMethodVarSet();//####[134]####
+        }//####[134]####
+        taskinfo.setTaskIdArgIndexes(0);//####[134]####
+        taskinfo.addDependsOn(start);//####[134]####
+        taskinfo.setParameters(start, end);//####[134]####
+        taskinfo.setMethod(__pt__computeNewSumTask_int_int_method);//####[134]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[134]####
+    }//####[134]####
+    private static TaskID<Double> computeNewSumTask(BlockingQueue<Integer> start, int end) {//####[134]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[134]####
+        return computeNewSumTask(start, end, new TaskInfo());//####[134]####
+    }//####[134]####
+    private static TaskID<Double> computeNewSumTask(BlockingQueue<Integer> start, int end, TaskInfo taskinfo) {//####[134]####
+        // ensure Method variable is set//####[134]####
+        if (__pt__computeNewSumTask_int_int_method == null) {//####[134]####
+            __pt__computeNewSumTask_int_int_ensureMethodVarSet();//####[134]####
+        }//####[134]####
+        taskinfo.setQueueArgIndexes(0);//####[134]####
+        taskinfo.setIsPipeline(true);//####[134]####
+        taskinfo.setParameters(start, end);//####[134]####
+        taskinfo.setMethod(__pt__computeNewSumTask_int_int_method);//####[134]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[134]####
+    }//####[134]####
+    private static TaskID<Double> computeNewSumTask(int start, TaskID<Integer> end) {//####[134]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[134]####
+        return computeNewSumTask(start, end, new TaskInfo());//####[134]####
+    }//####[134]####
+    private static TaskID<Double> computeNewSumTask(int start, TaskID<Integer> end, TaskInfo taskinfo) {//####[134]####
+        // ensure Method variable is set//####[134]####
+        if (__pt__computeNewSumTask_int_int_method == null) {//####[134]####
+            __pt__computeNewSumTask_int_int_ensureMethodVarSet();//####[134]####
+        }//####[134]####
+        taskinfo.setTaskIdArgIndexes(1);//####[134]####
+        taskinfo.addDependsOn(end);//####[134]####
+        taskinfo.setParameters(start, end);//####[134]####
+        taskinfo.setMethod(__pt__computeNewSumTask_int_int_method);//####[134]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[134]####
+    }//####[134]####
+    private static TaskID<Double> computeNewSumTask(TaskID<Integer> start, TaskID<Integer> end) {//####[134]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[134]####
+        return computeNewSumTask(start, end, new TaskInfo());//####[134]####
+    }//####[134]####
+    private static TaskID<Double> computeNewSumTask(TaskID<Integer> start, TaskID<Integer> end, TaskInfo taskinfo) {//####[134]####
+        // ensure Method variable is set//####[134]####
+        if (__pt__computeNewSumTask_int_int_method == null) {//####[134]####
+            __pt__computeNewSumTask_int_int_ensureMethodVarSet();//####[134]####
+        }//####[134]####
+        taskinfo.setTaskIdArgIndexes(0, 1);//####[134]####
+        taskinfo.addDependsOn(start);//####[134]####
+        taskinfo.addDependsOn(end);//####[134]####
+        taskinfo.setParameters(start, end);//####[134]####
+        taskinfo.setMethod(__pt__computeNewSumTask_int_int_method);//####[134]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[134]####
+    }//####[134]####
+    private static TaskID<Double> computeNewSumTask(BlockingQueue<Integer> start, TaskID<Integer> end) {//####[134]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[134]####
+        return computeNewSumTask(start, end, new TaskInfo());//####[134]####
+    }//####[134]####
+    private static TaskID<Double> computeNewSumTask(BlockingQueue<Integer> start, TaskID<Integer> end, TaskInfo taskinfo) {//####[134]####
+        // ensure Method variable is set//####[134]####
+        if (__pt__computeNewSumTask_int_int_method == null) {//####[134]####
+            __pt__computeNewSumTask_int_int_ensureMethodVarSet();//####[134]####
+        }//####[134]####
+        taskinfo.setQueueArgIndexes(0);//####[134]####
+        taskinfo.setIsPipeline(true);//####[134]####
+        taskinfo.setTaskIdArgIndexes(1);//####[134]####
+        taskinfo.addDependsOn(end);//####[134]####
+        taskinfo.setParameters(start, end);//####[134]####
+        taskinfo.setMethod(__pt__computeNewSumTask_int_int_method);//####[134]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[134]####
+    }//####[134]####
+    private static TaskID<Double> computeNewSumTask(int start, BlockingQueue<Integer> end) {//####[134]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[134]####
+        return computeNewSumTask(start, end, new TaskInfo());//####[134]####
+    }//####[134]####
+    private static TaskID<Double> computeNewSumTask(int start, BlockingQueue<Integer> end, TaskInfo taskinfo) {//####[134]####
+        // ensure Method variable is set//####[134]####
+        if (__pt__computeNewSumTask_int_int_method == null) {//####[134]####
+            __pt__computeNewSumTask_int_int_ensureMethodVarSet();//####[134]####
+        }//####[134]####
+        taskinfo.setQueueArgIndexes(1);//####[134]####
+        taskinfo.setIsPipeline(true);//####[134]####
+        taskinfo.setParameters(start, end);//####[134]####
+        taskinfo.setMethod(__pt__computeNewSumTask_int_int_method);//####[134]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[134]####
+    }//####[134]####
+    private static TaskID<Double> computeNewSumTask(TaskID<Integer> start, BlockingQueue<Integer> end) {//####[134]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[134]####
+        return computeNewSumTask(start, end, new TaskInfo());//####[134]####
+    }//####[134]####
+    private static TaskID<Double> computeNewSumTask(TaskID<Integer> start, BlockingQueue<Integer> end, TaskInfo taskinfo) {//####[134]####
+        // ensure Method variable is set//####[134]####
+        if (__pt__computeNewSumTask_int_int_method == null) {//####[134]####
+            __pt__computeNewSumTask_int_int_ensureMethodVarSet();//####[134]####
+        }//####[134]####
+        taskinfo.setQueueArgIndexes(1);//####[134]####
+        taskinfo.setIsPipeline(true);//####[134]####
+        taskinfo.setTaskIdArgIndexes(0);//####[134]####
+        taskinfo.addDependsOn(start);//####[134]####
+        taskinfo.setParameters(start, end);//####[134]####
+        taskinfo.setMethod(__pt__computeNewSumTask_int_int_method);//####[134]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[134]####
+    }//####[134]####
+    private static TaskID<Double> computeNewSumTask(BlockingQueue<Integer> start, BlockingQueue<Integer> end) {//####[134]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[134]####
+        return computeNewSumTask(start, end, new TaskInfo());//####[134]####
+    }//####[134]####
+    private static TaskID<Double> computeNewSumTask(BlockingQueue<Integer> start, BlockingQueue<Integer> end, TaskInfo taskinfo) {//####[134]####
+        // ensure Method variable is set//####[134]####
+        if (__pt__computeNewSumTask_int_int_method == null) {//####[134]####
+            __pt__computeNewSumTask_int_int_ensureMethodVarSet();//####[134]####
+        }//####[134]####
+        taskinfo.setQueueArgIndexes(0, 1);//####[134]####
+        taskinfo.setIsPipeline(true);//####[134]####
+        taskinfo.setParameters(start, end);//####[134]####
+        taskinfo.setMethod(__pt__computeNewSumTask_int_int_method);//####[134]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[134]####
+    }//####[134]####
+    public static double __pt__computeNewSumTask(int start, int end) {//####[134]####
+        double total = 0;//####[135]####
+        for (int i = start; i < end; i++) //####[136]####
+        {//####[136]####
+            total += population[i];//####[137]####
+        }//####[138]####
+        return total;//####[139]####
+    }//####[140]####
+//####[140]####
+//####[142]####
+    public static double computeMeanParaTask(int numThreads, ScheduleType schedule) {//####[142]####
+        ParaTask.setScheduling(schedule);//####[143]####
+        ParaTask.setThreadPoolSize(ThreadPoolType.ALL, numThreads);//####[144]####
+        if (numThreads == 1) //####[145]####
+        {//####[145]####
+            double total = 0;//####[146]####
+            for (int i = 0; i < population.length; i++) //####[147]####
+            {//####[147]####
+                total += population[i];//####[148]####
+            }//####[149]####
+            return total;//####[150]####
+        }//####[151]####
+        int lenPerTask = population.length / numThreads;//####[153]####
+        TaskIDGroup<Double> group = new TaskIDGroup<Double>(numThreads - 1);//####[154]####
+        int start = 0;//####[156]####
+        for (int i = 0; i < numThreads - 1; i++) //####[157]####
+        {//####[157]####
+            TaskID<Double> sum = computeNewSumTask(start, start + lenPerTask);//####[158]####
+            start += lenPerTask;//####[159]####
+            group.add(sum);//####[160]####
+        }//####[161]####
+        double sum = 0;//####[163]####
+        for (int i = start; i < population.length; ++i) //####[164]####
+        {//####[164]####
+            sum += population[i];//####[165]####
+        }//####[166]####
+        try {//####[167]####
+            group.waitTillFinished();//####[168]####
+            Reduction<Double> red = new Reduction<Double>() {//####[168]####
+//####[172]####
+                @Override//####[172]####
+                public Double combine(Double a, Double b) {//####[172]####
+                    return a + b;//####[173]####
+                }//####[174]####
+            };//####[174]####
+            sum += group.reduce(red);//####[177]####
+            return sum / population.length;//####[178]####
+        } catch (Exception e) {//####[180]####
+            throw new RuntimeException(e.getMessage());//####[181]####
+        }//####[182]####
+    }//####[183]####
+}//####[183]####

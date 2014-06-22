@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class TrivialComputation {
 	private static AtomicInteger index = new AtomicInteger(0);
 
-	public static void trivalComputationByParaTaskWithLambda() {
+	public static void trivalComputationByParaTask() {
 		TaskID id = trivalComputation();
 		
 		try {

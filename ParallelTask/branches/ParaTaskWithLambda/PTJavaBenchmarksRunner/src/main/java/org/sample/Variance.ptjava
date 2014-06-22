@@ -4,16 +4,18 @@ import java.util.Arrays;
 import java.util.Random;
 import java.util.concurrent.*;
 
+import pt.runtime.TaskIDGroup;
+import pt.runtime.ParaTask.ScheduleType;
+import pt.runtime.ParaTask.ThreadPoolType;
 
 public class Variance {
 
     private static final Random rand = new Random();
     private static final int MIN = 1;
     private static final int MAX = 140;
-    private static final int POPULATION_SIZE = 30000000;
-    public static final int NUMBER_OF_RUNS = 20;
-    
-    public static final long THRESHOLD = 10;
+    private static final int POPULATION_SIZE = 60000000;
+
+    public static long THRESHOLD = 1000;
     
     public static void init() {
     	population = generatePopulation(POPULATION_SIZE);
@@ -78,6 +80,14 @@ public class Variance {
     	return varSum / population.length;
     }
     
+    public static void varianceWithThreshold(int numThreads, 
+    		ScheduleType schedule, int threshold) {
+    	ParaTask.setScheduling(schedule);
+    	ParaTask.setThreadPoolSize(ThreadPoolType.ALL, numThreads);
+    	THRESHOLD = threshold;
+    	varianceParaTask();
+    }
+    
     private static double computeSum(int start, int end) {
     	int length = end - start;
         if (length <= THRESHOLD) {
@@ -119,6 +129,57 @@ public class Variance {
         double rightSum = computeVarianceSum(start + length/2, end, mean);
         
     	return getResult(left) + rightSum;
+    }
+    
+    TASK private static double computeNewSumTask(int start, int end) {
+    	double total = 0;
+        for (int i = start; i < end; i++) {
+            total += population[i];
+        }
+        return total;
+    }
+    
+    public static double computeMeanParaTask(int numThreads, ScheduleType schedule) {
+    	ParaTask.setScheduling(schedule);
+    	ParaTask.setThreadPoolSize(ThreadPoolType.ALL, numThreads);
+    	if(numThreads == 1) {
+    		double total = 0;
+            for (int i = 0; i < population.length; i++) {
+                total += population[i];
+            }
+            return total;
+    	}
+    	
+    	int lenPerTask = population.length / numThreads;
+    	TaskIDGroup<Double> group = new TaskIDGroup<Double>(numThreads - 1);
+    	
+    	int start = 0;
+    	for(int i = 0; i < numThreads - 1; i++) {
+    		TaskID<Double> sum = computeNewSumTask(start, start + lenPerTask);
+    		start += lenPerTask;
+    		group.add(sum);
+    	}
+
+    	double sum = 0;
+    	for(int i = start; i < population.length; ++i) {
+    		sum += population[i];
+    	}
+    	try {
+    		group.waitTillFinished();
+    		
+    		Reduction<Double> red = new Reduction<Double>() {
+				@Override
+				public Double combine(Double a, Double b) {
+					return a + b;
+				}
+            };    		    
+            
+            sum += group.reduce(red);
+            return sum / population.length;
+            
+    	} catch (Exception e) {
+			throw new RuntimeException(e.getMessage());
+		}
     }
     
 }
