@@ -1,9 +1,11 @@
 package pt.benchmarks.wrapper;
 
+import pt.benchmarks.MeanCalc;
 import pt.benchmarks.TrivialComputation;
 import pt.benchmarks.Variance;
 import pt.benchmarks.queens.Queens;
 import pt.benchmarks.wrapper.ParaTaskWrapper.ScheduleType;
+import pt.runtime.ParaTask;
 
 public class BenchmarksWrapper {
 	public static double[] generatePopulation(int populationSize) {
@@ -54,6 +56,17 @@ public class BenchmarksWrapper {
 			ScheduleType schedule) {
 		Variance.computeMeanParaTask(population, numThreads, 
 				ParaTaskWrapper.getSchedulingType(schedule));
+	}
+	
+	public static void initMeanCalc() {
+		MeanCalc.init();
+		ParaTask.init();
+	}
+	
+	public static void computeMeanRecursively(int numThreads, ScheduleType schedule) {
+		ParaTaskWrapper.setScheduling(schedule);
+		ParaTaskWrapper.setThreadPoolSize(numThreads);
+		MeanCalc.meanRecursive(numThreads, MeanCalc.POPULATION_SIZE / 32);
 	}
 
 }
