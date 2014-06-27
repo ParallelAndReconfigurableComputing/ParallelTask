@@ -9,7 +9,7 @@ public class MeanCalc {
     
     private static final int MAX = 140;
     
-    public static final int POPULATION_SIZE = 90000000;
+    public static final int POPULATION_SIZE = 300000000;
     
     private static long THRESHOLD = 1000;
     
