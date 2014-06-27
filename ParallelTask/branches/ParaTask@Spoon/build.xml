@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project name="ParaTaskWithAnnotations" basedir=".">
+
+	<property name="src.dir" location="src" />
+	<property name="test.dir" location="test" />
+
+	<property name="dist.dir" location="dist" />
+	<property name="gen.dir" location="${dist.dir}/gen" />
+	<property name="classes.dir" location="${dist.dir}/classes" />
+	<property name="lib.dir" location="libs" />
+	<property name="spoon.jar" location="${lib.dir}/spoon-core-1.4-jar-with-dependencies.jar"/>
+
+	<target name="init" description="Creating the folders.">
+		<mkdir dir="${dist.dir}" />
+		<mkdir dir="${classes.dir}" />
+		<mkdir dir="${gen.dir}" />
+	</target>
+
+	<target name="compile" depends="init" description="Compiles the java code">
+		<javac includeantruntime="true" srcdir="${src.dir}" destdir="${classes.dir}">
+			<classpath>
+				<pathelement location="${spoon.jar}" />
+			</classpath>
+		</javac>
+	</target>
+
+	<target name="clean" >
+		<delete dir="${classes.dir}" />
+		<delete dir="${gen.dir}" />
+	</target>
+	
+	<target name="process" depends="compile" description="Process the annotated code">
+		<exec executable="java">
+			<arg line="-cp ${spoon.jar}:dist/classes spoon.Launcher -v -o ${gen.dir} -i input/ -p pt.processors.FutureProcessor" />
+		</exec>
+	</target>
+</project>
