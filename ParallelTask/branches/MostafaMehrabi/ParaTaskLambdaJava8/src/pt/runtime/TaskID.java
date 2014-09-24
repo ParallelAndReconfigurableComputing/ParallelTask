@@ -559,9 +559,6 @@ public class TaskID<T> {
 	}
 	
 	/**
-	 * @author Kingsley
-	 * @date 2014/04/08
-	 * 
 	 * Invoke all the dependent subtasks for group
 	 * 
 	 * This method is called when a task is complete. In order to set a task as "complete", this
