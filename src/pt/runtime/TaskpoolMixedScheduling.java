@@ -26,52 +26,33 @@ import java.util.concurrent.PriorityBlockingQueue;
 
 import pt.queues.FifoLifoQueue;
 
+/**
+ * The mixed scheduling policy is a combination of <code>Work Stealing</code> and <code>Work Sharing</code> policies,
+ * such that when enqueuing a task, if the enqueuing thread is a <i>worker thread</i>, the <code><b>Work Stealing</b></code>
+ * policy is used, and if the enqueuing thread is a <i>non-worker thread</i>, the <code><b>Work Sharing</b></code> policy is
+ * used!
+ * <br><br>
+ * A worker thread potentially prefers to execute tasks from its own <code>localOneOffTask</code> queue before helping with 
+ * the global shared queue!
+ * 
+ * @author Mostafa Mehrabi
+ * @since  14/9/2014
+ * */
 public class TaskpoolMixedScheduling extends AbstractTaskPool {
-	
+   /**
+	 * When enqueuing tasks under the <code>Mixed Scheduling</code> policy, if a task <b>cannot</b> be executed 
+	 * by arbitrary threads, it will be enqueued to the <code>privateQueue</code> of the thread in charge of
+	 * executing it. 
+	 * <br><br>
+	 * However, if the task can be executed by arbitrary threads it will be enqueued to the <code>mixedMultiTask</code>
+	 * queue if it is a <code>TaskIDGroup</code>, otherwise it will be enqueued to the <code>mixedOneOffTask</code> queue.
+	 * 
+	 * @author Mostafa Mehrabi
+	 * @sice   14/9/2014
+	 * */
 	@Override
 	protected void enqueueReadyTask(TaskID<?> taskID) {
-		/**
-		 * 
-		 * @Author : Kingsley
-		 * @since : 25/04/2013
-		 * Instead of simplely putting task into mixed queue, putting task to 
-		 * different mixed queue by checking if the task is multi task or not.
-		 * 
-		 * @since : 15/05/2013
-		 * Check if (taskID instanceof TaskIDGroup)
-		 * if true, taskID is a un-expanded multi task;
-		 * if false, taskID is a one-off task.
-		 * 
-		 * Check if(taskID.getExecuteOnThread() != ParaTaskHelper.ANY_THREAD_TASK) 
-		 * if true, taskID is a expanded multi sub task.
-		 * 
-		 * For one-off task, when none-worker threads is queuing a task, this task
-		 * goes to the mixed one-off task queue by calling mixedqueue.addGlobal(taskID);
-		 * while worker threads is queuing a task, this task goes to the mixed one-off 
-		 * task queue by calling mixedqueue.addLocal(taskID).
-		 * 
-		 * For multi task, only the global part of mixed queue is required.
-		 * using
-		 * if (taskID.getExecuteOnThread() != ParaTaskHelper.ANY_THREAD_TASK)
-		 * to check if this task has been expanded or not. 
-		 * if expanded this goes to the private multi task queue; 
-		 * if not, this task goes to the mixed one-off task queue 
-		 * by calling mixedqueue.addGlobal(taskID). 
-		 * 
-		 * */
-		
-		/*if (taskID.getExecuteOnThread() != ParaTaskHelper.ANY_THREAD_TASK) {
-			if (taskID.getTaskInfo().getRegisteringThread() instanceof TaskThread)
-				mixedMultiTaskqueue.addLocal(taskID);
-			else
-				mixedMultiTaskqueue.addGlobal(taskID);
-		}else {
-			if (taskID.getTaskInfo().getRegisteringThread() instanceof TaskThread)
-				mixedOneoffTaskqueue.addLocal(taskID);
-			else
-				mixedOneoffTaskqueue.addGlobal(taskID);
-		}*/
-		
+			
 		if (taskID.getExecuteOnThread() != ParaTaskHelper.ANY_THREAD_TASK || taskID instanceof TaskIDGroup) {
 			if (taskID.getExecuteOnThread() == ParaTaskHelper.ANY_THREAD_TASK) {
 				mixedMultiTaskqueue.addGlobal(taskID);
@@ -87,6 +68,29 @@ public class TaskpoolMixedScheduling extends AbstractTaskPool {
 		}
 	}
 	
+	/**
+	 * This method polls a new task for the current thread that is requesting for a new task under the 
+	 * <code>Mixed Scheduling</code> policy. This method should only be called by <code>Worker Threads</code>. 
+	 * <br><br>
+	 * Once a worker thread requests for a new task, this method checks if the thread is a <code>Multi Task</code>
+	 * thread. If so, then the <code>privateQueue</code> of that thread will be checked. In case there is a 
+	 * task found which passes the preliminary execution attempt successfully, the task is passed to the thread to execute.
+	 * <br><br>
+	 * However, if the private queue of the <code>Multi Task</code> worker thread does not have any executable tasks, then 
+	 * the method will check the <code>mixedMultiTask</code> queue. Every multi-task in this queue will be expanded into its
+	 * sub-tasks, and the sub-tasks will be enqueue as <code>ready-to-execute</code> tasks, but the thread will temporarily 
+	 * return <b>without</b> a task for this time, waiting for later chances. 
+	 * <br><br>
+	 * If the current worker thread is not a <code>Multi Task</code> worker thread, then the method checks the 
+	 * <code>mixedOneOffTask</code> queue. For a given task inside this queue, if the thread is allowed to execute it, the 
+	 * task will be checked with preliminary execution attempt. If the attempt is successful, the task will be sent to thread
+	 * to execute. However, if the thread is not allowed to execute the task, the task will be enqueued to the <code>privateQueue</code>
+	 * of the thread in charge of executing it.This process will continue until either a task is found for the thread, or all
+	 * tasks inside the <code>mixedOneOffTask</code> queue are polled and enqueued into <code>privateQueues</code>.
+	 * 
+	 *@author Mostafa Mehrabi
+	 *@since  14/9/2014
+	 * */
 	@Override
 	public TaskID workerPollNextTask() {
 		

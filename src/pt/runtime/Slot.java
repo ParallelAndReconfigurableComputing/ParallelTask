@@ -21,7 +21,19 @@ package pt.runtime;
 
 import java.lang.reflect.Method;
 import java.util.concurrent.ConcurrentLinkedQueue;
-
+/**
+ *This class allows the user to define a handler from one of the Functor types (functional interfaces)
+ * which could be done by using lambda expressions as well. The user-defined handler will be associated
+ * to the corresponding Functor instance in this class. Once the <code>execute</code> method of a <code>slot</code>
+ * is called, the method executes the <code>execute</code> method of the corresponding handler which is 
+ * an instance of one of the Fucntors. 
+ * <br><br>
+ * This class also allows storing and retrieving the intermediate results of a taskID.
+ * 
+ * @author Mostafa Mehrabi
+ * @since  4/9/2014
+ * 
+ * */
 public class Slot {
 	public static enum SetCompleteSlot {TRUE, FALSE}
 	
