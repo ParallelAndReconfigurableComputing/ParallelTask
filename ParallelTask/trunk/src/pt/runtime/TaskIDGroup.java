@@ -187,10 +187,14 @@ public class TaskIDGroup<E> extends TaskID<E> {
 		return innerTasks.iterator();
 	}
 	
-	/*
-	 * increments the number of inner tasks that have finished executing.
+	/**
+	 * Increments the number of inner tasks that have finished executing. Then checks if all inner-tasks
+	 * are completed. If that is the case, then checks if there are any exceptions asynchronously recorded
+	 * for any of the inner-tasks, and calls their handlers. Moreover, it checks for slots to notify   
+	 * and executes them. Then it sets the task as "complete".
 	 * 
-	 * used only for multi-tasks?
+	 * @author Mostafa Mehrabi
+	 * @since  9/9/2014
 	 */
 	void oneMoreInnerTaskCompleted() { 
 		int numCompleted = numTaskCompleted.incrementAndGet();
@@ -336,27 +340,22 @@ public class TaskIDGroup<E> extends TaskID<E> {
 	}
 	
 	/**
-	 * Waits for all the contained inner tasks to complete.
-	 */
+	 * Waits for all the contained inner tasks to complete. It goes through all inner-tasks and
+	 * if an inner-task is a TaskIDGroup, which means there is another multi-task inside the group
+	 * waits until that inner multi-task is expanded and all its task are finished. Then, it proceeds 
+	 * to finishe other inner-tasks.
+	 * If an inner-task is a TaskID, which means it is a normal task, wait until that task is completed.
+	 *
+	 * @author Kingsley
+	 * @author Mostafa Mehrabi
+     * @since 08/05/2013
+     * @since 9/9/2014
+	 * */
 	@Override
 	public void waitTillFinished() throws ExecutionException, InterruptedException {
 		int size = innerTasks.size();
 		for (int i = size-1; i >= 0; i--) {// wait for them in reverse order (LIFO)
 			try {
-				/**
-				 * 
-				 * @author Kingsley
-				 * @since 08/05/2013
-				 * 
-				 * When waiting tasks get finished, first check the type of the task.
-				 * if it is a TaskIDGroup, which means there is a multi task inside the group
-				 * (even it is still not expanded), wait until it is expanded before start 
-				 * tracing its processing status.
-				 * if it is a TaskID, which means it is a normal task, start checking if it completed
-				 * 
-				 * */
-				//innerTasks.get(i).waitTillFinished();
-				
 				TaskID taskID= innerTasks.get(i);
 				if (taskID instanceof TaskIDGroup) {
 					TaskIDGroup taskIDGroup = (TaskIDGroup) taskID;
@@ -378,6 +377,20 @@ public class TaskIDGroup<E> extends TaskID<E> {
 		}
 	}
 	
+	/**
+	 * This method sets a checkpoint at which threads that arrive earlier wait until all threads arrive. 
+	 * This is mostly done in situations where we want to make sure that at a specific stage
+	 * all threads have reached a specific point in the program. 
+	 * <br>
+	 * Therefore, while none of the threads have called <code>barrier()</code>, all threads carry on doing their
+	 * ordinary tasks. Once <code>barrier()</code> is called by a thread, that thread has to wait (either doing 
+	 * some other tasks, or going to sleep) until all other threads arrive to that check point (i.e. call 
+	 * <code>barrier()</code>). When all threads have called <code>barrier()</code>, barrier's counter will
+	 * be set back to <b>zero</b>, and threads can carry on doing their tasks.
+	 * 
+	 * @author Mostafa Mehrabi
+	 * @since  9/9/2014
+	 * */
 	void barrier() throws InterruptedException, BrokenBarrierException {
 		int pos = barrier.incrementAndGet();
 		WorkerThread currentWorker = (WorkerThread) Thread.currentThread();

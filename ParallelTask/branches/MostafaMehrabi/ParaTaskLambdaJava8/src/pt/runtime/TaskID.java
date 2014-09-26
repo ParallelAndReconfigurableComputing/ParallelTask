@@ -279,6 +279,10 @@ public class TaskID<T> {
 	 * will still allow the task to continue executing. To stop the task, the task should check
 	 * to see if a cancel request has been made. 
 	 * @return <code>true</code> if it has cancelled successfully, <code>false</code> otherwise.
+	 *
+	 * @author Mostafa Mehrabi
+	 * @author Kingsley
+	 * 
 	 * @see #cancelRequested() 
 	 * @see CurrentTask#cancelRequested()
 	 * @see #cancelledSuccessfully()

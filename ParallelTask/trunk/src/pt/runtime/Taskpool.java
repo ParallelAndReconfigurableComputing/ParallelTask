@@ -25,6 +25,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingDeque;
 
+/**
+ * Classes which implement this interface provide specifications regarding scheduling policies such as:<br>
+ * 1- How to deal with tasks that are ready to be executed.<br>
+ * 2- How to enqueue tasks (i.e. adding them to global or private task queues).<br>
+ * 3- How to enqueue multi-task groups.<br>
+ * 4- Different approaches for threads taking tasks from schedule-specific task pools/queues.<br>
+ * 5- Managing different types of task pools/queues.<br>
+ * 
+ * @author Mostafa Mehrabi
+ * @since 9/9/2014
+ * */
 public interface Taskpool {
 		/**
 	* The specified task is currently on the waiting queue since it has some dependences. However, all thoses dependences have 

@@ -35,43 +35,34 @@ import pt.compiler.parser.ast.stmt.ForeachStmt;
 
 /**
  *	
- *	There is no global queue, all tasks are placed on private queues in a round-robin fashion. If workers start to run out of work, 
- * 	then they steal (randomly) from another worker. [this is similar to JCilk].
- * 
- *   	(Maybe this could be enhanced by favoring to steal from a worker that we last succeeded to steal from). 
- *	
- *	Private queues are ordered such that workers get the head, while thiefs get the tail.  
+ *	There is no global queue, all tasks are placed on private queues in a round-robin fashion. Local queues are ordered such that 
+ *  when a thread enqueues a task into its own local queue it enqueues the task to the head of the queue. However, if a thread
+ *  enqueues the task to another thread's local queue, it enqueues the task to the tail of the queue.
+ *  <br><br>
+ *  If workers start to run out of work, then they steal (randomly) from another worker. [this is similar to JCilk].
+ *  This could be enhanced by favoring to steal from a worker that we last succeeded to steal from. local queues are ordered such
+ *  that when a thread takes a task from its owned queue it takes it from the tail (LIFO), but when it steals a task from another
+ *  thread's queue, it takes it from the head (FIFO).
+ *  
+ *  @author Mostafa Mehrabi
+ *  @since  9/9/2014
  */
 public class TaskpoolLIFOWorkStealing extends AbstractTaskPool {
 	
+	/**
+	* When enqueuing a task in the <code>WorkStealing</code> policy, if the task is not able to be executed on any arbitrary thread,
+	 * regardless of the type of enqueuing thread it will be enqueued to the <code>privateQueue</code> of the thread in charge of 
+	 * executing that task. However, if a task <b>can be executed by arbitrary threads</b>, then if the task is a <code>TaskIDGroup</code> 
+	 * it will be enqueued to the <code>globalMultiTask</code> queue, otherwise if the enqueuing thread is a <code>Worker Thread</code> 
+	 * and <b>is not</b> a <code>MultiTaskWorker</code> thread, it will enqueue the task to the head of its local queue. For other
+	 * cases where the enqueuing thread <b>is</b> a <code>MultiTaskWorker</code> thread or <b>is not</b> a <code>Worker Thread</code>, 
+	 * the task will be enqueued to the tail of a random thread's <code>localQueue</code>.
+	 * 
+	 * @author Mostafa Mehrabi
+	 * @since  10/9/2014
+	 * */
 	@Override
 	protected void enqueueReadyTask(TaskID<?> taskID) {
-		
-		/**
-		 * 
-		 * @Author : Kingsley
-		 * @since : 04/05/2013
-		 * Check if (taskID instanceof TaskIDGroup)
-		 * if true, taskID is a un-expanded multi task;
-		 * if false, taskID is a one-off task.
-		 * 
-		 * Check if(taskID.getExecuteOnThread() != ParaTaskHelper.ANY_THREAD_TASK) 
-		 * if true, taskID is a expanded multi sub task.
-		 * 
-		 * For one-off task, when ono-worker threads is queuing a task, this task
-		 * goes to a random local one-off task queue; while worker threads is queuing 
-		 * a task, this task goes to the its local one-off task queue.
-		 * 
-		 * 
-		 * For multi task,  using
-		 * if (taskID.getExecuteOnThread() != ParaTaskHelper.ANY_THREAD_TASK)
-		 * to check if this task has been expanded or not. 
-		 * if expanded this goes to the private multi task queue; 
-		 * if not, this task goes to the global multi task queue.
-		 * 
-		 * 
-		 * */
-		
 		if (taskID.getExecuteOnThread() != ParaTaskHelper.ANY_THREAD_TASK || taskID instanceof TaskIDGroup) {
 			//-- this is a multi-task, so place it on that thread's local queue (if it is wrongly stolen, it then gets placed on private queue)
 			
@@ -212,103 +203,60 @@ public class TaskpoolLIFOWorkStealing extends AbstractTaskPool {
 		}
 	}
 	
+	/**
+	 * Only worker threads can call this method.
+	 * This method first checks if the worker thread is a multi-task worker thread. In that case, it will check the thread's
+	 * <code>privateQueue</code>, and if a task is found, and the attempt for executing it is successful, the task will be 
+	 * passed to the thread to execute.
+	 * <br><br>
+	 * However, if the thread's <code>privateQueue</code> is empty, the method searches through the <code>globalMultiTask</code>
+	 * queue, expands each multi-task into its sub-tasks and enqueues them as <code>ready-to-execute</code> tasks. However, the
+	 * thread will temporarily return without having anything to execute this time.
+	 * <br><br>
+	 * If the worker thread is not a multi-task worker thread, it is first attempted to poll a task from the head of that
+	 * thread's <code>localOneOffTask</code> queue. If a task is found and the preliminary attempt for executing it is 
+	 * successful, that task will be passed to the thread to execute.
+	 * <br><br>
+	 * However, if there are no tasks in the thread's <code>localOneOffTask</code> queue, the thread will try to steal a task 
+	 * from the tail of another thread's <code>localOneOffTask</code> queue. Preferably, if there is a thread from which a
+	 * task has been stolen already (AKA <b><i>victim thread</i></b>), we would like to steal from the same victim's 
+	 * <code>localOneOffTask</code> queue. 
+	 * <br><br>
+	 * But if there isn't any previous victims for task stealing, starting from a random thread's <code>localOneOffTask</code>
+	 * queue, we proceed through every thread's <code>localOneOffTask</code> queue (except for the current thread's own queue)
+	 * and we look for a task to steal from the tail of that local queue. Once a task is found, and the preliminary attempt 
+	 * for executing it is successful, that task will be passed to the thread, and that <code>localOneOffTask</code> queue's 
+	 * corresponding thread will be remembered as the <b><i>victim thread</i></b>.
+	 * <br><br>
+	 * After all these processes, if there are still no tasks found, the <b><i>victim thread</i></b> will be set to <cod>null</code>
+	 * and the method returns <code>null</code> indicating an unsuccessful attempt for polling a task.
+	 * 
+	 *  @author Mostafa Mehrabi
+	 *  @since  14/9/2014
+	 * */
 	@Override
 	public TaskID workerPollNextTask() {
 		
 		WorkerThread wt = (WorkerThread) Thread.currentThread();
-		
-		/**
-		 * 
-		 * @Author : Kingsley
-		 * @since : 26/04/2013
-		 * 
-		 * The workerID should be found according to different worker threads.
-		 * 
-		 * */
-		//int workerID = wt.getThreadID();
-		
-		//-- first check current worker's private queue and find a multi-task that has not been cancelled
-		
-		/**
-		 * 
-		 * @Author : Kingsley
-		 * @since : 25/04/2013
-		 * The data structure is changed from array to list, therefore the corresponding way to
-		 * get the data has to be changed.
-		 * 
-		 * One-off Task Worker will never examine its private queue.
-		 * 
-		 * */
-		//TaskID next = privateQueues[workerID].poll();
 		TaskID next = null;
 		
 		if (wt.isMultiTaskWorker()) {
-			/**
-			 * 
-			 * @Author : Kingsley
-			 * @since : 26/04/2013
-			 * 
-			 * Get workthread for multi task worker
-			 * 
-			 * */
 			int workerID = wt.getThreadLocalID();
 			
 			next= privateQueues.get(workerID).poll();
 			
 			while (next != null) {
-				
-				//-- attempt to execute this task
 				if (next.executeAttempt()) {
-					//-- no cancel attempt was successful so far, therefore may execute this task
-					//-- this (multi-)task is here because another thread accidentally stole it from the local queue 
 					return next;
 				} else {
-					//-- task was successfully cancelled beforehand, therefore grab another task
 					next.enqueueSlots(true);
-					
-					/**
-					 * 
-					 * @Author : Kingsley
-					 * @since : 25/04/2013
-					 * The data structure is changed from array to list, therefore the corresponding way to
-					 * get the data has to be changed.
-					 * 
-					 * */
-					//next = privateQueues[workerID].poll();
+					//-- task was successfully cancelled beforehand, therefore grab another task
 					next = privateQueues.get(workerID).poll();
 				}
 			}
 		}
-		
-	
-		//-- check for a task from this worker thread's local queue.
-		/**
-		 * 
-		 * @Author Kingsley
-		 * @since 25/04/2013
-		 * The data structure is changed from array to list, therefore the corresponding way to
-		 * get the data has to be changed.
-		 * 
-		 * check local queue according to the worker thread type.
-		 * If no suitable task found, return null
-		 * 
-		 * @since 04/05/2013
-		 * There are no local queues for multi task any more.
-		 * And there is no work-stealing for multi task any more 
-		 * Here, the code will do the same thing just like what happened in work-sharing 
-		 * 
-		 * @since 10/05/2013
-		 * Add a new variable to identify if current task is sub task
-		 * Set it true when expand a multi task.
-		 * 
-		 * Since the sub task will not be given a global id, set the global id equal to its
-		 * parent global id.
-		 * 
-		 * @since 21/05/2013
-		 * When expand a multi task, set the field of "isSubTask" to true for its every single sub tasks.
-		 * 
-		 * */
-		
+			
+		//if there were no tasks found in the privateQueue, then look into the globalMultiTask queue
 		if (wt.isMultiTaskWorker()) {
 			while ((next = globalMultiTaskqueue.poll()) != null) {
 				// expand multi task
