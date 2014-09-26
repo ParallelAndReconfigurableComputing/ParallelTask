@@ -26,16 +26,20 @@ import org.omg.CORBA.PUBLIC_MEMBER;
 
 
 /**
- * 
- * Helper methods for the ParaTask runtime. This class contains various functions to set up the ParaTask runtime, etc.
- * <br><br>
- * All applications making use of the ParaTask features should invoke {@link ParaTask#init()} early in the <code>main</code>
- * method. This will initialise various aspects of the ParaTask runtime.
- * 
- * @author Nasser Giacaman
- * @author Oliver Sinnen
- *
- */
+* @author Mostafa Mehrabi
+* @author Nasser Giacaman
+* @author Oliver Sinnen
+* 
+* <br><br>
+* Helper methods for the ParaTask runtime. This class contains various functions to set up the ParaTask runtime. 
+* Importantly the type of scheduling, thread pool type, thread pool size, the EDT and the task listener are set 
+* and retrieved via this class. 
+* This class is also able to receive a list of GrouptaskIDs, flatten them and return the flattened list.
+* 
+* <br><br>
+* All applications making use of the ParaTask features should invoke {@link ParaTask#init()} early in the <code>main</code>
+* method. This will initialise various aspects of the ParaTask runtime.
+**/
 public class ParaTask {
 	
 	/**
