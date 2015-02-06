@@ -19,6 +19,8 @@
 
 package pt.runtime;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.AbstractQueue;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -166,6 +168,20 @@ public abstract class AbstractTaskPool implements Taskpool {
 	 * there no need for sub-classes to refine how interactive tasks are handled */
 	private AtomicInteger interactiveTaskCount = new AtomicInteger(0);
 	
+	
+	/*
+	 * 	Used for the Work-First implementation.
+	 * 	Boolean used to check if the Work-First is currently being used.
+	 * 	The Counter is used to check if the threshold for the number of tasks have been met.
+	 */
+	protected boolean isWorkFirst = true; //TEMP - MAKE IT TOGGLABLE
+	protected AtomicInteger workFirstCounter = new AtomicInteger(0);
+
+	private int workFirstUpperThreshold = 40;//1400;
+	private int workFirstLowerThreshold = 20;//700;
+	private boolean isWorkFirstInPlace = false;
+	
+	
 	protected AbstractTaskPool() {
 		/**
 		 * 
@@ -216,32 +232,79 @@ public abstract class AbstractTaskPool implements Taskpool {
 	 * the task has been queued. This method is generic and not schedule-specific. 
 	 */
 	public TaskID enqueue(TaskInfo taskinfo) {
-		ArrayList<TaskID> allDependences = null;
-		if (taskinfo.getDependences() != null)
-			allDependences = ParaTask.allTasksInList(taskinfo.getDependences());
+		
+		/*
+		 * 	Configures thresholds based on upper and lower bounds.
+		 */
+		if(isWorkFirst) {
+			//System.out.println(workFirstCounter.get());
+			if(workFirstCounter.get() >= workFirstUpperThreshold)
+				isWorkFirstInPlace = true;
+			else if(workFirstCounter.get() <= workFirstLowerThreshold)
+				isWorkFirstInPlace = false;
+		}
 		
 		TaskID taskID = new TaskID(taskinfo);
 		
-		//-- determine if this task is being enqueued from within another task.. if so, set the enclosing task (needed to 
-		//--		propogate exceptions to outer tasks (in case they have a suitable handler))
-		Thread rt = taskinfo.setRegisteringThread();
-		
-		if (rt instanceof TaskThread)
-			taskID.setEnclosingTask(((TaskThread)rt).currentExecutingTask());
-		
-		if (taskinfo.hasAnySlots())
-			taskinfo.setTaskIDForSlotsAndHandlers(taskID);
-		
-		if (taskID.isPipeline()) {
-			//-- pipeline threads don't need to wait for dependencies
-			startPipelineTask(taskID);
-		} else if (allDependences == null) {
-			if (taskID.isInteractive())
-				startInteractiveTask(taskID);
-			else
-				enqueueReadyTask(taskID);
+		/**
+		 * 	When the Work-First is used, it will consider the work-first threshold and will stop enqueuing when
+		 * 	the threshold has been reached.
+		 * 	Instead of enqueuing, tasks will be sequentially processed instead.
+		 */
+		if(isWorkFirstInPlace) {
+			/*
+			 * 	Directly extracts the method of the task to operate on the class sequentially.
+			 * 	Also while invoking the sequential method of the task, the return result has also been set.
+			 */
+			try {
+				
+				TaskInfo taskInfo = taskID.getTaskInfo();
+				Method m = taskInfo.getMethod();
+				taskID.setReturnResult(m.invoke(taskInfo.getInstance(), taskInfo.getParameters()));
+				
+				/*
+				 * 	Once successfully invoked, clean up the rest of the TaskID info.
+				 */
+				taskID.setComplete();
+				
+				
+			} catch (IllegalAccessException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IllegalArgumentException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (InvocationTargetException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
 		} else {
-			enqueueWaitingTask(taskID, allDependences);
+			ArrayList<TaskID> allDependences = null;
+			if (taskinfo.getDependences() != null)
+				allDependences = ParaTask.allTasksInList(taskinfo.getDependences());
+			
+			//-- determine if this task is being enqueued from within another task.. if so, set the enclosing task (needed to 
+			//--		propogate exceptions to outer tasks (in case they have a suitable handler))
+			Thread rt = taskinfo.setRegisteringThread();
+			
+			if (rt instanceof TaskThread)
+				taskID.setEnclosingTask(((TaskThread)rt).currentExecutingTask());
+			
+			if (taskinfo.hasAnySlots())
+				taskinfo.setTaskIDForSlotsAndHandlers(taskID);
+			
+			if (taskID.isPipeline()) {
+				//-- pipeline threads don't need to wait for dependencies
+				startPipelineTask(taskID);
+			} else if (allDependences == null) {
+				if (taskID.isInteractive())
+					startInteractiveTask(taskID);
+				else
+					enqueueReadyTask(taskID);
+			} else {
+				enqueueWaitingTask(taskID, allDependences);
+			}
 		}
 		
 		return taskID;
