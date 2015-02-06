@@ -46,6 +46,9 @@ public class TaskpoolFactory {
 				case WorkStealing:
 					taskpool = new TaskpoolLIFOWorkStealing();
 					break;
+				case WorkFirst:
+					taskpool = new TaskpoolLIFOWorkFirst();
+					break;
 				default:
 					break;
 				}

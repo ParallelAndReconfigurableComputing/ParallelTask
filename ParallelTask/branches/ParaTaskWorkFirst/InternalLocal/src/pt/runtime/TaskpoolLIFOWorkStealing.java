@@ -111,7 +111,7 @@ public class TaskpoolLIFOWorkStealing extends AbstractTaskPool {
 			if (regThread instanceof WorkerThread) {
 				//-- Add task to this thread's worker queue, at the beginning since it is the "hottest" task.
 				
-				WorkerThread workerThread = (WorkerThread) regThread;
+				WorkerThread workerThread = (WorkerThread) regThread;				
 				
 				if (!workerThread.isMultiTaskWorker()) {
 					
