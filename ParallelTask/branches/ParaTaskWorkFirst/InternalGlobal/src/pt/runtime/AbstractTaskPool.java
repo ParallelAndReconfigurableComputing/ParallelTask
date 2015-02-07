@@ -258,9 +258,8 @@ public abstract class AbstractTaskPool implements Taskpool {
 			 */
 			try {
 				
-				TaskInfo taskInfo = taskID.getTaskInfo();
-				Method m = taskInfo.getMethod();
-				taskID.setReturnResult(m.invoke(taskInfo.getInstance(), taskInfo.getParameters()));
+				Method m = taskinfo.getMethod();
+				taskID.setReturnResult(m.invoke(taskinfo.getInstance(), taskinfo.getParameters()));
 				
 				/*
 				 * 	Once successfully invoked, clean up the rest of the TaskID info.
