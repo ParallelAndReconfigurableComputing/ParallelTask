@@ -19,6 +19,8 @@
 
 package pt.runtime;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.AbstractQueue;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -50,6 +52,13 @@ public abstract class AbstractTaskPool implements Taskpool {
 			return o2.globalID - o1.globalID;
 		}
 	};
+	
+	//Task Depth threshold
+	private int taskDepthThreshold = 8;
+	
+	public void setTaskDepthThreshold(int threshold) {
+		taskDepthThreshold = threshold;
+	}
 	
 	
 	
@@ -216,32 +225,68 @@ public abstract class AbstractTaskPool implements Taskpool {
 	 * the task has been queued. This method is generic and not schedule-specific. 
 	 */
 	public TaskID enqueue(TaskInfo taskinfo) {
-		ArrayList<TaskID> allDependences = null;
-		if (taskinfo.getDependences() != null)
-			allDependences = ParaTask.allTasksInList(taskinfo.getDependences());
 		
 		TaskID taskID = new TaskID(taskinfo);
+		
+		ArrayList<TaskID> allDependences = null;
 		
 		//-- determine if this task is being enqueued from within another task.. if so, set the enclosing task (needed to 
 		//--		propogate exceptions to outer tasks (in case they have a suitable handler))
 		Thread rt = taskinfo.setRegisteringThread();
 		
-		if (rt instanceof TaskThread)
+		if (rt instanceof TaskThread) {
+			TaskID parentTask = ((TaskThread)rt).currentExecutingTask();
 			taskID.setEnclosingTask(((TaskThread)rt).currentExecutingTask());
+			taskID.setTaskDepth(parentTask.getTaskDepth()+1);
+		}
 		
-		if (taskinfo.hasAnySlots())
-			taskinfo.setTaskIDForSlotsAndHandlers(taskID);
+		if(ParaTask.getScheduleType() == ParaTask.ScheduleType.WorkFirst && taskID.getTaskDepth() >= taskDepthThreshold) {
+			/*
+			 * 	Directly extracts the method of the task to operate on the class sequentially.
+			 * 	Also while invoking the sequential method of the task, the return result has also been set.
+			 */
+			try {
+				//System.out.println("Sequential");
+				Method m = taskinfo.getMethod();
+				taskID.setReturnResult(m.invoke(taskinfo.getInstance(), taskinfo.getParameters()));
+				m = null;
+				
+				/*
+				 * 	Once successfully invoked, clean up the rest of the TaskID info.
+				 */
+				taskID.setComplete();
+				
+			} catch (IllegalAccessException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IllegalArgumentException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (InvocationTargetException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		} else { 
+
+			//System.out.println("Enqueue");
+			if (taskinfo.getDependences() != null)
+				allDependences = ParaTask.allTasksInList(taskinfo.getDependences());
 		
-		if (taskID.isPipeline()) {
-			//-- pipeline threads don't need to wait for dependencies
-			startPipelineTask(taskID);
-		} else if (allDependences == null) {
-			if (taskID.isInteractive())
-				startInteractiveTask(taskID);
-			else
-				enqueueReadyTask(taskID);
-		} else {
-			enqueueWaitingTask(taskID, allDependences);
+			if (taskinfo.hasAnySlots())
+				taskinfo.setTaskIDForSlotsAndHandlers(taskID);
+			
+			if (taskID.isPipeline()) {
+				//-- pipeline threads don't need to wait for dependencies
+				startPipelineTask(taskID);
+			} else if (allDependences == null) {
+				if (taskID.isInteractive())
+					startInteractiveTask(taskID);
+				else
+					enqueueReadyTask(taskID);
+			} else {
+				enqueueWaitingTask(taskID, allDependences);
+			}
 		}
 		
 		return taskID;

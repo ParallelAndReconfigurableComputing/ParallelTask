@@ -163,6 +163,20 @@ public class TaskID<E> {
 	protected void setSubTask(boolean isSubTask) {
 		this.isSubTask = isSubTask;
 	}
+	
+	
+	/*
+	 * 	Task depth level for hierachy purposes
+	 */
+	private int taskDepth = 1;
+	
+	int getTaskDepth() {
+		return taskDepth;
+	}
+	
+	void setTaskDepth(int taskDepth) {
+		this.taskDepth = taskDepth;
+	}
 
 	/**
 	 * Checks to see if this task has successfully cancelled.
