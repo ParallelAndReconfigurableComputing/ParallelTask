@@ -2,6 +2,7 @@ package pt.runtime;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 
 /**
  * 
@@ -16,11 +17,90 @@ import java.lang.reflect.Method;
 
 public class TaskpoolLIFOWorkFirst extends TaskpoolLIFOWorkStealing {
 	
-
+	//Task Depth threshold
+	private int taskDepthThreshold = 8;
+	
 	/**
 	 * 	Threshold used for the depth level task cutting.
 	 */
-	//private int taskDepthThreshold = 8;
+	public void setTaskDepthThreshold(int threshold) {
+		taskDepthThreshold = threshold;
+	}
+	
+	
+	/*
+	 * Creates a TaskID for the specified task (whose details are contained in the TaskInfo). It then returns the TaskID after 
+	 * the task has been queued. If the depth of a task exceeds the threshold, tasks are no longer queued and are executed
+	 * sequentially. 
+	 * This method is generic and schedule-specific to Work-First. 
+	 */
+	public TaskID enqueue(TaskInfo taskinfo) {
+		
+		TaskID taskID = new TaskID(taskinfo);
+		
+		ArrayList<TaskID> allDependences = null;
+		
+		//-- determine if this task is being enqueued from within another task.. if so, set the enclosing task (needed to 
+		//--		propogate exceptions to outer tasks (in case they have a suitable handler))
+		Thread rt = taskinfo.setRegisteringThread();
+		
+		if (rt instanceof TaskThread) {
+			TaskID parentTask = ((TaskThread)rt).currentExecutingTask();
+			taskID.setEnclosingTask(((TaskThread)rt).currentExecutingTask());
+			taskID.setTaskDepth(parentTask.getTaskDepth()+1);
+		}
+		
+		if(ParaTask.getScheduleType() == ParaTask.ScheduleType.WorkFirst && taskID.getTaskDepth() >= taskDepthThreshold) {
+			/*
+			 * 	Directly extracts the method of the task to operate on the class sequentially.
+			 * 	Also while invoking the sequential method of the task, the return result has also been set.
+			 */
+			try {
+				//System.out.println("Sequential");
+				Method m = taskinfo.getMethod();
+				taskID.setReturnResult(m.invoke(taskinfo.getInstance(), taskinfo.getParameters()));
+				m = null;
+				
+				/*
+				 * 	Once successfully invoked, clean up the rest of the TaskID info.
+				 */
+				taskID.setComplete();
+				
+			} catch (IllegalAccessException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IllegalArgumentException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (InvocationTargetException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		} else { 
+
+			//System.out.println("Enqueue");
+			if (taskinfo.getDependences() != null)
+				allDependences = ParaTask.allTasksInList(taskinfo.getDependences());
+		
+			if (taskinfo.hasAnySlots())
+				taskinfo.setTaskIDForSlotsAndHandlers(taskID);
+			
+			if (taskID.isPipeline()) {
+				//-- pipeline threads don't need to wait for dependencies
+				startPipelineTask(taskID);
+			} else if (allDependences == null) {
+				if (taskID.isInteractive())
+					startInteractiveTask(taskID);
+				else
+					enqueueReadyTask(taskID);
+			} else {
+				enqueueWaitingTask(taskID, allDependences);
+			}
+		}
+		
+		return taskID;
+	}
 	
 	
 	/**
