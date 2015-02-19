@@ -95,11 +95,6 @@ public interface Taskpool {
 	
 	public int totalNumTasksExecuted();
 	
-	/**
-	 * 	Sets the threshold for the task depth before it stops enqueuing.
-	 * 	@param threshold
-	 */
-	public void setTaskDepthThreshold(int threshold);
 	
 	/**
 	 * 
