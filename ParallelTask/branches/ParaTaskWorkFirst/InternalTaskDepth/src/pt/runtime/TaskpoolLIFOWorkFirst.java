@@ -46,7 +46,7 @@ public class TaskpoolLIFOWorkFirst extends TaskpoolLIFOWorkStealing {
 		
 		if (rt instanceof TaskThread) {
 			TaskID parentTask = ((TaskThread)rt).currentExecutingTask();
-			taskID.setEnclosingTask(((TaskThread)rt).currentExecutingTask());
+			taskID.setEnclosingTask(parentTask);
 			taskID.setTaskDepth(parentTask.getTaskDepth()+1);
 		}
 		
