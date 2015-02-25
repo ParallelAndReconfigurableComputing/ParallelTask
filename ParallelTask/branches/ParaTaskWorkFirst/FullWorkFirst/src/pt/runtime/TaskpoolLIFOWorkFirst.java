@@ -18,8 +18,34 @@ public class TaskpoolLIFOWorkFirst extends TaskpoolLIFOWorkStealing {
 
 	private int workFirstUpperThreshold = 40;//1400;
 	private int workFirstLowerThreshold = 20;//700;
-	private boolean isWorkFirstInPlace = false;
+	private boolean isOverloaded = false;
 	
+	//Variable to allow users to stop the Work-First discontinuation
+	private boolean isTaskInterrupted = true;
+	
+	/**
+	 * 	Determines if the state of the scheduler is overloaded with tasks.
+	 * 	Used in conjunction with Work-First to ensure tasks are fixed.
+	 * @param boolean isOverloaded
+	 */
+	public void setIsOverLoaded(boolean isOverloaded) {
+		this.isOverloaded = isOverloaded;
+	}
+	
+	public boolean getIsOverloaded() {
+		return isOverloaded;
+	}
+	
+	/**
+	 * 	Used to toggle between an interruptable task or not.
+	 */
+	public void setIsTaskInterrupted(boolean isInterrupted) {
+			isTaskInterrupted = isInterrupted;
+	}
+	
+	public boolean getIsTaskInterrupted() {
+		return isTaskInterrupted;
+	}
 	
 	/**
 	 * 	@Override
@@ -37,9 +63,9 @@ public class TaskpoolLIFOWorkFirst extends TaskpoolLIFOWorkStealing {
 		if(isWorkFirst) {
 			//System.out.println(workFirstCounter.get());
 			if(workFirstCounter.get() >= workFirstUpperThreshold)
-				isWorkFirstInPlace = true;
+				setIsOverLoaded(true);
 			else if(workFirstCounter.get() <= workFirstLowerThreshold)
-				isWorkFirstInPlace = false;
+				setIsOverLoaded(false);
 		}
 		
 		TaskID taskID = new TaskID(taskinfo);
@@ -65,11 +91,14 @@ public class TaskpoolLIFOWorkFirst extends TaskpoolLIFOWorkStealing {
 			 * 	Attempts to see if there's a task that this thread's currently working on.
 			 * 	If so, then it attempts to enqueue this task to someone else instead.
 			 */
-		if(isWorkFirstInPlace) {
+		if(getIsOverloaded()) {
 		
-		
-				//Thread registering stuff was here
-				if (rt instanceof TaskThread) {
+			//Thread registering stuff was here
+			if (rt instanceof TaskThread) {
+				
+				//Only interrupts/discontinues current task IF this has been toggled to be true
+				if(getIsTaskInterrupted()) {
+				
 					TaskID currentTask = ((TaskThread)rt).currentExecutingTask();
 	
 					if(!currentTask.hasCompleted()) {
@@ -98,46 +127,48 @@ public class TaskpoolLIFOWorkFirst extends TaskpoolLIFOWorkStealing {
 							enqueueWaitingTask(currentTask, allDependences);
 						}
 					}
+				}
+				
+				
+				/*
+				 * 	Attempts to execute task directly
+				 */
+				
+				ArrayList<TaskID> allDependences = null;
+				if (taskinfo.getDependences() != null)
+					allDependences = ParaTask.allTasksInList(taskinfo.getDependences());
+				
+				if (rt instanceof TaskThread)
+					taskID.setEnclosingTask(((TaskThread)rt).currentExecutingTask());
+				
+				if (taskinfo.hasAnySlots())
+					taskinfo.setTaskIDForSlotsAndHandlers(taskID);
+				
+			
+				//((TaskThread) rt).executeTask(taskID);
+				try {
 					
+					Method m = taskinfo.getMethod();
+					taskID.setReturnResult(m.invoke(taskinfo.getInstance(), taskinfo.getParameters()));
 					
 					/*
-					 * 	Attempts to execute task directly
+					 * 	Once successfully invoked, clean up the rest of the TaskID info.
 					 */
-					
-					ArrayList<TaskID> allDependences = null;
-					if (taskinfo.getDependences() != null)
-						allDependences = ParaTask.allTasksInList(taskinfo.getDependences());
-					
-					if (rt instanceof TaskThread)
-						taskID.setEnclosingTask(((TaskThread)rt).currentExecutingTask());
-					
-					if (taskinfo.hasAnySlots())
-						taskinfo.setTaskIDForSlotsAndHandlers(taskID);
 				
-					//((TaskThread) rt).executeTask(taskID);
-					try {
-						
-						Method m = taskinfo.getMethod();
-						taskID.setReturnResult(m.invoke(taskinfo.getInstance(), taskinfo.getParameters()));
-						
-						/*
-						 * 	Once successfully invoked, clean up the rest of the TaskID info.
-						 */
+					taskID.setComplete();
 					
-						taskID.setComplete();
-						
-						
-					} catch (IllegalAccessException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (IllegalArgumentException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (InvocationTargetException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
+					
+				} catch (IllegalAccessException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IllegalArgumentException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (InvocationTargetException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
+			}
 		} else {
 			ArrayList<TaskID> allDependences = null;
 			if (taskinfo.getDependences() != null)
