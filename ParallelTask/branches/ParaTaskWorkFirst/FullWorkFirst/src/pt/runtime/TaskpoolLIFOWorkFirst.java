@@ -43,47 +43,105 @@ public class TaskpoolLIFOWorkFirst extends TaskpoolLIFOWorkStealing {
 		}
 		
 		TaskID taskID = new TaskID(taskinfo);
+		Thread rt = taskinfo.setRegisteringThread();
 		
 		/**
 		 * 	When the Work-First is used, it will consider the work-first threshold and will stop enqueuing when
 		 * 	the threshold has been reached.
 		 * 	Instead of enqueuing, tasks will be sequentially processed instead.
 		 */
-		if(isWorkFirstInPlace) {
-			/*
-			 * 	Directly extracts the method of the task to operate on the class sequentially.
-			 * 	Also while invoking the sequential method of the task, the return result has also been set.
-			 */
-			try {
-				
-				Method m = taskinfo.getMethod();
-				taskID.setReturnResult(m.invoke(taskinfo.getInstance(), taskinfo.getParameters()));
-				
-				/*
-				 * 	Once successfully invoked, clean up the rest of the TaskID info.
+				/**
+				 * 	Steps:
+				 * 	Get registering thread
+				 * 	Check if it is a worker thread?
+				 * 	If there is a current task:
+				 * 		Set task to started or enqueued or something
+				 * 		Add this task to the worker's local task queue - At the back
+				 * 	Otherwise execute new tasks sequentially.
 				 */
-				taskID.setComplete();
+
+
+			/*
+			 * 	Attempts to see if there's a task that this thread's currently working on.
+			 * 	If so, then it attempts to enqueue this task to someone else instead.
+			 */
+		if(isWorkFirstInPlace) {
+		
+		
+				//Thread registering stuff was here
+				if (rt instanceof TaskThread) {
+					TaskID currentTask = ((TaskThread)rt).currentExecutingTask();
+	
+					if(!currentTask.hasCompleted()) {
+						//if(currentTask.hasCompleted())
+						taskID.setEnclosingTask(currentTask); //Necessary??
+						
+						TaskInfo currentTaskInfo = currentTask.getTaskInfo();
+						
+						
+						ArrayList<TaskID> allDependences = null;
+						if (currentTaskInfo.getDependences() != null)
+							allDependences = ParaTask.allTasksInList(currentTaskInfo.getDependences());				
+									
+						if (currentTaskInfo.hasAnySlots())
+							currentTaskInfo.setTaskIDForSlotsAndHandlers(currentTask);
+						
+						if (currentTask.isPipeline()) {
+							//-- pipeline threads don't need to wait for dependencies
+							startPipelineTask(currentTask);
+						} else if (allDependences == null) {
+							if (currentTask.isInteractive())
+								startInteractiveTask(currentTask);
+							else
+								enqueueReadyTask(currentTask);
+						} else {
+							enqueueWaitingTask(currentTask, allDependences);
+						}
+					}
+					
+					
+					/*
+					 * 	Attempts to execute task directly
+					 */
+					
+					ArrayList<TaskID> allDependences = null;
+					if (taskinfo.getDependences() != null)
+						allDependences = ParaTask.allTasksInList(taskinfo.getDependences());
+					
+					if (rt instanceof TaskThread)
+						taskID.setEnclosingTask(((TaskThread)rt).currentExecutingTask());
+					
+					if (taskinfo.hasAnySlots())
+						taskinfo.setTaskIDForSlotsAndHandlers(taskID);
 				
-				
-			} catch (IllegalAccessException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IllegalArgumentException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (InvocationTargetException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
+					//((TaskThread) rt).executeTask(taskID);
+					try {
+						
+						Method m = taskinfo.getMethod();
+						taskID.setReturnResult(m.invoke(taskinfo.getInstance(), taskinfo.getParameters()));
+						
+						/*
+						 * 	Once successfully invoked, clean up the rest of the TaskID info.
+						 */
+					
+						taskID.setComplete();
+						
+						
+					} catch (IllegalAccessException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IllegalArgumentException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (InvocationTargetException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
 		} else {
 			ArrayList<TaskID> allDependences = null;
 			if (taskinfo.getDependences() != null)
 				allDependences = ParaTask.allTasksInList(taskinfo.getDependences());
-			
-			//-- determine if this task is being enqueued from within another task.. if so, set the enclosing task (needed to 
-			//--		propogate exceptions to outer tasks (in case they have a suitable handler))
-			Thread rt = taskinfo.setRegisteringThread();
 			
 			if (rt instanceof TaskThread)
 				taskID.setEnclosingTask(((TaskThread)rt).currentExecutingTask());
@@ -103,6 +161,7 @@ public class TaskpoolLIFOWorkFirst extends TaskpoolLIFOWorkStealing {
 				enqueueWaitingTask(taskID, allDependences);
 			}
 		}
+			
 		
 		return taskID;
 	}
