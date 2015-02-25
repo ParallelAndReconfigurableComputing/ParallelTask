@@ -68,7 +68,7 @@ public class TaskpoolLIFOWorkFirst extends TaskpoolLIFOWorkStealing {
 			 * 	Attempts to see if there's a task that this thread's currently working on.
 			 * 	If so, then it attempts to enqueue this task to someone else instead.
 			 */
-		if(isTaskInterrupted) {
+		if(isOverloaded) {
 		
 			//Thread registering stuff was here
 			if (rt instanceof TaskThread) {
