@@ -13,6 +13,7 @@ package pt.runtime;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 
 public class TaskpoolLIFOWorkFirst extends TaskpoolLIFOWorkStealing {
 	
@@ -20,7 +21,69 @@ public class TaskpoolLIFOWorkFirst extends TaskpoolLIFOWorkStealing {
 	 * 	Constants for determining whether the local task queue has reached its threshold.
 	 */
 	private int localOneoffTaskQueueThreshold = 3;
+
+	private boolean isTaskInterrupted = true;
 	
+	//Previous task
+	
+
+	
+	
+	/**
+	 * 	@Override
+	 * Creates a TaskID for the specified task (whose details are contained in the TaskInfo). The enqueuing process is dependent
+	 * on the conditions of the Work-First thresholds. If the number of tasks queued exceeds the workFirstUpperThreshold,
+	 * then tasks are no longer queued but executed sequentially - Otherwise tasks will be queued.
+	 * It then returns the TaskID after the task has been queued or executed via Work-First conditions. 
+	 * This method is Work-First schedule-specific. 
+	 */
+	public TaskID enqueue(TaskInfo taskinfo) {
+		
+		TaskID taskID = new TaskID(taskinfo);
+		Thread rt = taskinfo.setRegisteringThread();
+		
+		/**
+		 * 	When the Work-First is used, it will consider the work-first threshold and will stop enqueuing when
+		 * 	the threshold has been reached.
+		 * 	Instead of enqueuing, tasks will be sequentially processed instead.
+		 */
+				/**
+				 * 	Steps:
+				 * 	Get registering thread
+				 * 	Check if it is a worker thread?
+				 * 	If there is a current task:
+				 * 		Set task to started or enqueued or something
+				 * 		Add this task to the worker's local task queue - At the back
+				 * 	Otherwise execute new tasks sequentially.
+				 */
+
+
+		ArrayList<TaskID> allDependences = null;
+		if (taskinfo.getDependences() != null)
+			allDependences = ParaTask.allTasksInList(taskinfo.getDependences());
+		
+		if (rt instanceof TaskThread)
+			taskID.setEnclosingTask(((TaskThread)rt).currentExecutingTask());
+		
+		if (taskinfo.hasAnySlots())
+			taskinfo.setTaskIDForSlotsAndHandlers(taskID);
+		
+		if (taskID.isPipeline()) {
+			//-- pipeline threads don't need to wait for dependencies
+			startPipelineTask(taskID);
+		} else if (allDependences == null) {
+			if (taskID.isInteractive())
+				startInteractiveTask(taskID);
+			else
+				enqueueReadyTask(taskID);
+		} else {
+			enqueueWaitingTask(taskID, allDependences);
+		}
+		
+		return taskID;
+	}
+	
+
 	
 	/**
 	* When enqueuing a task in the <code>WorkStealing</code> policy, if the task is not able to be executed on any arbitrary thread,
@@ -73,8 +136,10 @@ public class TaskpoolLIFOWorkFirst extends TaskpoolLIFOWorkStealing {
 			 * 	manually execute the thread.
 			 */
 			
+			
 			//Get current queuing thread(Could be worker thread or non-worker thread)
 			Thread regThread = taskID.getTaskInfo().getRegisteringThread();
+			
 			
 			/**
 			 * 
@@ -91,7 +156,7 @@ public class TaskpoolLIFOWorkFirst extends TaskpoolLIFOWorkStealing {
 			if (regThread instanceof WorkerThread) {
 				//-- Add task to this thread's worker queue, at the beginning since it is the "hottest" task.
 				
-				WorkerThread workerThread = (WorkerThread) regThread;				
+				WorkerThread workerThread = (WorkerThread) regThread;	
 				
 				if (!workerThread.isMultiTaskWorker()) {
 					
@@ -114,6 +179,16 @@ public class TaskpoolLIFOWorkFirst extends TaskpoolLIFOWorkStealing {
 					
 					//If size exceeds the threshold, then will process sequentially
 					if(localOneoffTaskQueues.get(tid).size() >= localOneoffTaskQueueThreshold) {
+						
+						//Gets previous task
+						if(regThread instanceof TaskThread) {
+							TaskID currentTask = ((TaskThread)regThread).currentExecutingTask();
+							if(currentTask != null && currentTask.hasCompleted()) {
+								System.out.println("Adding");
+								localOneoffTaskQueues.get(tid).addFirst(currentTask);
+							}
+						}
+						
 						TaskInfo taskInfo = taskID.getTaskInfo();
 						Method m = taskInfo.getMethod();
 						try {
