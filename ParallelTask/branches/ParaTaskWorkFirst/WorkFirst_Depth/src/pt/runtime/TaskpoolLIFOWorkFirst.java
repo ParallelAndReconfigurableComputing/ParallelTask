@@ -51,6 +51,53 @@ public class TaskpoolLIFOWorkFirst extends TaskpoolLIFOWorkStealing {
 		}
 		
 		if(ParaTask.getScheduleType() == ParaTask.ScheduleType.WorkFirst && taskID.getTaskDepth() >= taskDepthThreshold) {
+			
+			
+			/*
+			 * 	Enqueues previous task first
+			 */
+			TaskID currentTask = ((TaskThread)rt).currentExecutingTask();
+			
+			if(!currentTask.hasCompleted()) {
+				//if(currentTask.hasCompleted())
+				taskID.setEnclosingTask(currentTask); //Necessary??
+				
+				TaskInfo currentTaskInfo = currentTask.getTaskInfo();
+				
+				
+				if (currentTaskInfo.getDependences() != null)
+					allDependences = ParaTask.allTasksInList(currentTaskInfo.getDependences());				
+							
+				if (currentTaskInfo.hasAnySlots())
+					currentTaskInfo.setTaskIDForSlotsAndHandlers(currentTask);
+				
+				if (currentTask.isPipeline()) {
+					//-- pipeline threads don't need to wait for dependencies
+					startPipelineTask(currentTask);
+				} else if (allDependences == null) {
+					if (currentTask.isInteractive())
+						startInteractiveTask(currentTask);
+					else
+						enqueueReadyTask(currentTask);
+				} else {
+					enqueueWaitingTask(currentTask, allDependences);
+				}
+			}
+			
+			
+			/*
+			 * 	Set up task info for new task
+			 */
+			if (taskinfo.getDependences() != null)
+				allDependences = ParaTask.allTasksInList(taskinfo.getDependences());
+			
+			if (rt instanceof TaskThread)
+				taskID.setEnclosingTask(((TaskThread)rt).currentExecutingTask());
+			
+			if (taskinfo.hasAnySlots())
+				taskinfo.setTaskIDForSlotsAndHandlers(taskID);
+			
+			
 			/*
 			 * 	Directly extracts the method of the task to operate on the class sequentially.
 			 * 	Also while invoking the sequential method of the task, the return result has also been set.
