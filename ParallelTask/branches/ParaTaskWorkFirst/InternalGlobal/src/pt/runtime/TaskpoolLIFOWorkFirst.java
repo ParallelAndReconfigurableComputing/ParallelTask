@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class TaskpoolLIFOWorkFirst extends TaskpoolLIFOWorkStealing {
+public class TaskpoolLIFOWorkFirst extends TaskpoolLIFOWorkStealing implements TaskpoolWorkFirst {
 	
 	/*
 	 * 	Used for the Work-First implementation.
@@ -19,6 +19,8 @@ public class TaskpoolLIFOWorkFirst extends TaskpoolLIFOWorkStealing {
 	private int workFirstUpperThreshold = 40;//1400;
 	private int workFirstLowerThreshold = 20;//700;
 	private boolean isWorkFirstInPlace = false;
+	
+
 	
 	
 	/**

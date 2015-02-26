@@ -363,5 +363,37 @@ public class ParaTask {
 		//Sets Workfirst to true in the TaskPool
 		//isWorkfirst
 	}
+	
+	/**
+	 * 	Sets upper bound threshold for Work-First
+	 * @param threshold
+	 */
+	public static void setWorkFirstUpperThreshold(int threshold) {
+		TaskpoolFactory.getTaskpool().setUpperBoundThreshold(threshold);
+	}
+
+	/**
+	 * 	Returns upper bound threshold for Work-First
+	 * @return int
+	 */
+	public static int getWorkFirstUpperThreshold() {
+		return TaskpoolFactory.getTaskpool().getUpperBoundThreshold();
+	}
+	
+	/**
+	 * 	Sets lower bound threshold for Work-First
+	 * @param threshold
+	 */
+	public static void setWorkFirstLowerThreshold (int threshold) {
+		TaskpoolFactory.getTaskpool().setLowerBoundThreshold(threshold);
+	}
+
+	/**
+	 * 	Returns lower bound threshold for Work-First
+	 * @return int
+	 */
+	public static int getWorkFirstLowerThreshold() {
+		return TaskpoolFactory.getTaskpool().getLowerBoundThreshold();
+	}
 
 }

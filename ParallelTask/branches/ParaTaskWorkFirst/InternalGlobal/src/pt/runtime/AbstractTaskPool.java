@@ -52,6 +52,13 @@ public abstract class AbstractTaskPool implements Taskpool {
 	};
 	
 	
+	/*
+	 * 	Work-First threshold variables
+	 */
+	private int workFirstUpperThreshold = 40;
+	private int workFirstLowerThreshold = 20;
+	
+	
 	
 	/**
 	 * 
@@ -535,5 +542,23 @@ public abstract class AbstractTaskPool implements Taskpool {
 	
 	public List<AbstractQueue<TaskID<?>>> getPrivateTaskQueues() {
 		return privateQueues;
+	}
+	
+	
+	
+	public void setUpperBoundThreshold(int threshold) {
+		workFirstUpperThreshold = threshold;
+	}
+	
+	public int getUpperBoundThreshold() {
+		return workFirstUpperThreshold;
+	}
+	
+	public void setLowerBoundThreshold(int threshold) {
+		workFirstLowerThreshold = threshold;
+	}
+	
+	public int getLowerBoundThreshold() {
+		return workFirstLowerThreshold;
 	}
 }
