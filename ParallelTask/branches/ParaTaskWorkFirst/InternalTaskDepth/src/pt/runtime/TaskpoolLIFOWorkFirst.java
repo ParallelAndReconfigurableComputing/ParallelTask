@@ -18,14 +18,9 @@ import java.util.ArrayList;
 public class TaskpoolLIFOWorkFirst extends TaskpoolLIFOWorkStealing {
 	
 	//Task Depth threshold
-	private int taskDepthThreshold = 8;
+	//private int taskDepthThreshold = 8;
 	
-	/**
-	 * 	Threshold used for the depth level task cutting.
-	 */
-	public void setTaskDepthThreshold(int threshold) {
-		taskDepthThreshold = threshold;
-	}
+	
 	
 	
 	/*

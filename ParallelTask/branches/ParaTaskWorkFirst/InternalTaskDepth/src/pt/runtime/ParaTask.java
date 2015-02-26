@@ -351,4 +351,25 @@ public class ParaTask {
 		}
 		return list;
 	}
+	
+	
+	/*
+	 * 	Getters and setters for adjusting Task Depth thresholds
+	 */
+	
+	/**
+	 * 	Sets Work-First depth threshold
+	 * 	@param threshold
+	 */
+	public void setDepthThreshold(int threshold) {
+		TaskpoolFactory.getTaskpool().setTaskDepthThreshold(threshold);
+	}
+	
+	/**
+	 *	Gets Work-First depth threshold
+	 * 	@return
+	 */
+	public int getDepthThreshold() {
+		return TaskpoolFactory.getTaskpool().getTaskDepthThreshold();
+	}
 }
