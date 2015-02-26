@@ -353,5 +353,26 @@ public class ParaTask {
 		}
 		return list;
 	}
+	
+	
+	/*
+	 * 	Getter and Setter for Work-First Thresholds
+	 */
+	
+	/**
+	 * 	Sets threshold value for Work-First local task queues
+	 * @param threshold
+	 */
+	public void setThreshold(int threshold) {
+		TaskpoolFactory.getTaskpool().setThreshold(threshold);
+	}
+	
+	/**
+	 * 	Gets threshold value for Work-First local task queues
+	 * @return threshold
+	 */
+	public int getThreshold() {
+		return TaskpoolFactory.getTaskpool().getThreshold();
+	}
 
 }

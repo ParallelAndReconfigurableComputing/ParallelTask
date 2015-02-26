@@ -109,4 +109,12 @@ public interface Taskpool {
 	public Map<Integer, LinkedBlockingDeque<TaskID<?>>> getLocalOneoffTaskQueues();
 	
 	public List<AbstractQueue<TaskID<?>>> getPrivateTaskQueues();
+	
+	
+	/**
+	 * 	Setter and getter for Work-First thresholds
+	 */
+	public void setThreshold(int threshold);
+	
+	public int getThreshold();
 }

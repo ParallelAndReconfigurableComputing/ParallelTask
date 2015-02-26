@@ -51,6 +51,10 @@ public abstract class AbstractTaskPool implements Taskpool {
 		}
 	};
 	
+	/*
+	 * 	Work-First threshold for Local Task Queues
+	 */
+	private int threshold = 3;
 	
 	
 	/**
@@ -535,5 +539,23 @@ public abstract class AbstractTaskPool implements Taskpool {
 	
 	public List<AbstractQueue<TaskID<?>>> getPrivateTaskQueues() {
 		return privateQueues;
+	}
+	
+	
+	/**
+	 * Sets Work-First threshold
+	 * @param threshold
+	 */
+	
+	public void setThreshold(int threshold) {
+		this.threshold = threshold;
+	}
+	
+	/**
+	 * 	Returns threshold
+	 * 	@return threshold
+	 */
+	public int getThreshold() {
+		return this.threshold;
 	}
 }
