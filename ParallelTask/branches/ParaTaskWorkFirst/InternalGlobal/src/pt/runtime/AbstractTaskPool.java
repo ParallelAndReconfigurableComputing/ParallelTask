@@ -55,8 +55,8 @@ public abstract class AbstractTaskPool implements Taskpool {
 	/*
 	 * 	Work-First threshold variables
 	 */
-	private int workFirstUpperThreshold = 40;
-	private int workFirstLowerThreshold = 20;
+	protected int workFirstUpperThreshold = 40;
+	protected int workFirstLowerThreshold = 20;
 	
 	
 	

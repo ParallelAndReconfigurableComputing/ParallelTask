@@ -16,8 +16,8 @@ public class TaskpoolLIFOWorkFirst extends TaskpoolLIFOWorkStealing implements T
 	protected boolean isWorkFirst = true; //TEMP - MAKE IT TOGGLABLE
 	protected AtomicInteger workFirstCounter = new AtomicInteger(0);
 
-	private int workFirstUpperThreshold = 40;//1400;
-	private int workFirstLowerThreshold = 20;//700;
+//	private int workFirstUpperThreshold = 40;//1400;
+//	private int workFirstLowerThreshold = 20;//700;
 	private boolean isWorkFirstInPlace = false;
 	
 
