@@ -361,7 +361,7 @@ public class ParaTask {
 	 * 	Sets Work-First depth threshold
 	 * 	@param threshold
 	 */
-	public void setDepthThreshold(int threshold) {
+	public static void setDepthThreshold(int threshold) {
 		TaskpoolFactory.getTaskpool().setTaskDepthThreshold(threshold);
 	}
 	
@@ -369,7 +369,7 @@ public class ParaTask {
 	 *	Gets Work-First depth threshold
 	 * 	@return
 	 */
-	public int getDepthThreshold() {
+	public static int getDepthThreshold() {
 		return TaskpoolFactory.getTaskpool().getTaskDepthThreshold();
 	}
 }
