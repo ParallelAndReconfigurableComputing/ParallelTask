@@ -19,7 +19,6 @@ public class TaskpoolLIFOWorkFirst extends TaskpoolLIFOWorkStealing {
 	/**
 	 * 	Constants for determining whether the local task queue has reached its threshold.
 	 */
-	private int localOneoffTaskQueueThreshold = 3;
 	
 	
 	/**
@@ -113,7 +112,7 @@ public class TaskpoolLIFOWorkFirst extends TaskpoolLIFOWorkStealing {
 					int tid = workerThread.getThreadID();
 					
 					//If size exceeds the threshold, then will process sequentially
-					if(localOneoffTaskQueues.get(tid).size() >= localOneoffTaskQueueThreshold) {
+					if(localOneoffTaskQueues.get(tid).size() >= threshold) {
 						TaskInfo taskInfo = taskID.getTaskInfo();
 						Method m = taskInfo.getMethod();
 						try {
@@ -168,7 +167,7 @@ public class TaskpoolLIFOWorkFirst extends TaskpoolLIFOWorkStealing {
 					
 					
 					//If size exceeds the threshold, then will process sequentially
-					if(localOneoffTaskQueues.get(randThread).size() >= localOneoffTaskQueueThreshold) {
+					if(localOneoffTaskQueues.get(randThread).size() >= threshold) {
 						TaskInfo taskInfo = taskID.getTaskInfo();
 						Method m = taskInfo.getMethod();
 						try {
@@ -225,7 +224,7 @@ public class TaskpoolLIFOWorkFirst extends TaskpoolLIFOWorkStealing {
 				
 				
 				//If size exceeds the threshold, then will process sequentially
-				if(localOneoffTaskQueues.get(randThread).size() >= localOneoffTaskQueueThreshold) {
+				if(localOneoffTaskQueues.get(randThread).size() >= threshold) {
 					TaskInfo taskInfo = taskID.getTaskInfo();
 					Method m = taskInfo.getMethod();
 					try {

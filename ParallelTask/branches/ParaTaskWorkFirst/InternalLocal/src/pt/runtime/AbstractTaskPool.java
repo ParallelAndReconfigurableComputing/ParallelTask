@@ -54,7 +54,7 @@ public abstract class AbstractTaskPool implements Taskpool {
 	/*
 	 * 	Work-First threshold for Local Task Queues
 	 */
-	private int threshold = 3;
+	protected int threshold = 3;
 	
 	
 	/**
