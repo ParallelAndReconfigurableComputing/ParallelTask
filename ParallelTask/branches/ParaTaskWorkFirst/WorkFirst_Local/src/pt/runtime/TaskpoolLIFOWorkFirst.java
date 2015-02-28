@@ -20,7 +20,7 @@ public class TaskpoolLIFOWorkFirst extends TaskpoolLIFOWorkStealing {
 	/**
 	 * 	Constants for determining whether the local task queue has reached its threshold.
 	 */
-	private int localOneoffTaskQueueThreshold = 3;
+	private int localOneoffTaskQueueThreshold = 5;
 
 	private boolean isTaskInterrupted = true;
 	
@@ -184,7 +184,7 @@ public class TaskpoolLIFOWorkFirst extends TaskpoolLIFOWorkStealing {
 						if(regThread instanceof TaskThread) {
 							TaskID currentTask = ((TaskThread)regThread).currentExecutingTask();
 							if(currentTask != null && currentTask.hasCompleted()) {
-								System.out.println("Adding");
+								//System.out.println("Adding");
 								localOneoffTaskQueues.get(tid).addFirst(currentTask);
 							}
 						}
@@ -244,6 +244,14 @@ public class TaskpoolLIFOWorkFirst extends TaskpoolLIFOWorkStealing {
 					
 					//If size exceeds the threshold, then will process sequentially
 					if(localOneoffTaskQueues.get(randThread).size() >= localOneoffTaskQueueThreshold) {
+						//Gets previous task
+						if(regThread instanceof TaskThread) {
+							TaskID currentTask = ((TaskThread)regThread).currentExecutingTask();
+							if(currentTask != null && currentTask.hasCompleted()) {
+								//System.out.println("Adding");
+								localOneoffTaskQueues.get(randThread).addFirst(currentTask);
+							}
+						}
 						TaskInfo taskInfo = taskID.getTaskInfo();
 						Method m = taskInfo.getMethod();
 						try {
@@ -301,6 +309,17 @@ public class TaskpoolLIFOWorkFirst extends TaskpoolLIFOWorkStealing {
 				
 				//If size exceeds the threshold, then will process sequentially
 				if(localOneoffTaskQueues.get(randThread).size() >= localOneoffTaskQueueThreshold) {
+
+					//Gets previous task
+					if(regThread instanceof TaskThread) {
+						TaskID currentTask = ((TaskThread)regThread).currentExecutingTask();
+						if(currentTask != null && currentTask.hasCompleted()) {
+							//System.out.println("Adding");
+							localOneoffTaskQueues.get(randThread).addFirst(currentTask);
+						}
+					}
+					
+					
 					TaskInfo taskInfo = taskID.getTaskInfo();
 					Method m = taskInfo.getMethod();
 					try {
