@@ -49,11 +49,6 @@ public class TaskpoolLIFOWorkFirst extends TaskpoolLIFOWorkStealing implements T
 				Method m = taskinfo.getMethod();
 				taskID.setReturnResult(m.invoke(taskinfo.getInstance(), taskinfo.getParameters()));
 				
-				/*
-				 * 	Once successfully invoked, clean up the rest of the TaskID info.
-				 */
-				taskID.setComplete();
-				
 				
 			} catch (IllegalAccessException e) {
 				// TODO Auto-generated catch block
