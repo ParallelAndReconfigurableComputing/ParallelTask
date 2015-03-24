@@ -13,8 +13,7 @@ public class TaskpoolLIFOWorkFirst extends TaskpoolLIFOWorkStealing implements T
 	 * 	Boolean used to check if the Work-First is currently being used.
 	 * 	The Counter is used to check if the threshold for the number of tasks have been met.
 	 */
-	protected boolean isWorkFirst = true; //TEMP - MAKE IT TOGGLABLE
-	protected AtomicInteger workFirstCounter = new AtomicInteger(0);
+	protected boolean isWorkFirst = true;
 
 //	private int workFirstUpperThreshold = 40;//1400;
 //	private int workFirstLowerThreshold = 20;//700;
@@ -33,25 +32,14 @@ public class TaskpoolLIFOWorkFirst extends TaskpoolLIFOWorkStealing implements T
 	 */
 	public TaskID enqueue(TaskInfo taskinfo) {
 		
-		/*
-		 * 	Configures thresholds based on upper and lower bounds.
-		 */
-		if(isWorkFirst) {
-			//System.out.println(workFirstCounter.get());
-			if(workFirstCounter.get() >= workFirstUpperThreshold)
-				isWorkFirstInPlace = true;
-			else if(workFirstCounter.get() <= workFirstLowerThreshold)
-				isWorkFirstInPlace = false;
-		}
 		
 		TaskID taskID = new TaskID(taskinfo);
 		
 		/**
-		 * 	When the Work-First is used, it will consider the work-first threshold and will stop enqueuing when
-		 * 	the threshold has been reached.
-		 * 	Instead of enqueuing, tasks will be sequentially processed instead.
+		 * 	Always enqueues.
+		 * 	Testing the overhead of the Work-First mechanism compared to sequential/other Work-First solutions.
 		 */
-		if(isWorkFirstInPlace) {
+		if(true) {
 			/*
 			 * 	Directly extracts the method of the task to operate on the class sequentially.
 			 * 	Also while invoking the sequential method of the task, the return result has also been set.
@@ -196,7 +184,6 @@ public class TaskpoolLIFOWorkFirst extends TaskpoolLIFOWorkStealing implements T
 
 					//localQueues[tid].addFirst(taskID);
 					//localQueues.get(tid).addFirst(taskID);
-					workFirstCounter.incrementAndGet();
 					localOneoffTaskQueues.get(tid).addFirst(taskID);
 				}else {
 					//-- just add it to a random worker thread's queue.. (Add it at the end, since it's not hot in that thread's queue)
@@ -227,7 +214,6 @@ public class TaskpoolLIFOWorkFirst extends TaskpoolLIFOWorkStealing implements T
 
 					//localQueues[randThread].addLast(taskID);
 					//localQueues.get(randThread).addLast(taskID);
-					workFirstCounter.incrementAndGet();
 					localOneoffTaskQueues.get(randThread).addLast(taskID);
 				}
 			} else {
@@ -262,7 +248,6 @@ public class TaskpoolLIFOWorkFirst extends TaskpoolLIFOWorkStealing implements T
 				
 				//localQueues[randThread].addLast(taskID);
 				//localQueues.get(randThread).addLast(taskID);
-				workFirstCounter.incrementAndGet();
 				localOneoffTaskQueues.get(randThread).addLast(taskID);
 			}
 		}
@@ -537,7 +522,6 @@ public class TaskpoolLIFOWorkFirst extends TaskpoolLIFOWorkStealing implements T
 
 				//-- attempt to have permission to execute this task
 				if (next.executeAttempt()) {
-					workFirstCounter.decrementAndGet();
 					return next;
 				} else {
 					next.enqueueSlots(true);
@@ -593,7 +577,6 @@ public class TaskpoolLIFOWorkFirst extends TaskpoolLIFOWorkStealing implements T
 					
 					if (next.executeAttempt()) {
 						//-- otherwise, it is safe to attempt to execute this task
-						workFirstCounter.decrementAndGet();
 						return next;
 					} else {
 						//-- task has been canceled
@@ -708,7 +691,6 @@ public class TaskpoolLIFOWorkFirst extends TaskpoolLIFOWorkStealing implements T
 						if (next.executeAttempt()) {
 							//-- otherwise, it is safe to attempt to execute this task
 							lastStolenFrom.set(nextVictim);
-							workFirstCounter.decrementAndGet();
 							return next;
 						} else {
 							//-- task has been canceled
