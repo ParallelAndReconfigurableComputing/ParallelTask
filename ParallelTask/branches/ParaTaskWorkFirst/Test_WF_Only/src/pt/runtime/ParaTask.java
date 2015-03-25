@@ -56,7 +56,7 @@ public class ParaTask {
 	 * */
 	
 	//private static int threadPoolSize = Runtime.getRuntime().availableProcessors();
-	private static ScheduleType scheduleType = ScheduleType.WorkStealing;
+	private static ScheduleType scheduleType = ScheduleType.WorkFirst;
 	private static boolean isInitialized = false;
 
 	private static Thread EDT = null;		// a reference to the EDT
@@ -97,7 +97,11 @@ public class ParaTask {
 		 * dispatch thread), this behaves as work-sharing. A worker thread always favours to execute tasks 
 		 * from its local queue before helping with the global shared queue.    
 		 */
-		MixedSchedule };
+		MixedSchedule,
+		
+		WorkFirst
+		
+	};
 		
 		
    /**
