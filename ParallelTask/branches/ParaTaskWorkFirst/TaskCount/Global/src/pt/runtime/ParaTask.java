@@ -395,5 +395,13 @@ public class ParaTask {
 	public static int getWorkFirstLowerThreshold() {
 		return TaskpoolFactory.getTaskpool().getLowerBoundThreshold();
 	}
+	
+	/**
+	 * Returns number of tasks in Work-First
+	 * @return int
+	 */
+	public static int getTaskCount() {
+		return TaskpoolFactory.getTaskpool().getTaskCount();
+	}
 
 }

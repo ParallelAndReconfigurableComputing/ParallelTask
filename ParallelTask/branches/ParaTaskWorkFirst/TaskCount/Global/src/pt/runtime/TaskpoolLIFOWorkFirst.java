@@ -20,7 +20,6 @@ public class TaskpoolLIFOWorkFirst extends TaskpoolLIFOWorkStealing implements T
 //	private int workFirstLowerThreshold = 20;//700;
 	private boolean isWorkFirstInPlace = false;
 	
-
 	
 	
 	/**
@@ -79,6 +78,9 @@ public class TaskpoolLIFOWorkFirst extends TaskpoolLIFOWorkStealing implements T
 			}
 			
 		} else {
+			
+			taskCounter.getAndIncrement();
+			
 			ArrayList<TaskID> allDependences = null;
 			if (taskinfo.getDependences() != null)
 				allDependences = ParaTask.allTasksInList(taskinfo.getDependences());

@@ -128,4 +128,9 @@ public interface Taskpool {
 	public void setLowerBoundThreshold(int threshold);
 	
 	public int getLowerBoundThreshold();
+	
+	/*
+	 * Counts how many tasks in total.
+	 */
+	public int getTaskCount();
 }

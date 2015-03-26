@@ -58,6 +58,11 @@ public abstract class AbstractTaskPool implements Taskpool {
 	protected int workFirstUpperThreshold = 40;
 	protected int workFirstLowerThreshold = 20;
 	
+	/*
+	 * 	Task count
+	 */
+	protected AtomicInteger taskCounter = new AtomicInteger(0);
+	
 	
 	
 	/**
@@ -560,5 +565,9 @@ public abstract class AbstractTaskPool implements Taskpool {
 	
 	public int getLowerBoundThreshold() {
 		return workFirstLowerThreshold;
+	}
+	
+	public int getTaskCount() {
+		return taskCounter.get();
 	}
 }
