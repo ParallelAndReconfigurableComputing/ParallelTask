@@ -117,4 +117,9 @@ public interface Taskpool {
 	public void setTaskDepthThreshold(int threshold);
 	
 	public int getTaskDepthThreshold();
+	
+	/*
+	 * Counts how many tasks in total.
+	 */
+	public int getTaskCount();
 }

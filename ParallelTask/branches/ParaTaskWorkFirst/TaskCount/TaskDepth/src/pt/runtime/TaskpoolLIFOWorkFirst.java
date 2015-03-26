@@ -73,7 +73,9 @@ public class TaskpoolLIFOWorkFirst extends TaskpoolLIFOWorkStealing {
 			}
 			
 		} else { 
-
+			
+			taskCounter.getAndIncrement();
+			
 			//System.out.println("Enqueue");
 			if (taskinfo.getDependences() != null)
 				allDependences = ParaTask.allTasksInList(taskinfo.getDependences());

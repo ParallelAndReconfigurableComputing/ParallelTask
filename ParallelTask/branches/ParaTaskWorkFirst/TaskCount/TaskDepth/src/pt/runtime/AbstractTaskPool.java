@@ -54,6 +54,11 @@ public abstract class AbstractTaskPool implements Taskpool {
 	
 	//Task Depth threshold
 	protected int taskDepthThreshold = 8;
+
+	/*
+	 * 	Task count
+	 */
+	protected AtomicInteger taskCounter = new AtomicInteger(0);
 	
 	
 	/**
@@ -555,5 +560,9 @@ public abstract class AbstractTaskPool implements Taskpool {
 	 */
 	public int getTaskDepthThreshold() {
 		return taskDepthThreshold;
+	}
+	
+	public int getTaskCount() {
+		return taskCounter.get();
 	}
 }
