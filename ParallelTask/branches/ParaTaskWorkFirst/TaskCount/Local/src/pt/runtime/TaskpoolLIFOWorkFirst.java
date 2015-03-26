@@ -136,6 +136,7 @@ public class TaskpoolLIFOWorkFirst extends TaskpoolLIFOWorkStealing {
 					} else {
 						//localQueues[tid].addFirst(taskID);
 						//localQueues.get(tid).addFirst(taskID);
+						taskCounter.getAndIncrement();
 						localOneoffTaskQueues.get(tid).addFirst(taskID);
 					}
 				}else {
@@ -191,6 +192,7 @@ public class TaskpoolLIFOWorkFirst extends TaskpoolLIFOWorkStealing {
 					} else {
 						//localQueues[randThread].addLast(taskID);
 						//localQueues.get(randThread).addLast(taskID);
+						taskCounter.getAndIncrement();
 						localOneoffTaskQueues.get(randThread).addLast(taskID);
 					}
 				}
@@ -250,6 +252,7 @@ public class TaskpoolLIFOWorkFirst extends TaskpoolLIFOWorkStealing {
 					
 					//localQueues[randThread].addLast(taskID);
 					//localQueues.get(randThread).addLast(taskID);
+					taskCounter.getAndIncrement();
 					localOneoffTaskQueues.get(randThread).addLast(taskID);
 				}
 			}

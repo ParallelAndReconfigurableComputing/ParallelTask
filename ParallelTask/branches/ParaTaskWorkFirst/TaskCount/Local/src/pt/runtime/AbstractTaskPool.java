@@ -55,7 +55,11 @@ public abstract class AbstractTaskPool implements Taskpool {
 	 * 	Work-First threshold for Local Task Queues
 	 */
 	protected int threshold = 3;
-	
+
+	/*
+	 * 	Task count
+	 */
+	protected AtomicInteger taskCounter = new AtomicInteger(0);
 	
 	/**
 	 * 
@@ -557,5 +561,9 @@ public abstract class AbstractTaskPool implements Taskpool {
 	 */
 	public int getThreshold() {
 		return this.threshold;
+	}
+	
+	public int getTaskCount() {
+		return taskCounter.get();
 	}
 }
