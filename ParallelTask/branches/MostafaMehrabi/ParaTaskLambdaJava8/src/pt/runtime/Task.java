@@ -27,20 +27,20 @@ import java.util.List;
 /**
  * 
  * This class is used to store information regarding the task, which is not related 
- * to its execution time. That is, the information is regarding the task before it is
- * invoked, and the information regarding the execution period (i.e. after the task is
+ * to its execution time. That is, the information regarding the task before it is
+ * invoked. Thus, the information regarding the execution period (i.e. after the task is
  * invoked) will be stored in the TaskID.<br>
  * In general this class stores information regarding<br> 
  * 1- Dependences of a specific task<br>
  * 2- The handlers (i.e. slots) to notify during the execution and after execution<br>
  * 3- It identifies if a task is a sub task of another task<br>
- * 4- It keeps a copy of the thread which registers the task<br>
+ * 4- It keeps a reference to the thread which registers the task<br>
  * 5- It asynchronously collects the exceptions that may occur during execution by their<br>
  *    types (i.e. classes) and their corresponding exception handlers<br>
  * <br>   
- * This class keeps a copy of the thread which registers the task. If the registering 
- * thread is EDT (either android or java), it obtains a copy from ParaTask.getEDT(), otherwise
- * a copy of the <code>CurrentThread</code> will be made.<br>
+ * This class keeps a reference to the thread which registers the task. If the registering 
+ * thread is EDT (either android or java), it obtains the reference from ParaTask.getEDT(), otherwise
+ * the reference to the <code>CurrentThread</code> will be made.<br>
  * <br>
  * This class also provides a method which returns the appropriate exception handler for an 
  * exception class that it receives as argument. Moreover, this class provides a method that
