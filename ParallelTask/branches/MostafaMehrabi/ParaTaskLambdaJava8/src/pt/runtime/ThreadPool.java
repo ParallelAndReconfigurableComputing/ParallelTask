@@ -29,6 +29,13 @@ import pt.runtime.ParaTask.ThreadPoolType;
  */
 public class ThreadPool {
 
+	/**
+	 * Indicates the size of the thread pool, and is automatically determined according to the 
+	 * number of <code>CPU cores</code> at runtime. 
+	 * 
+	 * @author Mostafa Mehrabi
+	 * @since  15/9/2014
+	 * */
 	private static int poolSize = -1;
 	
 	/**
@@ -36,12 +43,9 @@ public class ThreadPool {
 	 * @author Kingsley
 	 * @since 18/05/2013
 	 * 
-	 * This two variables are not really necessary.
-	 * 
-	 * @since 27/05/2013
-	 * Re use the field of "oneoffTaskThreadPoolSize" to trace how many one-off task
+	 * Use the field of "oneoffTaskThreadPoolSize" to trace how many one-off task
 	 * worker threads should EXACTLY exist in the one-off task thread pool
-	 * Re use the field of "multiTaskThreadPoolSize" to trace how many one-off task
+	 * Use the field of "multiTaskThreadPoolSize" to trace how many one-off task
 	 * worker threads should EXACTLY exist in the one-off task thread pool
 	 * 
 	 * @since 31/05/2013
@@ -56,37 +60,24 @@ public class ThreadPool {
 	private final static ReentrantLock reentrantLock = new ReentrantLock();
 	
 	/**
-	 * 
-	 * @author Kingsley
-	 * @since 18/05/2013
-	 * 
-	 * Used to indicate different thread pool type
-	 * 
-	 * @since 27/05/2013
-	 * Move this enumeration to the class of ParaTask, since it is open to user.
-	 * 
-	 * */
-	 /* private static enum ThreadPoolType{
-	    	ALL, ONEOFF, MULTI
-	 }*/
-	
-    /**
      * 
-     * @author Kingsley
-	 * @since 16/05/2013
-	 * Change the pool size from LinkedList to TreeMap, the key is the thread id.
-	 * The benifit is TreeMap is already sorted, so we can get the worker thread
-	 * who owns the highest thread id, or get the worker thread just simply using 
-	 * its thread id as a index.
-	 * 
-	 * @since 16/06/2013
+     * 
+	 * The pools are <code>TreeMaps</code>, the key is the thread id.
+	 * The benefit with <code>TreeMaps</code> is that they are already sorted, so 
+	 * we can get the worker thread who owns the highest <code>threadID</code>, or get the worker thread just simply using 
+	 * its <code>threadID</code> as an index.
+	 * <br><br>
 	 * One-off task worker thread does not need to be sorted and synchronized.
 	 * Using HashMap instead.
 	 * 
+	 * @author Kingsley
+	 * @since 16/05/2013
+	 * 
 	 */
+	private static SortedMap<Integer, WorkerThread> multiTaskWorkers = Collections.synchronizedSortedMap(new TreeMap<Integer, WorkerThread>());
+	
 	private static Map<Integer, WorkerThread> oneoffTaskWorkers = new HashMap<Integer, WorkerThread>();
 
-	private static SortedMap<Integer, WorkerThread> multiTaskWorkers = Collections.synchronizedSortedMap(new TreeMap<Integer, WorkerThread>());
 	
 	
 	/**
@@ -111,7 +102,6 @@ public class ThreadPool {
 
 	static {
 		if (poolSize < 0) {
-			// Initially, the pool size is equal to the nuber of processors
 			poolSize = Runtime.getRuntime().availableProcessors();
 		}
 	}
@@ -122,10 +112,6 @@ public class ThreadPool {
 	 * @since 25/04/2013
 	 * Initialize worker threads here
 	 * 
-	 * @since 11/05/2013
-	 * Set taskpool first
-	 * Add a timer to test thread killing, this code will probably be removed later 
-	 * 
 	 * */
 	
 	protected static void initialize(Taskpool taskpool) {
@@ -133,19 +119,40 @@ public class ThreadPool {
 		initializeWorkerThreads(taskpool);
 	}
 	
+	/**
+	 * This method initializes the <code>Worker Threads</code> that are going to execute tasks
+	 * in this instance of <code>Thread Pool</code>. In the first step, this method creates as 
+	 * many <code>Multi-task Threads</code> as half of the <code>CPU cores</code> at runtime 
+	 * (i.e. half of <code>poolSize</code>). 
+	 * <br><br>
+	 *Then the <code>Mutli-task Threads</code> are granted <b>maximum</b> priority, and are allowed
+	 *to be active as <b>daemon</b> threads if required. Then the <code>Mutli-task Threads</code> are 
+	 *added to a <code><i>sorted tree map</i></code>, where their <code>globalID</code> is used as 
+	 *the key! Finally there is a <code>privateQueue</code> created and associated to each <code>Mutli-task Thread</code>.
+	 *The <code>privateQueues</code> are collected in a <b>list</b> of <code>privateQueues</code>, where the order of
+	 *queues is same as the order of threads created. 
+	 *<br><br> 
+	 *Threads are given <code>globalIDs</code> which indicates their position in the thread pool. <code>Multi-task Threads</code>
+	 *are also given a <code>localID</code> or <code>multiTaskWorkerID</code> which indicates the position of 
+	 *<code>Multi-task Threads</code> with respect to each other.
+	 *<br><br>
+	 *After the <code>Multi-task Threads</code> are created, the other half of <code>poolSize</code> (i.e. No. of CPU-cores) is
+	 *specified to <code>OneOff-task</code> threads. There will be <code>globalID</code>s associated to <code>OneOff-task</code>
+	 *threads as both <u>local</u> and <u>global</u> IDs, because <code>OneOff-tasks</code> threads don't really need a
+	 *local IDs. Same as <code>Multi-task</code> threads, <code>OneOff-task</code> threads are given <b>maximum</b> priority, 
+	 *and are allowed to be active as <b>daemon</b> threads if required. <code>OneOff-task</code> threads are then added to
+	 *a <i>Map</i> collection which maps a worker thread to its <code>globalID</code>. Moreover, there is one 
+	 *<code>localOneOffTask</code> queue associated to each <code>OneOff-task</code> thread. The indices of local queues for both 
+	 *worker thread types starts from 0.
+	 * 
+	 * @Author Kingsley
+	 * @author Mostafa Mehrabi
+	 * 
+	 * @since 26/04/2013
+	 * @since 15/9/2014
+	 * */
 	private static void initializeWorkerThreads(Taskpool taskpool) {
-		/**
-		 * 
-		 * @Author Kingsley
-		 * @since 26/04/2013
-		 * It must to create different worker thread separately, since local queue is not shared,
-		 * the index of local queue for both worker thread type starts from 0;
-		 * 
-		 * @since 02/05/2013
-		 * One-off task threads do not need local thread ID.
-		 * 
-		 * 
-		 * */
+		
 		int multiTaskWorkerID = 0;
 		
 		int multiTaskThreadPoolSize = poolSize/2;
@@ -166,7 +173,7 @@ public class ThreadPool {
 				 * @since : 18/05/2013
 				 * No matter what scheduling policy is, private task queues
 				 * are always required. Before putting something inside, the collection
-				 * of the queues must has already been initialized. 
+				 * of the queues must have already been initialized. 
 				 * 
 				 * */
 				List<AbstractQueue<TaskID<?>>> privateTaskQueues = taskpool.getPrivateTaskQueues();
@@ -177,34 +184,18 @@ public class ThreadPool {
 				workers.start();
 			}else {
 			
-		
 				/**
 				 * 
 				 * @Auther : Kingsley
 				 * @since : 02/05/2013
-				 * One-off task threads do not need local thread ID. 
-				 * Simply give its local id the same value as its global id.
+				 * One-off task threads do not need local thread ID (multiTaskID). 
+				 * Simply use its <code>globalID</code> for both local and global IDs.
 				 * 
 				 * */
 				WorkerThread workers = new WorkerThread(globalID, globalID, taskpool, false);
 				workers.setPriority(Thread.MAX_PRIORITY);
 				workers.setDaemon(true);
 				oneoffTaskWorkers.put(globalID, workers);
-				
-				/**
-				 * 
-				 * @Auther : Kingsley
-				 * @since : 02/05/2013
-				 * 
-				 * Create local one-off task queue for each worker here since the HashMap
-				 * requires worker's global id
-				 * 
-				 * @since : 15/05/2013
-				 * According to different scheduling policies, local one-off task queues
-				 * maybe not required. Before putting something inside, check if the collection
-				 * of the queues has already been initialized. 
-				 * 
-				 * */
 				Map<Integer, LinkedBlockingDeque<TaskID<?>>> localOneoffTaskQueues = taskpool.getLocalOneoffTaskQueues();
 				if (null != localOneoffTaskQueues) {
 					localOneoffTaskQueues.put(globalID, new LinkedBlockingDeque<TaskID<?>>());
@@ -232,31 +223,15 @@ public class ThreadPool {
 
 	/**
 	 * 
-	 * @Author Kingsley
-	 * @since 26/04/2013
+	 * This method sets the size of the <code>Thread Pool</code> and depending on the type
+	 * of the <code>Thread Pool</code> it takes further required actions as a result of 
+	 * the change. The further actions take place in {@link #adjustThreadPool(ThreadPoolType, int)}.
 	 * 
-	 * Set total pool size and adjust the size of each pool.
-	 * 
-	 * @since 02/05/2013
-	 * When call this method, set the size for each pool.
-	 * 
-	 * @since 27/05/2013
-	 * Add another argument to indicate the thread pool type
-	 * 
+	 * @author Mostafa Mehrabi
+	 * @since  15/9/2014
 	 * */
 	
 	protected static void setPoolSize(ThreadPoolType threadPoolType, int poolSize) {
-		/**
-		 * 
-		 * @author Kingsley
-		 * @since 18/05/2013
-		 * 
-		 * This two variables are not really necessary. 
-		 * When user call setPoolSize(int poolSize), add or remove workers
-		 * from the thread pool directly.
-		 * 
-		 * 
-		 * */
 		ThreadPool.poolSize = poolSize;
 		adjustThreadPool(threadPoolType, poolSize);
 	}
@@ -323,23 +298,21 @@ public class ThreadPool {
 	}
 	
 	/**
+	 * Adjust the pool size for one-off task thread pool. If the new size is smaller than 
+	 * the original size of <code>OneOff-task</code> thread pool, then all threads in <code>OneOff-task</code>
+	 * thread pool will get poisoned. However, because <code>lottoNum</code> is set to the number of 
+	 * <i>redundant threads</i>, only the redundant threads will be removed. 
+	 * <br><br>
+	 * If the new size is bigger than the original size of <code>OneOff-task</code> thread pool, then there will
+	 * be as many <code>OneOff-task</code> worker threads added to the <code>OneOff-task</code> thread pool as it
+	 * is required to fill the new capacity. Threads will be granted <b>maximum</b> priority, and will be allowed 
+	 * to behave as <b>daemon</b> threads if required. The threads will be added to the <code>OneOff-task</code>
+	 * thread pool, and their corresponding <code>localOneOffTask</code> queue will be added to the <code>Map</code>
+	 * collection. 
+	 *
+	 *@author Mostafa Mehrabi
+	 *@since 16/9/2014
 	 * 
-	 * @author Kingsley
-	 * @since 18/05/2013
-	 * @param newSize
-	 * @return 
-	 * 
-	 * Adjust the pool size for one-off task thread pool
-	 * 
-	 * @since 23/05/2013
-	 * Slightly modify the method for WorkStealing 
-	 * 
-	 * @since 27/05/2013
-	 * Fix the bug of continues calling setPoolSize();
-	 * 
-	 * @since 31/05/2013
-	 * Simplify the implementation of reducing thread number.
-	 * Acquire a lock before loop the one-off task worker thread pool
 	 * */
 	private static void adjustOneoffThreadPool(int newSize){
 		if (oneoffTaskThreadPoolSize == newSize) {
@@ -397,7 +370,7 @@ public class ThreadPool {
 			
 		}else {
 			reentrantLock.lock();
-			
+			//shouldn't we remove their taskqueues as well?
 			oneoffTaskWorkers.remove(threadID);
 			
 			reentrantLock.unlock();
