@@ -25,19 +25,7 @@ import java.util.Stack;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/**
- * This class which extends the <code>java.lang.Thread</code> class facilitates creating tasks threads
- * with their own <code>IDs</code>. Moreover, <code>multi task</code> threads also have a <code>localID</code>
- * in order to be identified in their own thread-pool. 
- * <br><br>
- * This class allows assigning instances of <code>TaskPool</code> to the instances of this class at the creation
- * time via the constructor. The customized <code>executeTask</code> method in this class executes the <b>task</b> that 
- * is assigned to a specific instance of this class, and stores the final result in the <code>TaskID</code> instance
- * that is associated to the <b>task</b>.
- * 
- * @author Mostafa Mehrabi
- * @since  15/9/2014
- * */
+
 public abstract class TaskThread extends Thread {
 
 	//-- TaskThreads could potentially have a stack of currently-processing tasks 
@@ -47,20 +35,13 @@ public abstract class TaskThread extends Thread {
 	
 	/**
 	 * 
-	 * ThreadID is used to identify the position of a worker thread
+	 * @Author : Kingsley
+	 * @since : 26/04/2013
+	 * Still keep threadID which is used to identify the position of a worker thread
 	 * in the entire system.
-	 * <br><br>
-	 * For each <i>newly created</i> task thread the <code><b>nextThreadID</b></code> is increased, 
-	 * which is then associated to that thread's <code>threadID</code> to identify the position of 
-	 * that worker thread in its own dedicated thread pool.
-	 * Moreover, for <i>multi task</i> threads the <code><b>nextThreadLocalID</b></code> is increased,
-	 * and then associated to that thread's <code>threadLocalID</code>.
 	 * 
-	 * @author Kingsley
-	 * @since  26/04/2013
-	 *
-	 * @author Mostafa Mehrabi
-	 * @since  15/9/2014
+	 * Newly increase two threadID, multiTaskThreadID and oneoffTaskThreadID, which are
+	 * used to indentify the position of a worker thread in its own dedicated thread pool.
 	 * 
 	 *  */
 	protected int threadID = -1;
@@ -109,14 +90,9 @@ public abstract class TaskThread extends Thread {
 	}
 	
 	/**
-	 * Executes the task given to this thread, and stores the result in the TaskID. This method
-	 * pushes the task being executed in the <code>currentTaskStack</code> while the task is being
-	 * executed, and pops the task out when the execution has either finished, or failed. 
-	 * @return <code>true</code> if task executed successfully, <code>false</code> otherwise
+	 * Executes the current task for this thread, and stores the result in the TaskID
+	 * @return	true if task executed successfully, false otherwise
 	 * @throws PoisonPillException 
-	 * 
-	 * @author Mostafa Mehrabi
-	 * @since  15/9/2014
 	 */
 	protected boolean executeTask(TaskID task){
 		currentTaskStack.push(task);

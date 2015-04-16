@@ -26,5 +26,9 @@ public class ParaTaskRuntimeException extends RuntimeException {
 	public ParaTaskRuntimeException(String message) {
 		super(message);
 	}
+	
+	public ParaTaskRuntimeException(Exception cause) {
+		super(cause);
+	}
 
 }

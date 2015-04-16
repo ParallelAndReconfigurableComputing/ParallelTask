@@ -20,12 +20,6 @@
 package pt.runtime;
 
 import java.util.concurrent.locks.ReentrantLock;
-/**
- * Is a factory class that provides only one instance of <code>TaskPool</code> which is 
- * configured according to the scheduling type specified by <code>ParaTask</code>.
- * @author Mostafa Mehrabi
- * @since 9/9/2014
- * */
 public class TaskpoolFactory {
 	
 	private static Taskpool taskpool = null;

@@ -52,7 +52,7 @@ public class Slot {
 	private FunctionInterExceptionHandler exceptionHanlder;
 	private FunctorVoidWithTwoArgs<TaskID<?>, Object> interimHandler;
 	
-	private Slot() {
+	protected Slot() {
 	}
 	
 	public Slot(Functor<?> handler) {

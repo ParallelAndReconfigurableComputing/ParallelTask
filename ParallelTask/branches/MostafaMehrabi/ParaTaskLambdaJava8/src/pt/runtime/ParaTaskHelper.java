@@ -20,19 +20,7 @@
 package pt.runtime;
 
 import java.lang.reflect.Method;
-/**
- * This class is a helper class which provides information regarding runtime constants 
- * such as <code>PT_PREFIX, WORKER_SLEEP_DELAY, ANY_THREAD_TASK</code> etc. The latter (i.e. <code>ANY_THREAD_TASK</code>)
- * indicates if a specific task could be executed by arbitrary threads or not.<br> 
- * This class also reflects a method if it is provided the name of the <b>class</b> which 
- * contains that <b>method</b>, the name of the method and the list of arguments. It should
- * be mentioned that, in order to reflect the asked method, a function in this class:
- * <br>
- * <code><b><i>getDeclaredMethod</i></b></code> <br>goes through the super classes and enclosing classes as well!
- * 
- * @author Mostafa Mehrabi
- * @since  4/9/2014
- * */
+
 public class ParaTaskHelper {
 
 	/**
