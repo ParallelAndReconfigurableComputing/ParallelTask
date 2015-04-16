@@ -24,14 +24,21 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
+ * @author Mostafa Mehrabi
+ * @author Nasser Giacaman
+ * @author Oliver Sinnen
  * 
- * Helper methods for the ParaTask runtime. This class contains various functions to set up the ParaTask runtime, etc.
+ * <br><br>
+ * Helper methods for the ParaTask runtime. This class contains various functions to set up the ParaTask runtime. 
+ * Importantly the type of scheduling, thread pool type, thread pool size, the EDT and the task listener are set 
+ * and retrieved via this class. 
+ * This class is also able to receive a list of GrouptaskIDs, flatten them and return the flattened list.
+ * 
  * <br><br>
  * All applications making use of the ParaTask features should invoke {@link ParaTask#init()} early in the <code>main</code>
  * method. This will initialise various aspects of the ParaTask runtime.
  * 
- * @author Nasser Giacaman
- * @author Oliver Sinnen
+ * 
  *
  */
 public class ParaTask {
@@ -234,6 +241,7 @@ public class ParaTask {
 			GuiThread.init();
 		
 			try {
+				//why do we need to reflect the function that we can call it ourselves?
 				ParaTaskHelper.setCompleteSlot = 
 					ParaTaskHelper.class.getDeclaredMethod("setComplete", new Class[] {TaskID.class});
 			} catch (SecurityException e) {
@@ -302,7 +310,7 @@ public class ParaTask {
 	 */
 	public static List<TaskID<?>> allTasksInList(List<TaskID<?>> list) {
 		ArrayList<TaskID<?>> result = new ArrayList<>();
-		
+		//we are basically doing nothing in this function. 
 		Iterator<TaskID<?>> it = list.iterator();
 		while (it.hasNext()) {
 			

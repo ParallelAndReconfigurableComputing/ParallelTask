@@ -20,7 +20,20 @@
 package pt.runtime;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
-
+/**
+ *This class allows the user to define a handler from one of the Functor types (functional interfaces)
+ * which could be done by using lambda expressions as well. The user-defined handler will be associated
+ * to the corresponding Functor instance in this class. Once the <code>execute</code> method of a <code>slot</code>
+ * is called, the method executes the <code>execute</code> method of the corresponding handler which is 
+ * an instance of one of the Fucntors. 
+ * <br><br>
+ * This class also allows storing and retrieving the intermediate results of a taskID.
+ * 
+ * @author Mostafa Mehrabi
+ * @since  4/9/2014
+ * 
+ * */
+//Add the explanation for 'setComplete' later!
 public class Slot {	
 	final public static Slot quit = new Slot();
 
@@ -30,7 +43,7 @@ public class Slot {
 	private boolean isIntermediateResultSlot;
 	private boolean isASetCompleteSlot;
 	
-	protected TaskID<?> taskID = null; 	// this is the task for which this slot is attached to (who should assign it?)
+	private TaskID<?> taskID = null; 	// this is the task for which this slot is attached to (who should assign it?)
 				// cannot be assigned at the time the slot is created (since the TaskID wasn't created just yet)
 	
 	private Functor<?> handler;
@@ -39,7 +52,7 @@ public class Slot {
 	private FunctionInterExceptionHandler exceptionHanlder;
 	private FunctorVoidWithTwoArgs<TaskID<?>, Object> interimHandler;
 	
-	protected Slot() {
+	private Slot() {
 	}
 	
 	public Slot(Functor<?> handler) {
@@ -77,6 +90,8 @@ public class Slot {
 			interResults = new ConcurrentLinkedQueue<Object>();
 			interResultType = type;
 		}
+		
+		//else if (interResultType.equals(type))
 		interResults.add(value);
 	}
 	
@@ -91,7 +106,7 @@ public class Slot {
 	public TaskID<?> getTaskID() {
 		return taskID;
 	}
-
+	//how is a slot going to use a taskID?
 	public void setTaskID(TaskID<?> taskID) {
 		this.taskID = taskID;
 	}
