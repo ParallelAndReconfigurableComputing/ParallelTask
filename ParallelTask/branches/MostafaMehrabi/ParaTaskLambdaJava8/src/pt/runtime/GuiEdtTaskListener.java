@@ -27,7 +27,6 @@ package pt.runtime;
 public class GuiEdtTaskListener extends AbstractTaskListener {
 	
 	private void executeSlotOnEDT(final Slot slot) {
-		//GuiThread.invokeLater( () -> doExecuteSlot(slot));
 		GuiThread.invokeLater(new Runnable() {
 			@Override
 			public void run() {
@@ -36,8 +35,6 @@ public class GuiEdtTaskListener extends AbstractTaskListener {
 		});
 	}
 
-	//why are we twisting the implementation here, adding function calls
-	//cost performance
 	public void executeSlot(Slot slot) {
 		this.executeSlotOnEDT(slot);
 	}

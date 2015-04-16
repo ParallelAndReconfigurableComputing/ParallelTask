@@ -208,7 +208,7 @@ public class CurrentTask {
 	 * @param interimResult		The interim result being published.
      * @throws RuntimeException if not called from within a ParaTask task. 
 	 */
-	public static <E> void publishInterim(E interimResult) {
+	public static <E>void publishInterim(E interimResult) {
 		TaskID<?> id = CurrentTask.currentTaskID();
 		List<Slot> interSlots = id.getTaskInfo().getInterSlotsToNotify() ;
 		if (interSlots == null)

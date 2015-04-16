@@ -60,7 +60,8 @@ public interface Taskpool {
 	* @return
 	* 
 	* 
-	* */	
+	* */
+	
 	public <T> TaskIDGroup<T> enqueueMulti(Task<T> taskinfo, int count);
 	
 	/**

@@ -23,7 +23,6 @@ public class GuiThreadSwing implements GuiThreadProxy {
 		try {
 			SwingUtilities.invokeAndWait(new Runnable() {
 				public void run() {
-					//inside invoke and wait, to make sure EDT will implement it
 					edt = Thread.currentThread();
 				}
 			});

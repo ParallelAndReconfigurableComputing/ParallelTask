@@ -18,6 +18,7 @@ public class LottoBox {
 	protected static AtomicInteger lottoNum = new AtomicInteger(0);
 	
 	private final static ReentrantLock reentrantLock = new ReentrantLock();
+	
 	protected static void tryLuck(){
 		while (true) {
 			if (reentrantLock.tryLock()) {

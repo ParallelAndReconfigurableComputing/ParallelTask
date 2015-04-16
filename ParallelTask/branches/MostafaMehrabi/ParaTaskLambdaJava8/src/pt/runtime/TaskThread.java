@@ -28,8 +28,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class TaskThread extends Thread {
 
-	//-- TaskThreads could potentially have a stack of currently-processing tasks 
-	//(e.g. if it blocks on a TaskID that hasn't completed)
+	//-- TaskThreads could potentially have a stack of currently-processing tasks (e.g. if it blocks on a TaskID that hasn't completed)
 	protected Stack<TaskID<?>> currentTaskStack = new Stack<TaskID<?>>();
 	
 	
@@ -43,9 +42,18 @@ public abstract class TaskThread extends Thread {
 	 * Newly increase two threadID, multiTaskThreadID and oneoffTaskThreadID, which are
 	 * used to indentify the position of a worker thread in its own dedicated thread pool.
 	 * 
-	 *  */
+	 * @since : 02/05/2013
+	 * One-off task threads do not need local thread ID.
+	 * 
+	 * @since ��10/05/2013
+	 * Change the name of multiTaskThreadID to threadLocalID
+	 * Change the name of nextMultiTaskThreadID to nextThreadLocalID
+	 * 
+	 * */
 	protected int threadID = -1;
 	
+	//protected int multiTaskThreadID = -1;
+	//protected int oneoffTaskThreadID = -1;
 	protected int threadLocalID = -1;
 	
 	
@@ -54,6 +62,8 @@ public abstract class TaskThread extends Thread {
 	// thread-safe in case interactive threads need to be created from multiple threads
 	private static AtomicInteger nextThreadID = new AtomicInteger(-1); 	
 	
+	//private static AtomicInteger nextMultiTaskThreadID = new AtomicInteger(-1); 	
+	//private static AtomicInteger nextOneoffTaskThreadID = new AtomicInteger(-1); 
 	private static AtomicInteger nextThreadLocalID = new AtomicInteger(-1); 
 	
 	/**
@@ -62,7 +72,7 @@ public abstract class TaskThread extends Thread {
 	 * @since 18/05/2013
 	 * 
 	 * This constructor is used for "Interactive Thread", "Pipeline Thread" and "Slot Handling Thread"
-	 * Give no thread ID to these thread types
+	 * Give no thread ID to these thread type
 	 * 
 	 * */
 	
@@ -85,7 +95,10 @@ public abstract class TaskThread extends Thread {
 		this.threadID = nextThreadID.incrementAndGet();
 		if (isMultiTaskWorker) {
 			this.threadLocalID = nextThreadLocalID.incrementAndGet();
-		} 		
+		} /*else {
+			this.oneoffTaskThreadID = nextOneoffTaskThreadID.incrementAndGet();
+		}*/
+		
 		this.taskpool = taskpool;
 	}
 	
@@ -99,6 +112,21 @@ public abstract class TaskThread extends Thread {
 		
 		Task info = task.getTaskInfo();
 		Object result = null;
+		
+		// TODO
+		/*
+		// retrieve results from implicit taskids
+		int[] taskIdArgIndexes = info.getTaskIdArgIndexes();
+		for (int index : taskIdArgIndexes) {
+			try {
+				args[index] = ((TaskID)args[index]).getReturnResult();
+			} catch (InterruptedException e) {
+				// can't happen because task is guaranteed to have finished
+			} catch (ExecutionException e) {
+				// can't happen, handled somewhere else (eventually will be anyway)
+			}
+		}
+		*/
 		
 		try {
 			result = info.execute();
@@ -117,7 +145,7 @@ public abstract class TaskThread extends Thread {
 	}
 	
 	/**
-	 * Return the TaskID that is being currently executed by this TaskThread 
+	 * Return the currently executing TaskID by this TaskThread 
 	 * @return	The current TaskID, or null if not working on a task
 	 */
 	public TaskID<?> currentExecutingTask() {
@@ -135,7 +163,7 @@ public abstract class TaskThread extends Thread {
 	 * @Author : Kingsley
 	 * @since : 26/04/2013
 	 * 
-	 * Call to find the local threadID. This is specially used to identify the
+	 * Call to find the local threadID. This is specially used for identify the
 	 * position of local queue in the local queue list. 
 	 * 
 	 * @since : 02/05/2013
@@ -145,6 +173,14 @@ public abstract class TaskThread extends Thread {
 	 * Change the function of getMultiTaskThreadID() to getThreadLocalID
 	 * 
 	 * */
+	
+	/*public int getMultiTaskThreadID() {
+		return multiTaskThreadID;
+	}
+
+	public int getOneoffTaskThreadID() {
+		return oneoffTaskThreadID;
+	}*/
 	
 	protected int getThreadLocalID() {
 		return threadLocalID;

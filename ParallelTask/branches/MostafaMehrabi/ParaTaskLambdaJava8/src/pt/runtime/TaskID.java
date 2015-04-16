@@ -130,7 +130,7 @@ public class TaskID<T> {
 	}
 	
 	/**
-	 * Checks to see if this task is an interactive task.
+	 * Checks to see if this task is an interactibe task.
 	 * 
 	 * @return <code>true</code> if this is an interactive task, <code>false</code> otherwise.
 	 */
@@ -175,8 +175,6 @@ public class TaskID<T> {
 	TaskID(boolean alreadyCompleted) {
 		if (alreadyCompleted) {
 			globalID = nextGlobalID.incrementAndGet();
-			//I think one of the count down latches must be registering thread.
-			//this.completedLatchForRegisteringThread = new CountDownLatch(0);
 			completedLatch = new CountDownLatch(0);
 			completedLatch = new CountDownLatch(0);
 			hasCompleted = new AtomicBoolean(true);
@@ -214,10 +212,6 @@ public class TaskID<T> {
 		changeStatusLock = new ReentrantLock();
 	}
 	
-	/**
-	 * This constructor receives information about, whether a task is interactive
-	 * as well as it sets the count down latch to one. 
-	 * */
 	TaskID(Task<T> taskInfo) {
 		this();
 		
@@ -236,7 +230,10 @@ public class TaskID<T> {
 		}
 	}
 	
-	
+	//-- return true if successfully canceled
+	//-- TODO at the moment this is not a perfect implementation, since a 2nd (and 3rd, etc) call to this method might return false, 
+	// even if it has successfully cancelled.. (this can be correctly by locking - but don't want to introcuce the overhead of locking every 
+	// time a task is started..)
 	/**
 	 * Attempts to cancel the task. If cancelled successfully, the task will not be enqueued. A failed cancel 
 	 * will still allow the task to continue executing. To stop the task, the task should check
@@ -250,6 +247,9 @@ public class TaskID<T> {
 		cancelRequested.set(true);
 		
 		int prevStatus = status.getAndSet(CANCELLED);
+		
+		// TODO currently this only returns true if this is the first time attempting to cancel.. should be 
+		// fixed so that it also returns true if it was cancelled before..(but this requires locking etc).
 		
 		if (prevStatus == CREATED || cancelled) {
 			cancelled = true;
@@ -282,22 +282,12 @@ public class TaskID<T> {
 		return enclosingTask;
 	}
 	
-	/**
-	 * A <code>waiter</code> is another task that is waiting for the instance of task to finish. Once a 
-	 * request for adding a waiter for this task is received, the instance will check if it is already 
-	 * completed. If that is the case, the instance will remove itself from the list of dependences of 
-	 * the <code>waiter</code>, otherwise the <code>waiter</code> will be added to the list of waiters.
-	 * (i.e. list of other tasks which are waiting for this instance to finish).
-	 * 
-	 * @author Mostafa Mehrabi
-	 * @since  9/9/2014
-	 * */
 	void addWaiter(TaskID<?> waiter) {
 		if (hasCompleted.get()) {
 			waiter.dependenceFinished(this);
 		} else {
 			changeStatusLock.lock();
-			/*The task could be completed after acquiring the lock*/
+			
 			if (!hasCompleted.get()) {
 				if (waitingTasks == null)
 					waitingTasks = new ConcurrentLinkedQueue<>();
@@ -310,11 +300,7 @@ public class TaskID<T> {
 		}
 	}
 	
-	/** One of the other Tasks (that this task dependsOn) has finished, and 
-	 * will be removed from the list of dependences of this task. If that was 
-	 * the last Task in the list of dependences, the task pool (which is in
-	 * charge of scheduling) will be informed that this instance of TaskID is 
-	 * ready to be executed!
+	/* one of the other Tasks (that this task dependsOn) has finished 
 	 * 
 	 * if that was the last Task we were waiting for, inform the taskpool
 	 * 
@@ -346,9 +332,8 @@ public class TaskID<T> {
 	}
 	
 	/**
-	 * Relative IDs are used to arrange the sub-tasks of a multi-task. This method returns the 
-	 * sub-task's relative ID in the multi-task.
-	 * @return The position, starting from 0, of this sub-task compared to it's sibling subtasks.
+	 * Returns the sub-task's relative ID in the multi-task. 
+	 * @return	The position, starting from 0, of this sub-task compared to it's sibling subtasks.
 	 * @see CurrentTask#globalID()
 	 * @see CurrentTask#relativeID()
 	 * @see #globalID()  
@@ -366,9 +351,7 @@ public class TaskID<T> {
 	}
 	
 	/**
-	 * Returns the result of the task. In order to return the final result of a task we have to
-	 * wait until that task is finished. If the task has not finished yet, the current thread blocks
-	 * (i.e. the thread which wants the result from this task blocks). 
+	 * Returns the result of the task. If the task has not finished yet, the current thread blocks. 
 	 * ParaTask worker threads will not block, instead they execute other ready tasks until
 	 * this task completes.
 	 * @return	The result of the task.
@@ -433,7 +416,7 @@ public class TaskID<T> {
 				 * */
 				
 				while (!hasCompleted.get()) {
-					//the fact that so many classes provide the cancel request feature is confusing
+					//System.out.println("inside " + currentWorker.threadID + " " + currentWorker.isCancelRequired() + " " + currentWorker.isPoisoned());
 					if (currentWorker.isCancelRequired() && !currentWorker.isCancelled()) {
 						LottoBox.tryLuck();
 					}
@@ -531,12 +514,12 @@ public class TaskID<T> {
 		
 		if (waitingTasks != null) {
 			while ((waiter = waitingTasks.poll()) != null) {
-				// remove this task from the waiter's dependences queue
+				// removes the waiter from the queue
 				waiter.dependenceFinished(this);
 			}
 		}
 		
-		completedLatchForRegisteringThread.countDown();	//-- in case there were slots
+		completedLatchForRegisteringThread.countDown();	//-- in case there were no slots
 		completedLatch.countDown();
 		hasCompleted.set(true);
 		changeStatusLock.unlock();
@@ -570,6 +553,8 @@ public class TaskID<T> {
 	 *	This will enqueue the notify slots and the exception handlers to be executed by the registered thread. 
 	 *	Note that this TaskID is NOT considered completed, until all these slots are finished (even though the 
 	 *	actual task logic has been executed, we need to wait for the slots before handling dependences, etc).
+	 *
+	 * 	Therefore, the registering thread will later set the status of this task as complete. 
 	 */
 	void enqueueSlots(boolean onlyEnqueueFinishedSlot) {
 		
@@ -604,13 +589,6 @@ public class TaskID<T> {
 		}
 	}
 	
-	/**
-	 * Returns the appropriate exception hanlder for a specific class of exception,
-	 * by receiving that exception class as argument.
-	 * 
-	 * @author Mostafa Mehrabi
-	 * @since 9/9/2014
-	 * */
 	protected Slot getExceptionHandler(Class<?> occurredException) {
 		
 		//-- first, try to get handler defined immediately for this task

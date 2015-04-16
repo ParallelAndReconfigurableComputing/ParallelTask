@@ -105,9 +105,6 @@ public class ParaTaskHelper {
 	 */
     static public class ClassGetter extends SecurityManager {
         public Class getCurrentClass() {
-        	//receives the current execution stack in the form of an array of classes
-        	//the element of index 0 is the class of current executing method, the element
-        	//of index 1 is the class of the current method' caller, and so on...
         	Class[] stack = getClassContext();
         	
         	if (stack == null) { // android 4.0 returns null

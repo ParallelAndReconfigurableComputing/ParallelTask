@@ -26,24 +26,63 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.PriorityBlockingQueue;
+
 public class TaskpoolFIFOWorkSharing extends AbstractTaskPool {
+	
 	@Override
 	protected void enqueueReadyTask(TaskID taskID) {
 		//-- multi-tasks are added here first because this scheduling is fully FIFO according to the enqueuing timestamp
 		
-		if (taskID.getExecuteOnThread() == ParaTaskHelper.ANY_THREAD_TASK){
-			if (taskID instanceof TaskIDGroup){
+		/**
+		 * 
+		 * @Author : Kingsley
+		 * @since : 25/04/2013
+		 * Instead of simplely putting task into global queue, putting task to 
+		 * different global queue by checking if the task is multi task or not.
+		 * 
+		 * @since : 04/05/2013
+		 * Check if (taskID instanceof TaskIDGroup)
+		 * if true, taskID is a un-expanded multi task;
+		 * if false, taskID is a one-off task.
+		 * 
+		 * Check if(taskID.getExecuteOnThread() != ParaTaskHelper.ANY_THREAD_TASK) 
+		 * if true, taskID is a expanded multi sub task.
+		 * 
+		 * For one-off task, when none-worker threads is queuing a task, this task
+		 * goes to the global one-off task queue; while worker threads is queuing 
+		 * a task, this task goes to the its local one-off task queue.
+		 * 
+		 * For multi task,  using
+		 * if (taskID.getExecuteOnThread() != ParaTaskHelper.ANY_THREAD_TASK)
+		 * to check if this task has been expanded or not. 
+		 * if expanded this goes to the private multi task queue; 
+		 * if not, this task goes to the global multi task queue.
+		 * 
+		 * @since : 15/05/2013
+		 * For one-off task, there should be only one-off task global queue.
+		 * All tasks go to there right now.
+		 * */
+		//globalTaskqueue.add(taskID);		/* this will wake up any blocking worker threads if necessary */
+	
+		if (taskID.getExecuteOnThread() != ParaTaskHelper.ANY_THREAD_TASK || taskID instanceof TaskIDGroup) {
+			if (taskID.getExecuteOnThread() == ParaTaskHelper.ANY_THREAD_TASK) {
 				globalMultiTaskqueue.add(taskID);
+			} else {
+				privateQueues.get(taskID.getExecuteOnThread()).add(taskID);
 			}
-			else{
-				globalOne0ffTaskqueue.add(taskID);
-			}
-		}
-		
-		else{
-			privateQueues.get(taskID.getExecuteOnThread()).add(taskID);
-		}
+		}else {
 			
+			/*Thread t = Thread.currentThread();
+			if (t instanceof TaskThread) {
+				WorkerThread workerThread = (WorkerThread) t;
+				localOneoffTaskQueues.get(workerThread.getThreadID()).add(taskID);
+			}else {
+				globalOne0ffTaskqueue.add(taskID);
+			}*/
+			
+			globalOne0ffTaskqueue.add(taskID);
+			
+		}
 	}
 	
 	/**
@@ -79,7 +118,7 @@ public class TaskpoolFIFOWorkSharing extends AbstractTaskPool {
 		//TaskID next = privateQueues[workerID].poll();
 		
 		TaskID next = null;
-		//shouldn't this be !wt.isMultiTaskWorker()
+		
 		if (wt.isMultiTaskWorker()) {
 			next = privateQueues.get(workerID).poll();
 			
@@ -108,7 +147,7 @@ public class TaskpoolFIFOWorkSharing extends AbstractTaskPool {
 			}
 		}
 		
-		//why checking the same condition again?
+		
 		/**
 		 * 
 		 * @Author : Kingsley
@@ -169,7 +208,6 @@ public class TaskpoolFIFOWorkSharing extends AbstractTaskPool {
 		 * */
 		
 		if (wt.isMultiTaskWorker()) {
-			//Thread could not find a task from its private queue, now try the global multi task queue.
 			while ((next = globalMultiTaskqueue.poll()) != null) {
 				// expand multi task
 				int count = next.getCount();
@@ -184,6 +222,9 @@ public class TaskpoolFIFOWorkSharing extends AbstractTaskPool {
 					
 					taskID.setRelativeID(i);
 					taskID.setExecuteOnThread(i%currentMultiTaskThreadPool);
+					
+					//Change since 23/05/2013, see the constructor of TaskID.
+					//taskID.setGlobalID(next.globalID());
 					
 					taskID.setSubTask(true);
 					/**
@@ -275,7 +316,40 @@ public class TaskpoolFIFOWorkSharing extends AbstractTaskPool {
 					//-- TODO maybe should not execute slots for cancelled tasks, just the completedSlot() ?? 
 				}
 				
+				/*int savedFor = next.getExecuteOnThread();
 				
+				// check if this task is saved for another worker thread
+				if (savedFor == ParaTaskHelper.ANY_THREAD_TASK || savedFor == workerID) {
+					
+					//-- attempt to execute this task
+					if (next.executeAttempt()) {
+						//-- no cancel attempt was successful so far, therefore may execute this task
+						
+						return next;
+					} else {
+						//-- task was successfully cancelled beforehand, therefore grab another task
+						next.enqueueSlots(true);	//-- task is considered complete, so execute slots
+						//-- TODO maybe should not execute slots for cancelled tasks, just the completedSlot() ?? 
+					}
+				} else {
+					
+					*//**
+					 * 
+					 * @Author : Kingsley
+					 * @since : 25/04/2013
+					 * The data structure is changed from array to list, therefore the corresponding way to
+					 * get the data has to be changed.
+					 * 
+					 * 
+					 * Actually this branch will never be executed since the task is picked from
+					 * global one-off task queue, such that every one-off task dedicated worker
+					 * thread can execute it.
+					 * 
+					 * *//*
+					
+		  			//privateQueues[savedFor].add(next);
+					privateQueues.get(savedFor).add(next);
+				}*/
 			}
 		}
 		
@@ -290,17 +364,64 @@ public class TaskpoolFIFOWorkSharing extends AbstractTaskPool {
 	@Override
 	protected void initialise() {
 		
+		//-- The private queues and the global queue all have FIFO ordering, since tasks are executed in the same order as the enqueue.
+		
+		/**
+		 * 
+		 * @Author : Kingsley
+		 * @since : 25/04/2013
+		 * The data structure is changed from array to list, therefore the corresponding way to
+		 * initialize the data has to be changed.
+		 * 
+		 * Initialize private queue for only multi task worker threads.
+		 * 
+		 * Initialize both global multi task queue and global one-off task queue.
+		 * 
+		 * @since : 04/05/2013
+		 * For multi task, global multi task queue and private queues should be initialized here
+		 * 
+		 * For one-off task, global one-off task queue and local one-off task queues should be 
+		 * initialized here
+		 * 
+		 * @since : 15/05/2013
+		 * For one-off task, only global multi task queue is required.
+		 * 
+		 * @since : 18/05/2013
+		 * Thread pool should not take responsibility of creating local queues or private queues
+		 * for individual working thread, even before those threads are created.
+		 * Keep creating all shared queues, such as global queue and mixed queue here, create
+		 * only the collection for unshared queues here, after worker threads are created later 
+		 * along with their individual queues, those queues could be added into the collection.    
+		 * 
+		 * */
+		
+		
+		/*privateQueues = new PriorityBlockingQueue[numThreads];
+		for (int i = 0; i < numThreads; i++) {
+			privateQueues[i] = new PriorityBlockingQueue<TaskID<?>>(INITIAL_QUEUE_CAPACITY, FIFO_TaskID_Comparator);
+		}
+		globalTaskqueue = new PriorityBlockingQueue<TaskID<?>>(INITIAL_QUEUE_CAPACITY, FIFO_TaskID_Comparator);*/
+		
+		//For multi task used
 		globalMultiTaskqueue = new PriorityBlockingQueue<TaskID<?>>(
 				AbstractTaskPool.INITIAL_QUEUE_CAPACITY,
 				AbstractTaskPool.FIFO_TaskID_Comparator);
 		
 		privateQueues = new ArrayList<AbstractQueue<TaskID<?>>>();
 		
+		//Put this create procedure into thread pool 
+		/*for (int i = 0; i < numMultiTaskThreads; i++) {
+			privateQueues.add(new PriorityBlockingQueue<TaskID<?>>(
+					AbstractTaskPool.INITIAL_QUEUE_CAPACITY,
+					AbstractTaskPool.FIFO_TaskID_Comparator));
+		}*/
 		
+		//For one-off task used
 		globalOne0ffTaskqueue = new PriorityBlockingQueue<TaskID<?>>(
 				AbstractTaskPool.INITIAL_QUEUE_CAPACITY,
 				AbstractTaskPool.FIFO_TaskID_Comparator);
 		
+		//localOneoffTaskQueues = new HashMap<Integer, LinkedBlockingDeque<TaskID<?>>>();
 		
 		initialiseWorkerThreads();
 	}

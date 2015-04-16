@@ -26,28 +26,10 @@ import java.util.List;
 
 /**
  * 
- * This class is used to store information regarding the task, which is not related 
- * to its execution time. That is, the information regarding the task before it is
- * invoked. Thus, the information regarding the execution period (i.e. after the task is
- * invoked) will be stored in the TaskID.<br>
- * In general this class stores information regarding<br> 
- * 1- Dependences of a specific task<br>
- * 2- The handlers (i.e. slots) to notify during the execution and after execution<br>
- * 3- It identifies if a task is a sub task of another task<br>
- * 4- It keeps a reference to the thread which registers the task<br>
- * 5- It asynchronously collects the exceptions that may occur during execution by their<br>
- *    types (i.e. classes) and their corresponding exception handlers<br>
- * <br>   
- * This class keeps a reference to the thread which registers the task. If the registering 
- * thread is EDT (either android or java), it obtains the reference from ParaTask.getEDT(), otherwise
- * the reference to the <code>CurrentThread</code> will be made.<br>
- * <br>
- * This class also provides a method which returns the appropriate exception handler for an 
- * exception class that it receives as argument. Moreover, this class provides a method that
- * returns an instance of this class for a functor that it receives as argument.<br>
- * <br>
- * @author Mostafa Mehrabi
- * @since  7/9/2014
+ * Used to store certain information in order to invoke the task.. (i.e. before
+ * invoking the task.. therefore information after the task has been invoked (eg
+ * return value) are stored in the TaskID
+ *
  */
 public class Task<T> {
 	static {
@@ -59,6 +41,9 @@ public class Task<T> {
 	// for ParaTask in Java 8
 	private Functor<?> lambda;
 	private FunctorVoid lambdaVoid;
+	private FunctorWithOneArg<?> lambdaWithOneArg;
+	
+	
 	
 	private int taskCount = 1;
 
@@ -66,6 +51,8 @@ public class Task<T> {
 	private List<Slot> slotsToNotify;
 	private List<Slot> interSlotsToNotify;
 	private List<TaskID<?>> dependences;
+	
+	private List<TaskID<?>> pipelineArgs;
 
 	// for implicit results/dequeuing
 	private int[] taskIdArgIndexes = new int[] {};
@@ -75,9 +62,8 @@ public class Task<T> {
 
 	// -- Should always ensure that the registered exceptions are kept lined up
 	// with the handlers
-	// Maybe using a Map was better,
-	private List<Class<?>> exceptions = null;//keeps the records of the exceptions occurred 
-	private List<Slot> exceptionHandlers = null;//keeps the records of the handlers corresponding to those exceptions
+	private List<Class<?>> exceptions;
+	private List<Slot> exceptionHandlers;
 
 	private boolean isInteractive = false;
 
@@ -97,6 +83,10 @@ public class Task<T> {
 
 	private Task(FunctorVoid lambda) {
 		this.lambdaVoid = lambda;
+	}
+	
+	private Task(FunctorWithOneArg<?> fun) {
+		this.lambdaWithOneArg = fun;
 	}
 
 	public boolean hasAnySlots() {
@@ -118,8 +108,7 @@ public class Task<T> {
 	public int[] getQueueArgIndexes() {
 		return queueArgIndexes;
 	}
-	//the three dots in arguments means, zero or more, or an array of integers
-	//may be passed as parameter/s.
+
 	public void setTaskIdArgIndexes(int... indexes) {
 		this.taskIdArgIndexes = indexes;
 	}
@@ -134,7 +123,7 @@ public class Task<T> {
 
 	public Thread setRegisteringThread() {
 		try {
-			if (GuiThread.isEventDispatchThread())//if the current thread is an event dispatch thread
+			if (GuiThread.isEventDispatchThread())
 				registeringThread = ParaTask.getEDT();
 			else
 				registeringThread = Thread.currentThread();
@@ -151,12 +140,14 @@ public class Task<T> {
 			}
 		}
 		if (interSlotsToNotify != null) {
-			for (Iterator<Slot> it = interSlotsToNotify.iterator(); it.hasNext();) {
+			for (Iterator<Slot> it = interSlotsToNotify.iterator(); it
+					.hasNext();) {
 				it.next().setTaskID(taskID);
 			}
 		}
 		if (exceptionHandlers != null) {
-			for (Iterator<Slot> it = exceptionHandlers.iterator(); it.hasNext();) {
+			for (Iterator<Slot> it = exceptionHandlers.iterator(); it
+					.hasNext();) {
 				it.next().setTaskID(taskID);
 			}
 		}
@@ -169,7 +160,8 @@ public class Task<T> {
 	 * @param exceptionClass
 	 * @param handler
 	 */
-	public Task<T> asyncCatch(Class<?> exceptionClass, FunctionInterExceptionHandler handler) {
+	public Task<T> asyncCatch(Class<?> exceptionClass,
+			FunctionInterExceptionHandler handler) {
 		if (this.exceptionHandlers == null) {
 			exceptions = new ArrayList<>();
 			exceptionHandlers = new ArrayList<>();
@@ -239,13 +231,16 @@ public class Task<T> {
 		this.isSubTask = isSubTask;
 	}
 
-	//returns a functor as a task
 	public static <T> Task<T> asTask(Functor<T> fun) {
 		return new Task<T>(fun);
 	}
 	
 	public static Task<Void> asTask(FunctorVoid fun) {
 		return new Task<Void>(fun);
+	}
+	
+	public static <T> Task<T> asTask(FunctorWithOneArg<T> fun) {
+		return new Task<T>(fun);
 	}
 	
 	public static <T> Task<T> asMultiTask(Functor<T> fun, int count) {
@@ -288,6 +283,14 @@ public class Task<T> {
 		return this;
 	}
 	
+	public Task<T> withPipelineHandler(FunctorVoidWithOneArg<T> handler) {
+		if (slotsToNotify == null)
+			slotsToNotify = new ArrayList<Slot>();
+		this.slotsToNotify.add(new PipelineSlot<T>(handler));
+		hasAnySlots = true;
+		return this;
+	}
+	
 	public Task<T> withHandler(FunctorVoid handler) {
 		if (slotsToNotify == null)
 			slotsToNotify = new ArrayList<Slot>();
@@ -304,7 +307,21 @@ public class Task<T> {
 	}
 
 	public Task<T> dependsOn(TaskID<?>... taskIDs) {
-		this.dependences = Arrays.asList(taskIDs);
+		if(this.dependences == null)
+			this.dependences = new ArrayList<>();
+		this.dependences.addAll(Arrays.asList(taskIDs));
+		return this;
+	}
+	
+	public Task<T> dependsOnAsArg(TaskID<?> taskID) {
+		if(this.dependences == null)
+			this.dependences = new ArrayList<>();
+		this.dependences.add(taskID);
+		
+		if(this.pipelineArgs == null)
+			this.pipelineArgs = new ArrayList<>();
+		this.pipelineArgs.add(taskID);
+		
 		return this;
 	}
 
@@ -318,9 +335,12 @@ public class Task<T> {
 	Object execute() {
 		if (this.lambda != null)
 			return this.lambda.exec();
-		else {
+		else if (this.lambdaVoid != null){
 			this.lambdaVoid.exec();
 			return null;
+		} else if (this.lambdaWithOneArg != null) {
+			return this.lambdaWithOneArg.exec(this.pipelineArgs.get(0).getResult());
 		}
+		return null;
 	}
 }

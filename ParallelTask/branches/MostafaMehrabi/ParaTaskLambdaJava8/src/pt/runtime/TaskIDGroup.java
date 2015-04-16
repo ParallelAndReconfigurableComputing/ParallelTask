@@ -85,7 +85,7 @@ public class TaskIDGroup<T> extends TaskID<T> {
 		this.groupSize = groupSize;
 	}
 	
-	/**this is only used to create a multi-task (the size is known before adding the inner tasks)*/
+	//-- this is only used to create a multi-task (the size is known before adding the inner tasks)
 	TaskIDGroup(int groupSize, Task<T> taskInfo) {
 		super(taskInfo);
 		this.isMultiTask = true;
@@ -343,11 +343,23 @@ public class TaskIDGroup<T> extends TaskID<T> {
 		int size = innerTasks.size();
 		for (int i = size-1; i >= 0; i--) {// wait for them in reverse order (LIFO)
 			try {
+				/**
+				 * 
+				 * @author Kingsley
+				 * @since 08/05/2013
+				 * 
+				 * When waiting tasks get finished, first check the type of the task.
+				 * if it is a TaskIDGroup, which means there is a multi task inside the group
+				 * (even it is still not expanded), wait until it is expanded before start 
+				 * tracing its processing status.
+				 * if it is a TaskID, which means it is a normal task, start checking if it completed
+				 * 
+				 * */
+				//innerTasks.get(i).waitTillFinished();
 				
 				TaskID<?> taskID = innerTasks.get(i);
 				if (taskID instanceof TaskIDGroup) {
 					TaskIDGroup<?> taskIDGroup = (TaskIDGroup<?>) taskID;
-					//don't we need to force expanding here? We are just receiving boolean variable
 					while (!taskIDGroup.getExpanded()) {
 						Thread.sleep(1);
 					}
@@ -372,11 +384,11 @@ public class TaskIDGroup<T> extends TaskID<T> {
 		
 		if (pos != groupSize) {
 			while (barrier.get() != groupSize && barrier.get() != 0) {
-				//keep executing other tasks until all the threads have reached the barrier
+				//-- keep executing other tasks until all the threads have reached the barrier
 				currentWorker.executeAnotherTaskOrSleep();
 			}
 		} else {
-			//this is the last thread to arrive.. reset the barrier
+			//-- this is the last thread to arrive.. reset the barrier
 			barrier.set(0);
 		}
 	}

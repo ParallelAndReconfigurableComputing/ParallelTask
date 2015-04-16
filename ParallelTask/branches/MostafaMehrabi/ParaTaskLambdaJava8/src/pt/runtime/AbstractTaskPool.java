@@ -213,7 +213,6 @@ public abstract class AbstractTaskPool implements Taskpool {
 	 * the task has been queued. This method is generic and not schedule-specific. 
 	 */
 	public <T> TaskID<T> enqueue(Task<T> taskinfo) {
-		//this function could be implemented tidier
 		List<TaskID<?>> allDependences = null;
 		if (taskinfo.getDependences() != null)
 			allDependences = ParaTask.allTasksInList(taskinfo.getDependences());
@@ -236,7 +235,6 @@ public abstract class AbstractTaskPool implements Taskpool {
 			//-- pipeline threads don't need to wait for dependencies
 			startPipelineTask(taskID);
 		} else */
-		//this part, with the if statement at the beginning of this method
 		if (allDependences == null) {
 			if (taskID.isInteractive())
 				startInteractiveTask(taskID);
@@ -274,7 +272,7 @@ public abstract class AbstractTaskPool implements Taskpool {
 				startInteractiveTask(group);
 			else
 				enqueueReadyTask(group);
-		else// addDependences != null
+		else
 			enqueueWaitingTask(group, allDependences);
 		
 		return group;
@@ -315,8 +313,6 @@ public abstract class AbstractTaskPool implements Taskpool {
 	 * Used to decrement the count of interactive tasks
 	 */
 	public void interactiveTaskCompleted(TaskID<?> taskID) {
-		//we need a mechanism to check:
-		//if (taskID != null && taskID.isInteractive())
 		interactiveTaskCount.decrementAndGet();
 	}
 	
@@ -342,7 +338,6 @@ public abstract class AbstractTaskPool implements Taskpool {
 
 		if (allDependences.size() > 0) {
 			waitingTasks.put(taskID, "");
-			//are we not able to get these dependences from the task info?
 			taskID.setRemainingDependences(allDependences);
 			
 			for (int d = 0; d < allDependences.size(); d++) {
