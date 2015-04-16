@@ -25,35 +25,46 @@ import java.util.Stack;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
-
+/**
+ * This class which extends the <code>java.lang.Thread</code> class facilitates creating tasks threads
+ * with their own <code>IDs</code>. Moreover, <code>multi task</code> threads also have a <code>localID</code>
+ * in order to be identified in their own thread-pool. 
+ * <br><br>
+ * This class allows assigning instances of <code>TaskPool</code> to the instances of this class at the creation
+ * time via the constructor. The customized <code>executeTask</code> method in this class executes the <b>task</b> that 
+ * is assigned to a specific instance of this class, and stores the final result in the <code>TaskID</code> instance
+ * that is associated to the <b>task</b>.
+ * 
+ * @author Mostafa Mehrabi
+ * @since  15/9/2014
+ * */
 public abstract class TaskThread extends Thread {
 
-	//-- TaskThreads could potentially have a stack of currently-processing tasks (e.g. if it blocks on a TaskID that hasn't completed)
+	//-- TaskThreads could potentially have a stack of currently-processing tasks 
+	//(e.g. if it blocks on a TaskID that hasn't completed)
 	protected Stack<TaskID<?>> currentTaskStack = new Stack<TaskID<?>>();
 	
 	
 	/**
 	 * 
-	 * @Author : Kingsley
-	 * @since : 26/04/2013
-	 * Still keep threadID which is used to identify the position of a worker thread
+	 * ThreadID is used to identify the position of a worker thread
 	 * in the entire system.
+	 * <br><br>
+	 * For each <i>newly created</i> task thread the <code><b>nextThreadID</b></code> is increased, 
+	 * which is then associated to that thread's <code>threadID</code> to identify the position of 
+	 * that worker thread in its own dedicated thread pool.
+	 * Moreover, for <i>multi task</i> threads the <code><b>nextThreadLocalID</b></code> is increased,
+	 * and then associated to that thread's <code>threadLocalID</code>.
 	 * 
-	 * Newly increase two threadID, multiTaskThreadID and oneoffTaskThreadID, which are
-	 * used to indentify the position of a worker thread in its own dedicated thread pool.
+	 * @author Kingsley
+	 * @since  26/04/2013
+	 *
+	 * @author Mostafa Mehrabi
+	 * @since  15/9/2014
 	 * 
-	 * @since : 02/05/2013
-	 * One-off task threads do not need local thread ID.
-	 * 
-	 * @since ��10/05/2013
-	 * Change the name of multiTaskThreadID to threadLocalID
-	 * Change the name of nextMultiTaskThreadID to nextThreadLocalID
-	 * 
-	 * */
+	 *  */
 	protected int threadID = -1;
 	
-	//protected int multiTaskThreadID = -1;
-	//protected int oneoffTaskThreadID = -1;
 	protected int threadLocalID = -1;
 	
 	
@@ -62,8 +73,6 @@ public abstract class TaskThread extends Thread {
 	// thread-safe in case interactive threads need to be created from multiple threads
 	private static AtomicInteger nextThreadID = new AtomicInteger(-1); 	
 	
-	//private static AtomicInteger nextMultiTaskThreadID = new AtomicInteger(-1); 	
-	//private static AtomicInteger nextOneoffTaskThreadID = new AtomicInteger(-1); 
 	private static AtomicInteger nextThreadLocalID = new AtomicInteger(-1); 
 	
 	/**
@@ -72,7 +81,7 @@ public abstract class TaskThread extends Thread {
 	 * @since 18/05/2013
 	 * 
 	 * This constructor is used for "Interactive Thread", "Pipeline Thread" and "Slot Handling Thread"
-	 * Give no thread ID to these thread type
+	 * Give no thread ID to these thread types
 	 * 
 	 * */
 	
@@ -95,38 +104,25 @@ public abstract class TaskThread extends Thread {
 		this.threadID = nextThreadID.incrementAndGet();
 		if (isMultiTaskWorker) {
 			this.threadLocalID = nextThreadLocalID.incrementAndGet();
-		} /*else {
-			this.oneoffTaskThreadID = nextOneoffTaskThreadID.incrementAndGet();
-		}*/
-		
+		} 		
 		this.taskpool = taskpool;
 	}
 	
 	/**
-	 * Executes the current task for this thread, and stores the result in the TaskID
-	 * @return	true if task executed successfully, false otherwise
+	 * Executes the task given to this thread, and stores the result in the TaskID. This method
+	 * pushes the task being executed in the <code>currentTaskStack</code> while the task is being
+	 * executed, and pops the task out when the execution has either finished, or failed. 
+	 * @return <code>true</code> if task executed successfully, <code>false</code> otherwise
 	 * @throws PoisonPillException 
+	 * 
+	 * @author Mostafa Mehrabi
+	 * @since  15/9/2014
 	 */
 	protected boolean executeTask(TaskID task){
 		currentTaskStack.push(task);
 		
 		Task info = task.getTaskInfo();
 		Object result = null;
-		
-		// TODO
-		/*
-		// retrieve results from implicit taskids
-		int[] taskIdArgIndexes = info.getTaskIdArgIndexes();
-		for (int index : taskIdArgIndexes) {
-			try {
-				args[index] = ((TaskID)args[index]).getReturnResult();
-			} catch (InterruptedException e) {
-				// can't happen because task is guaranteed to have finished
-			} catch (ExecutionException e) {
-				// can't happen, handled somewhere else (eventually will be anyway)
-			}
-		}
-		*/
 		
 		try {
 			result = info.execute();
@@ -145,7 +141,7 @@ public abstract class TaskThread extends Thread {
 	}
 	
 	/**
-	 * Return the currently executing TaskID by this TaskThread 
+	 * Return the TaskID that is being currently executed by this TaskThread 
 	 * @return	The current TaskID, or null if not working on a task
 	 */
 	public TaskID<?> currentExecutingTask() {
@@ -163,7 +159,7 @@ public abstract class TaskThread extends Thread {
 	 * @Author : Kingsley
 	 * @since : 26/04/2013
 	 * 
-	 * Call to find the local threadID. This is specially used for identify the
+	 * Call to find the local threadID. This is specially used to identify the
 	 * position of local queue in the local queue list. 
 	 * 
 	 * @since : 02/05/2013
@@ -173,14 +169,6 @@ public abstract class TaskThread extends Thread {
 	 * Change the function of getMultiTaskThreadID() to getThreadLocalID
 	 * 
 	 * */
-	
-	/*public int getMultiTaskThreadID() {
-		return multiTaskThreadID;
-	}
-
-	public int getOneoffTaskThreadID() {
-		return oneoffTaskThreadID;
-	}*/
 	
 	protected int getThreadLocalID() {
 		return threadLocalID;

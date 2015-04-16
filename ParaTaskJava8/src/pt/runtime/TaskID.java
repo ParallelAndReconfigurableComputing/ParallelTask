@@ -32,9 +32,42 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * A future object representing a task invocation. As well as containing the return result for non-<code>void</code> tasks, 
  * the <code>TaskID</code> may also be used with <code>dependsOn</code>, cancel attempts, and other various functions. 
+ * <br><br>
+ * Every aspect that deals with a task during its execution will go through this class <code>'TaskID'</code>. This class 
+ * keeps the information regarding<br>
+ * 1- A task's global ID and its relative ID (relativeID is used within a multi-task group).<br>
+ * 2- The enclosing task of a specific instance (for finding asynchronous exceptions).<br>
+ * 3- The initial information of this instance (i.e. taskInfo which is an instance of Task).<br>
+ * 4- Indicates if a task can be executed by any arbitrary thread.<br>
+ * 5- Records and returns the final result of a task.<br>
+ * 6- Indicates if an instance of task has completed its execution.<br>
+ * 7- Indicates if an instance of task has been requested to cancel.<br>
+ * 8- Indicates if an instance of task has been successfully canceled (first cancel request, then practically cancel).<br>
+ * 9- Keeps track of the progress of an instance of the task. <br>
+ * 10-Returns the corresponding exception handler for a specific exception class by communicating with taskInfo<br> 
+ * 11-Each instance has two count down latches. One for the registering thread, and one for other threads. Because<br>
+ *    the registering thread is allowed to process through the slots, and we want to unblock the threads that are <br>
+ *    waiting for the task to finish, before it starts proceeding through the slots (handlers)
+ *<br><br>
+ *Each task can have three states, <code>CREATED, CANCELLED</code> and <code>STARTED</code>. By default a task's status is 
+ *set to CREATED, when its constructor is called. For a task to be executed or complete the execution it needs to be
+ *on STARTED status. Whenever a task is created the count down latches will be set to one to block the threads that depend 
+ *on this task, and when that task is completed, or cancelled the count down latches are set back to zero to unblock the 
+ *threads.<br><br>
+ *All sub-tasks of a multi-task share the same globalID, at the time of creation. A taskID holds the information about
+ *whether a task is interactive, and whether it has slots (handlers) to notify from the task.<br><br>
+ *Moreover, this task enables requesting for cancellation of the instance of task, allows recording the tasks that are
+ *waiting for the instance of task to finish, returns the final result of a task and also provides a mechanism through 
+ *which other threads can wait for the instance of task to finish (or do another task meanwhile they wait for the instance
+ *of task to finish). For a task in order to complete all the slots stored in the task need to be executed; therefore the 
+ *method 'enqueueSlots' must be called.      
+ * 
  * 
  * @author Nasser Giacaman
  * @author Oliver Sinnen
+ * @author Mostafa Mehrabi
+ * 
+ * @since  8/9/2014
  *
  * @param <T> The task's return type
  */
@@ -130,7 +163,7 @@ public class TaskID<T> {
 	}
 	
 	/**
-	 * Checks to see if this task is an interactibe task.
+	 * Checks to see if this task is an interactive task.
 	 * 
 	 * @return <code>true</code> if this is an interactive task, <code>false</code> otherwise.
 	 */
@@ -175,6 +208,8 @@ public class TaskID<T> {
 	TaskID(boolean alreadyCompleted) {
 		if (alreadyCompleted) {
 			globalID = nextGlobalID.incrementAndGet();
+			//I think one of the count down latches must be registering thread.
+			//this.completedLatchForRegisteringThread = new CountDownLatch(0);
 			completedLatch = new CountDownLatch(0);
 			completedLatch = new CountDownLatch(0);
 			hasCompleted = new AtomicBoolean(true);
@@ -212,6 +247,10 @@ public class TaskID<T> {
 		changeStatusLock = new ReentrantLock();
 	}
 	
+	/**
+	 * This constructor receives information about, whether a task is interactive
+	 * as well as it sets the count down latch to one. 
+	 * */
 	TaskID(Task<T> taskInfo) {
 		this();
 		
@@ -230,15 +269,20 @@ public class TaskID<T> {
 		}
 	}
 	
-	//-- return true if successfully canceled
-	//-- TODO at the moment this is not a perfect implementation, since a 2nd (and 3rd, etc) call to this method might return false, 
-	// even if it has successfully cancelled.. (this can be correctly by locking - but don't want to introcuce the overhead of locking every 
-	// time a task is started..)
+	
 	/**
-	 * Attempts to cancel the task. If cancelled successfully, the task will not be enqueued. A failed cancel 
+	 * Attempts to cancel the task. It first changes the state of the task to <code>CANCELLED</code>, and then
+	 * checks if the previous status of the task was <code>CREATED</code> or if the task is already cancelled. 
+	 * In that case the cancellation attempt will be successful, and the method will return <code>true</code>
+	 * <br><br>
+	 * If cancelled successfully, the task will not be enqueued. A failed cancel 
 	 * will still allow the task to continue executing. To stop the task, the task should check
 	 * to see if a cancel request has been made. 
 	 * @return <code>true</code> if it has cancelled successfully, <code>false</code> otherwise.
+	 *
+	 * @author Mostafa Mehrabi
+	 * @author Kingsley
+	 * 
 	 * @see #cancelRequested() 
 	 * @see CurrentTask#cancelRequested()
 	 * @see #cancelledSuccessfully()
@@ -247,9 +291,6 @@ public class TaskID<T> {
 		cancelRequested.set(true);
 		
 		int prevStatus = status.getAndSet(CANCELLED);
-		
-		// TODO currently this only returns true if this is the first time attempting to cancel.. should be 
-		// fixed so that it also returns true if it was cancelled before..(but this requires locking etc).
 		
 		if (prevStatus == CREATED || cancelled) {
 			cancelled = true;
@@ -267,6 +308,14 @@ public class TaskID<T> {
 		return group;
 	}
 	
+	/**
+	 * Tells if a task could start being executed. That means the task has been <code>CREATED</code>, and
+	 * is not <code>CANCELLED</code>. Returns <code>true</code> if the task can start,
+	 * and returns <code>false</code> otherwise.
+	 * 
+	 * @author Mostafa Mehrabi
+	 * @since  9/9/2014
+	 * */
 	boolean executeAttempt() {
 		int prevStatus = status.getAndSet(STARTED);
 		
@@ -282,12 +331,22 @@ public class TaskID<T> {
 		return enclosingTask;
 	}
 	
+	/**
+	 * A <code>waiter</code> is another task that is waiting for the instance of task to finish. Once a 
+	 * request for adding a waiter for this task is received, the instance will check if it is already 
+	 * completed. If that is the case, the instance will remove itself from the list of dependences of 
+	 * the <code>waiter</code>, otherwise the <code>waiter</code> will be added to the list of waiters.
+	 * (i.e. list of other tasks which are waiting for this instance to finish).
+	 * 
+	 * @author Mostafa Mehrabi
+	 * @since  9/9/2014
+	 * */
 	void addWaiter(TaskID<?> waiter) {
 		if (hasCompleted.get()) {
 			waiter.dependenceFinished(this);
 		} else {
 			changeStatusLock.lock();
-			
+			/*The task could be completed after acquiring the lock*/
 			if (!hasCompleted.get()) {
 				if (waitingTasks == null)
 					waitingTasks = new ConcurrentLinkedQueue<>();
@@ -300,10 +359,14 @@ public class TaskID<T> {
 		}
 	}
 	
-	/* one of the other Tasks (that this task dependsOn) has finished 
+	/** One of the other Tasks (that this task dependsOn) has finished, and 
+	 * will be removed from the list of dependences of this task. If that was 
+	 * the last Task in the list of dependences, the task pool (which is in
+	 * charge of scheduling) will be informed that this instance of TaskID is 
+	 * ready to be executed!
 	 * 
-	 * if that was the last Task we were waiting for, inform the taskpool
-	 * 
+	 *  @author Mostafa Mehrabi
+	 *  @since  9/9/2014
 	 * */
 	void dependenceFinished(TaskID<?> otherTask) {
 		remainingDependences.remove(otherTask);
@@ -332,8 +395,9 @@ public class TaskID<T> {
 	}
 	
 	/**
-	 * Returns the sub-task's relative ID in the multi-task. 
-	 * @return	The position, starting from 0, of this sub-task compared to it's sibling subtasks.
+	 * Relative IDs are used to arrange the sub-tasks of a multi-task. This method returns the 
+	 * sub-task's relative ID in the multi-task.
+	 * @return The position, starting from 0, of this sub-task compared to it's sibling subtasks.
 	 * @see CurrentTask#globalID()
 	 * @see CurrentTask#relativeID()
 	 * @see #globalID()  
@@ -351,7 +415,9 @@ public class TaskID<T> {
 	}
 	
 	/**
-	 * Returns the result of the task. If the task has not finished yet, the current thread blocks. 
+	 * Returns the result of the task. In order to return the final result of a task we have to
+	 * wait until that task is finished. If the task has not finished yet, the current thread blocks
+	 * (i.e. the thread which wants the result from this task blocks). 
 	 * ParaTask worker threads will not block, instead they execute other ready tasks until
 	 * this task completes.
 	 * @return	The result of the task.
@@ -365,38 +431,36 @@ public class TaskID<T> {
 		return returnResult;
 	}
 	
-	public T getResult() {
-		T result = null;
-		try {
-			result = getReturnResult();
-		} catch (Exception e) {
-			throw new ParaTaskRuntimeException(e);
-		}
-		return result;
-	}
-	
 	/**
-	 * Blocks the current thread until the task finishes. If the blocking thread is a 
-	 * ParaTask worker thread, then other tasks are executed until this task completes. 
+	 * Helps the current thread with waiting for the task to finish. This method first
+	 * checks if the task is already completed. If not, the method starts dealing with
+	 * the current thread. Interactive threads or user threads can block and wait until
+	 * the task is finished. However, if the blocking thread is a ParaTask worker thread, 
+	 * it can execute some other tasks until this task completes. 
+	 * <br><br>
+	 * Before a worker tries to find another task and executes it, this thread should 
+	 * check if there is a cancel request for the thread. If a worker thread is poisoned
+	 * (i.e. requested to cancel, but not cancelled yet), even if there are some unfinished
+	 * children tasks, it will not get a chance to execute them, but it will have a chance
+	 * to inform the task pool and ask the task pool to remove it (i.e. the current worker 
+	 * thread) from its (task pool's) list of worker threads.
+	 * <br><br>
+	 * If the current thread is a worker thread and is not poisoned, neither it is cancelled 
+	 * already, it will be allowed to execute some other tasks (depending on the scheduling 
+	 * scheme) or it can go to sleep. If the thread is logically cancelled already, it will 
+	 * sleep until it is shut down by the virtual machine.
+	 * <br><br>
+	 * If the current thread is not a worker thread, and is the thread that as registered this
+	 * task it has to wait on its own count down latch, other wise the thread can wait on the 
+	 * normal count down latch.
 	 * @throws ExecutionException
 	 * @throws InterruptedException
 	 * 
-	 * 
+	 * @author Mostafa Mehrabi
+	 * @since  9/9/2014
 	 * @author Kingsley
 	 * @since 25/05/2013
-	 * 
-	 * Before a worker tries to find another task and executes it, this thread should 
-	 * check if there is cancel request.
-	 * 
-	 * If a worker thread is poisoned, even there are some unfinished children tasks,
-	 * it will not get a chance to execute them, what it can do is check if they are 
-	 * finished or not(executed by other thread)
-	 * 
-	 * @since 31/05/2013
-	 * Simplify the implementation of reducing thread number.
-	 * Do not need to access the "PoisonPillBox" to get a "pill"
-	 * Instead, using the class of "LottoBox"
-	 */
+	 * */
 	public void waitTillFinished() throws ExecutionException, InterruptedException {		
 		if (!hasCompleted.get()) {
 			Thread t = Thread.currentThread();
@@ -416,7 +480,7 @@ public class TaskID<T> {
 				 * */
 				
 				while (!hasCompleted.get()) {
-					//System.out.println("inside " + currentWorker.threadID + " " + currentWorker.isCancelRequired() + " " + currentWorker.isPoisoned());
+					//the fact that so many classes provide the cancel request feature is confusing
 					if (currentWorker.isCancelRequired() && !currentWorker.isCancelled()) {
 						LottoBox.tryLuck();
 					}
@@ -499,10 +563,20 @@ public class TaskID<T> {
 	}
 	
 	/**
-	 * @author Kingsley
-	 * @date 2014/04/08
-	 * 
 	 * Invoke all the dependent subtasks for group
+	 * 
+	 * This method is called when a task is complete. In order to set a task as "complete", this
+	 * method goes through the list of tasks that have been waiting for this task to finish, and
+	 * removes the task from their lists of dependences. Then it unblocks all the waiting threads,
+	 * even the registering thread (in case there are slots to execute), and sets the flag 'hasComplete' 
+	 * to <code>true</code>.
+	 * If this task is registered as a group of tasks, the method will go through all tasks that have 
+	 * been waiting for this group to finish, and then removes this group from their lists of dependences.
+	 * If any of those waiting tasks have their list of dependences emptied by removing this group, it will
+	 * be introduced to the task pool as a ready-to-execute task. 
+	 * 
+	 * @author Mostafa Mehrabi
+	 * @since 9/9/2014
 	 * */
 	void setComplete() {
 		
@@ -514,12 +588,12 @@ public class TaskID<T> {
 		
 		if (waitingTasks != null) {
 			while ((waiter = waitingTasks.poll()) != null) {
-				// removes the waiter from the queue
+				// remove this task from the waiter's dependences queue
 				waiter.dependenceFinished(this);
 			}
 		}
 		
-		completedLatchForRegisteringThread.countDown();	//-- in case there were no slots
+		completedLatchForRegisteringThread.countDown();	//-- in case there were slots
 		completedLatch.countDown();
 		hasCompleted.set(true);
 		changeStatusLock.unlock();
@@ -549,12 +623,13 @@ public class TaskID<T> {
 		}
 	}
 	
-	/*
-	 *	This will enqueue the notify slots and the exception handlers to be executed by the registered thread. 
-	 *	Note that this TaskID is NOT considered completed, until all these slots are finished (even though the 
-	 *	actual task logic has been executed, we need to wait for the slots before handling dependences, etc).
-	 *
-	 * 	Therefore, the registering thread will later set the status of this task as complete. 
+	/**
+	 * In order to make sure a task is completed, the possible handlers (slots) that are queued by the task need 
+	 * to be invoked. This method invokes slots and the exception handlers to be executed by the registered thread. 
+	 * <br><br>
+	 * Note that this TaskID is NOT considered completed, until all these slots are finished (even though the 
+	 * actual task logic has been executed, we need to wait for the slots before handling dependences, etc).
+	 * Therefore, the registering thread will later set the status of this task as complete. 
 	 */
 	void enqueueSlots(boolean onlyEnqueueFinishedSlot) {
 		
@@ -589,6 +664,13 @@ public class TaskID<T> {
 		}
 	}
 	
+	/**
+	 * Returns the appropriate exception hanlder for a specific class of exception,
+	 * by receiving that exception class as argument.
+	 * 
+	 * @author Mostafa Mehrabi
+	 * @since 9/9/2014
+	 * */
 	protected Slot getExceptionHandler(Class<?> occurredException) {
 		
 		//-- first, try to get handler defined immediately for this task
