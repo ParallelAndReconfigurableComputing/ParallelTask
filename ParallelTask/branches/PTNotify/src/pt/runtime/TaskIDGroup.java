@@ -27,6 +27,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
+import pi.reductions.Reduction;
+
 /**
  * An extension of <code>TaskID</code> to contain multiple tasks. In particular, a <code>TaskIDGroup</code> is returned for 
  * all multi-task invocations. Users may also instantiate a <code>TaskIDGroup</code> and populate it with multiple 
@@ -127,7 +129,7 @@ public class TaskIDGroup<E> extends TaskID<E> {
 		}
 		reductionAnswer = getInnerTaskResult(0);
 		for (int i = 1; i < groupSize; i++) {
-			reductionAnswer = red.combine(reductionAnswer, getInnerTaskResult(i));
+			reductionAnswer = red.reduce(reductionAnswer, getInnerTaskResult(i));
 		}
 		performedReduction = true;
 		reductionLock.unlock();
