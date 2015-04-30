@@ -118,7 +118,7 @@ public class TaskID<T> {
 	
 	/**
 	 * 
-	 * @Author  Kingsley
+	 * @author  Kingsley
 	 * @since 04/05/2013
 	 * 
 	 * Later Expansion
@@ -138,7 +138,7 @@ public class TaskID<T> {
 	
 	/**
 	 * 
-	 * @Author  Kingsley
+	 * @author  Kingsley
 	 * @since 21/05/2013
 	 * 
 	 * When a multi task is expanded, set this field to true for its every single sub tasks.
@@ -751,7 +751,7 @@ public class TaskID<T> {
 	
 	/**
 	 * 
-	 * @Author : Kingsley
+	 * @author : Kingsley
 	 * @since : 10/05/2013
 	 * 
 	 * When multi task is expanded, call this method, and set global id for its sub tasks.

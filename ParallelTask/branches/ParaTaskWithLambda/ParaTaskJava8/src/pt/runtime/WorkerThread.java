@@ -23,7 +23,7 @@ public class WorkerThread extends TaskThread {
 	
 	/**
 	 * 
-	 * @Author Kingsley
+	 * @author Kingsley
 	 * @since 25/04/2013
 	 * 
 	 * When creating a new worker, indicate it is dedicated for multi task or dedicated for one-off task
@@ -61,7 +61,7 @@ public class WorkerThread extends TaskThread {
 		
 		/**
 		 * 
-		 * @Author : Kingsley
+		 * @author : Kingsley
 		 * @since : 26/04/2013
 		 * 
 		 * Still remain the threadID check.
@@ -200,7 +200,7 @@ public class WorkerThread extends TaskThread {
 	 * 
 	 * @author Kingsley
 	 * @since 24/05/2013
-	 * @param boolean cancelRequired
+	 * @param cancelRequired 
 	 * 
 	 * Used by thread pool to tell worker threads that some threads need to be killed.
 	 * 

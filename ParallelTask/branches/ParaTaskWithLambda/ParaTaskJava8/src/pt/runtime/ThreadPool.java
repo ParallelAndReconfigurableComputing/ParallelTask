@@ -108,7 +108,7 @@ public class ThreadPool {
 
 	/**
 	 * 
-	 * @Author Kingsley
+	 * @author Kingsley
 	 * @since 25/04/2013
 	 * Initialize worker threads here
 	 * 
@@ -145,7 +145,7 @@ public class ThreadPool {
 	 *<code>localOneOffTask</code> queue associated to each <code>OneOff-task</code> thread. The indices of local queues for both 
 	 *worker thread types starts from 0.
 	 * 
-	 * @Author Kingsley
+	 * @author Kingsley
 	 * @author Mostafa Mehrabi
 	 * 
 	 * @since 26/04/2013
@@ -379,7 +379,7 @@ public class ThreadPool {
 
 	/**
 	 * 
-	 * @Author Kingsley
+	 * @author Kingsley
 	 * @since 18/06/2013
 	 * @return int
 	 * 

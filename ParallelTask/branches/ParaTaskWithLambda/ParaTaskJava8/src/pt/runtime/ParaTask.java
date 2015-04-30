@@ -45,7 +45,7 @@ public class ParaTask {
 	
 	/**
 	 * 
-	 * @Author : Kingsley
+	 * @author : Kingsley
 	 * @since : 29/04/2013
 	 * 
 	 * ParaTask does not need to know the thread pool size. It should ask thread pool to get
@@ -127,7 +127,7 @@ public class ParaTask {
 		
 		/**
 		 * 
-		 * @Author Kingsley
+		 * @author Kingsley
 		 * @since 29/04/2013
 		 * 
 		 * Set thread pool size through accessing the class of thread pool
@@ -142,7 +142,7 @@ public class ParaTask {
     }
     
     /**
-     * @Author Kingsley
+     * @author Kingsley
      * @since 02/05/2013
      * @param size
      * 
@@ -161,7 +161,7 @@ public class ParaTask {
     }*/
     
     /**
-     * @Author : Kingsley
+     * @author : Kingsley
      * @since : 02/05/2013
      * @param size
      * 
@@ -206,7 +206,7 @@ public class ParaTask {
     	
     	/**
 		 * 
-		 * @Author : Kingsley
+		 * @author : Kingsley
 		 * @since : 29/04/2013
 		 * 
 		 * Get thread pool size through accessing the class of thread pool
@@ -300,7 +300,7 @@ public class ParaTask {
 	 * @see #allTasksInGroup(TaskIDGroup)
 	 * 
 	 * @author Kingsley
-	 * @date 2014/04/08
+	 * @since 2014/04/08
 	 * When add dependency to a task(A), if the dependency is a TaskIDGroup, meaning that it is a Multi-Task,
 	 * the task(A) should directly depends on this Multi-Task, rather than all its sub-tasks.
 	 * 
@@ -330,7 +330,7 @@ public class ParaTask {
 	
 	/**
 	 * A recursive convenience function that digs into the TaskIDGroup and returns all the individual TaskIDs.
-	 * @see #allTasksInList(ArrayList) 
+	 * @see #allTasksInList(List)
 	 * @return the TaskIDs inside <code>group</code> placed inside a new ArrayList
 	 * */
 	public static List<TaskID<?>> allTasksInGroup(TaskIDGroup<?> group) {

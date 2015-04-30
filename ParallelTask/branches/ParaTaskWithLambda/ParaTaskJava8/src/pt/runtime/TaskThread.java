@@ -92,7 +92,7 @@ public abstract class TaskThread extends Thread {
 	
 	/**
 	 * 
-	 * @Author : Kingsley
+	 * @author : Kingsley
 	 * @since : 26/04/2013
 	 * 
 	 * A new constructor. If modify the original constructor, the creation of other threads
@@ -113,7 +113,6 @@ public abstract class TaskThread extends Thread {
 	 * pushes the task being executed in the <code>currentTaskStack</code> while the task is being
 	 * executed, and pops the task out when the execution has either finished, or failed. 
 	 * @return <code>true</code> if task executed successfully, <code>false</code> otherwise
-	 * @throws PoisonPillException 
 	 * 
 	 * @author Mostafa Mehrabi
 	 * @since  15/9/2014
@@ -156,7 +155,7 @@ public abstract class TaskThread extends Thread {
 
 	/**
 	 * 
-	 * @Author : Kingsley
+	 * @author : Kingsley
 	 * @since : 26/04/2013
 	 * 
 	 * Call to find the local threadID. This is specially used to identify the

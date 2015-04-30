@@ -23,11 +23,15 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Spliterator;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 /**
  * An implementation of a work-stealing queue. Elements are added and removed from the queue using a work-stealing policy.
@@ -472,5 +476,35 @@ public class WorkStealingQueue<E> implements BlockingQueue<E> {
 			list.addAll(q);
 		}
 		return list;
+	}
+
+	@Override
+	public boolean removeIf(Predicate<? super E> filter) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public Spliterator<E> spliterator() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Stream<E> stream() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Stream<E> parallelStream() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void forEach(Consumer<? super E> action) {
+		// TODO Auto-generated method stub
+		
 	}
 }

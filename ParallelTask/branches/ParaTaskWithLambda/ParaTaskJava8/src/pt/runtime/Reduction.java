@@ -48,7 +48,7 @@ public interface Reduction<E> {
 	 * <ul>
 	 * <li> <i>associative:</i> the order of evaluating the reduction makes no difference, and
 	 * <li> <i>commutative</i> the order of the values (i.e. <code>a</code> and <code>b</code>) makes no difference. 
-	 * 
+	 * </ul>
 	 * @param a	 The first element in the reduction
 	 * @param b The second element in the reduction
 	 * @return The result of reducing <code>a</code> with <code>b</code>.

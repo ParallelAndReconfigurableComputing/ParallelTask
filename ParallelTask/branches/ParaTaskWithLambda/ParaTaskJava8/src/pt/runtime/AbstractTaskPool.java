@@ -52,7 +52,7 @@ public abstract class AbstractTaskPool implements Taskpool {
 	
 	/**
 	 * 
-	 * @Author : Kingsley
+	 * @author Kingsley
 	 * @since : 25/04/2013
 	 * The number of multi task worker threads and the number of one-off task worker threads 
 	 * 
@@ -75,7 +75,7 @@ public abstract class AbstractTaskPool implements Taskpool {
 	/* The pool of worker threads */
 	/**
 	 * 
-	 * @Author : Kingsley
+	 * @author : Kingsley
 	 * @since : 25/04/2013
 	 * Task pool does not need to know anything about worker, a thread pool class
 	 * is used to manage the work threads.
@@ -89,7 +89,7 @@ public abstract class AbstractTaskPool implements Taskpool {
 	/* Ready tasks, in a shared global queue (for work-sharing implementations) */
 	/**
 	 * 
-	 * @Author Kingsley
+	 * @author Kingsley
 	 * @since 25/04/2013
 	 * Separate Multi Task and One-off Task. Create two different global queues
 	 * 
@@ -101,7 +101,7 @@ public abstract class AbstractTaskPool implements Taskpool {
 	
 	/**
 	 * 
-	 * @Author : Kingsley
+	 * @author : Kingsley
 	 * @since : 25/04/2013
 	 * Separate Multi Task and One-off Task. Create two different mixed queues
 	 * 
@@ -114,7 +114,7 @@ public abstract class AbstractTaskPool implements Taskpool {
 	/* Ready tasks, in private queues (stores multi-tasks) - no stealing occurs within these queues */
 	/**
 	 * 
-	 * @Author : Kingsley
+	 * @author : Kingsley
 	 * @since : 25/04/2013
 	 * Since new worker threads could be added into the thread pool, or old worker threads could
 	 * be removed from the thread pool, the data structure of array could not be used anymore(array 
@@ -129,7 +129,7 @@ public abstract class AbstractTaskPool implements Taskpool {
 	/* Ready tasks, for each worker thread. If empty, workers steal from another worker within these queues (for work-stealing implementations) */ 
 	/**
 	 * 
-	 * @Author : Kingsley
+	 * @author : Kingsley
 	 * @since : 25/04/2013
 	 * Since new worker threads could be added into the thread pool, or old worker threads could
 	 * be removed from the thread pool, the data structure of array could not be used anymore(array 
@@ -166,7 +166,7 @@ public abstract class AbstractTaskPool implements Taskpool {
 	protected AbstractTaskPool() {
 		/**
 		 * 
-		 * @Author : Kingsley
+		 * @author : Kingsley
 		 * @since : 25/04/2013
 		 * 
 		 * Enquire threads number from thread pool rather than from ParaTask
@@ -378,7 +378,7 @@ public abstract class AbstractTaskPool implements Taskpool {
 	 
 	 /**
 	  * 
-	  * @Author : Kingsley
+	  * @author : Kingsley
 	  * @since : 25/04/2013
 	  * Task pool does not need to know anything about worker, a thread pool class
 	  * is used to manage the work threads.
@@ -394,7 +394,7 @@ public abstract class AbstractTaskPool implements Taskpool {
 	
 	/**
 	 * 
-	 * @Author : Kingsley
+	 * @author : Kingsley
 	 * @since : 02/05/2013 
 	 * Used to access local one-off task queues by thread pool when initialization.
 	 * 
