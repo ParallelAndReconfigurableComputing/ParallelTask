@@ -27,7 +27,7 @@ import java.util.Iterator;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.PriorityBlockingQueue;
 /**
- * This class extends <code>AbstractTaskPool</cod> which is an implementation of <code>TaskPool</code>
+ * This class extends <code>AbstractTaskPool</code> which is an implementation of <code>TaskPool</code>
  * and uses <code>Work Sharing</code> policy for scheduling tasks. In <code>Work Sharing</code> all tasks
  * are queued to a shared global queue, and are executed by threads in a FIFO (first in first out) policy.
  * 
@@ -85,7 +85,7 @@ public class TaskpoolFIFOWorkSharing extends AbstractTaskPool {
 	 * @return  The <code>TaskID</code> appropriate for the current worker, otherwise <code>null</code> if there wasn't one at this time
 	 * 
 	 * @author Mostafa Mehrabi
-	 * @sice   9/9/2014
+	 * @since   9/9/2014
 	 */
 	@Override
 	public TaskID workerPollNextTask() {

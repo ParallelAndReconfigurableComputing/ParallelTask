@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project name="ParaTaskProgbar" basedir=".">
+
+	<property name="paratask.dir" value="../PTNotify" />
+	<property name="paratask.buld.xml" value="${paratask.dir}/build.xml" />
+	<property name="ptruntime.jar" value="${paratask.dir}/release/PTRuntime-latest.jar" />
+
+	<target name="copy.ptruntime.jar">
+		<ant antfile="${paratask.buld.xml}" target="dist" dir="${paratask.dir}" />
+		<copy file="${ptruntime.jar}" todir="libs" />
+	</target>
+
+	<target name="compile.ptjava.files">
+		<java classname="pt.compiler.ParaTaskParser">
+			<arg value="src" />
+			<classpath>
+				<pathelement location="${paratask.dir}/bin" />
+			</classpath>
+		</java>
+	</target>
+</project>

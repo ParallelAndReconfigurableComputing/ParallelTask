@@ -49,7 +49,7 @@ public class TaskpoolMixedScheduling extends AbstractTaskPool {
 	 * queue if it is a <code>TaskIDGroup</code>, otherwise it will be enqueued to the <code>mixedOneOffTask</code> queue.
 	 * 
 	 * @author Mostafa Mehrabi
-	 * @sice   14/9/2014
+	 * @since   14/9/2014
 	 * */
 	@Override
 	protected void enqueueReadyTask(TaskID<?> taskID) {

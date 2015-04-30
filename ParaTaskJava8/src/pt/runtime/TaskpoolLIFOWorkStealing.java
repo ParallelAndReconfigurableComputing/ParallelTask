@@ -120,7 +120,7 @@ public class TaskpoolLIFOWorkStealing extends AbstractTaskPool {
 	 * for executing it is successful, that task will be passed to the thread, and that <code>localOneOffTask</code> queue's 
 	 * corresponding thread will be remembered as the <b><i>victim thread</i></b>.
 	 * <br><br>
-	 * After all these processes, if there are still no tasks found, the <b><i>victim thread</i></b> will be set to <cod>null</code>
+	 * After all these processes, if there are still no tasks found, the <b><i>victim thread</i></b> will be set to <code>null</code>
 	 * and the method returns <code>null</code> indicating an unsuccessful attempt for polling a task.
 	 * 
 	 *  @author Mostafa Mehrabi

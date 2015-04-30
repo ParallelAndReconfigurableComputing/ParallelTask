@@ -77,8 +77,7 @@ public class CurrentTask {
 	 * Inquire as to whether the current code being executed is inside a task. Useful in some applications where
 	 * the same code fragment might be executed both as a task and sequentially. For example: 
 	 * <br><br>
-	 * <code><pre>
-	 * 
+	 * <code>	  
 	 * TASK int computeTask(int value) {
 	 * 		return compute(value); 
 	 * }
@@ -94,7 +93,7 @@ public class CurrentTask {
 	 * 		...
 	 * }
 	 * 
-	 * </pre></code>
+	 * </code>
 	 * 
 	 * @return <code>true</code> if the currently inside a task, <code>false</code> otherwise.
 	 */
