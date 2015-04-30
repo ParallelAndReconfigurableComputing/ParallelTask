@@ -3,7 +3,7 @@
  	<property name="src.dir"   value="src" />
  	<property name="doc.dir"   value="docs" />
 	<property name="build.dir" value="bild" />
- 	<property name="dist.dir"  value="dist" />
+ 	<property name="dist.dir"  value="release" />
  	<property name="jarVersion" value="PTLambda-1.0.0"/>
 	
 	<!-- Check the operating system -->
