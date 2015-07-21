@@ -21,8 +21,11 @@ package pt.runtime;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * 
@@ -59,6 +62,7 @@ public class Task<T> {
 	// for ParaTask in Java 8
 	private Functor<?> lambda;
 	private FunctorVoid lambdaVoid;
+	private StandardFunctor<?, ?> standardFunctor;
 	
 	private int taskCount = 1;
 
@@ -78,6 +82,7 @@ public class Task<T> {
 	// Maybe using a Map was better,
 	private List<Class<?>> exceptions = null;//keeps the records of the exceptions occurred 
 	private List<Slot> exceptionHandlers = null;//keeps the records of the handlers corresponding to those exceptions
+	private Map<Class<?>, Slot> asyncExceptions = new HashMap<Class<?>, Slot>();
 
 	private boolean isInteractive = false;
 
@@ -98,11 +103,21 @@ public class Task<T> {
 	private Task(FunctorVoid lambda) {
 		this.lambdaVoid = lambda;
 	}
+	
+	private Task(StandardFunctor<?, ?> standardFunctor){
+		this.standardFunctor = standardFunctor;
+	}
 
 	public boolean hasAnySlots() {
 		return hasAnySlots;
 	}
 	
+	/**
+	 * Sets the number of tasks in a multiple-task.
+	 * 
+	 * @param count The number of multiple-tasks
+	 * 
+	 */
 	private Task<T> setCount(int count) {
 		if(count < 0) {
 			throw new IllegalArgumentException("the value for task count must be greater than 0 or equal to STAR (0)");
@@ -118,6 +133,7 @@ public class Task<T> {
 	public int[] getQueueArgIndexes() {
 		return queueArgIndexes;
 	}
+	
 	//the three dots in arguments means, zero or more, or an array of integers
 	//may be passed as parameter/s.
 	public void setTaskIdArgIndexes(int... indexes) {
@@ -128,8 +144,16 @@ public class Task<T> {
 		this.queueArgIndexes = indexes;
 	}
 
+	/**
+	 * Returns the registering thread of this task, iff the
+	 * thread is still alive, otherwise it returns <code>null</code>.
+	 * 
+	 * @param Thread The registering thread that is returned by this method.
+	 * */
 	public Thread getRegisteringThread() {
-		return registeringThread;
+		if (registeringThread.isAlive())
+			return registeringThread;
+		return null;
 	}
 
 	public Thread setRegisteringThread() {
@@ -160,6 +184,13 @@ public class Task<T> {
 				it.next().setTaskID(taskID);
 			}
 		}
+		if (!asyncExceptions.isEmpty()){
+			Set<Class<?>> exceptionClasses = asyncExceptions.keySet();
+			for (Class<?> exception : exceptionClasses){
+				Slot handler = asyncExceptions.get(exception);
+				handler.setTaskID(taskID);
+			}
+		}
 	}
 
 	/**
@@ -170,6 +201,14 @@ public class Task<T> {
 	 * @param handler
 	 */
 	public Task<T> asyncCatch(Class<?> exceptionClass, FunctionInterExceptionHandler handler) {
+		
+		if (exceptionClass == null)
+			throw new IllegalArgumentException("There is no exception class specified!");
+		else if (handler == null)
+			throw new IllegalArgumentException("There is no exception handler specified for this exception");
+	
+		asyncExceptions.put(exceptionClass, (Slot)handler);
+		
 		if (this.exceptionHandlers == null) {
 			exceptions = new ArrayList<>();
 			exceptionHandlers = new ArrayList<>();
@@ -180,13 +219,11 @@ public class Task<T> {
 		return this;
 	}
 
-	/*
-	 * This method returns the first suitable handler (if any is found) for the
-	 * specified exception. It considers the correct inheritance structure, and
-	 * the order of handlers considered is the same order as the programmer
-	 * listed in the trycatch
+	/**
+	 * Returns the handler associated to the specified exception. 
 	 */
 	public Slot getExceptionHandler(Class<?> occuredException) {
+		
 		if (exceptions == null)
 			return null;
 		for (int i = 0; i < exceptions.size(); i++) {
@@ -194,7 +231,17 @@ public class Task<T> {
 					exceptions.get(i)))
 				return exceptionHandlers.get(i);
 		}
-		return null;
+		
+		if (asyncExceptions.isEmpty())
+			return null;
+		
+		else if (!asyncExceptions.containsKey(occuredException))
+			return null;
+			
+		else 
+			return asyncExceptions.get(occuredException);
+		
+		//return null;
 	}
 
 	public List<Slot> getInterSlotsToNotify() {
@@ -246,6 +293,10 @@ public class Task<T> {
 	
 	public static Task<Void> asTask(FunctorVoid fun) {
 		return new Task<Void>(fun);
+	}
+	
+	public static <R, P, T> Task<T> asTask(StandardFunctor<R, P> standardFunctor){
+		return new Task<T>(standardFunctor);
 	}
 	
 	public static <T> Task<T> asMultiTask(Functor<T> fun, int count) {
