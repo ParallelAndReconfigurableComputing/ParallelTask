@@ -1,4 +1,5 @@
 /*
+
  *  Copyright (C) 2010 Nasser Giacaman, Oliver Sinnen
  *
  *  This file is part of Parallel Task.
@@ -56,10 +57,10 @@ import java.util.concurrent.locks.ReentrantLock;
  *threads.<br><br>
  *All sub-tasks of a multi-task share the same globalID, at the time of creation. A taskID holds the information about
  *whether a task is interactive, and whether it has slots (handlers) to notify from the task.<br><br>
- *Moreover, this task enables requesting for cancellation of the instance of task, allows recording the tasks that are
+ *Moreover, a taskID enables requesting for cancellation of the instance of task, allows recording the tasks that are
  *waiting for the instance of task to finish, returns the final result of a task and also provides a mechanism through 
  *which other threads can wait for the instance of task to finish (or do another task meanwhile they wait for the instance
- *of task to finish). For a task in order to complete all the slots stored in the task need to be executed; therefore the 
+ *of task to finish). For a task in order to complete, all the slots stored in the task need to be executed; therefore the 
  *method 'enqueueSlots' must be called.      
  * 
  * 
@@ -71,6 +72,8 @@ import java.util.concurrent.locks.ReentrantLock;
  *
  * @param <T> The task's return type
  */
+//a TaskID's return type (i.e., T) is possibly equivalent to the return type of 
+//a functor (i.e., R).
 public class TaskID<T> {
 	
 	static protected AtomicInteger nextGlobalID = new AtomicInteger(-1);
@@ -103,10 +106,30 @@ public class TaskID<T> {
 	private Throwable exception = null;
 	
 	private boolean isInteractive = false;
+	/**
+	 * TaskIDs waiting for this task to finish.
+	 * 
+	 * @author Mostafa Mehrabi
+	 * @since  4/8/2015
+	 * */
+	private ConcurrentLinkedQueue<TaskID<?>> waitingTasks = null;
 	
-	private ConcurrentLinkedQueue<TaskID<?>> waitingTasks = null;	//-- TaskIDs waiting for this task 
+	/**
+	 * TaskIDs that this task is waiting for to finish.
+	 * 
+	 * @author Mostafa Mehrabi
+	 * @since  4/8/2015
+	 * */
 	private ConcurrentHashMap<TaskID<?>, Object> remainingDependences = null;	//-- TaskIDs this task is waiting for
 	
+	/**
+	 * The group of tasks that this task belongs to, if it is a <code>subtask</code> of 
+	 * a <code>multi-task</code>. Otherwise, this attribute remains null for a <code>one-off</code>
+	 * or an <code>I/O task</code>.
+	 * 
+	 * @author Mostafa Mehrabi
+	 * @since  4/8/2015
+	 * */
 	protected TaskIDGroup<?> group = null;
 	
 	protected boolean hasSlots = false;
@@ -115,6 +138,73 @@ public class TaskID<T> {
 	static final protected int CANCELLED = 1;
 	static final protected int STARTED = 2;
 	protected AtomicInteger status = new AtomicInteger(CREATED);
+	
+	/**
+	 * 
+	 * @author Kingsley
+	 * @since 10/05/2013
+	 * 
+	 * Move the globalID allocation from the constructor of TaskID() 
+	 * to the constructor of TaskID(TaskInfo taskInfo)
+	 * 
+	 * The idea is all subtasks of a multi task should share a global id,
+	 * rather than give them a new one when they are created.
+	 * 
+	 * 
+	 * @since 23/05/2013
+	 * All subtasks of a multi task share a global id, this idea is good for understanding
+	 * All subtasks have different global id, this idea is good for software engineering.
+	 * If we treat each subtask the same as one-off task, which means we should give each
+	 * subtask a unique global id.
+	 * 
+	 * */
+	
+	TaskID() {
+		//globalID = nextGlobalID.incrementAndGet();
+		completedLatch = new CountDownLatch(1);
+		hasCompleted = new AtomicBoolean(false);
+		status = new AtomicInteger(CREATED);
+		changeStatusLock = new ReentrantLock();
+	}
+	
+
+	/**
+	 * This constructor receives information about, whether a task is interactive
+	 * as well as it sets the count down latch to one. 
+	 * */
+	public TaskID(Task<T> taskInfo) {
+		this();
+		
+		/*if(!taskInfo.isSubTask()){
+			globalID = nextGlobalID.incrementAndGet();
+		}*/
+		
+		globalID = nextGlobalID.incrementAndGet();
+		
+		completedLatchForRegisteringThread = new CountDownLatch(1);
+		this.taskInfo = taskInfo;
+		isInteractive = taskInfo.isInteractive();
+		if (taskInfo != null) {
+			hasSlots = taskInfo.getSlotsToNotify() != null;
+//			hasHandlers = taskInfo.hasRegisteredHandlers();
+		}
+	}
+	
+	
+	
+	public TaskID(boolean alreadyCompleted) {
+		if (alreadyCompleted) {
+			globalID = nextGlobalID.incrementAndGet();
+			//I think one of the count down latches must be registering thread.
+			//this.completedLatchForRegisteringThread = new CountDownLatch(0);
+			completedLatch = new CountDownLatch(0);
+			completedLatch = new CountDownLatch(0);
+			hasCompleted = new AtomicBoolean(true);
+			status = new AtomicInteger(STARTED);
+		} else {
+			throw new UnsupportedOperationException("Don't call this constructor if passing in 'false'!");
+		}
+	}
 	
 	/**
 	 * 
@@ -144,6 +234,7 @@ public class TaskID<T> {
 	 * When a multi task is expanded, set this field to true for its every single sub tasks.
 	 * 
 	 * */
+	//isSubTask and isInteractive also exist in Task, which one to use?
 	private boolean isSubTask = false;
 
 	protected boolean isSubTask() {
@@ -203,72 +294,7 @@ public class TaskID<T> {
 	 */
 	public boolean cancelRequested() {
 		return cancelRequested.get();
-	}
-	
-	TaskID(boolean alreadyCompleted) {
-		if (alreadyCompleted) {
-			globalID = nextGlobalID.incrementAndGet();
-			//I think one of the count down latches must be registering thread.
-			//this.completedLatchForRegisteringThread = new CountDownLatch(0);
-			completedLatch = new CountDownLatch(0);
-			completedLatch = new CountDownLatch(0);
-			hasCompleted = new AtomicBoolean(true);
-			status = new AtomicInteger(STARTED);
-		} else {
-			throw new UnsupportedOperationException("Don't call this constructor if passing in 'false'!");
-		}
-	}
-	
-	/**
-	 * 
-	 * @author Kingsley
-	 * @since 10/05/2013
-	 * 
-	 * Move the globalID allocation from the constructor of TaskID() 
-	 * to the constructor of TaskID(TaskInfo taskInfo)
-	 * 
-	 * The idea is all subtasks of a multi task should share a global id,
-	 * rather than give them a new one when they are created.
-	 * 
-	 * 
-	 * @since 23/05/2013
-	 * All subtasks of a multi task share a global id, this idea is good for understanding
-	 * All subtasks have different global id, this idea is good for software engineering.
-	 * If we treat each subtask the same as one-off task, which means we should give each
-	 * subtask a unique global id.
-	 * 
-	 * */
-	
-	TaskID() {
-		//globalID = nextGlobalID.incrementAndGet();
-		completedLatch = new CountDownLatch(1);
-		hasCompleted = new AtomicBoolean(false);
-		status = new AtomicInteger(CREATED);
-		changeStatusLock = new ReentrantLock();
-	}
-	
-	/**
-	 * This constructor receives information about, whether a task is interactive
-	 * as well as it sets the count down latch to one. 
-	 * */
-	TaskID(Task<T> taskInfo) {
-		this();
-		
-		/*if(!taskInfo.isSubTask()){
-			globalID = nextGlobalID.incrementAndGet();
-		}*/
-		
-		globalID = nextGlobalID.incrementAndGet();
-		
-		completedLatchForRegisteringThread = new CountDownLatch(1);
-		this.taskInfo = taskInfo;
-		isInteractive = taskInfo.isInteractive();
-		if (taskInfo != null) {
-			hasSlots = taskInfo.getSlotsToNotify() != null;
-//			hasHandlers = taskInfo.hasRegisteredHandlers();
-		}
-	}
-	
+	}	
 	
 	/**
 	 * Attempts to cancel the task. It first changes the state of the task to <code>CANCELLED</code>, and then
@@ -289,14 +315,24 @@ public class TaskID<T> {
 	 */
 	public boolean cancelAttempt() {
 		cancelRequested.set(true);
-		
+		//shouldn't we have this expression within the if statement?
 		int prevStatus = status.getAndSet(CANCELLED);
 		
 		if (prevStatus == CREATED || cancelled) {
 			cancelled = true;
 			return true;
 		}
+		
 		return false;
+		
+//		I think it should be this way!		
+//		if (status.get() != CREATED)
+//			return false;
+//		
+//		status.set(CANCELLED);
+//		cancelled = true;
+//		return true;
+		
 	}
 	
 	/**
@@ -321,6 +357,13 @@ public class TaskID<T> {
 		
 		//-- TODO if the status was not CREATED before this, then should probably set status to CANCELLED 
 		return prevStatus == CREATED;
+		
+//		I think it should be this way		
+//		if (status.get() != CREATED)
+//			return false;
+//		
+//		status.set(STARTED);
+//		return true;
 	}
 	
 	void setEnclosingTask(TaskID<?> enclosingTask) {
@@ -375,6 +418,7 @@ public class TaskID<T> {
 		}
 	}
 	
+	//maybe remianingDependences can be a concurrent queue instead of hashMap?
 	void setRemainingDependences(List<TaskID<?>> deps) {
 		remainingDependences = new ConcurrentHashMap<>();
 		Iterator<TaskID<?>> it = deps.iterator();
@@ -417,7 +461,7 @@ public class TaskID<T> {
 	/**
 	 * Returns the result of the task. In order to return the final result of a task we have to
 	 * wait until that task is finished. If the task has not finished yet, the current thread blocks
-	 * (i.e. the thread which wants the result from this task blocks). 
+	 * (i.e., the thread which wants the result from this task blocks). 
 	 * ParaTask worker threads will not block, instead they execute other ready tasks until
 	 * this task completes.
 	 * @return	The result of the task.
@@ -450,8 +494,8 @@ public class TaskID<T> {
 	 * scheme) or it can go to sleep. If the thread is logically cancelled already, it will 
 	 * sleep until it is shut down by the virtual machine.
 	 * <br><br>
-	 * If the current thread is not a worker thread, and is the thread that as registered this
-	 * task it has to wait on its own count down latch, other wise the thread can wait on the 
+	 * If the current thread is not a worker thread, and is the thread that has registered this
+	 * task, it has to wait on its own count down latch, other wise the thread can wait on the 
 	 * normal count down latch.
 	 * @throws ExecutionException
 	 * @throws InterruptedException
@@ -508,7 +552,9 @@ public class TaskID<T> {
 			}
 		}
 		
-		//-- task has completed.. was there a user error?
+		//This is checked at the end because we have to give a task a chance to 
+		//be executed. If the task has any errors, it will finish, and then we can check
+		//if there is any errors.
 		if (hasUserError.get()) {
 			throw new ExecutionException(exception);
 		}
@@ -598,22 +644,23 @@ public class TaskID<T> {
 		hasCompleted.set(true);
 		changeStatusLock.unlock();
 		
+		//would it not be better to implement this part of the code as an overridden method
+		//in the child class TaskIDGroup
 		if (group != null) {
 			
-			TaskID<?> groupWaiter = null;
+			waiter = null;
 			
 			if (((TaskID<?>)group).waitingTasks != null) {
-				ConcurrentLinkedQueue<TaskID<?>> groupWaitingTaskIDs = ((TaskID<?>)group).waitingTasks;
+				ConcurrentLinkedQueue<TaskID<?>> taskIDsWaitingForGroup = ((TaskID<?>)group).waitingTasks;
 				
-				while ((groupWaiter = groupWaitingTaskIDs.poll()) != null) {
-					// removes the waiter from the queue
-					//groupWaiter.dependenceFinished(group);
+				while ((waiter = taskIDsWaitingForGroup.poll()) != null) {
 					
-					ConcurrentHashMap<TaskID<?>, Object> groupRemainingDependences = groupWaiter.remainingDependences;
+					//remove the current instance (i.e., group) from the list of dependencies of each waiting TaskID.
+					ConcurrentHashMap<TaskID<?>, Object> remainingDependencesOfGroup = waiter.remainingDependences;
 									
-					groupRemainingDependences.remove(group);
-					if (groupRemainingDependences.isEmpty()) {
-						TaskpoolFactory.getTaskpool().nowReady(groupWaiter);
+					remainingDependencesOfGroup.remove(group);
+					if (remainingDependencesOfGroup.isEmpty()) {
+						TaskpoolFactory.getTaskpool().nowReady(waiter);
 					}
 					
 				}
@@ -648,7 +695,7 @@ public class TaskID<T> {
 				
 //				System.out.println("HAS SLOTS..");
 				completedLatchForRegisteringThread.countDown(); //-- so that registering thread will not block in slots 
-				completedLatch.countDown();  // ADDED THIS??
+				completedLatch.countDown();  // ADDED THIS?? -- I think this should be added after the slots and handlers are executed.
 				
 				if (hasUserError.get())
 					executeHandlers();

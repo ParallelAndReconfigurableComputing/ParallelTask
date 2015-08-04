@@ -96,6 +96,7 @@ public class Task<T> {
 	 * */
 	private boolean isSubTask = false;
 
+	//These constructors can at least automate the process of creating TaskID.
 	private Task(Functor<?> lambda) {
 		this.lambda = lambda;
 	}
@@ -104,20 +105,17 @@ public class Task<T> {
 		this.lambdaVoid = lambda;
 	}
 	
-	private Task(StandardFunctor<?, ?> standardFunctor){
+	private <R, P> Task(StandardFunctor<R, P> standardFunctor){
 		this.standardFunctor = standardFunctor;
 	}
 
-	public boolean hasAnySlots() {
-		return hasAnySlots;
-	}
-	
 	/**
 	 * Sets the number of tasks in a multiple-task.
 	 * 
 	 * @param count The number of multiple-tasks
 	 * 
 	 */
+	//some methods are returning the current instance of Task<T> which seems to be pointless
 	private Task<T> setCount(int count) {
 		if(count < 0) {
 			throw new IllegalArgumentException("the value for task count must be greater than 0 or equal to STAR (0)");
@@ -156,6 +154,7 @@ public class Task<T> {
 		return null;
 	}
 
+	//Why do we have to check if the GUI thread is the EDT?
 	public Thread setRegisteringThread() {
 		try {
 			if (GuiThread.isEventDispatchThread())//if the current thread is an event dispatch thread
@@ -168,6 +167,7 @@ public class Task<T> {
 		return registeringThread;
 	}
 
+	//make sure these steps are automated.. Should it be automated?
 	public void setTaskIDForSlotsAndHandlers(TaskID<T> taskID) {
 		if (slotsToNotify != null) {
 			for (Iterator<Slot> it = slotsToNotify.iterator(); it.hasNext();) {
@@ -243,7 +243,11 @@ public class Task<T> {
 		
 		//return null;
 	}
-
+	
+	public boolean hasAnySlots() {
+		return hasAnySlots;
+	}
+	
 	public List<Slot> getInterSlotsToNotify() {
 		return interSlotsToNotify;
 	}
@@ -268,6 +272,7 @@ public class Task<T> {
 	public boolean hasRegisteredHandlers() {
 		return exceptions != null
 				&& !exceptions.isEmpty();
+		//return !asyncExceptions.isEmpty();
 	}
 
 	/**
@@ -299,6 +304,8 @@ public class Task<T> {
 		return new Task<T>(standardFunctor);
 	}
 	
+	//Once the final policy for which "Functor" to use is decide, make sure that 
+	//asTask, asMultiple and asIOTask methods are modified accordingly.
 	public static <T> Task<T> asMultiTask(Functor<T> fun, int count) {
 		return new Task<T>(fun).setCount(count);
 	}
@@ -347,6 +354,7 @@ public class Task<T> {
 		return this;
 	}
 	
+	//with interim handlers could be pointless and unnecessary	
 	public Task<T> withInterimHandler(FunctorVoidWithTwoArgs<TaskID<?>, Object> handler) {
 		if (interSlotsToNotify == null)
 			interSlotsToNotify = new ArrayList<Slot>();
@@ -359,6 +367,7 @@ public class Task<T> {
 		return this;
 	}
 
+	//This is where a Task returns its corresponding TaskID
 	public TaskID<T> start() {
 		if(this.taskCount == 1)
 			return TaskpoolFactory.getTaskpool().enqueue(this);
