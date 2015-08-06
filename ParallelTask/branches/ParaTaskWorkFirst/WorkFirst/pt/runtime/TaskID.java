@@ -165,9 +165,14 @@ public class TaskID<E> {
 	}
 	
 	
-	/*
-	 * 	Task depth level for hierachy purposes
+	/**
+	 * 	@Author	Weng Hao
+	 * 	
+	 * 	Used to record the depth level for a task.
+	 * 	Primarily used for the TaskpoolLIFOWorkFirstTaskDepth for the Task Depth Control.
+	 * 	Default depth of a task is set to 1.
 	 */
+	
 	private int taskDepth = 1;
 	
 	int getTaskDepth() {

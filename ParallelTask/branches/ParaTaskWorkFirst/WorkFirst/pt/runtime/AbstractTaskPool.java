@@ -52,10 +52,6 @@ public abstract class AbstractTaskPool implements Taskpool {
 	};
 	
 	
-	//Task Depth threshold
-	protected int taskDepthThreshold = 8;
-	
-	
 	/**
 	 * 
 	 * @Author : Kingsley
@@ -538,22 +534,5 @@ public abstract class AbstractTaskPool implements Taskpool {
 	
 	public List<AbstractQueue<TaskID<?>>> getPrivateTaskQueues() {
 		return privateQueues;
-	}
-	
-	
-	/**
-	 * 	Threshold used for the depth level task cutting.
-	 * 	@param: int threshold
-	 */
-	public void setTaskDepthThreshold(int threshold) {
-		taskDepthThreshold = threshold;
-	}
-	
-	/**
-	 * 	Returns threshold for Work-First
-	 * @return int taskDepthThreshold
-	 */
-	public int getTaskDepthThreshold() {
-		return taskDepthThreshold;
 	}
 }
