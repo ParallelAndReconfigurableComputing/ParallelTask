@@ -19,6 +19,7 @@
 
 package pt.runtime;
 
+import pi.RedLib.Reduction;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.concurrent.BrokenBarrierException;
@@ -145,12 +146,13 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	 * @param red	The reduction to perform
 	 * @return The result of performing the reduction on the set of <code>TaskID</code>s contained in this group.
 	 */
-	public T reduce(Reduction<T> red) throws ExecutionException, InterruptedException {
+	public T reduce(Reduction<T> reduction) throws ExecutionException, InterruptedException {
 		waitTillFinished();
 		
 		// TODO want to make this like the Parallel Iterator's reduction.. i.e. checks initial value, etc.. 
 		
 		if (groupSize == 0)
+			
 			return null;
 		
 		reductionLock.lock();
@@ -160,7 +162,7 @@ public class TaskIDGroup<T> extends TaskID<T> {
 		}
 		reductionAnswer = getInnerTaskResult(0);
 		for (int i = 1; i < groupSize; i++) {
-			reductionAnswer = red.combine(reductionAnswer, getInnerTaskResult(i));
+			reductionAnswer = reduction.reduce(reductionAnswer, getInnerTaskResult(i));
 		}
 		performedReduction = true;
 		reductionLock.unlock();
@@ -211,16 +213,16 @@ public class TaskIDGroup<T> extends TaskID<T> {
 
 				for (Iterator<TaskID<?>> it = groupMembers(); it.hasNext(); ) {
 					TaskID<?> task = it.next();
-					Throwable ex = task.getException();
-					if (ex != null) {
-						Slot handler = getExceptionHandler(ex.getClass());
+					Throwable exception = task.getException();
+					if (exception != null) {
+						Slot handler = getExceptionHandler(exception.getClass());
 						
 						if (handler != null) {
 							callTaskListener(handler);
 							nothingToQueue = false;
 						} else {
 							System.err.println("No asynchronous exception handler found in Task " + task.globalID() + " for the following exception: ");
-							ex.printStackTrace();
+							exception.printStackTrace();
 						}
 					}
 				}
