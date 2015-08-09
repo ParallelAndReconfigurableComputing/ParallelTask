@@ -76,6 +76,29 @@ import java.util.concurrent.locks.ReentrantLock;
 //a functor (i.e., R).
 public class TaskID<T> {
 	
+	/**
+	 * 
+	 * @author  Kingsley
+	 * @since 04/05/2013
+	 * 
+	 * Indicates how many sub tasks should be expanded, and its value can
+	 * only be set from {@link AbstractTaskPool#enqueueMulti()}
+	 * 
+	 * */
+	private int count = 0;
+	
+	/**
+	 * 
+	 * @author  Kingsley
+	 * @since 21/05/2013
+	 * 
+	 * When a multi task is expanded, set this field to <u><b>true</u></b> for its every single sub tasks.
+	 * 
+	 * */
+	//isSubTask and isInteractive also exist in Task, which one to use?
+	private boolean isSubTask = false;
+
+	
 	static protected AtomicInteger nextGlobalID = new AtomicInteger(-1);
 	
 	protected int globalID = -1;
@@ -137,6 +160,7 @@ public class TaskID<T> {
 	static final protected int CREATED = 0;
 	static final protected int CANCELLED = 1;
 	static final protected int STARTED = 2;
+	static final protected int COMPLETED = 3;
 	protected AtomicInteger status = new AtomicInteger(CREATED);
 	
 	/**
@@ -197,7 +221,7 @@ public class TaskID<T> {
 			globalID = nextGlobalID.incrementAndGet();
 			//I think one of the count down latches must be registering thread.
 			//this.completedLatchForRegisteringThread = new CountDownLatch(0);
-			completedLatch = new CountDownLatch(0);
+			completedLatchForRegisteringThread = new CountDownLatch(0);
 			completedLatch = new CountDownLatch(0);
 			hasCompleted = new AtomicBoolean(true);
 			status = new AtomicInteger(STARTED);
@@ -206,17 +230,7 @@ public class TaskID<T> {
 		}
 	}
 	
-	/**
-	 * 
-	 * @author  Kingsley
-	 * @since 04/05/2013
-	 * 
-	 * Later Expansion
-	 * Use this to indicate how many sub tasks should be expanded.
-	 * Can only be set the value from {@link AbstractTaskPool#enqueueMulti()}
-	 * 
-	 * */
-	private int count = 0;
+	
 	
 	protected int getCount() {
 		return count;
@@ -226,17 +240,7 @@ public class TaskID<T> {
 		this.count = count;
 	}
 	
-	/**
-	 * 
-	 * @author  Kingsley
-	 * @since 21/05/2013
-	 * 
-	 * When a multi task is expanded, set this field to true for its every single sub tasks.
-	 * 
-	 * */
-	//isSubTask and isInteractive also exist in Task, which one to use?
-	private boolean isSubTask = false;
-
+	
 	protected boolean isSubTask() {
 		return isSubTask;
 	}
