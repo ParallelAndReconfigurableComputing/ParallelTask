@@ -80,8 +80,8 @@ public class Task<T> {
 	// -- Should always ensure that the registered exceptions are kept lined up
 	// with the handlers
 	// Maybe using a Map was better,
-	private List<Class<?>> exceptions = null;//keeps the records of the exceptions occurred 
-	private List<Slot> exceptionHandlers = null;//keeps the records of the handlers corresponding to those exceptions
+	//private List<Class<?>> exceptions = null;//keeps the records of the exceptions occurred 
+	//private List<Slot> exceptionHandlers = null;//keeps the records of the handlers corresponding to those exceptions
 	private Map<Class<?>, Slot> asyncExceptions = new HashMap<Class<?>, Slot>();
 
 	private boolean isInteractive = false;
@@ -179,11 +179,7 @@ public class Task<T> {
 				it.next().setTaskID(taskID);
 			}
 		}
-		if (exceptionHandlers != null) {
-			for (Iterator<Slot> it = exceptionHandlers.iterator(); it.hasNext();) {
-				it.next().setTaskID(taskID);
-			}
-		}
+		
 		if (!asyncExceptions.isEmpty()){
 			Set<Class<?>> exceptionClasses = asyncExceptions.keySet();
 			for (Class<?> exception : exceptionClasses){
@@ -208,13 +204,6 @@ public class Task<T> {
 			throw new IllegalArgumentException("There is no exception handler specified for this exception");
 	
 		asyncExceptions.put(exceptionClass, (Slot)handler);
-		
-		if (this.exceptionHandlers == null) {
-			exceptions = new ArrayList<>();
-			exceptionHandlers = new ArrayList<>();
-		}
-		exceptions.add(exceptionClass);
-		exceptionHandlers.add(new Slot(handler));
 		hasAnySlots = true;
 		return this;
 	}
@@ -224,14 +213,6 @@ public class Task<T> {
 	 */
 	public Slot getExceptionHandler(Class<?> occuredException) {
 		
-		if (exceptions == null)
-			return null;
-		for (int i = 0; i < exceptions.size(); i++) {
-			if (ParaTaskHelper.isSubClassOf(occuredException,
-					exceptions.get(i)))
-				return exceptionHandlers.get(i);
-		}
-		
 		if (asyncExceptions.isEmpty())
 			return null;
 		
@@ -240,8 +221,6 @@ public class Task<T> {
 			
 		else 
 			return asyncExceptions.get(occuredException);
-		
-		//return null;
 	}
 	
 	public boolean hasAnySlots() {
@@ -270,9 +249,7 @@ public class Task<T> {
 	}
 
 	public boolean hasRegisteredHandlers() {
-		return exceptions != null
-				&& !exceptions.isEmpty();
-		//return !asyncExceptions.isEmpty();
+		return !asyncExceptions.isEmpty();
 	}
 
 	/**

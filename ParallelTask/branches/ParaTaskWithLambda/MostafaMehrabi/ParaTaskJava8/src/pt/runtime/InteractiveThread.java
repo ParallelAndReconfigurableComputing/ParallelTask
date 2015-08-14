@@ -37,7 +37,7 @@ public class InteractiveThread extends TaskThread {
 		boolean success = executeTask(task);
 		if (success) {
 			try {
-				if (!task.cancelledSuccessfully())
+				if (!task.hasBeenCancelled())
 					task.getReturnResult();
 			} catch (ExecutionException e) {
 				e.printStackTrace();
