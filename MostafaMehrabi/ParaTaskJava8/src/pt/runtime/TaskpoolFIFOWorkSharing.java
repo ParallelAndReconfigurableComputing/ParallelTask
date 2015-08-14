@@ -136,7 +136,7 @@ public class TaskpoolFIFOWorkSharing extends AbstractTaskPool {
 					
 					taskID.setSubTask(true);
 					taskID.setPartOfGroup(((TaskIDGroup)next));
-					((TaskIDGroup)next).add(taskID);
+					((TaskIDGroup)next).addInnerTask(taskID);
 					enqueueReadyTask(taskID);
 					
 				}

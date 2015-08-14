@@ -336,7 +336,7 @@ public class ParaTask {
 	public static List<TaskID<?>> allTasksInGroup(TaskIDGroup<?> group) {
 		ArrayList<TaskID<?>> list = new ArrayList<>();
 		 
-		Iterator<TaskID<?>> it = group.groupMembers();
+		Iterator<TaskID<?>> it = group.getGroupIterator();
 		while (it.hasNext()) {
 			TaskID<?> id = it.next();
 			if (id instanceof TaskIDGroup) {

@@ -158,7 +158,7 @@ public class CurrentTask {
 	/**
 	 * Returns the current task's global ID. All tasks have a unique ID, and this is it.
 	 * @return	The current task's globally-unique ID
-	 * @see TaskID#globalID()
+	 * @see TaskID#getGlobalID()
      * @throws RuntimeException if not called from within a ParaTask task. 
 	 */
 	public static int globalID() {
@@ -166,14 +166,14 @@ public class CurrentTask {
 		if (!(t instanceof TaskThread)) {
 			throw new ParaTaskRuntimeException("ParaTask.globalID() may only be called from within a Task");
 		}
-		return ((TaskThread)t).currentExecutingTask().globalID();
+		return ((TaskThread)t).currentExecutingTask().getGlobalID();
 	}
 	
 	/**
 	 * All tasks have a relative ID. But this only makes sense for multi-tasks. If the current task is not 
 	 * part of a multi-task, then this always returns 0. Relative IDs start from 0.
 	 * @return	The current task's relative ID
-	 * @see TaskID#relativeID()
+	 * @see TaskID#getRelativeID()
      * @throws RuntimeException if not called from within a ParaTask task. 
 	 */
 	public static int relativeID() {
@@ -181,7 +181,7 @@ public class CurrentTask {
 		if (!(t instanceof TaskThread)) {
 			throw new ParaTaskRuntimeException("ParaTask.relativeID() may only be called from within a Task");
 		}
-		return ((TaskThread)t).currentExecutingTask().relativeID();
+		return ((TaskThread)t).currentExecutingTask().getRelativeID();
 	}
 	
 	/**

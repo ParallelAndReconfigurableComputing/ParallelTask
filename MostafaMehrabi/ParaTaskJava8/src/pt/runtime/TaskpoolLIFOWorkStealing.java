@@ -162,7 +162,7 @@ public class TaskpoolLIFOWorkStealing extends AbstractTaskPool {
 					taskID.setExecuteOnThread(i%currentMultiTaskThreadPool);
 					taskID.setSubTask(true);
 					taskID.setPartOfGroup(((TaskIDGroup)next));
-					((TaskIDGroup)next).add(taskID);
+					((TaskIDGroup)next).addInnerTask(taskID);
 					enqueueReadyTask(taskID);
 				}
 			}
