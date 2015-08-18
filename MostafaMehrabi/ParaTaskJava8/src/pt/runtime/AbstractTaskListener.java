@@ -21,14 +21,14 @@ package pt.runtime;
 
 public abstract class AbstractTaskListener implements Runnable {
 
-	abstract public void executeSlot(Slot slot);
+	abstract public void executeSlot(TaskSlot slot);
 
 	/**
 	 * Executes the specified slot. If an exception occurs while running the
 	 * slot, this is stored in the slot.
 	 * 
 	 */
-	protected void doExecuteSlot(Slot slot) {
+	protected void doExecuteSlot(TaskSlot slot) {
 		slot.execute();
 	}
 }

@@ -13,5 +13,5 @@ package pt.runtime;
 
 @FunctionalInterface
 public interface StandardFunctor<R, P>{
-	public R exec(P...params);
+	R exec(P...params);
 }

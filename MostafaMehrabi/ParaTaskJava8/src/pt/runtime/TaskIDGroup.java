@@ -219,10 +219,10 @@ public class TaskIDGroup<T> extends TaskID<T> {
 				for (TaskID<?> taskID : innerTasks ) {
 					Throwable exception = taskID.getException();
 					if (exception != null) {
-						Slot handler = getExceptionHandler(exception.getClass());
+						TaskSlot handler = getExceptionHandler(exception.getClass());
 						
 						if (handler != null) {
-							callTaskListener(handler);
+							executeOneTaskSlot(handler);
 							nothingToQueue = false;
 						} else {
 							System.err.println("No asynchronous exception handler found in Task " + taskID.getGlobalID() + " for the following exception: ");
@@ -234,14 +234,14 @@ public class TaskIDGroup<T> extends TaskID<T> {
 			
 			//-- executeSlots
 			if (hasSlots) {
-				executeSlots();
+				executeAllTaskSlots();
 				nothingToQueue = false;
 			} 
 
 			if (nothingToQueue) {
 				setComplete();
 			} else {
-				callTaskListener(new Slot(this::setComplete).setIsSetCompleteSlot(true));
+				executeOneTaskSlot(new TaskSlot(this::setComplete).setIsSetCompleteSlot(true));
 			}
 		}else {
 //			System.out.println("Group size of "+ groupSize+ " not finished. Number of tasks completed so far: "+numCompleted);

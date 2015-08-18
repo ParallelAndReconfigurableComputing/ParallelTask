@@ -34,8 +34,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * 
  * */
 //Add the explanation for 'setComplete' later!
-public class Slot {	
-	final public static Slot quit = new Slot();
+public class TaskSlot {	
+	final public static TaskSlot quit = new TaskSlot();
 
 	private ConcurrentLinkedQueue<Object> interResults = null;
 	private Class<?> interResultType = null;
@@ -52,31 +52,31 @@ public class Slot {
 	private FunctionInterExceptionHandler exceptionHanlder;
 	private FunctorVoidWithTwoArgs<TaskID<?>, Object> interimHandler;
 	
-	private Slot() {
+	private TaskSlot() {
 	}
 	
-	public Slot(Functor<?> handler) {
+	public TaskSlot(Functor<?> handler) {
 		this.handler = handler;
 	}
 	
-	public Slot(FunctorVoid handler) {
+	public TaskSlot(FunctorVoid handler) {
 		this.voidHandler = handler;
 	}
 	
-	public Slot(FunctorVoidWithOneArg<TaskID<?>> handlerWithArg) {
+	public TaskSlot(FunctorVoidWithOneArg<TaskID<?>> handlerWithArg) {
 		this.handlerWithArg = handlerWithArg;
 	}
 	
-	public Slot(FunctionInterExceptionHandler handler) {
+	public TaskSlot(FunctionInterExceptionHandler handler) {
 		this.exceptionHanlder = handler;
 	}
 	
-	public Slot(FunctorVoidWithTwoArgs<TaskID<?>, Object> interimHandler) {
+	public TaskSlot(FunctorVoidWithTwoArgs<TaskID<?>, Object> interimHandler) {
 		this.interimHandler = interimHandler;
 		this.isIntermediateResultSlot = true;
 	}
 	
-	public Slot setIsSetCompleteSlot(boolean setComplete) {
+	public TaskSlot setIsSetCompleteSlot(boolean setComplete) {
 		this.isASetCompleteSlot = setComplete;
 		return this;
 	}	
