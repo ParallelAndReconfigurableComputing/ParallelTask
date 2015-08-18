@@ -67,8 +67,8 @@ public class Task<T> {
 	private int taskCount = 1;
 
 	private Thread registeringThread;
-	private List<Slot> slotsToNotify;
-	private List<Slot> interSlotsToNotify;
+	private List<TaskSlot> slotsToNotify;
+	private List<TaskSlot> interSlotsToNotify;
 	private List<TaskID<?>> dependences;
 
 	// for implicit results/dequeuing
@@ -82,7 +82,7 @@ public class Task<T> {
 	// Maybe using a Map was better,
 	//private List<Class<?>> exceptions = null;//keeps the records of the exceptions occurred 
 	//private List<Slot> exceptionHandlers = null;//keeps the records of the handlers corresponding to those exceptions
-	private Map<Class<?>, Slot> asyncExceptions = new HashMap<Class<?>, Slot>();
+	private Map<Class<?>, TaskSlot> asyncExceptions = new HashMap<Class<?>, TaskSlot>();
 
 	private boolean isInteractive = false;
 
@@ -170,12 +170,12 @@ public class Task<T> {
 	//make sure these steps are automated.. Should it be automated?
 	public void setTaskIDForSlotsAndHandlers(TaskID<T> taskID) {
 		if (slotsToNotify != null) {
-			for (Iterator<Slot> it = slotsToNotify.iterator(); it.hasNext();) {
+			for (Iterator<TaskSlot> it = slotsToNotify.iterator(); it.hasNext();) {
 				it.next().setTaskID(taskID);
 			}
 		}
 		if (interSlotsToNotify != null) {
-			for (Iterator<Slot> it = interSlotsToNotify.iterator(); it.hasNext();) {
+			for (Iterator<TaskSlot> it = interSlotsToNotify.iterator(); it.hasNext();) {
 				it.next().setTaskID(taskID);
 			}
 		}
@@ -183,7 +183,7 @@ public class Task<T> {
 		if (!asyncExceptions.isEmpty()){
 			Set<Class<?>> exceptionClasses = asyncExceptions.keySet();
 			for (Class<?> exception : exceptionClasses){
-				Slot handler = asyncExceptions.get(exception);
+				TaskSlot handler = asyncExceptions.get(exception);
 				handler.setTaskID(taskID);
 			}
 		}
@@ -203,7 +203,7 @@ public class Task<T> {
 		else if (handler == null)
 			throw new IllegalArgumentException("There is no exception handler specified for this exception");
 	
-		asyncExceptions.put(exceptionClass, (Slot)handler);
+		asyncExceptions.put(exceptionClass, (TaskSlot)handler);
 		hasAnySlots = true;
 		return this;
 	}
@@ -211,7 +211,7 @@ public class Task<T> {
 	/**
 	 * Returns the handler associated to the specified exception. 
 	 */
-	public Slot getExceptionHandler(Class<?> occuredException) {
+	public TaskSlot getExceptionHandler(Class<?> occuredException) {
 		
 		if (asyncExceptions.isEmpty())
 			return null;
@@ -227,11 +227,11 @@ public class Task<T> {
 		return hasAnySlots;
 	}
 	
-	public List<Slot> getInterSlotsToNotify() {
+	public List<TaskSlot> getInterSlotsToNotify() {
 		return interSlotsToNotify;
 	}
 
-	public List<Slot> getSlotsToNotify() {
+	public List<TaskSlot> getSlotsToNotify() {
 		return slotsToNotify;
 	}
 
@@ -309,24 +309,24 @@ public class Task<T> {
 
 	public <T2> Task<T> withHandler(Functor<T2> handler) {
 		if (slotsToNotify == null)
-			slotsToNotify = new ArrayList<Slot>();
-		this.slotsToNotify.add(new Slot(handler));
+			slotsToNotify = new ArrayList<TaskSlot>();
+		this.slotsToNotify.add(new TaskSlot(handler));
 		hasAnySlots = true;
 		return this;
 	}
 
 	public Task<T> withHandler(FunctorVoidWithOneArg<TaskID<?>> handler) {
 		if (slotsToNotify == null)
-			slotsToNotify = new ArrayList<Slot>();
-		this.slotsToNotify.add(new Slot(handler));
+			slotsToNotify = new ArrayList<TaskSlot>();
+		this.slotsToNotify.add(new TaskSlot(handler));
 		hasAnySlots = true;
 		return this;
 	}
 	
 	public Task<T> withHandler(FunctorVoid handler) {
 		if (slotsToNotify == null)
-			slotsToNotify = new ArrayList<Slot>();
-		this.slotsToNotify.add(new Slot(handler));
+			slotsToNotify = new ArrayList<TaskSlot>();
+		this.slotsToNotify.add(new TaskSlot(handler));
 		hasAnySlots = true;
 		return this;
 	}
@@ -334,8 +334,8 @@ public class Task<T> {
 	//with interim handlers could be pointless and unnecessary	
 	public Task<T> withInterimHandler(FunctorVoidWithTwoArgs<TaskID<?>, Object> handler) {
 		if (interSlotsToNotify == null)
-			interSlotsToNotify = new ArrayList<Slot>();
-		interSlotsToNotify.add(new Slot(handler));
+			interSlotsToNotify = new ArrayList<TaskSlot>();
+		interSlotsToNotify.add(new TaskSlot(handler));
 		return this;
 	}
 
