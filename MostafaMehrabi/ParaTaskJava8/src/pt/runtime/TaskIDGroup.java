@@ -89,16 +89,30 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	}
 	
 	/**this is only used to create a multi-task (the size is known before adding the inner tasks)*/
-	public TaskIDGroup(int groupSize, Task<T> taskInfo) {
+	TaskIDGroup(int groupSize, Task<T> taskInfo) {
 		super(taskInfo);
 		this.isMultiTask = true;
 		this.groupSize = groupSize;
 		this.reductionOperation = null;
 	}
 	
-	public TaskIDGroup(int groupSize, Task<T> taskInfo, Reduction<T> reduction) {
+	TaskIDGroup(int groupSize, Task<T> taskInfo, boolean isMultiTask){
+		super(taskInfo);
+		this.isMultiTask = isMultiTask;
+		this.groupSize = groupSize;
+		this.reductionOperation = null;
+	}
+	
+	TaskIDGroup(int groupSize, Task<T> taskInfo, Reduction<T> reduction) {
 		super(taskInfo);
 		this.isMultiTask = true;
+		this.groupSize = groupSize;
+		this.reductionOperation = reduction;
+	}
+	
+	TaskIDGroup(int groupSize, Task<T> taskInfo, boolean isMultiTask, Reduction<T> reduction) {
+		super(taskInfo);
+		this.isMultiTask = isMultiTask;
 		this.groupSize = groupSize;
 		this.reductionOperation = reduction;
 	}
@@ -158,8 +172,7 @@ public class TaskIDGroup<T> extends TaskID<T> {
 		
 		// TODO want to make this like the Parallel Iterator's reduction.. i.e. checks initial value, etc.. 
 		
-		if (groupSize == 0)
-			
+		if (groupSize == 0)			
 			return null;
 		
 		reductionLock.lock();
@@ -212,6 +225,7 @@ public class TaskIDGroup<T> extends TaskID<T> {
 			//-- this is the last task in the multi-task group, therefore need to invoke slots/handlers
 			boolean nothingToQueue = true;
 			
+			
 			if (hasUserError()) {
 				
 				// at the moment, the handler uses the group's TaskID rather than the one for the specific task.. needs to be fixed!!
@@ -219,7 +233,7 @@ public class TaskIDGroup<T> extends TaskID<T> {
 				for (TaskID<?> taskID : innerTasks ) {
 					Throwable exception = taskID.getException();
 					if (exception != null) {
-						TaskSlot handler = getExceptionHandler(exception.getClass());
+						Slot handler = getExceptionHandler(exception.getClass());
 						
 						if (handler != null) {
 							executeOneTaskSlot(handler);
@@ -241,7 +255,7 @@ public class TaskIDGroup<T> extends TaskID<T> {
 			if (nothingToQueue) {
 				setComplete();
 			} else {
-				executeOneTaskSlot(new TaskSlot(this::setComplete).setIsSetCompleteSlot(true));
+				executeOneTaskSlot(new Slot(this::setComplete).setIsSetCompleteSlot(true));
 			}
 		}else {
 //			System.out.println("Group size of "+ groupSize+ " not finished. Number of tasks completed so far: "+numCompleted);
@@ -279,13 +293,15 @@ public class TaskIDGroup<T> extends TaskID<T> {
 
 	/**
 	 * Perform a reduction on the results contained in the group.  
-	 * @param red	The reduction to perform on the results of the contained <code>TaskIDs</code>
+	 * @param reductionOperation	The reduction to perform on the results of the contained <code>TaskIDs</code>
 	 * @return		The result after performing the specified reduction. 
 	 * @throws ExecutionException
 	 * @throws InterruptedException
 	 */
-	public T getReturnResult(Reduction<T> red) throws ExecutionException, InterruptedException {
-		return reduce(red);
+	public T getReturnResult(Reduction<T> reductionOperation) throws ExecutionException, InterruptedException {
+		if (reductionOperation == null)
+			throw new UnsupportedOperationException("This is a TaskIDGroup, you must either specify a Reduction or get individual results from the inner TaskID members.");
+		return reduce(reductionOperation);
 	}
 
 	@Override
@@ -319,6 +335,17 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	public void enqueueSlots(boolean onlyEnqueueFinishedSlot) {
 	}
 
+	/**
+	 * This method is called by one of the inner tasks when it incurs an
+	 * exception. Therefore, the group knows that there is an exception 
+	 * within the group that needs handling. 
+	 * 
+	 * @param exception The exception instance that has been encountered by
+	 * an inner task.
+	 * 
+	 * @author Mostafa Mehrabi
+	 * @since  19/8/2015
+	 * */
 	@Override
 	public void setException(Throwable exception) {
 		exceptionList.add(exception);
@@ -368,7 +395,7 @@ public class TaskIDGroup<T> extends TaskID<T> {
 				if (taskID instanceof TaskIDGroup) {
 					TaskIDGroup<?> taskIDGroup = (TaskIDGroup<?>) taskID;
 					//don't we need to force expanding here? We are just receiving boolean variable
-					while (!taskIDGroup.getExpanded()) {
+					while (!taskIDGroup.isExpanded()) {
 						Thread.sleep(1);
 					}
 					taskIDGroup.waitTillFinished();
@@ -421,13 +448,13 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	 * @author Kingsley
 	 * @since 08/05/2013
 	 * 
-	 * After a multi task worker thread expand a mult task, call this method to set a "true" value.
+	 * After a multi task worker thread expand a multi-task, call this method to set a "true" value.
 	 */
 	protected void setExpanded(boolean isExpanded) {
 		this.isExpanded = isExpanded;
 	}
 	
-	protected boolean getExpanded(){
+	protected boolean isExpanded(){
 		return isExpanded;
 	}
 }
