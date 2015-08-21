@@ -7,6 +7,7 @@ import javax.swing.SwingUtilities;
 public class GuiThreadSwing implements GuiThreadProxy {
 
 	private GuiThreadSwing() {
+		this.init();
 	}
 
 	private static GuiThreadSwing instance;

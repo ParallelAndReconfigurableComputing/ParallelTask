@@ -544,7 +544,7 @@ public class TaskID<T> {
 	 * */
 	
 	public void waitTillFinished() throws ExecutionException, InterruptedException {		
-		if (!hasCompleted()) { //if (!(hasCompleted() || hasBeenCancelled()))
+		if (!(hasCompleted() || hasBeenCancelled())) { 
 			//get the thread which is trying to finish the task.
 			Thread thisThread = Thread.currentThread();
 			
@@ -610,7 +610,7 @@ public class TaskID<T> {
 		 * initially, may not be the one registering the task, and yet, that registering thread
 		 * is killed and replaced by another GUI thread! Instead, it is better to use a boolean
 		 * flag for each task to indicate if it has been registered by GUI thread.*/
-		if (registeredThread == ParaTask.getEDT() && GuiThread.isEventDispatchThread())
+		if (registeredThread == ParaTask.getEDT() && GuiThread.currentThreadIsEventDispatchThread())
 			return true;
 		else 
 			return registeredThread == Thread.currentThread();
@@ -679,7 +679,7 @@ public class TaskID<T> {
 					executeAllTaskSlots();
 				
 				//Since slots are executed in the order they are enqueued, then this will be the last slot!
-				executeOneTaskSlot(new TaskSlot(this::setComplete).setIsSetCompleteSlot(true));
+				executeOneTaskSlot(new Slot(this::setComplete).setIsSetCompleteSlot(true));
 				
 			} else {
 				setComplete();
@@ -700,10 +700,10 @@ public class TaskID<T> {
 	 * @author Mostafa Mehrabi
 	 * @since 9/9/2014
 	 * */
-	protected TaskSlot getExceptionHandler(Class<?> occurredException) {
+	protected Slot getExceptionHandler(Class<?> occurredException) {
 		
 		//-- first, try to get handler defined immediately for this task
-		TaskSlot handler = taskInfo.getExceptionHandler(occurredException);
+		Slot handler = taskInfo.getExceptionHandler(occurredException);
 		
 		TaskID<?> currentTask = this;
 		//-- while we have not found a handler, and while there are other enclosing tasks
@@ -717,7 +717,7 @@ public class TaskID<T> {
 	
 	//-- returns the number of handlers that it will execute for this TaskID
 	private boolean executeExceptionHandler() {
-		TaskSlot handler = getExceptionHandler(exception.getClass());
+		Slot handler = getExceptionHandler(exception.getClass());
 		
 		if (handler != null) {
 			executeOneTaskSlot(handler);
@@ -731,7 +731,7 @@ public class TaskID<T> {
 		}
 	}
 	
-	void executeOneTaskSlot(TaskSlot slot) {
+	void executeOneTaskSlot(Slot slot) {
 		ParaTask.getEDTTaskListener().executeSlot(slot);
 	}
 	
@@ -740,8 +740,8 @@ public class TaskID<T> {
 	}
 	
 	protected int executeAllTaskSlots() {
-		List<TaskSlot> slotsToNotify = taskInfo.getInterSlotsToNotify();
-		for (TaskSlot slotToNotify : slotsToNotify)
+		List<Slot> slotsToNotify = taskInfo.getInterSlotsToNotify();
+		for (Slot slotToNotify : slotsToNotify)
 			executeOneTaskSlot(slotToNotify);
 		return taskInfo.getSlotsToNotify().size();
 	}

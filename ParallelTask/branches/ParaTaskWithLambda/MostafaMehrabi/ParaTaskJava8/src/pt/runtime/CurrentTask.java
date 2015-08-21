@@ -209,10 +209,10 @@ public class CurrentTask {
 	 */
 	public static <E> void publishInterim(E interimResult) {
 		TaskID<?> id = CurrentTask.currentTaskID();
-		List<TaskSlot> interSlots = id.getTaskInfo().getInterSlotsToNotify() ;
+		List<Slot> interSlots = id.getTaskInfo().getInterSlotsToNotify() ;
 		if (interSlots == null)
 			return;
-		for (TaskSlot s : interSlots) {
+		for (Slot s : interSlots) {
 			s.addIntermediateResult(interimResult.getClass(), interimResult);
 			id.executeOneTaskSlot(s);
 		}
