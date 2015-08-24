@@ -37,7 +37,7 @@ import java.util.concurrent.LinkedBlockingDeque;
  * */
 public interface Taskpool {
 		/**
-	* The specified task is currently on the waiting queue since it has some dependences. However, all thoses dependences have 
+	* The specified task is currently on the waiting queue since it has some dependences. However, all those dependences have 
 	* now been met and the task is ready to be scheduled for execution. 
 	* @param taskID
 	*/
@@ -87,19 +87,25 @@ public interface Taskpool {
 	*/
 	public TaskID<?> workerTakeNextTask();
 	
-	public boolean executeSynchronously(int cutoff);	
+	public boolean executeSynchronously(int cutOff);	
 	
 	/**
+	 * Used to access local one-off task queues by thread pool at the initialization stage.
 	 * 
 	 * @author : Kingsley
-	 * @since : 02/05/2013 
-	 * Used to access local one-off task queues by thread pool when initialization.
-	 * 
-	 * @since : 18/05/2013 
-	 * Used to access private task queues by thread pool when initialization.
 	 *  
+	 * @since : 18/05/2013 
+	 *
 	 * */
 	public Map<Integer, LinkedBlockingDeque<TaskID<?>>> getLocalOneoffTaskQueues();
 	
+	/**
+	 * Used to access private task queues by thread pool at the initialization stage.
+	 * 
+	 * @author : Kingsley
+	 *  
+	 * @since : 18/05/2013 
+	 *
+	 * */
 	public List<AbstractQueue<TaskID<?>>> getPrivateTaskQueues();
 }
