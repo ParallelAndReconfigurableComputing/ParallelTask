@@ -49,179 +49,96 @@ public abstract class AbstractTaskPool implements Taskpool {
 	};
 	
 	
-	
-	/**
-	 * 
-	 * @author Kingsley
-	 * @since : 25/04/2013
-	 * The number of multi task worker threads and the number of one-off task worker threads 
-	 * 
-	 * @since : 04/05/2013
-	 * These numbers will only be used for initialization since they could be changed during
-	 * the runtime, everytime they are required, re-query the thread pool.
-	 * 
-	 * @since : 18/05/2013
-	 * These numbers should be only accessed during the runtime by calling the thread pool,
-	 * in order to avoid accessing them during the initialization, cancel these two variables. 
-	 * So as to numThreads, cancel it as well.
+	/** 
+	 * Tasks that are not ready to be executed yet, still waiting for dependences to be done! 
 	 * */
-	
-	/* The number of worker threads */
-	//protected int numThreads = -1;
-	//protected int numMultiTaskThreads = -1;
-	//protected int numOneoffTaskThreads = -1;
-	
-	
-	/* The pool of worker threads */
-	/**
-	 * 
-	 * @author : Kingsley
-	 * @since : 25/04/2013
-	 * Task pool does not need to know anything about worker, a thread pool class
-	 * is used to manage the work threads.
-	 * 
-	 * */
-	//protected WorkerThread[] workers;
-	
-	/* Tasks that are not ready to be executed yet, still waiting for dependences to be met */
 	protected ConcurrentHashMap<TaskID<?>, Object> waitingTasks = new ConcurrentHashMap<TaskID<?>, Object>();
 	
-	/* Ready tasks, in a shared global queue (for work-sharing implementations) */
 	/**
-	 * 
-	 * @author Kingsley
-	 * @since 25/04/2013
-	 * Separate Multi Task and One-off Task. Create two different global queues
-	 * 
+	 * A thread-safe queue for global multi-tasks that are ready to be executed.
 	 * */
-	//protected PriorityBlockingQueue<TaskID<?>> globalTaskqueue = null;
 	protected PriorityBlockingQueue<TaskID<?>> globalMultiTaskqueue = null;
+	
+	/**
+	 * A thread-safe queue for global one-off tasks that are ready to be executed.
+	 * */
 	protected PriorityBlockingQueue<TaskID<?>> globalOne0ffTaskqueue = null;
 	
+	/**
+	 * A queue for ready-to-execute multi-tasks in a mixed-scheduling implementation.
+	 */
+	protected FifoLifoQueue<TaskID<?>> mixedMultiTaskqueue = null;
 	
 	/**
-	 * 
-	 * @author : Kingsley
-	 * @since : 25/04/2013
-	 * Separate Multi Task and One-off Task. Create two different mixed queues
-	 * 
-	 * */
-	/* Ready tasks (for mixed-scheduling implementation) */
-	//protected FifoLifoQueue<TaskID<?>> mixedQueue = null;
-	protected FifoLifoQueue<TaskID<?>> mixedMultiTaskqueue = null;
+	 * A queue for ready-to-execute one-off tasks in a mixed-scheduling implementation.  
+	 */
 	protected FifoLifoQueue<TaskID<?>> mixedOneoffTaskqueue = null;
 	
-	/* Ready tasks, in private queues (stores multi-tasks) - no stealing occurs within these queues */
 	/**
-	 * 
-	 * @author : Kingsley
-	 * @since : 25/04/2013
-	 * Since new worker threads could be added into the thread pool, or old worker threads could
-	 * be removed from the thread pool, the data structure of array could not be used anymore(array 
-	 * has to be initialized with a certain length, and can not be changed). Instead a dynamic 
-	 * data structure should be used here.
-	 * 
-	 * 
-	 * */
-	//protected AbstractQueue<TaskID<?>>[] privateQueues;
+	 * A list of Abstract Queues that hold the private ready-to-execute tasks of worker threads. That is, for each worker
+	 * thread, an Abstract Queue is added to the list. No stealing occurs within these queues. 
+	 * @see  AbstractQueue
+	 */
 	protected List<AbstractQueue<TaskID<?>>> privateQueues;
 	
-	/* Ready tasks, for each worker thread. If empty, workers steal from another worker within these queues (for work-stealing implementations) */ 
 	/**
-	 * 
-	 * @author : Kingsley
-	 * @since : 25/04/2013
-	 * Since new worker threads could be added into the thread pool, or old worker threads could
-	 * be removed from the thread pool, the data structure of array could not be used anymore(array 
-	 * has to be initialized with a certain length, and can not be changed). Instead a dynamic 
-	 * data structure should be used here.
-	 * 
-	 * Generic Type will be erased at the compile time, so LinkedBlockingDeque has to be used rather
-	 * than the interface Deque.
-	 * 
-	 * Separate Multi Task and One-off Task. Create two different global queues
-	 * 
-	 * @since : 02/05/2013
-	 * One-off task threads do not need local thread ID, which means a List can not be used to group
-	 * local one-off task queues here. HashMap will be used here as a replacement.
-	 * 
-	 * @since : 04/05/2013
-	 * There are no local multi task queues any more.
-	 * 
-	 * */	
-	//protected Deque<TaskID<?>>[] localQueues = null;		 
-	//protected List<LinkedBlockingDeque<TaskID<?>>> localQueues = null;
-	//protected List<LinkedBlockingDeque<TaskID<?>>> localMultiTaskQueues = null;
-	//protected List<LinkedBlockingDeque<TaskID<?>>> localOneoffTaskQueues = null;
+	 * A Map that associates the ID of a worker thread to a thread-safe queue that holds its 
+	 * local ready-to-execute one-off tasks. Once the local one-off task queue of a worker 
+	 * thread is empty, that worker thread can steal tasks from other thread's local one-off
+	 * task queues. 
+	 */
 	protected Map<Integer, LinkedBlockingDeque<TaskID<?>>> localOneoffTaskQueues = null;
 	
 	
 	protected ThreadLocal<Integer> lastStolenFrom = null;	
 	protected static final int NOT_STOLEN = -1;			
 	
-	/* Stores the current count of active interactive tasks. This is private, 
-	 * there no need for sub-classes to refine how interactive tasks are handled */
+	/** Stores the current count of active interactive tasks. This is private, 
+	 * there is no need for sub-classes to refine how interactive tasks are handled */
 	private AtomicInteger interactiveTaskCount = new AtomicInteger(0);
 	
 	protected AbstractTaskPool() {
-		/**
-		 * 
-		 * @author : Kingsley
-		 * @since : 25/04/2013
-		 * 
-		 * Enquire threads number from thread pool rather than from ParaTask
-		 * 
-		 * 
-		 *  @since : 18/05/2013
-		 * These numbers should be only accessed during the runtime by calling the thread pool,
-		 * It does not make sense to get those values before the completion of initialization,
-		 * */
-		//numThreads = ParaTask.getThreadPoolSize();
-		
-		//numMultiTaskThreads = ThreadPool.getMultiTaskThreadPoolSize();
-		//numOneoffTaskThreads = ThreadPool.getOneoffTaskThreadPoolSize();
-		//numThreads = ThreadPool.getPoolSize();
 		initialise();
 	}
 	
-	/*
-	 * (schedule-specific) 
-	 * The schedule-specific enqueuing of a ready task is defined here (not in the public enqueue() and enqueueMulti() methods, 
-	 * since those are generic and will eventually use this method). 
-	 * This method will not be called for interactive tasks, since the enqueue(), etc will check this beforehand.
-	 * 
-	 * This method is also not necessarily executed by the actual original enqueueing thread (since this might be called later since
-	 * the task was waiting for other tasks to complete).
+	
+	/**
+	 * This method is in charge of schedule-specific enqueueing of a ready task (public <code>enqueue()</code> and <code>enqueueMulti()</code>
+	 * methods, are generic and will eventually use this method). This method will not be called for interactive tasks. This method is also not 
+	 * necessarily executed by the actual original enqueueing thread (since it might be called later, as a task could wait for other tasks to complete).
 	 *  
 	 */
 	protected abstract void enqueueReadyTask(TaskID<?> taskID/* , boolean wasWaiting  */); // this last parameter could be used to fine-tune performance
 	
-	/*
+	/**
 	 * (schedule-specific) 
 	 * The worker thread polls for a task to execute. If there currently isn't one, then it returns null.
 	 */
 	public abstract TaskID<?> workerPollNextTask();	
 	
-	/*
+	/**
 	 * (schedule-specific)
-	 * Performs initialisation specific to the schedule. 
+	 * Performs initialization depending on the scheduling policy. 
 	 */
 	protected abstract void initialise();
 	
-	/*
+	/**
 	 * Creates a TaskID for the specified task (whose details are contained in the TaskInfo). It then returns the TaskID after 
 	 * the task has been queued. This method is generic and not schedule-specific. 
+	 * <br>
+	 * During the process of enqueueing a task, the framework checks if the enqueueing thread is a task-thread (i.e., the thread
+	 * is currently executing another task; therefore this task is being enqueued from within another task). If the enqueueing 
+	 * thread is a task-thread, then its corresponding task is recorded as the enclosing task. 
 	 */
 	public <T> TaskID<T> enqueue(Task<T> taskinfo) {
-		//this function could be implemented tidier
 		List<TaskID<?>> allDependences = null;
 		if (taskinfo.getDependences() != null)
 			allDependences = ParaTask.allTasksInList(taskinfo.getDependences());
 		
 		TaskID<T> taskID = new TaskID<>(taskinfo);
 		
-		//-- determine if this task is being enqueued from within another task.. if so, set the enclosing task (needed to 
-		//--		propogate exceptions to outer tasks (in case they have a suitable handler))
+		//determine if this task is being enqueued from within another task. If so, set the enclosing task (needed to 
+		//propagate exceptions to outer tasks (in case they have a suitable handler)).
 		Thread rt = taskinfo.setRegisteringThread();
 		
 		if (rt instanceof TaskThread)
@@ -230,13 +147,6 @@ public abstract class AbstractTaskPool implements Taskpool {
 		if (taskinfo.hasAnySlots())
 			taskinfo.setTaskIDForSlotsAndHandlers(taskID);
 		
-		/*
-		// TODO add pipeline support
-		if (taskID.isPipeline()) {
-			//-- pipeline threads don't need to wait for dependencies
-			startPipelineTask(taskID);
-		} else */
-		//this part, with the if statement at the beginning of this method
 		if (allDependences == null) {
 			if (taskID.isInteractive())
 				startInteractiveTask(taskID);
@@ -249,12 +159,13 @@ public abstract class AbstractTaskPool implements Taskpool {
 		return taskID;
 	}	
 	
-	public TaskIDGroup enqueueMulti(Task taskinfo, int count){
+	@Override
+	public <T> TaskIDGroup<T> enqueueMulti(Task<T> taskinfo, int count){
 		
 		if (count == Task.STAR)
 			count = ThreadPool.getMultiTaskThreadPoolSize();
 		
-		TaskIDGroup group = new TaskIDGroup(count, taskinfo);
+		TaskIDGroup<T> group = new TaskIDGroup<T>(count, taskinfo);
 		group.setCount(count);
 		
 		List<TaskID<?>> allDependences = null;
@@ -280,18 +191,16 @@ public abstract class AbstractTaskPool implements Taskpool {
 		return group;
 	}
 	
-	/*
-	 * The worker thread blocks until it gets a task to execute.   
-	 * 
-	 * This method only returns when it finds an appropriate task for the calling worker (therefore appears as blocking).
-	 * 
-	 * If keeps polling for a task (this polling is schedule-specific). If it did not find anything from the poll, then it 
-	 * sleeps before trying again, and again.
+	/**
+	 * The worker thread blocks until it gets a task to execute. This method only returns when it finds an appropriate task 
+	 * for the calling worker (therefore appears as blocking). If keeps polling for a task (this polling is schedule-specific). 
+	 * If it does not find anything from the poll, then it sleeps before trying again.
 	 * 
 	 */
-	public TaskID workerTakeNextTask() {
+	@Override
+	public TaskID<?> workerTakeNextTask() {
 		while (true) {
-			TaskID next = workerPollNextTask();
+			TaskID<?> next = workerPollNextTask();
 			
 			if (next != null) 
 				return next;
@@ -304,45 +213,45 @@ public abstract class AbstractTaskPool implements Taskpool {
 		}
 	}
 	
-	/*
+	/**
 	 * Returns the count of currently active interactive tasks. This is usually to know how many threads there are.
 	 */
 	public int getActiveInteractiveTaskCount() {
 		return interactiveTaskCount.get();
 	}
 	
-	/*
-	 * Used to decrement the count of interactive tasks
+	/**
+	 * Used to decrement the count of interactive tasks, given that the taskID belongs to an interactive task.
 	 */
-	public void interactiveTaskCompleted(TaskID<?> taskID) {
-		//we need a mechanism to check:
-		//if (taskID != null && taskID.isInteractive())
-		interactiveTaskCount.decrementAndGet();
+	public boolean interactiveTaskCompleted(TaskID<?> taskID) {
+		if (taskID != null && taskID.isInteractive()){
+			interactiveTaskCount.decrementAndGet();
+			return true;
+		}
+		return false;
 	}
-	
-	protected void startInteractiveTask(TaskID taskID) {
+	 /**
+	  * Increases the number of interactive tasks by one, and assigns the interactive task to a
+	  * new interactive thread, and starts the thread. 
+	  * @param taskID The TaskID<?> object that represents the interactive task.
+	  */
+	protected void startInteractiveTask(TaskID<?> taskID) {
+		if (!taskID.isInteractive() || taskID == null)
+			return;
 		InteractiveThread it = new InteractiveThread(this, taskID);
 		interactiveTaskCount.incrementAndGet();
 		it.start();
 	}
 	
-	/*
-	// TODO add pipeline support
-	protected void startPipelineTask(TaskID taskID) {
-		PipelineThread pt = new PipelineThread(this, taskID);
-		taskID.setPipelineThread(pt);
-		pt.start();
-	}
-	*/
-	
-	/*
+	/**
+	 * Adds a task to the queue of waiting-tasks, which are waiting on their dependencies to finish.  
 	 * There is just one waiting queue, therefore adding to the waiting queue is not schedule-specific.
 	 */
 	protected void enqueueWaitingTask(TaskID<?> taskID, List<TaskID<?>> allDependences) {
 
 		if (allDependences.size() > 0) {
 			waitingTasks.put(taskID, "");
-			//are we not able to get these dependences from the task info?
+			//taskID.getTaskInfo().getDependences();
 			taskID.setRemainingDependences(allDependences);
 			
 			for (int d = 0; d < allDependences.size(); d++) {
@@ -354,14 +263,11 @@ public abstract class AbstractTaskPool implements Taskpool {
 	}
 	
 
-	/*
+	/**
 	 * Removes the specified task off the waiting queue and onto the ready-queue. 
 	 */
 	public void nowReady(TaskID<?> waiter) {
-		/*
-		 * remove 'waiter' from the waiting collection, and put it onto the ready queue
-		 * ensures that it is only enqueued once (so that enqueuing it a second time will fail)
-		 * */
+		//ensures that it is only enqueued once (so that enqueuing it a second time will fail)
 		Object obj = waitingTasks.remove(waiter);
 		if (obj != null) {
 			if (waiter.isInteractive())
@@ -371,19 +277,11 @@ public abstract class AbstractTaskPool implements Taskpool {
 		}
 	}
 	
-	/*
-	 * This initialisation creates the worker threads, but none of the queues. Should be called from the 
-	 * initialise() method of task pools that implement this class. 
+	/**
+	 * Creates the worker threads, but none of the queues. Must be called from the 
+	 * initialize() method of the task pools that extend {@link #AbstractTaskPool()}. 
 	 */
 	 
-	 /**
-	  * 
-	  * @author : Kingsley
-	  * @since : 25/04/2013
-	  * Task pool does not need to know anything about worker, a thread pool class
-	  * is used to manage the work threads.
-	  * 
-	  * */
 	protected void initialiseWorkerThreads() {
 		ThreadPool.initialize(this);
 	}
@@ -392,16 +290,6 @@ public abstract class AbstractTaskPool implements Taskpool {
 		return false;
 	}
 	
-	/**
-	 * 
-	 * @author : Kingsley
-	 * @since : 02/05/2013 
-	 * Used to access local one-off task queues by thread pool when initialization.
-	 * 
-	 * @since : 18/05/2013 
-	 * Used to access private task queues by thread pool when initialization.
-	 *  
-	 * */
 	public Map<Integer, LinkedBlockingDeque<TaskID<?>>> getLocalOneoffTaskQueues() {
 		return localOneoffTaskQueues;
 	}
