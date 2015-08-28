@@ -52,7 +52,7 @@ import java.util.Set;
  * @author Mostafa Mehrabi
  * @since  7/9/2014
  */
-public class Task<T> {
+class TaskInfo<T> {
 	static {
 		ParaTask.init();
 	}
@@ -76,6 +76,7 @@ public class Task<T> {
 	private int[] queueArgIndexes = new int[] {};
 
 	private boolean hasAnySlots = false;
+	private boolean registeredByGuiThread = false;
 
 	// -- Should always ensure that the registered exceptions are kept lined up
 	// with the handlers
@@ -97,15 +98,15 @@ public class Task<T> {
 	private boolean isSubTask = false;
 
 	//These constructors can at least automate the process of creating TaskID.
-	private Task(Functor<?> lambda) {
+	private TaskInfo(Functor<?> lambda) {
 		this.lambda = lambda;
 	}
 
-	private Task(FunctorVoid lambda) {
+	private TaskInfo(FunctorVoid lambda) {
 		this.lambdaVoid = lambda;
 	}
 	
-	private <R, P> Task(StandardFunctor<R, P> standardFunctor){
+	private <R, P> TaskInfo(StandardFunctor<R, P> standardFunctor){
 		this.standardFunctor = standardFunctor;
 	}
 
@@ -116,12 +117,16 @@ public class Task<T> {
 	 * 
 	 */
 	//some methods are returning the current instance of Task<T> which seems to be pointless
-	private Task<T> setCount(int count) {
+	private TaskInfo<T> setCount(int count) {
 		if(count < 0) {
 			throw new IllegalArgumentException("the value for task count must be greater than 0 or equal to STAR (0)");
 		}
 		this.taskCount = count;
 		return this;
+	}
+	
+	boolean hasBeenRegisteredByGuiThread(){
+		return this.registeredByGuiThread;
 	}
 
 	public int[] getTaskIdArgIndexes() {
@@ -149,6 +154,8 @@ public class Task<T> {
 	 * @param Thread The registering thread that is returned by this method.
 	 * */
 	public Thread getRegisteringThread() {
+		if (hasBeenRegisteredByGuiThread())
+			return GuiThread.getEventDispatchThread();
 		if (registeringThread.isAlive())
 			return registeringThread;
 		return null;
@@ -157,8 +164,10 @@ public class Task<T> {
 	//Why do we have to check if the GUI thread is the EDT?
 	public Thread setRegisteringThread() {
 		try {
-			if (GuiThread.currentThreadIsEventDispatchThread())//if the current thread is an event dispatch thread
+			if (GuiThread.currentThreadIsEventDispatchThread()){//if the current thread is an event dispatch thread
 				registeringThread = ParaTask.getEDT();
+				this.registeredByGuiThread = true;
+			}
 			else
 				registeringThread = Thread.currentThread();
 		} catch (Exception e) {
@@ -196,7 +205,7 @@ public class Task<T> {
 	 * @param exceptionClass
 	 * @param handler
 	 */
-	public Task<T> asyncCatch(Class<?> exceptionClass, FunctionInterExceptionHandler handler) {
+	public TaskInfo<T> asyncCatch(Class<?> exceptionClass, FunctionInterExceptionHandler handler) {
 		
 		if (exceptionClass == null)
 			throw new IllegalArgumentException("There is no exception class specified!");
@@ -243,7 +252,7 @@ public class Task<T> {
 		return isInteractive;
 	}
 
-	private Task<T> setInteractive(boolean isInteractive) {
+	private TaskInfo<T> setInteractive(boolean isInteractive) {
 		this.isInteractive = isInteractive;
 		return this;
 	}
@@ -269,45 +278,45 @@ public class Task<T> {
 	}
 
 	//returns a functor as a task
-	public static <T> Task<T> asTask(Functor<T> fun) {
-		return new Task<T>(fun);
+	public static <T> TaskInfo<T> asTask(Functor<T> fun) {
+		return new TaskInfo<T>(fun);
 	}
 	
-	public static Task<Void> asTask(FunctorVoid fun) {
-		return new Task<Void>(fun);
+	public static TaskInfo<Void> asTask(FunctorVoid fun) {
+		return new TaskInfo<Void>(fun);
 	}
 	
-	public static <R, P, T> Task<T> asTask(StandardFunctor<R, P> standardFunctor){
-		return new Task<T>(standardFunctor);
+	public static <R, P, T> TaskInfo<T> asTask(StandardFunctor<R, P> standardFunctor){
+		return new TaskInfo<T>(standardFunctor);
 	}
 	
 	//Once the final policy for which "Functor" to use is decide, make sure that 
 	//asTask, asMultiple and asIOTask methods are modified accordingly.
-	public static <T> Task<T> asMultiTask(Functor<T> fun, int count) {
-		return new Task<T>(fun).setCount(count);
+	public static <T> TaskInfo<T> asMultiTask(Functor<T> fun, int count) {
+		return new TaskInfo<T>(fun).setCount(count);
 	}
 	
-	public static <T> Task<T> asMultiTask(Functor<T> fun) {
-		return new Task<T>(fun).setCount(STAR);
+	public static <T> TaskInfo<T> asMultiTask(Functor<T> fun) {
+		return new TaskInfo<T>(fun).setCount(STAR);
 	}
 	
-	public static Task<Void> asMultiTask(FunctorVoid fun, int count) {
-		return new Task<Void>(fun).setCount(count);
+	public static TaskInfo<Void> asMultiTask(FunctorVoid fun, int count) {
+		return new TaskInfo<Void>(fun).setCount(count);
 	}
 	
-	public static Task<Void> asMultiTask(FunctorVoid fun) {
-		return new Task<Void>(fun).setCount(STAR);
+	public static TaskInfo<Void> asMultiTask(FunctorVoid fun) {
+		return new TaskInfo<Void>(fun).setCount(STAR);
 	}
 
-	public static <T> Task<T> asIOTask(Functor<T> fun) {
-		return new Task<T>(fun).setInteractive(true);
+	public static <T> TaskInfo<T> asIOTask(Functor<T> fun) {
+		return new TaskInfo<T>(fun).setInteractive(true);
 	}
 
-	public static Task<Void> asIOTask(FunctorVoid fun) {
-		return new Task<Void>(fun).setInteractive(true);
+	public static TaskInfo<Void> asIOTask(FunctorVoid fun) {
+		return new TaskInfo<Void>(fun).setInteractive(true);
 	}
 
-	public <T2> Task<T> withHandler(Functor<T2> handler) {
+	public <T2> TaskInfo<T> withHandler(Functor<T2> handler) {
 		if (slotsToNotify == null)
 			slotsToNotify = new ArrayList<Slot>();
 		this.slotsToNotify.add(new Slot(handler));
@@ -315,7 +324,7 @@ public class Task<T> {
 		return this;
 	}
 
-	public Task<T> withHandler(FunctorVoidWithOneArg<TaskID<?>> handler) {
+	public TaskInfo<T> withHandler(FunctorVoidWithOneArg<TaskID<?>> handler) {
 		if (slotsToNotify == null)
 			slotsToNotify = new ArrayList<Slot>();
 		this.slotsToNotify.add(new Slot(handler));
@@ -323,7 +332,7 @@ public class Task<T> {
 		return this;
 	}
 	
-	public Task<T> withHandler(FunctorVoid handler) {
+	public TaskInfo<T> withHandler(FunctorVoid handler) {
 		if (slotsToNotify == null)
 			slotsToNotify = new ArrayList<Slot>();
 		this.slotsToNotify.add(new Slot(handler));
@@ -332,14 +341,14 @@ public class Task<T> {
 	}
 	
 	//with interim handlers could be pointless and unnecessary	
-	public Task<T> withInterimHandler(FunctorVoidWithTwoArgs<TaskID<?>, Object> handler) {
+	public TaskInfo<T> withInterimHandler(FunctorVoidWithTwoArgs<TaskID<?>, Object> handler) {
 		if (interSlotsToNotify == null)
 			interSlotsToNotify = new ArrayList<Slot>();
 		interSlotsToNotify.add(new Slot(handler));
 		return this;
 	}
 
-	public Task<T> dependsOn(TaskID<?>... taskIDs) {
+	public TaskInfo<T> dependsOn(TaskID<?>... taskIDs) {
 		this.dependences = Arrays.asList(taskIDs);
 		return this;
 	}

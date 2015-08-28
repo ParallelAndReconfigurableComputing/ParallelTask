@@ -57,22 +57,22 @@ public abstract class AbstractTaskPool implements Taskpool {
 	/**
 	 * A thread-safe queue for global multi-tasks that are ready to be executed.
 	 * */
-	protected PriorityBlockingQueue<TaskID<?>> globalMultiTaskqueue = null;
+	protected PriorityBlockingQueue<TaskID<?>> globalMultiTaskQueue = null;
 	
 	/**
 	 * A thread-safe queue for global one-off tasks that are ready to be executed.
 	 * */
-	protected PriorityBlockingQueue<TaskID<?>> globalOne0ffTaskqueue = null;
+	protected PriorityBlockingQueue<TaskID<?>> globalOne0ffTaskQueue = null;
 	
 	/**
 	 * A queue for ready-to-execute multi-tasks in a mixed-scheduling implementation.
 	 */
-	protected FifoLifoQueue<TaskID<?>> mixedMultiTaskqueue = null;
+	protected FifoLifoQueue<TaskID<?>> mixedMultiTaskQueue = null;
 	
 	/**
 	 * A queue for ready-to-execute one-off tasks in a mixed-scheduling implementation.  
 	 */
-	protected FifoLifoQueue<TaskID<?>> mixedOneoffTaskqueue = null;
+	protected FifoLifoQueue<TaskID<?>> mixedOneoffTaskQueue = null;
 	
 	/**
 	 * A list of Abstract Queues that hold the private ready-to-execute tasks of worker threads. That is, for each worker
@@ -89,7 +89,9 @@ public abstract class AbstractTaskPool implements Taskpool {
 	 */
 	protected Map<Integer, LinkedBlockingDeque<TaskID<?>>> localOneoffTaskQueues = null;
 	
-	
+	/**
+	 * Represents the thread for which the task was stolen the last time.
+	 */
 	protected ThreadLocal<Integer> lastStolenFrom = null;	
 	protected static final int NOT_STOLEN = -1;			
 	
@@ -108,11 +110,11 @@ public abstract class AbstractTaskPool implements Taskpool {
 	 * necessarily executed by the actual original enqueueing thread (since it might be called later, as a task could wait for other tasks to complete).
 	 *  
 	 */
-	protected abstract void enqueueReadyTask(TaskID<?> taskID/* , boolean wasWaiting  */); // this last parameter could be used to fine-tune performance
+	protected abstract void enqueueReadyTask(TaskID<?> taskID); 
 	
 	/**
 	 * (schedule-specific) 
-	 * The worker thread polls for a task to execute. If there currently isn't one, then it returns null.
+	 * The worker thread pools for a task to execute. If there currently isn't one, then it returns null.
 	 */
 	public abstract TaskID<?> workerPollNextTask();	
 	
@@ -130,22 +132,22 @@ public abstract class AbstractTaskPool implements Taskpool {
 	 * is currently executing another task; therefore this task is being enqueued from within another task). If the enqueueing 
 	 * thread is a task-thread, then its corresponding task is recorded as the enclosing task. 
 	 */
-	public <T> TaskID<T> enqueue(Task<T> taskinfo) {
+	public <T> TaskID<T> enqueue(TaskInfo<T> taskInfo) {
 		List<TaskID<?>> allDependences = null;
-		if (taskinfo.getDependences() != null)
-			allDependences = ParaTask.allTasksInList(taskinfo.getDependences());
+		if (taskInfo.getDependences() != null)
+			allDependences = ParaTask.allTasksInList(taskInfo.getDependences());
 		
-		TaskID<T> taskID = new TaskID<>(taskinfo);
+		TaskID<T> taskID = new TaskID<>(taskInfo);
 		
 		//determine if this task is being enqueued from within another task. If so, set the enclosing task (needed to 
 		//propagate exceptions to outer tasks (in case they have a suitable handler)).
-		Thread rt = taskinfo.setRegisteringThread();
+		Thread rt = taskInfo.setRegisteringThread();
 		
 		if (rt instanceof TaskThread)
 			taskID.setEnclosingTask(((TaskThread)rt).currentExecutingTask());
 		
-		if (taskinfo.hasAnySlots())
-			taskinfo.setTaskIDForSlotsAndHandlers(taskID);
+		if (taskInfo.hasAnySlots())
+			taskInfo.setTaskIDForSlotsAndHandlers(taskID);
 		
 		if (allDependences == null) {
 			if (taskID.isInteractive())
@@ -160,25 +162,25 @@ public abstract class AbstractTaskPool implements Taskpool {
 	}	
 	
 	@Override
-	public <T> TaskIDGroup<T> enqueueMulti(Task<T> taskinfo, int count){
+	public <T> TaskIDGroup<T> enqueueMulti(TaskInfo<T> taskInfo, int count){
 		
-		if (count == Task.STAR)
+		if (count == TaskInfo.STAR)
 			count = ThreadPool.getMultiTaskThreadPoolSize();
 		
-		TaskIDGroup<T> group = new TaskIDGroup<T>(count, taskinfo);
+		TaskIDGroup<T> group = new TaskIDGroup<T>(count, taskInfo);
 		group.setCount(count);
 		
 		List<TaskID<?>> allDependences = null;
-		if (taskinfo.getDependences() != null)
-			allDependences = ParaTask.allTasksInList(taskinfo.getDependences());
+		if (taskInfo.getDependences() != null)
+			allDependences = ParaTask.allTasksInList(taskInfo.getDependences());
 			
-		Thread rt = taskinfo.setRegisteringThread();
+		Thread rt = taskInfo.setRegisteringThread();
 		
 		if (rt instanceof TaskThread)
 			group.setEnclosingTask(((TaskThread)rt).currentExecutingTask());
 		
-		if (taskinfo.hasAnySlots())
-			taskinfo.setTaskIDForSlotsAndHandlers(group);
+		if (taskInfo.hasAnySlots())
+			taskInfo.setTaskIDForSlotsAndHandlers(group);
 		
 		if (allDependences == null)
 			if (group.isInteractive()) 
@@ -264,7 +266,7 @@ public abstract class AbstractTaskPool implements Taskpool {
 	
 
 	/**
-	 * Removes the specified task off the waiting queue and onto the ready-queue. 
+	 * Removes the specified task off the waiting queue and moves it onto the ready-queue. 
 	 */
 	public void nowReady(TaskID<?> waiter) {
 		//ensures that it is only enqueued once (so that enqueuing it a second time will fail)

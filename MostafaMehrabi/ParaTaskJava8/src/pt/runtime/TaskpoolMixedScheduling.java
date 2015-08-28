@@ -61,12 +61,12 @@ public class TaskpoolMixedScheduling extends AbstractTaskPool {
 		
 		//if the task can be executed on arbitrary threads, and is a group task
 		else if (taskID instanceof TaskIDGroup){
-			mixedMultiTaskqueue.addGlobal(taskID);
+			mixedMultiTaskQueue.addGlobal(taskID);
 		}
 		
 		//if the task can be executed on arbitrary threads, and is a one off task
 		else{
-			mixedOneoffTaskqueue.addGlobal(taskID);
+			mixedOneoffTaskQueue.addGlobal(taskID);
 		}
 		
 	}
@@ -122,12 +122,12 @@ public class TaskpoolMixedScheduling extends AbstractTaskPool {
 			
 			// If the private queue of this multi-task does not have an executable task...
 			// get task from mixed-schedule queue.. if no suitable task found, return null
-			while ((next = mixedMultiTaskqueue.poll()) != null) {
+			while ((next = mixedMultiTaskQueue.poll()) != null) {
 				
 				// expand multi task
 				int count = next.getCount();
 				int currentMultiTaskThreadPool = ThreadPool.getMultiTaskThreadPoolSize();
-				Task taskinfo = next.getTaskInfo();
+				TaskInfo taskinfo = next.getTaskInfo();
 
 				// indicate this is a sub task
 				taskinfo.setSubTask(true);
@@ -150,7 +150,7 @@ public class TaskpoolMixedScheduling extends AbstractTaskPool {
 		}else {
 			// If the worker thread is not a multi-task thread look into the one off mixed queue...
 			// get task from mixed-schedule queue.. if no suitable task found, return null
-			while ((next = mixedOneoffTaskqueue.poll()) != null) {
+			while ((next = mixedOneoffTaskQueue.poll()) != null) {
 				int savedFor = next.getExecuteOnThread();
 				
 				// check if this task is saved for another worker thread
@@ -180,12 +180,12 @@ public class TaskpoolMixedScheduling extends AbstractTaskPool {
 	protected void initialise() {
 	
 		//For multi task
-		mixedMultiTaskqueue = new FifoLifoQueue<TaskID<?>>();
+		mixedMultiTaskQueue = new FifoLifoQueue<TaskID<?>>();
 		
 		privateQueues = new ArrayList<AbstractQueue<TaskID<?>>>();
 		
 		//For one-off task
-		mixedOneoffTaskqueue = new FifoLifoQueue<TaskID<?>>();
+		mixedOneoffTaskQueue = new FifoLifoQueue<TaskID<?>>();
 		
 		initialiseWorkerThreads();
 	}

@@ -120,7 +120,7 @@ public abstract class TaskThread extends Thread {
 	protected boolean executeTask(TaskID task){
 		currentTaskStack.push(task);
 		
-		Task info = task.getTaskInfo();
+		TaskInfo info = task.getTaskInfo();
 		Object result = null;
 		
 		try {
