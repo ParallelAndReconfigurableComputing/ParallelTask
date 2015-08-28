@@ -108,7 +108,7 @@ public class TaskID<T> {
 	
 	private int executeOnThread = ParaTaskHelper.ANY_THREAD_TASK;
 	
-	protected Task<T> taskInfo = null;
+	protected TaskInfo<T> taskInfo = null;
 	private T returnResult = null;
 	
 	private int progress = 0;
@@ -196,7 +196,7 @@ public class TaskID<T> {
 	 * This constructor receives information about, whether a task is interactive
 	 * as well as it sets the count down latch to one. 
 	 * */
-	public TaskID(Task<T> taskInfo) {
+	public TaskID(TaskInfo<T> taskInfo) {
 		this();		
 		globalID = nextGlobalID.incrementAndGet();
 		completedLatchForRegisteringThread = new CountDownLatch(1);
@@ -308,7 +308,7 @@ public class TaskID<T> {
 		this.relativeID = relativeID;
 	}
 	
-	Task<T> getTaskInfo() {
+	TaskInfo<T> getTaskInfo() {
 		return taskInfo;
 	}
 	
@@ -548,7 +548,7 @@ public class TaskID<T> {
 			//get the thread which is trying to finish the task.
 			Thread thisThread = Thread.currentThread();
 			
-			// Only WorkerThreads should start a new TaskID.. all other threads belong to the user, or 
+			// Only WorkerThreads can execute a new TaskID.. all other threads belong to the user, or 
 			// are InteractiveThreads (therefore it is OK for them to block) 
 			if (thisThread instanceof WorkerThread) {
 				WorkerThread thisWorkerThread = (WorkerThread) thisThread;
@@ -566,7 +566,8 @@ public class TaskID<T> {
 						//if the worker thread is cancelled, then put it to sleep
 						//until it is killed by JVM or Dalvik
 						try {
-							Thread.sleep(1);
+							//200 mili-seconds of sleeping for the thread before it polls again
+							Thread.sleep(200);
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 						}
@@ -610,7 +611,7 @@ public class TaskID<T> {
 		 * initially, may not be the one registering the task, and yet, that registering thread
 		 * is killed and replaced by another GUI thread! Instead, it is better to use a boolean
 		 * flag for each task to indicate if it has been registered by GUI thread.*/
-		if (registeredThread == ParaTask.getEDT() && GuiThread.currentThreadIsEventDispatchThread())
+		if (taskInfo.hasBeenRegisteredByGuiThread() && GuiThread.currentThreadIsEventDispatchThread())
 			return true;
 		else 
 			return registeredThread == Thread.currentThread();
@@ -679,17 +680,14 @@ public class TaskID<T> {
 					executeAllTaskSlots();
 				
 				//Since slots are executed in the order they are enqueued, then this will be the last slot!
+				//We want to ensure that 'setComplete' is called after all slots are executed, so we enqueue
+				//the method as another slot at the end.
 				executeOneTaskSlot(new Slot(this::setComplete).setIsSetCompleteSlot(true));
 				
 			} else {
 				setComplete();
 			}
 			
-//			if (hasUserError.get())
-//				executeExceptionHandler();
-//			if (hasSlots)
-//				executeAllTaskSlots();
-//			setComplete();
 		}
 	}
 	

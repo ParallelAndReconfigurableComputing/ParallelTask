@@ -89,28 +89,28 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	}
 	
 	/**this is only used to create a multi-task (the size is known before adding the inner tasks)*/
-	TaskIDGroup(int groupSize, Task<T> taskInfo) {
+	TaskIDGroup(int groupSize, TaskInfo<T> taskInfo) {
 		super(taskInfo);
 		this.isMultiTask = true;
 		this.groupSize = groupSize;
 		this.reductionOperation = null;
 	}
 	
-	TaskIDGroup(int groupSize, Task<T> taskInfo, boolean isMultiTask){
+	TaskIDGroup(int groupSize, TaskInfo<T> taskInfo, boolean isMultiTask){
 		super(taskInfo);
 		this.isMultiTask = isMultiTask;
 		this.groupSize = groupSize;
 		this.reductionOperation = null;
 	}
 	
-	TaskIDGroup(int groupSize, Task<T> taskInfo, Reduction<T> reduction) {
+	TaskIDGroup(int groupSize, TaskInfo<T> taskInfo, Reduction<T> reduction) {
 		super(taskInfo);
 		this.isMultiTask = true;
 		this.groupSize = groupSize;
 		this.reductionOperation = reduction;
 	}
 	
-	TaskIDGroup(int groupSize, Task<T> taskInfo, boolean isMultiTask, Reduction<T> reduction) {
+	TaskIDGroup(int groupSize, TaskInfo<T> taskInfo, boolean isMultiTask, Reduction<T> reduction) {
 		super(taskInfo);
 		this.isMultiTask = isMultiTask;
 		this.groupSize = groupSize;
@@ -305,25 +305,9 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	}
 
 	@Override
-	public Task<T> getTaskInfo() {
+	public TaskInfo<T> getTaskInfo() {
 		return taskInfo;
 		//throw new UnsupportedOperationException("TODO: Not implemented! Does a TaskIDGroup need to be able to use this method?");
-	}
-
-	/**
-	 * Checks to see whether all the inner tasks have completed.
-	 */
-	@Override
-	public boolean hasCompleted() {
-		return super.hasCompleted();
-	}
-	
-	/**
-	 * Checks to see whether any of the inner tasks contained an error. 
-	 */
-	@Override
-	public boolean hasUserError() {
-		return super.hasUserError();
 	}
 
 	@Override

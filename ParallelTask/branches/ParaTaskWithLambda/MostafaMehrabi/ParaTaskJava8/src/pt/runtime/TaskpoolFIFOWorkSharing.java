@@ -48,15 +48,15 @@ public class TaskpoolFIFOWorkSharing extends AbstractTaskPool {
 	 * @since  9/9/2014
 	 * */
 	@Override
-	protected void enqueueReadyTask(TaskID taskID) {
-		//-- multi-tasks are added here first because this scheduling is fully FIFO according to the enqueuing timestamp
+	protected void enqueueReadyTask(TaskID<?> taskID) {
+		//Multi-tasks are added here first because this scheduling is fully FIFO according to the enqueuing timestamp
 		
 		if (taskID.getExecuteOnThread() == ParaTaskHelper.ANY_THREAD_TASK){
 			if (taskID instanceof TaskIDGroup){
-				globalMultiTaskqueue.add(taskID);
+				globalMultiTaskQueue.add(taskID);
 			}
 			else{
-				globalOne0ffTaskqueue.add(taskID);
+				globalOne0ffTaskQueue.add(taskID);
 			}
 		}
 		
@@ -69,14 +69,15 @@ public class TaskpoolFIFOWorkSharing extends AbstractTaskPool {
 	/**
 	 * This method is called by a worker thread in order to get another task to execute. This method is schedule specific
 	 * and its implementations are different for different scheduling types. For work sharing, the method tries to poll 
-	 * a task from the worker thread's <code>privateQueue</code>. If the attempt is successful, it attempts to execute the task. If 
+	 * a task from the worker thread's <code>privateQueue</code>. If the polling is successful, it attempts to execute the task. If 
 	 * the attempt is successful the task will be passed to the worker thread to execute; otherwise this method will call
-	 * for enqueueing the slots of that task.
+	 * for enqueueing the slots of that task, becuase unsuccessful execution attempts mean that the task is either cancelled or 
+	 * completed.
 	 * <br><br>
 	 * If there are no tasks found in the thread's private queue, the method will then check the <code>globalMultiTask</code> queue, 
 	 * this is because one off tasks are not enqueued to private queues, and they are submitted to <code>gloabOneOffTask</code> queues
 	 * from the beginning.<br>
-	 *  While there are multi-tasks in the <code>globalMultiTask</code> queue, they are polled and expanded and enqueued 
+	 * While there are multi-tasks in the <code>globalMultiTask</code> queue, they are polled and expanded and enqueued 
 	 * as ready-to-execute tasks.<br>
 	 * If no tasks were found in the <code>gloablMultiTask</code> queue, the method will check the <code>globalOneOffTask</code>
 	 * queue, and if still nothing is found, it will return <code>null</code>. It should be mentioned that <code>polling</code> 
@@ -88,55 +89,52 @@ public class TaskpoolFIFOWorkSharing extends AbstractTaskPool {
 	 * @since   9/9/2014
 	 */
 	@Override
-	public TaskID workerPollNextTask() {
+	public TaskID<?> workerPollNextTask() {
 		
-		WorkerThread wt = (WorkerThread) Thread.currentThread();
-		int workerID = wt.getThreadID();
+		WorkerThread workerThread = (WorkerThread) Thread.currentThread();
+		int workerID = workerThread.getThreadID();
 		
-		TaskID next = null;
+		TaskID<?> nextTaskID = null;
 		//shouldn't this be !wt.isMultiTaskWorker()
-		if (wt.isMultiTaskWorker()) {
-			next = privateQueues.get(workerID).poll();
+		if (workerThread.isMultiTaskWorker()) {
+			nextTaskID = privateQueues.get(workerID).poll();
 			
-			while (next != null) {
+			while (nextTaskID != null) {
 				
-				//-- attempt to execute this task
-				if (next.executeAttempt()) {
-					//-- no cancel attempt was successful so far, therefore may execute this task
-					return next;
-				} else {
-					//if the task cannot be started, it means the task was successfully cancelled beforehand, 
-					//therefore grab another task
-					next.enqueueSlots(true);	//-- task is considered complete, so execute slots
-					//-- TODO maybe should not execute slots for cancelled tasks, just the completedSlot() ?? 
-				}
+				//attempt to execute this task
+				if (nextTaskID.executeAttempt()) {
+					//no cancel attempt was successful so far, therefore may execute this task
+					return nextTaskID;
+				} 
 				
-				//'next' was not started, i.e. cancelled, so poll the next task
-				next = privateQueues.get(workerID).poll();
+				//if the task cannot be started, it means the task was successfully cancelled beforehand, 
+				//therefore task is considered complete, so execute slots and grab another task
+				nextTaskID.enqueueSlots(true);
+				nextTaskID = privateQueues.get(workerID).poll();
 			}
 		}
 		
 		//why checking the same condition again?
-		if (wt.isMultiTaskWorker()) {
+		if (workerThread.isMultiTaskWorker()) {
 			//Thread could not find a task from its private queue, now try the global multi task queue.
-			while ((next = globalMultiTaskqueue.poll()) != null) {
+			while ((nextTaskID = globalMultiTaskQueue.poll()) != null) {
 				// expand multi task
-				int count = next.getCount();
+				int count = nextTaskID.getCount();
 				int currentMultiTaskThreadPool = ThreadPool.getMultiTaskThreadPoolSize();
-				Task taskinfo = next.getTaskInfo();
+				TaskInfo<?> taskInfo = nextTaskID.getTaskInfo();
 
 				// indicate this is a sub task
-				taskinfo.setSubTask(true);
+				taskInfo.setSubTask(true);
 				
 				for (int i = 0; i < count; i++) {
-					TaskID taskID = new TaskID(taskinfo);
+					TaskID<?> taskID = new TaskID(taskInfo);
 					
 					taskID.setRelativeID(i);
 					taskID.setExecuteOnThread(i%currentMultiTaskThreadPool);
 					
 					taskID.setSubTask(true);
-					taskID.setPartOfGroup(((TaskIDGroup)next));
-					((TaskIDGroup)next).addInnerTask(taskID);
+					taskID.setPartOfGroup(((TaskIDGroup<?>)nextTaskID));
+					((TaskIDGroup<?>)nextTaskID).addInnerTask(taskID);
 					enqueueReadyTask(taskID);
 					
 				}
@@ -147,18 +145,18 @@ public class TaskpoolFIFOWorkSharing extends AbstractTaskPool {
 				 * 
 				 * After a multi task worker thread expand a mult task, set the expansion flag.
 				 */
-				((TaskIDGroup)next).setExpanded(true);
+				((TaskIDGroup<?>)nextTaskID).setExpanded(true);
 			}
 		} else {
-			while ((next = globalOne0ffTaskqueue.poll()) != null) {
+			while ((nextTaskID = globalOne0ffTaskQueue.poll()) != null) {
 				
-				if (next.executeAttempt()) {
+				if (nextTaskID.executeAttempt()) {
 					//-- no cancel attempt was successful so far, therefore may execute this task
 					
-					return next;
+					return nextTaskID;
 				} else {
 					//-- task was successfully cancelled beforehand, therefore grab another task
-					next.enqueueSlots(true);	//-- task is considered complete, so execute slots
+					nextTaskID.enqueueSlots(true);	//-- task is considered complete, so execute slots
 					//-- TODO maybe should not execute slots for cancelled tasks, just the completedSlot() ?? 
 				}
 				
@@ -177,14 +175,14 @@ public class TaskpoolFIFOWorkSharing extends AbstractTaskPool {
 	@Override
 	protected void initialise() {
 		
-		globalMultiTaskqueue = new PriorityBlockingQueue<TaskID<?>>(
+		globalMultiTaskQueue = new PriorityBlockingQueue<TaskID<?>>(
 				AbstractTaskPool.INITIAL_QUEUE_CAPACITY,
 				AbstractTaskPool.FIFO_TaskID_Comparator);
 		
 		privateQueues = new ArrayList<AbstractQueue<TaskID<?>>>();
 		
 		
-		globalOne0ffTaskqueue = new PriorityBlockingQueue<TaskID<?>>(
+		globalOne0ffTaskQueue = new PriorityBlockingQueue<TaskID<?>>(
 				AbstractTaskPool.INITIAL_QUEUE_CAPACITY,
 				AbstractTaskPool.FIFO_TaskID_Comparator);
 		

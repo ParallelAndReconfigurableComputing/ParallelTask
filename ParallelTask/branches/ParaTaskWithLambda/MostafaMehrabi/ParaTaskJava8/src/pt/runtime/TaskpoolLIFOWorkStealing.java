@@ -65,7 +65,7 @@ public class TaskpoolLIFOWorkStealing extends AbstractTaskPool {
 		
 		//so the task can be executed by arbitrary threads. Now if the task is a TaskIDGroup...
 		else if (taskID instanceof TaskIDGroup){
-			globalMultiTaskqueue.add(taskID);
+			globalMultiTaskQueue.add(taskID);
 			taskEnqueued = true;
 		}
 		
@@ -148,11 +148,11 @@ public class TaskpoolLIFOWorkStealing extends AbstractTaskPool {
 			}
 			
 			//if there were no tasks found in the privateQueue, then look into the globalMultiTask queue
-			while ((next = globalMultiTaskqueue.poll()) != null) {
+			while ((next = globalMultiTaskQueue.poll()) != null) {
 				// expand multi task
 				int count = next.getCount();
 				int currentMultiTaskThreadPool = ThreadPool.getMultiTaskThreadPoolSize();
-				Task taskinfo = next.getTaskInfo();
+				TaskInfo taskinfo = next.getTaskInfo();
 				
 				taskinfo.setSubTask(true);
 				//aren't we repetitively operating on the same taskInfo?
@@ -258,7 +258,7 @@ public class TaskpoolLIFOWorkStealing extends AbstractTaskPool {
 				return NOT_STOLEN;
 			}};
 		
-		globalMultiTaskqueue = new PriorityBlockingQueue<TaskID<?>>(
+		globalMultiTaskQueue = new PriorityBlockingQueue<TaskID<?>>(
 				AbstractTaskPool.INITIAL_QUEUE_CAPACITY,
 				AbstractTaskPool.LIFO_TaskID_Comparator);
 			

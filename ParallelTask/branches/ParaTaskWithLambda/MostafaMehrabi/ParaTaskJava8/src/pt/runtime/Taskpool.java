@@ -61,7 +61,7 @@ public interface Taskpool {
 	* @param taskinfo
 	* @return
 	*/
-	public <T> TaskID<T> enqueue(Task<T> taskinfo);
+	public <T> TaskID<T> enqueue(TaskInfo<T> taskinfo);
 	
 	/**
 	* Enqueues the specified TaskInfo as a multi-task, creates "count" inner tasks and places them in a TaskIDGroup
@@ -72,7 +72,7 @@ public interface Taskpool {
 	* 
 	* 
 	* */	
-	public <T> TaskIDGroup<T> enqueueMulti(Task<T> taskinfo, int count);
+	public <T> TaskIDGroup<T> enqueueMulti(TaskInfo<T> taskinfo, int count);
 	
 	/**
 	* The worker thread polls the task pool for a task.. If there isn't one, then it returns 
