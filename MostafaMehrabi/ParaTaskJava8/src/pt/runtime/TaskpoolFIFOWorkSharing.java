@@ -138,13 +138,7 @@ public class TaskpoolFIFOWorkSharing extends AbstractTaskPool {
 					enqueueReadyTask(taskID);
 					
 				}
-				/**
-				 * 
-				 * @author Kingsley
-				 * @since 08/05/2013
-				 * 
-				 * After a multi task worker thread expand a mult task, set the expansion flag.
-				 */
+				// After a multi task worker thread expand a mult task, set the expansion flag.
 				((TaskIDGroup<?>)nextTaskID).setExpanded(true);
 			}
 		} else {
@@ -152,7 +146,6 @@ public class TaskpoolFIFOWorkSharing extends AbstractTaskPool {
 				
 				if (nextTaskID.executeAttempt()) {
 					//-- no cancel attempt was successful so far, therefore may execute this task
-					
 					return nextTaskID;
 				} else {
 					//-- task was successfully cancelled beforehand, therefore grab another task
