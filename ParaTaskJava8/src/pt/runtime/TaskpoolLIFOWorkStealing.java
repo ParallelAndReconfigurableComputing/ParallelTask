@@ -165,6 +165,8 @@ public class TaskpoolLIFOWorkStealing extends AbstractTaskPool {
 					((TaskIDGroup)next).add(taskID);
 					enqueueReadyTask(taskID);
 				}
+				
+				((TaskIDGroup)next).setExpanded(true);
 			}
 			
 		}
