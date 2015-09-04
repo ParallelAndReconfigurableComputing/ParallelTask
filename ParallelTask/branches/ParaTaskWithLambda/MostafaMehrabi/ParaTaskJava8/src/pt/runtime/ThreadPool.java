@@ -21,12 +21,7 @@ import pt.runtime.WorkerThread;
 import pt.runtime.ParaTask.ThreadPoolType;
 
 
-/**
- * @author Kingsley
- * 
- * @since 01/10/2013
- * Remove all the unnecessary code before merging.
- */
+
 public class ThreadPool {
 
 	/**
@@ -36,7 +31,7 @@ public class ThreadPool {
 	 * @author Mostafa Mehrabi
 	 * @since  15/9/2014
 	 * */
-	private static int poolSize = -1;
+	private static int totalNumberOfThreads = -1;
 	
 	/**
 	 * 
@@ -58,6 +53,7 @@ public class ThreadPool {
 	private static int oneoffTaskThreadPoolSize;
 
 	private final static ReentrantLock reentrantLock = new ReentrantLock();
+
 	
 	/**
      * 
@@ -80,40 +76,24 @@ public class ThreadPool {
 
 	
 	
-	/**
-	 * 
-	 * @author Kingsley
-	 * @since 18/05/2013
-	 * 
-	 * Used to maintain the global id
-	 * 
-	 * */
+	/* Used to maintain the global id
+	 */
 	private static int globalID = 0;
 	
-	/**
-	 * 
-	 * @author Kingsley
-	 * @since 11/05/2013
-	 * 
-	 * This is used to enqueue fake task
+	/* This is used to enqueue fake task
 	 * The fake task is used to kill threads.
 	 * */
 	private static Taskpool taskpool;
 
 	static {
-		if (poolSize < 0) {
-			poolSize = Runtime.getRuntime().availableProcessors();
+		if (totalNumberOfThreads < 0) {
+			totalNumberOfThreads = 2 * Runtime.getRuntime().availableProcessors();
 		}
 	}
 
-	/**
-	 * 
-	 * @author Kingsley
-	 * @since 25/04/2013
+	/* 
 	 * Initialize worker threads here
-	 * 
-	 * */
-	
+	 */
 	protected static void initialize(Taskpool taskpool) {
 		ThreadPool.taskpool = taskpool;
 		initializeWorkerThreads(taskpool);
@@ -155,53 +135,42 @@ public class ThreadPool {
 		
 		int multiTaskWorkerID = 0;
 		
-		int multiTaskThreadPoolSize = poolSize/2;
+		int multiTaskThreadPoolSize = totalNumberOfThreads/2;
 		
-		for (int i = 0; i < poolSize; i++, globalID++) {
+		List<AbstractQueue<TaskID<?>>> privateTaskQueues = taskpool.getPrivateTaskQueues();
+		Map<Integer, LinkedBlockingDeque<TaskID<?>>> localOneoffTaskQueues = taskpool.getLocalOneoffTaskQueues();
+				
+		for (int i = 0; i < totalNumberOfThreads; i++, globalID++) {
 			if (multiTaskWorkerID < multiTaskThreadPoolSize) {
-				WorkerThread workers = new WorkerThread(globalID, multiTaskWorkerID, taskpool, true);
-				workers.setPriority(Thread.MAX_PRIORITY);
-				workers.setDaemon(true);
+				WorkerThread workerThread = new WorkerThread(globalID, multiTaskWorkerID, taskpool, true);
+				workerThread.setPriority(Thread.MAX_PRIORITY);
+				workerThread.setDaemon(true);
 
-				multiTaskWorkers.put(globalID, workers);
+				multiTaskWorkers.put(globalID, workerThread);
 				
 				multiTaskWorkerID++;
 				
-				/**
-				 * 
-				 * @author Kingsley
-				 * @since : 18/05/2013
-				 * No matter what scheduling policy is, private task queues
+				/* No matter what scheduling policy is, private task queues
 				 * are always required. Before putting something inside, the collection
-				 * of the queues must have already been initialized. 
-				 * 
-				 * */
-				List<AbstractQueue<TaskID<?>>> privateTaskQueues = taskpool.getPrivateTaskQueues();
+				 * of the queues must have already been initialized. */
 				privateTaskQueues.add(new PriorityBlockingQueue<TaskID<?>>(
 						AbstractTaskPool.INITIAL_QUEUE_CAPACITY,
 						AbstractTaskPool.FIFO_TaskID_Comparator));
 				
-				workers.start();
+				workerThread.start();
 			}else {
 			
-				/**
-				 * 
-				 * @Auther : Kingsley
-				 * @since : 02/05/2013
-				 * One-off task threads do not need local thread ID (multiTaskID). 
-				 * Simply use its <code>globalID</code> for both local and global IDs.
-				 * 
-				 * */
-				WorkerThread workers = new WorkerThread(globalID, globalID, taskpool, false);
-				workers.setPriority(Thread.MAX_PRIORITY);
-				workers.setDaemon(true);
-				oneoffTaskWorkers.put(globalID, workers);
-				Map<Integer, LinkedBlockingDeque<TaskID<?>>> localOneoffTaskQueues = taskpool.getLocalOneoffTaskQueues();
-				if (null != localOneoffTaskQueues) {
+				/* One-off task threads do not need local thread ID (multiTaskID). 
+				 * Simply use its <code>globalID</code> for both local and global IDs.*/
+				WorkerThread workerThread = new WorkerThread(globalID, globalID, taskpool, false);
+				workerThread.setPriority(Thread.MAX_PRIORITY);
+				workerThread.setDaemon(true);
+				oneoffTaskWorkers.put(globalID, workerThread);
+				if (localOneoffTaskQueues != null) {
 					localOneoffTaskQueues.put(globalID, new LinkedBlockingDeque<TaskID<?>>());
 				}
 
-				workers.start();
+				workerThread.start();
 			}
 		}
 		multiTaskThreadPoolSize = multiTaskWorkers.size();
@@ -232,7 +201,7 @@ public class ThreadPool {
 	 * */
 	
 	protected static void setPoolSize(ThreadPoolType threadPoolType, int poolSize) {
-		ThreadPool.poolSize = poolSize;
+		ThreadPool.totalNumberOfThreads = poolSize;
 		adjustThreadPool(threadPoolType, poolSize);
 	}
 	
@@ -252,20 +221,11 @@ public class ThreadPool {
 		return oneoffTaskWorkers.size();
 	}
 
-	/**
-	 * 
-	 * @author Kingsley
-	 * @since 18/05/2013
-	 * 
+	/* 
 	 * Adjust the pool size according to the parameter.
 	 * Only called after user called setPoolSize(int poolSize);
 	 * setMultiTaskThreadPoolSize(int multiTaskThreadPoolSize) or 
-	 * setOneoffTaskThreadPoolSize(int oneoffTaskThreadPoolSize)
-	 * 
-	 * @param ThreadPoolType Indicate different thread pool 
-	 * @param newSize
-	 * @return 
-	 * */
+	 * setOneoffTaskThreadPoolSize(int oneoffTaskThreadPoolSize)*/
 	private static void adjustThreadPool(ThreadPoolType type, int newSize) {
 		switch (type) {
 		case ALL:
@@ -324,8 +284,9 @@ public class ThreadPool {
 			
 			reentrantLock.lock();
 			
-			for (Iterator<WorkerThread> iterator = oneoffTaskWorkers.values().iterator(); iterator.hasNext();) {
-				WorkerThread workerThread = (WorkerThread) iterator.next();
+			//but in the "waitTillFinished" method in TaskID, if a thread is poisoned, it cannot
+			//execute any tasks!
+			for (WorkerThread workerThread : oneoffTaskWorkers.values()){
 				workerThread.requireCancel(true);
 			}
 			
@@ -336,16 +297,16 @@ public class ThreadPool {
 			int diff = newSize - oneoffTaskThreadPoolSize;
 			
 			for (int i = 0; i < diff; i++, globalID++) {
-				WorkerThread workers = new WorkerThread(globalID, globalID, taskpool, false);
-				workers.setPriority(Thread.MAX_PRIORITY);
-				workers.setDaemon(true);
+				WorkerThread workerThread = new WorkerThread(globalID, globalID, taskpool, false);
+				workerThread.setPriority(Thread.MAX_PRIORITY);
+				workerThread.setDaemon(true);
 
-				oneoffTaskWorkers.put(globalID, workers);
+				oneoffTaskWorkers.put(globalID, workerThread);
 				Map<Integer, LinkedBlockingDeque<TaskID<?>>> localOneoffTaskQueues = taskpool.getLocalOneoffTaskQueues();
 				if (null != localOneoffTaskQueues) {
 					localOneoffTaskQueues.put(globalID, new LinkedBlockingDeque<TaskID<?>>());
 				}
-				workers.start();
+				workerThread.start();
 			}
 			
 			oneoffTaskThreadPoolSize = oneoffTaskWorkers.size();
@@ -366,10 +327,8 @@ public class ThreadPool {
 	 * Acquire a lock before accessing the one-off task worker thread pool
 	 * */
 	protected static void lastWords(boolean isMultiTaskWorker, int threadID){
-		if (isMultiTaskWorker) {
-			
-		}else {
-			reentrantLock.lock();
+		if (!isMultiTaskWorker) {
+		    reentrantLock.lock();
 			//shouldn't we remove their taskqueues as well?
 			oneoffTaskWorkers.remove(threadID);
 			
