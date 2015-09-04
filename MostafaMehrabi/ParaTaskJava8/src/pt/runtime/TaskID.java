@@ -567,7 +567,7 @@ public class TaskID<T> {
 						//until it is killed by JVM or Dalvik
 						try {
 							//200 mili-seconds of sleeping for the thread before it polls again
-							Thread.sleep(200);
+							Thread.sleep(ParaTaskHelper.WORKER_SLEEP_DELAY);
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 						}

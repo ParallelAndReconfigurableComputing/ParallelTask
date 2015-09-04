@@ -56,12 +56,12 @@ public class TaskpoolFIFOWorkSharing extends AbstractTaskPool {
 				globalMultiTaskQueue.add(taskID);
 			}
 			else{
-				globalOne0ffTaskQueue.add(taskID);
+				globalOneOffTaskQueue.add(taskID);
 			}
 		}
 		
 		else{
-			privateQueues.get(taskID.getExecuteOnThread()).add(taskID);
+			privateTaskQueues.get(taskID.getExecuteOnThread()).add(taskID);
 		}
 			
 	}
@@ -97,9 +97,8 @@ public class TaskpoolFIFOWorkSharing extends AbstractTaskPool {
 		TaskID<?> nextTaskID = null;
 		//shouldn't this be !wt.isMultiTaskWorker()
 		if (workerThread.isMultiTaskWorker()) {
-			nextTaskID = privateQueues.get(workerID).poll();
 			
-			while (nextTaskID != null) {
+			while ((nextTaskID = privateTaskQueues.get(workerID).poll()) != null) {
 				
 				//attempt to execute this task
 				if (nextTaskID.executeAttempt()) {
@@ -108,19 +107,15 @@ public class TaskpoolFIFOWorkSharing extends AbstractTaskPool {
 				} 
 				
 				//if the task cannot be started, it means the task was successfully cancelled beforehand, 
-				//therefore task is considered complete, so execute slots and grab another task
+				//therefore, execute slots and grab another task
 				nextTaskID.enqueueSlots(true);
-				nextTaskID = privateQueues.get(workerID).poll();
 			}
-		}
-		
-		//why checking the same condition again?
-		if (workerThread.isMultiTaskWorker()) {
+			
 			//Thread could not find a task from its private queue, now try the global multi task queue.
 			while ((nextTaskID = globalMultiTaskQueue.poll()) != null) {
 				// expand multi task
 				int count = nextTaskID.getCount();
-				int currentMultiTaskThreadPool = ThreadPool.getMultiTaskThreadPoolSize();
+				int multiTaskThreadPoolSize = ThreadPool.getMultiTaskThreadPoolSize();
 				TaskInfo<?> taskInfo = nextTaskID.getTaskInfo();
 
 				// indicate this is a sub task
@@ -130,7 +125,7 @@ public class TaskpoolFIFOWorkSharing extends AbstractTaskPool {
 					TaskID<?> taskID = new TaskID(taskInfo);
 					
 					taskID.setRelativeID(i);
-					taskID.setExecuteOnThread(i%currentMultiTaskThreadPool);
+					taskID.setExecuteOnThread(i%multiTaskThreadPoolSize);
 					
 					taskID.setSubTask(true);
 					taskID.setPartOfGroup(((TaskIDGroup<?>)nextTaskID));
@@ -141,19 +136,16 @@ public class TaskpoolFIFOWorkSharing extends AbstractTaskPool {
 				// After a multi task worker thread expand a mult task, set the expansion flag.
 				((TaskIDGroup<?>)nextTaskID).setExpanded(true);
 			}
+			//return null;
 		} else {
-			while ((nextTaskID = globalOne0ffTaskQueue.poll()) != null) {
+			while ((nextTaskID = globalOneOffTaskQueue.poll()) != null) {
 				
 				if (nextTaskID.executeAttempt()) {
-					//-- no cancel attempt was successful so far, therefore may execute this task
 					return nextTaskID;
 				} else {
-					//-- task was successfully cancelled beforehand, therefore grab another task
-					nextTaskID.enqueueSlots(true);	//-- task is considered complete, so execute slots
-					//-- TODO maybe should not execute slots for cancelled tasks, just the completedSlot() ?? 
-				}
-				
-				
+					//task is considered complete, so execute slots
+					nextTaskID.enqueueSlots(true);	
+				}				
 			}
 		}
 		
@@ -172,10 +164,10 @@ public class TaskpoolFIFOWorkSharing extends AbstractTaskPool {
 				AbstractTaskPool.INITIAL_QUEUE_CAPACITY,
 				AbstractTaskPool.FIFO_TaskID_Comparator);
 		
-		privateQueues = new ArrayList<AbstractQueue<TaskID<?>>>();
+		privateTaskQueues = new ArrayList<AbstractQueue<TaskID<?>>>();
 		
 		
-		globalOne0ffTaskQueue = new PriorityBlockingQueue<TaskID<?>>(
+		globalOneOffTaskQueue = new PriorityBlockingQueue<TaskID<?>>(
 				AbstractTaskPool.INITIAL_QUEUE_CAPACITY,
 				AbstractTaskPool.FIFO_TaskID_Comparator);
 		

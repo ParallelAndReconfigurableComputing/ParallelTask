@@ -29,7 +29,7 @@ import java.util.concurrent.PriorityBlockingQueue;
 
 /**
  *	
- *	There is no global queue, all tasks are placed on private queues in a round-robin fashion. Local queues are ordered such that 
+ *	There is no global OneOff task queue, all tasks are placed on private queues in a round-robin fashion. Local queues are ordered such that 
  *  when a thread enqueues a task into its own local queue it enqueues the task to the head of the queue. However, if a thread
  *  enqueues the task to another thread's local queue, it enqueues the task to the tail of the queue.
  *  <br><br>
@@ -60,7 +60,7 @@ public class TaskpoolLIFOWorkStealing extends AbstractTaskPool {
 		
 		//if the task cannot be executed by arbitrary threads.
 		if (taskID.getExecuteOnThread() != ParaTaskHelper.ANY_THREAD_TASK){
-			privateQueues.get(taskID.getExecuteOnThread()).add(taskID);
+			privateTaskQueues.get(taskID.getExecuteOnThread()).add(taskID);
 			taskEnqueued = true;
 		}
 		
@@ -78,7 +78,7 @@ public class TaskpoolLIFOWorkStealing extends AbstractTaskPool {
 				WorkerThread enqueuingWorkerThread = (WorkerThread) registeringThread;
 				if (!enqueuingWorkerThread.isMultiTaskWorker()){
 					int tID = enqueuingWorkerThread.getThreadID();
-					localOneoffTaskQueues.get(tID).addFirst(taskID);
+					localOneOffTaskQueues.get(tID).addFirst(taskID);
 					taskEnqueued = true;
 				}
 			}
@@ -88,9 +88,9 @@ public class TaskpoolLIFOWorkStealing extends AbstractTaskPool {
 		//or is not a worker thread!
 		if (!taskEnqueued){
 			int oneOffTaskThreadPoolSize = ThreadPool.getOneoffTaskThreadPoolSize();
-			Integer[] workerIDs = localOneoffTaskQueues.keySet().toArray(new Integer[oneOffTaskThreadPoolSize]);
+			Integer[] workerIDs = localOneOffTaskQueues.keySet().toArray(new Integer[oneOffTaskThreadPoolSize]);
 			int randomThreadID = workerIDs[(int)(Math.random()*oneOffTaskThreadPoolSize)];
-			localOneoffTaskQueues.get(randomThreadID).addLast(taskID);
+			localOneOffTaskQueues.get(randomThreadID).addLast(taskID);
 			taskEnqueued = true;
 		}
 			
@@ -135,25 +135,24 @@ public class TaskpoolLIFOWorkStealing extends AbstractTaskPool {
 		int workerID = -1;
 		
 		if (workerThread.isMultiTaskWorker()) {
+			
 			workerID = workerThread.getThreadLocalID();
-			
-			nextTaskID= privateQueues.get(workerID).poll();
-			
-			while (nextTaskID != null) {
-				
+			//try the thread's private task queue first
+			while ((nextTaskID= privateTaskQueues.get(workerID).poll()) != null) {
 				if (nextTaskID.executeAttempt()) {
 					return nextTaskID;
 				} else {
 					nextTaskID.enqueueSlots(true);
-					nextTaskID = privateQueues.get(workerID).poll();
 				}
 			}
 			
 			//if there were no tasks found in the privateQueue, then look into the globalMultiTask queue
+			int currentMultiTaskThreadPoolSize = ThreadPool.getMultiTaskThreadPoolSize();
+			int count = 0;
+			// expand multi-tasks
 			while ((nextTaskID = globalMultiTaskQueue.poll()) != null) {
-				// expand multi task
-				int count = nextTaskID.getCount();
-				int currentMultiTaskThreadPoolSize = ThreadPool.getMultiTaskThreadPoolSize();
+				
+				count = nextTaskID.getCount();
 				TaskInfo<?> taskinfo = nextTaskID.getTaskInfo();
 				
 				taskinfo.setSubTask(true);
@@ -170,20 +169,17 @@ public class TaskpoolLIFOWorkStealing extends AbstractTaskPool {
 				
 				((TaskIDGroup<?>)nextTaskID).setExpanded(true);
 			}
-			
+			//return null;			
 		}
 		// if the worker thread is not a multi-task thread then check the local one-off task queues of that thread.
 		else {
 			workerID = workerThread.getThreadID();
-			nextTaskID = localOneoffTaskQueues.get(workerID).pollFirst();
-			
-			
-			while (nextTaskID != null) {
+					
+			while ((nextTaskID = localOneOffTaskQueues.get(workerID).pollFirst()) != null) {
 				if (nextTaskID.executeAttempt()) {
 					return nextTaskID;
 				} else {
 					nextTaskID.enqueueSlots(true);
-					nextTaskID = localOneoffTaskQueues.get(workerID).pollFirst();
 				}
 			}
 			
@@ -192,7 +188,7 @@ public class TaskpoolLIFOWorkStealing extends AbstractTaskPool {
 			int prevVictim = lastStolenFrom.get();
 			if (prevVictim != NOT_STOLEN) {
 				//if there is already a thread from which we have stolen a task before, then...
-				Deque<TaskID<?>> victimQueue = localOneoffTaskQueues.get(prevVictim);
+				Deque<TaskID<?>> victimQueue = localOneOffTaskQueues.get(prevVictim);
 				
 				if (victimQueue != null) {
 					nextTaskID = victimQueue.pollLast();
@@ -200,36 +196,34 @@ public class TaskpoolLIFOWorkStealing extends AbstractTaskPool {
 				
 				while (nextTaskID != null) {
 				if (nextTaskID.executeAttempt()) {
-						//-- otherwise, it is safe to attempt to execute this task
 						return nextTaskID;
 					} else {
-						//-- task has been canceled
 						nextTaskID.enqueueSlots(true);
-					}
-					
+					}					
 					nextTaskID = victimQueue.pollLast();	
 				}
 			}
 
+			
 			//if we have not stolen any task from a thread before, or if victim's queue is empty...
-			int oneoffTaskQueuesSize = localOneoffTaskQueues.size();
+			int oneOffTaskQueuesSize = localOneOffTaskQueues.size();
 			
-			//then chose a new victim  
-			int startVictimIndex = (int) (Math.random()*oneoffTaskQueuesSize); 
+			//then chose an index for starting the process of random victim selection 
+			int startVictimIndex = (int) (Math.random()*oneOffTaskQueuesSize); 
 			
-			//get the array of the worker threads indices
-			Integer[] workerThreadsIDs = localOneoffTaskQueues.keySet().toArray(new Integer[oneoffTaskQueuesSize]);
+			//get the array of the worker threads IDs
+			Integer[] workerThreadsIDs = localOneOffTaskQueues.keySet().toArray(new Integer[oneOffTaskQueuesSize]);
 			
 			//start from a random thread's local oneOffTaskQueue..
-			for (int v = 0; v < oneoffTaskQueuesSize; v++) {
-				int nextVictimID = workerThreadsIDs[(startVictimIndex+v)%oneoffTaskQueuesSize];
+			for (int v = 0; v < oneOffTaskQueuesSize; v++) {
+				int nextVictimID = workerThreadsIDs[(startVictimIndex+v)%oneOffTaskQueuesSize];
 				
 				//-- No point in trying to steal from self..
 				if (nextVictimID != workerID) {
 					
-					Deque<TaskID<?>> victimQueue = localOneoffTaskQueues.get(nextVictimID);
+					Deque<TaskID<?>> victimQueue = localOneOffTaskQueues.get(nextVictimID);
 				 //this part of the code is duplicated repeatedly, maybe it is better to implement it in a method
-					if (null != victimQueue) {
+					if (victimQueue != null) {
 						nextTaskID = victimQueue.pollLast();
 					}
 
@@ -266,8 +260,8 @@ public class TaskpoolLIFOWorkStealing extends AbstractTaskPool {
 				AbstractTaskPool.INITIAL_QUEUE_CAPACITY,
 				AbstractTaskPool.LIFO_TaskID_Comparator);
 			
-		privateQueues = new ArrayList<AbstractQueue<TaskID<?>>>();
-		localOneoffTaskQueues = new ConcurrentHashMap<Integer, LinkedBlockingDeque<TaskID<?>>>();
+		privateTaskQueues = new ArrayList<AbstractQueue<TaskID<?>>>();
+		localOneOffTaskQueues = new ConcurrentHashMap<Integer, LinkedBlockingDeque<TaskID<?>>>();
 		
 		initialiseWorkerThreads();
 	}

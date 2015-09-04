@@ -62,7 +62,7 @@ public abstract class AbstractTaskPool implements Taskpool {
 	/**
 	 * A thread-safe queue for global one-off tasks that are ready to be executed.
 	 * */
-	protected PriorityBlockingQueue<TaskID<?>> globalOne0ffTaskQueue = null;
+	protected PriorityBlockingQueue<TaskID<?>> globalOneOffTaskQueue = null;
 	
 	/**
 	 * A queue for ready-to-execute multi-tasks in a mixed-scheduling implementation.
@@ -72,14 +72,14 @@ public abstract class AbstractTaskPool implements Taskpool {
 	/**
 	 * A queue for ready-to-execute one-off tasks in a mixed-scheduling implementation.  
 	 */
-	protected FifoLifoQueue<TaskID<?>> mixedOneoffTaskQueue = null;
+	protected FifoLifoQueue<TaskID<?>> mixedOneOffTaskQueue = null;
 	
 	/**
 	 * A list of Abstract Queues that hold the private ready-to-execute tasks of worker threads. That is, for each worker
 	 * thread, an Abstract Queue is added to the list. No stealing occurs within these queues. 
 	 * @see  AbstractQueue
 	 */
-	protected List<AbstractQueue<TaskID<?>>> privateQueues;
+	protected List<AbstractQueue<TaskID<?>>> privateTaskQueues;
 	
 	/**
 	 * A Map that associates the ID of a worker thread to a thread-safe queue that holds its 
@@ -87,7 +87,7 @@ public abstract class AbstractTaskPool implements Taskpool {
 	 * thread is empty, that worker thread can steal tasks from other thread's local one-off
 	 * task queues. 
 	 */
-	protected Map<Integer, LinkedBlockingDeque<TaskID<?>>> localOneoffTaskQueues = null;
+	protected Map<Integer, LinkedBlockingDeque<TaskID<?>>> localOneOffTaskQueues = null;
 	
 	/**
 	 * Represents the thread for which the task was stolen the last time.
@@ -133,18 +133,21 @@ public abstract class AbstractTaskPool implements Taskpool {
 	 * thread is a task-thread, then its corresponding task is recorded as the enclosing task. 
 	 */
 	public <T> TaskID<T> enqueue(TaskInfo<T> taskInfo) {
-		List<TaskID<?>> allDependences = null;
-		if (taskInfo.getDependences() != null)
-			allDependences = ParaTask.allTasksInList(taskInfo.getDependences());
+		//List<TaskID<?>> allDependences = null;
+		List<TaskID<?>> allDependences = taskInfo.getDependences();
+		//currently the method "allTasksInList" is not doing anything
+		//so we can remove this part of the logic
+//		if (taskInfo.getDependences() != null)
+//			allDependences = ParaTask.allTasksInList(taskInfo.getDependences());
 		
 		TaskID<T> taskID = new TaskID<>(taskInfo);
 		
 		//determine if this task is being enqueued from within another task. If so, set the enclosing task (needed to 
 		//propagate exceptions to outer tasks (in case they have a suitable handler)).
-		Thread rt = taskInfo.setRegisteringThread();
+		Thread registeringThread = taskInfo.setRegisteringThread();
 		
-		if (rt instanceof TaskThread)
-			taskID.setEnclosingTask(((TaskThread)rt).currentExecutingTask());
+		if (registeringThread instanceof TaskThread)
+			taskID.setEnclosingTask(((TaskThread)registeringThread).currentExecutingTask());
 		
 		if (taskInfo.hasAnySlots())
 			taskInfo.setTaskIDForSlotsAndHandlers(taskID);
@@ -170,14 +173,16 @@ public abstract class AbstractTaskPool implements Taskpool {
 		TaskIDGroup<T> group = new TaskIDGroup<T>(count, taskInfo);
 		group.setCount(count);
 		
-		List<TaskID<?>> allDependences = null;
-		if (taskInfo.getDependences() != null)
-			allDependences = ParaTask.allTasksInList(taskInfo.getDependences());
+		//same thing here!
+//		List<TaskID<?>> allDependences = null;
+//		if (taskInfo.getDependences() != null)
+//			allDependences = ParaTask.allTasksInList(taskInfo.getDependences());
 			
-		Thread rt = taskInfo.setRegisteringThread();
+		List<TaskID<?>> allDependences = taskInfo.getDependences();
+		Thread registeringThread = taskInfo.setRegisteringThread();
 		
-		if (rt instanceof TaskThread)
-			group.setEnclosingTask(((TaskThread)rt).currentExecutingTask());
+		if (registeringThread instanceof TaskThread)
+			group.setEnclosingTask(((TaskThread)registeringThread).currentExecutingTask());
 		
 		if (taskInfo.hasAnySlots())
 			taskInfo.setTaskIDForSlotsAndHandlers(group);
@@ -202,10 +207,10 @@ public abstract class AbstractTaskPool implements Taskpool {
 	@Override
 	public TaskID<?> workerTakeNextTask() {
 		while (true) {
-			TaskID<?> next = workerPollNextTask();
+			TaskID<?> nextTaskID = workerPollNextTask();
 			
-			if (next != null) 
-				return next;
+			if (nextTaskID != null) 
+				return nextTaskID;
 			
 			try {
 				Thread.sleep(ParaTaskHelper.WORKER_SLEEP_DELAY);
@@ -256,8 +261,8 @@ public abstract class AbstractTaskPool implements Taskpool {
 			//taskID.getTaskInfo().getDependences();
 			taskID.setRemainingDependences(allDependences);
 			
-			for (int d = 0; d < allDependences.size(); d++) {
-				allDependences.get(d).addWaiter(taskID);
+			for (int dependentIndex = 0; dependentIndex < allDependences.size(); dependentIndex++) {
+				allDependences.get(dependentIndex).addWaiter(taskID);
 			}
 		} else {
 			enqueueReadyTask(taskID);
@@ -293,10 +298,10 @@ public abstract class AbstractTaskPool implements Taskpool {
 	}
 	
 	public Map<Integer, LinkedBlockingDeque<TaskID<?>>> getLocalOneoffTaskQueues() {
-		return localOneoffTaskQueues;
+		return localOneOffTaskQueues;
 	}
 	
 	public List<AbstractQueue<TaskID<?>>> getPrivateTaskQueues() {
-		return privateQueues;
+		return privateTaskQueues;
 	}
 }
