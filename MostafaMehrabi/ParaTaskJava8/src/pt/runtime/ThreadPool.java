@@ -24,30 +24,18 @@ import pt.runtime.ParaTask.ThreadPoolType;
 
 public class ThreadPool {
 
-	/**
+	/*
 	 * Indicates the size of the thread pool, and is automatically determined according to the 
 	 * number of <code>CPU cores</code> at runtime. 
-	 * 
-	 * @author Mostafa Mehrabi
-	 * @since  15/9/2014
-	 * */
+	 */
 	private static int totalNumberOfThreads = -1;
 	
-	/**
-	 * 
-	 * @author Kingsley
-	 * @since 18/05/2013
-	 * 
+	/* 
 	 * Use the field of "oneoffTaskThreadPoolSize" to trace how many one-off task
 	 * worker threads should EXACTLY exist in the one-off task thread pool
 	 * Use the field of "multiTaskThreadPoolSize" to trace how many one-off task
 	 * worker threads should EXACTLY exist in the one-off task thread pool
-	 * 
-	 * @since 31/05/2013
-	 * Need a lock to make sure that all the operations on the thread pool collection 
-	 * are atomic.
-	 * 
-	 * */
+	 */
 	private static int multiTaskThreadPoolSize;
 	
 	private static int oneoffTaskThreadPoolSize;
@@ -55,9 +43,7 @@ public class ThreadPool {
 	private final static ReentrantLock reentrantLock = new ReentrantLock();
 
 	
-	/**
-     * 
-     * 
+	/*
 	 * The pools are <code>TreeMaps</code>, the key is the thread id.
 	 * The benefit with <code>TreeMaps</code> is that they are already sorted, so 
 	 * we can get the worker thread who owns the highest <code>threadID</code>, or get the worker thread just simply using 
@@ -65,10 +51,6 @@ public class ThreadPool {
 	 * <br><br>
 	 * One-off task worker thread does not need to be sorted and synchronized.
 	 * Using HashMap instead.
-	 * 
-	 * @author Kingsley
-	 * @since 16/05/2013
-	 * 
 	 */
 	private static SortedMap<Integer, WorkerThread> multiTaskWorkers = Collections.synchronizedSortedMap(new TreeMap<Integer, WorkerThread>());
 	
@@ -85,11 +67,11 @@ public class ThreadPool {
 	 * */
 	private static Taskpool taskpool;
 
-	static {
-		if (totalNumberOfThreads < 0) {
-			totalNumberOfThreads = 2 * Runtime.getRuntime().availableProcessors();
-		}
-	}
+//	static {
+//		if (totalNumberOfThreads < 0) {
+//			totalNumberOfThreads = 2 * Runtime.getRuntime().availableProcessors();
+//		}
+//	}
 
 	/* 
 	 * Initialize worker threads here
@@ -99,7 +81,7 @@ public class ThreadPool {
 		initializeWorkerThreads(taskpool);
 	}
 	
-	/**
+	/*
 	 * This method initializes the <code>Worker Threads</code> that are going to execute tasks
 	 * in this instance of <code>Thread Pool</code>. In the first step, this method creates as 
 	 * many <code>Multi-task Threads</code> as half of the <code>CPU cores</code> at runtime 
@@ -125,18 +107,16 @@ public class ThreadPool {
 	 *<code>localOneOffTask</code> queue associated to each <code>OneOff-task</code> thread. The indices of local queues for both 
 	 *worker thread types starts from 0.
 	 * 
-	 * @author Kingsley
-	 * @author Mostafa Mehrabi
-	 * 
-	 * @since 26/04/2013
-	 * @since 15/9/2014
-	 * */
+	 */
 	private static void initializeWorkerThreads(Taskpool taskpool) {
 		
+		
+		if (totalNumberOfThreads < 1)
+			totalNumberOfThreads = 2 * Runtime.getRuntime().availableProcessors();
+		
+		int multiTaskThreadPoolSize = Runtime.getRuntime().availableProcessors();
+		
 		int multiTaskWorkerID = 0;
-		
-		int multiTaskThreadPoolSize = totalNumberOfThreads/2;
-		
 		List<AbstractQueue<TaskID<?>>> privateTaskQueues = taskpool.getPrivateTaskQueues();
 		Map<Integer, LinkedBlockingDeque<TaskID<?>>> localOneoffTaskQueues = taskpool.getLocalOneoffTaskQueues();
 				
