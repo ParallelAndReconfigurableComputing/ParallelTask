@@ -39,7 +39,7 @@ public abstract class TaskThread extends Thread {
 
 	//-- TaskThreads could potentially have a stack of currently-processing tasks 
 	//(e.g. if it blocks on a TaskID that hasn't completed)
-	protected Stack<TaskID<?>> currentTaskStack = new Stack<TaskID<?>>();
+	protected Stack<TaskID<?>> threadTaskStack = new Stack<TaskID<?>>();
 	
 	/*
 	 * 
@@ -93,25 +93,28 @@ public abstract class TaskThread extends Thread {
 	 * 
 	 *
 	 */
-	protected <T> boolean executeTask(TaskID<T> task){
-		currentTaskStack.push(task);
+	protected <T> boolean executeTask(TaskID<T> taskID){
+		threadTaskStack.push(taskID);
 		
-		TaskInfo<T> info = task.getTaskInfo();
+		TaskInfo<T> taskInfo = taskID.getTaskInfo();
 		T result = null;
 		
 		try {
-			result = (T) info.execute();
+			result = (T) taskInfo.execute();
 			
-			task.setReturnResult(result);
-			task.enqueueSlots(false);
+			taskID.setReturnResult(result);
+			taskID.enqueueSlots(false);
 			
-			currentTaskStack.pop();
+			threadTaskStack.pop();
 			return true;
-		} catch (IllegalArgumentException e) {
+		} catch (IllegalArgumentException/*Exception*/ e) {
 			e.printStackTrace();
+//			taskID.setException(e);
+//			currentTaskStack.pop();
+//			return false;
 		}
 		
-		currentTaskStack.pop();
+		threadTaskStack.pop();
 		return false; 
 	}
 	
@@ -119,8 +122,8 @@ public abstract class TaskThread extends Thread {
 	 * Return the TaskID that is being currently executed by this TaskThread 
 	 * @return	The current TaskID, or null if not working on a task
 	 */
-	public TaskID<?> currentExecutingTask() {
-		return currentTaskStack.peek();
+	TaskID<?> currentExecutingTask() {
+		return threadTaskStack.peek();
 	}
 	
 	public int getThreadID() {

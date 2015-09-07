@@ -33,7 +33,7 @@ public class WorkerThread extends TaskThread {
 	
 	private boolean isCancelRequired = false; 
 	
-	public WorkerThread(int globalID, int localID, Taskpool taskpool, boolean isMultiTaskWorker) {
+	WorkerThread(int globalID, int localID, Taskpool taskpool, boolean isMultiTaskWorker) {
 		super(taskpool, isMultiTaskWorker);
 		
 		//One-off task threads do not need local thread ID.
@@ -55,7 +55,7 @@ public class WorkerThread extends TaskThread {
 	 * 
 	 * @return true if it executes another task, otherwise false.
 	 */
-	public boolean executeAnotherTaskOrSleep() {
+	boolean executeAnotherTaskOrSleep() {
 
 		TaskID<?> task = taskpool.workerPollNextTask();
 		if (task != null) {
@@ -71,6 +71,7 @@ public class WorkerThread extends TaskThread {
 		}
 	}
 	
+	
 	/**
 	 * @author Kingsley
 	 * @since 23/05/2013
@@ -81,15 +82,13 @@ public class WorkerThread extends TaskThread {
 	 * 
 	 * @since 25/05/2013
 	 * Think it is un-necessary to distinguish nested and non-nested situation. Cancel "isWaiting".
-	 * */
-	
-	
+	 * */	
 	@Override
 	public void run() {
 		while (true) {
 			TaskID<?> task = taskpool.workerTakeNextTask();
-			//boolean success = executeTask(task);
-			executeTask(task);
+			boolean success = executeTask(task);
+			
 			if (isCancelRequired) {
 				if (isCancelled) {
 					break;
@@ -119,7 +118,7 @@ public class WorkerThread extends TaskThread {
 		return isCancelled;
 	}
 
-	protected void requireCancel(boolean cancelRequired){
+	protected void requestCancel(boolean cancelRequired){
 		this.isCancelRequired = cancelRequired;
 	}
 

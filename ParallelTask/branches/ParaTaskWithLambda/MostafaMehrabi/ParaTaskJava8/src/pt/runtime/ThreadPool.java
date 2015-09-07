@@ -38,7 +38,7 @@ public class ThreadPool {
 	 */
 	private static int multiTaskThreadPoolSize;
 	
-	private static int oneoffTaskThreadPoolSize;
+	private static int oneOffTaskThreadPoolSize;
 
 	private final static ReentrantLock reentrantLock = new ReentrantLock();
 
@@ -54,30 +54,16 @@ public class ThreadPool {
 	 */
 	private static SortedMap<Integer, WorkerThread> multiTaskWorkers = Collections.synchronizedSortedMap(new TreeMap<Integer, WorkerThread>());
 	
-	private static Map<Integer, WorkerThread> oneoffTaskWorkers = new HashMap<Integer, WorkerThread>();
+	private static Map<Integer, WorkerThread> oneOffTaskWorkers = new HashMap<Integer, WorkerThread>();
 
 	
 	
-	/* Used to maintain the global id
-	 */
 	private static int globalID = 0;
 	
-	/* This is used to enqueue fake task
-	 * The fake task is used to kill threads.
-	 * */
-	private static Taskpool taskpool;
+	private static Taskpool taskPool;
 
-//	static {
-//		if (totalNumberOfThreads < 0) {
-//			totalNumberOfThreads = 2 * Runtime.getRuntime().availableProcessors();
-//		}
-//	}
-
-	/* 
-	 * Initialize worker threads here
-	 */
 	protected static void initialize(Taskpool taskpool) {
-		ThreadPool.taskpool = taskpool;
+		ThreadPool.taskPool = taskpool;
 		initializeWorkerThreads(taskpool);
 	}
 	
@@ -140,12 +126,11 @@ public class ThreadPool {
 				workerThread.start();
 			}else {
 			
-				/* One-off task threads do not need local thread ID (multiTaskID). 
-				 * Simply use its <code>globalID</code> for both local and global IDs.*/
+				// One-off task threads do not need local thread ID (multiTaskID). 
 				WorkerThread workerThread = new WorkerThread(globalID, globalID, taskpool, false);
 				workerThread.setPriority(Thread.MAX_PRIORITY);
 				workerThread.setDaemon(true);
-				oneoffTaskWorkers.put(globalID, workerThread);
+				oneOffTaskWorkers.put(globalID, workerThread);
 				if (localOneoffTaskQueues != null) {
 					localOneoffTaskQueues.put(globalID, new LinkedBlockingDeque<TaskID<?>>());
 				}
@@ -154,19 +139,20 @@ public class ThreadPool {
 			}
 		}
 		multiTaskThreadPoolSize = multiTaskWorkers.size();
-		oneoffTaskThreadPoolSize = oneoffTaskWorkers.size();
+		oneOffTaskThreadPoolSize = oneOffTaskWorkers.size();
 	}
+	
 	
 	//? How should I return the pool size ?
 	//Maybe multi task thread pool size + one-off task thread pool size
 	protected static int getPoolSize(ThreadPoolType threadPoolType) {
 		switch (threadPoolType) {
 		case ONEOFF:
-			return oneoffTaskThreadPoolSize;
+			return oneOffTaskThreadPoolSize;
 		case MULTI:
 			return multiTaskThreadPoolSize;
 		default:
-			return multiTaskThreadPoolSize + oneoffTaskThreadPoolSize;
+			return multiTaskThreadPoolSize + oneOffTaskThreadPoolSize;
 		}
 	}
 
@@ -174,7 +160,7 @@ public class ThreadPool {
 	 * 
 	 * This method sets the size of the <code>Thread Pool</code> and depending on the type
 	 * of the <code>Thread Pool</code> it takes further required actions as a result of 
-	 * the change. The further actions take place in {@link #adjustThreadPool(ThreadPoolType, int)}.
+	 * the change. The further actions take place in {@link #adjustThreadPoolCapacity(ThreadPoolType, int)}.
 	 * 
 	 * @author Mostafa Mehrabi
 	 * @since  15/9/2014
@@ -182,7 +168,7 @@ public class ThreadPool {
 	
 	protected static void setPoolSize(ThreadPoolType threadPoolType, int poolSize) {
 		ThreadPool.totalNumberOfThreads = poolSize;
-		adjustThreadPool(threadPoolType, poolSize);
+		adjustThreadPoolCapacity(threadPoolType, poolSize);
 	}
 	
 	/**
@@ -198,7 +184,7 @@ public class ThreadPool {
 	}
 	
 	protected static int getOneoffTaskThreadPoolSize() {
-		return oneoffTaskWorkers.size();
+		return oneOffTaskWorkers.size();
 	}
 
 	/* 
@@ -206,14 +192,14 @@ public class ThreadPool {
 	 * Only called after user called setPoolSize(int poolSize);
 	 * setMultiTaskThreadPoolSize(int multiTaskThreadPoolSize) or 
 	 * setOneoffTaskThreadPoolSize(int oneoffTaskThreadPoolSize)*/
-	private static void adjustThreadPool(ThreadPoolType type, int newSize) {
+	private static void adjustThreadPoolCapacity(ThreadPoolType type, int newSize) {
 		switch (type) {
 		case ALL:
 			adjustMultiTaskThreadPool(newSize);
-			adjustOneoffThreadPool(newSize);
+			adjustOneOffThreadPool(newSize);
 			break;
 		case ONEOFF:
-			adjustOneoffThreadPool(newSize);
+			adjustOneOffThreadPool(newSize);
 			break;
 		case MULTI:
 			adjustMultiTaskThreadPool(newSize);
@@ -254,11 +240,11 @@ public class ThreadPool {
 	 *@since 16/9/2014
 	 * 
 	 * */
-	private static void adjustOneoffThreadPool(int newSize){
-		if (oneoffTaskThreadPoolSize == newSize) {
+	private static void adjustOneOffThreadPool(int newSize){
+		if (oneOffTaskThreadPoolSize == newSize) {
 			return;
-		}else if (oneoffTaskThreadPoolSize > newSize) {
-			int diff = oneoffTaskThreadPoolSize - newSize;
+		}else if (oneOffTaskThreadPoolSize > newSize) {
+			int diff = oneOffTaskThreadPoolSize - newSize;
 
 			LottoBox.setLotto(diff);
 			
@@ -266,52 +252,44 @@ public class ThreadPool {
 			
 			//but in the "waitTillFinished" method in TaskID, if a thread is poisoned, it cannot
 			//execute any tasks!
-			for (WorkerThread workerThread : oneoffTaskWorkers.values()){
-				workerThread.requireCancel(true);
+			for (WorkerThread workerThread : oneOffTaskWorkers.values()){
+				workerThread.requestCancel(true);
 			}
 			
 			reentrantLock.unlock();
 			
-			oneoffTaskThreadPoolSize = oneoffTaskThreadPoolSize - diff;
+			oneOffTaskThreadPoolSize = oneOffTaskThreadPoolSize - diff;
 		}else {
-			int diff = newSize - oneoffTaskThreadPoolSize;
+			int diff = newSize - oneOffTaskThreadPoolSize;
 			
 			for (int i = 0; i < diff; i++, globalID++) {
-				WorkerThread workerThread = new WorkerThread(globalID, globalID, taskpool, false);
+				WorkerThread workerThread = new WorkerThread(globalID, globalID, taskPool, false);
 				workerThread.setPriority(Thread.MAX_PRIORITY);
 				workerThread.setDaemon(true);
 
-				oneoffTaskWorkers.put(globalID, workerThread);
-				Map<Integer, LinkedBlockingDeque<TaskID<?>>> localOneoffTaskQueues = taskpool.getLocalOneoffTaskQueues();
+				oneOffTaskWorkers.put(globalID, workerThread);
+				Map<Integer, LinkedBlockingDeque<TaskID<?>>> localOneoffTaskQueues = taskPool.getLocalOneoffTaskQueues();
 				if (null != localOneoffTaskQueues) {
 					localOneoffTaskQueues.put(globalID, new LinkedBlockingDeque<TaskID<?>>());
 				}
 				workerThread.start();
 			}
 			
-			oneoffTaskThreadPoolSize = oneoffTaskWorkers.size();
+			oneOffTaskThreadPoolSize = oneOffTaskWorkers.size();
 		}
 	}
 	
 	/**
-	 * 
-	 * @author Kingsley
-	 * @since 16/05/2013
-	 * 
 	 * Before worker thread really stop working, give it a chance to tell the threadpool
 	 * its thread type and its thread id. Then the threadpool can remove it from the 
 	 * corresponding thread pool
-	 * 
-	 * @since 23/05/2013
-	 * Do not re-allocate tasks AND let other works keep stealing
-	 * Acquire a lock before accessing the one-off task worker thread pool
 	 * */
-	protected static void lastWords(boolean isMultiTaskWorker, int threadID){
+	protected static void removeThreadFromPool(boolean isMultiTaskWorker, int threadID){
 		if (!isMultiTaskWorker) {
 		    reentrantLock.lock();
 			//shouldn't we remove their taskqueues as well?
-			oneoffTaskWorkers.remove(threadID);
-			
+		   	oneOffTaskWorkers.remove(threadID);
+									
 			reentrantLock.unlock();
 		}
 	}
@@ -328,12 +306,30 @@ public class ThreadPool {
 	public static int getActiveCount(ThreadPoolType type) {
 		switch (type) {
 		case ONEOFF:
-			return oneoffTaskWorkers.size();
+			return oneOffTaskWorkers.size();
 		case MULTI:
 			return multiTaskWorkers.size();
 		default:
-			return oneoffTaskWorkers.size()+multiTaskWorkers.size();
+			return oneOffTaskWorkers.size()+multiTaskWorkers.size();
 		}
+	}
+	
+	/*
+	 * Returns the worker thread corresponding to the ID that is sent to the method. Returns null if there
+	 * are no threads registered for that ID in the pool. 
+	 * 
+	 * @param ID The integer parameter that stands of the ID of the thread that is to be retrieved from the pool.
+	 * @return WorkerThread 
+	 * 
+	 * @author Mostafa Mehrabi
+	 * @since  7/9/2015
+	 */
+	WorkerThread getWorkerThreadForID(int ID){
+		if (multiTaskWorkers.containsKey(ID))
+			return multiTaskWorkers.get(ID);
+		else if (oneOffTaskWorkers.containsKey(ID))
+			return oneOffTaskWorkers.get(ID);
+		return null;
 	}
  }
 
