@@ -6,14 +6,7 @@ package pt.runtime;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
-/**
- * @author Kingsley
- * @since 31/05/2013
- * 
- * @since 01/10/2013
- * Remove all the unnecessary code before merging.
- *
- */
+
 public class LottoBox {
 	/**
 	 * <code>lottoNum</code> stands for the number of <b>poisoned</b> threads that a 
@@ -42,7 +35,7 @@ public class LottoBox {
 				WorkerThread workerThread = (WorkerThread) Thread.currentThread();
 				if (lottoNum.get() > 0) {
 					//Inform Thread Pool
-					ThreadPool.lastWords(workerThread.isMultiTaskWorker(), workerThread.getThreadID());
+					ThreadPool.removeThreadFromPool(workerThread.isMultiTaskWorker(), workerThread.getThreadID());
 					
 					//Count down the latch
 					lottoNum.decrementAndGet();
@@ -51,7 +44,7 @@ public class LottoBox {
 					workerThread.setCancelled(true);
 				}else {
 					//No chance to die
-					workerThread.requireCancel(false);
+					workerThread.requestCancel(false);
 				}
 				reentrantLock.unlock();
 				break;

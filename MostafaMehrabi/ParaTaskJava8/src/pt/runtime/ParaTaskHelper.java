@@ -35,23 +35,23 @@ import java.lang.reflect.Method;
  * */
 public class ParaTaskHelper {
 
-	/**
+	/*
 	 * [This is only intended for internal use of the ParaTask compiler and runtime]
 	 */
 	public static final String PT_PREFIX = "__pt__";
 	
 
-	/**
+	/*
 	 * [This is only intended for internal use of the ParaTask compiler and runtime]
 	 */
 	public static long WORKER_SLEEP_DELAY = 200;
 
-	/**
+	/*
 	 * [This is only intended for internal use of the ParaTask compiler and runtime]
 	 */
 	public static int ANY_THREAD_TASK = -1;
 	
-	/**
+	/*
 	 * [This is only intended for internal use of the ParaTask compiler and runtime]
 	 */
 	public static int EXCEPTION_IN_SLOT = -1;
