@@ -52,7 +52,7 @@ public class TaskpoolMixedScheduling extends AbstractTaskPool {
 	protected void enqueueReadyTask(TaskID<?> taskID) {
 		//if the task cannot be executed on arbitrary threads, regardless of being
 		//a TaskIDGroup or a OneOff task, it will be enqueued to a private queue
-		if (taskID.getExecuteOnThread() != ParaTaskHelper.ANY_THREAD_TASK){
+		if (taskID.getExecuteOnThread() != ParaTask.ANY_THREAD_TASK){
 			privateTaskQueues.get(taskID.getExecuteOnThread()).add(taskID);
 		}
 		
@@ -150,7 +150,7 @@ public class TaskpoolMixedScheduling extends AbstractTaskPool {
 				int savedFor = nextTaskID.getExecuteOnThread();
 				
 				// check if this task is saved for another worker thread
-				if (savedFor == ParaTaskHelper.ANY_THREAD_TASK || savedFor == workerID) {
+				if (savedFor == ParaTask.ANY_THREAD_TASK || savedFor == workerID) {
 					if (nextTaskID.executeAttempt()) {
 						return nextTaskID;
 					} else {

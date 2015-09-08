@@ -59,7 +59,7 @@ public class TaskpoolLIFOWorkStealing extends AbstractTaskPool {
 		boolean taskEnqueued = false;
 		
 		//if the task cannot be executed by arbitrary threads.
-		if (taskID.getExecuteOnThread() != ParaTaskHelper.ANY_THREAD_TASK){
+		if (taskID.getExecuteOnThread() != ParaTask.ANY_THREAD_TASK){
 			privateTaskQueues.get(taskID.getExecuteOnThread()).add(taskID);
 			taskEnqueued = true;
 		}

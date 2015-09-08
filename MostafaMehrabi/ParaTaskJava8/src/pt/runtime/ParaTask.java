@@ -19,10 +19,6 @@
 
 package pt.runtime;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
 /**
  * @author Mostafa Mehrabi
  * @author Nasser Giacaman
@@ -31,46 +27,28 @@ import java.util.List;
  * <br><br>
  * Helper methods for the ParaTask runtime. This class contains various functions to set up the ParaTask runtime. 
  * Importantly the type of scheduling, thread pool type, thread pool size, the EDT and the task listener are set 
- * and retrieved via this class. 
- * This class is also able to receive a list of GrouptaskIDs, flatten them and return the flattened list.
- * 
+ * and retrieved via this class.
  * <br><br>
  * All applications making use of the ParaTask features should invoke {@link ParaTask#init()} early in the <code>main</code>
  * method. This will initialise various aspects of the ParaTask runtime.
- * 
- * 
- *
  */
 public class ParaTask {
 	
-	/**
-	 * 
-	 * @author : Kingsley
-	 * @since : 29/04/2013
-	 * 
-	 * ParaTask does not need to know the thread pool size. It should ask thread pool to get
-	 * the size of the pool. 
-	 * 
-	 * User does not need to know anything about thread, then it might be a good idea to set
-	 * the thread pool size through the ParaTask rather than accessing the thread pool directly.
-	 * 
-	 * */
-	
+		
 	//private static int threadPoolSize = Runtime.getRuntime().availableProcessors();
-	private static ScheduleType scheduleType = ScheduleType.WorkStealing;
+	private static ScheduleType scheduleType = null;
 	private static boolean isInitialized = false;
 
 	private static Thread EDT = null;		// a reference to the EDT
 	private static AbstractTaskListener listener;	// the EDT task listener
-		
-	ParaTask(){
-		
-	}
 	
-	public static Thread getEDT() {
-		return EDT;
-	}
+	//for internal use only
+	static final String PT_PREFIX = "__pt__";
+	static long WORKER_SLEEP_DELAY = 200;
+	static int ANY_THREAD_TASK = -1;
+	static int EXCEPTION_IN_SLOT = -1;
 	
+		
 	/**
 	 * 
 	 * Enum representing the possible schedules that ParaTask supports.
@@ -111,81 +89,48 @@ public class ParaTask {
 	public static enum ThreadPoolType{
 	    	ALL, ONEOFF, MULTI
 	 }	
+	
+	
 		
+	ParaTask(){
 		
-
+	}
+	
+	public static boolean isInitialized(){
+		return isInitialized;
+	}
+	
+	public static Thread getEDT() {
+		return EDT;
+	}
+		
 
     /**
      * Set the size of the thread pool. To have any effect, this must be executed very early before 
-     * ParaTask creates the runtime. 
+     * ParaTask creates the runtime. This method throws {@link IllegalArgumentException} if the parameter
+     * passed to it is smaller than one.
+     * 
      * @param size
      */
     public static void setThreadPoolSize(ThreadPoolType threadPoolType, int size) {
     	if (size < 1)
 			throw new IllegalArgumentException("Trying to create a Taskpool with " + size + " threads");
-		
-		
-		/**
-		 * 
-		 * @author Kingsley
-		 * @since 29/04/2013
-		 * 
-		 * Set thread pool size through accessing the class of thread pool
-		 * 
-		 * @since 27/05/2013
-		 * Add another argument to indicate the thread pool type
-		 * */
-		
-    	//threadPoolSize = size;
-		//ThreadPool.setPoolSize(size);
 		ThreadPool.setPoolSize(threadPoolType,size);
     }
     
-    /**
-     * @author Kingsley
-     * @since 02/05/2013
-     * @param size
-     * 
-     * Set the size of the multi task thread pool. 
-     * To have any effect, this must be executed very early before ParaTask creates the runtime. 
-     * 
-     * @since 27/05/2013
-     * No need any more
-     * 
-     */
-    /*public static void setMultiTaskThreadPoolSize(int size) {
-		if (size < 1)
-			throw new IllegalArgumentException("Trying to create a Taskpool with " + size + " threads");
-		
-		ThreadPool.setMultiTaskThreadPoolSize(size);
-    }*/
-    
-    /**
-     * @author : Kingsley
-     * @since : 02/05/2013
-     * @param size
-     * 
-     * Set the size of the one-off task thread pool. 
-     * To have any effect, this must be executed very early before ParaTask creates the runtime. 
-     * 
-	 * @since 27/05/2013
-     * No need any more
-     */
-    /*public static void setOneoffThreadPoolSize(int size) {
-		if (size < 1)
-			throw new IllegalArgumentException("Trying to create a Taskpool with " + size + " threads");
-		
-		ThreadPool.setOneoffTaskThreadPoolSize(size);
-    }*/
-    
+        
     /**
      * Set the scheduling scheme. This only has an effect if no tasks have been executed yet 
-     * (i.e. must be called before the taskpool is created).
+     * (i.e. must be called before ParaTask is initialized). This method throws
+     * {@link IllegalAccessExecption} if ParaTask is initialized earlier.
      * 
      * @param type The schedule to use.
+     * @throws IllegalAccessException 
      */
-    public static void setScheduling(ScheduleType type) {
-        // TODO modify so that it throws an exception if taskpool has already been created (i.e. too late to change schedule)
+    public static void setSchedulingType(ScheduleType type) throws IllegalAccessException {
+       if (isInitialized())
+    		throw new IllegalAccessException("ParaTask has been initialized already!\n"
+    				+ " The scheduling policy must be declared prior to the initialization stage!");
     	scheduleType = type;
     }
     
@@ -203,22 +148,11 @@ public class ParaTask {
      * @return	The thread pool size.
      */
     public static int getThreadPoolSize(ThreadPoolType threadPoolType) {
-    	
-    	/**
-		 * 
-		 * @author : Kingsley
-		 * @since : 29/04/2013
-		 * 
-		 * Get thread pool size through accessing the class of thread pool
-		 * 
-		 * */
-    	
-    	//return threadPoolSize;
     	return ThreadPool.getPoolSize(threadPoolType);
     }
     
-    public static int getActiveCount(ThreadPoolType threadPoolType){
-    	return ThreadPool.getActiveCount(threadPoolType);
+    public static int getNumberOfActiveThreads(ThreadPoolType threadPoolType){
+    	return ThreadPool.getNumberOfActiveThreads(threadPoolType);
     }
 	
 	/**
@@ -232,58 +166,54 @@ public class ParaTask {
 	
 	/**
 	 * To be executed by the main thread (i.e. inside the <code>main</code> method). Registers the main thread and event 
-	 * dispatch thread with ParaTask, as well as other ParaTask runtime settings.
+	 * dispatch thread with ParaTask, and instantiates a task pool with the default <code>WorkStealing</code> scheduling
+	 * policy, iff the scheduling policy is not set by the used beforehand. Otherwise, it initialized the task pool using
+	 * the user-specified scheduling policy.
+	 * 
+	 * @return boolean If ParaTask has not been initialized before, this method returns <code>true</code> once the setup
+	 * is done. Otherwise (i.e., ParaTask has been initialized before) it returns <code>false</code>.
+	 * 
+	 * @author Mostafa Mehrabi
+	 * @since  2015
 	 */
-	public static void init() {
-		
+	public static boolean init(){
+		if (scheduleType == null)
+			return init(ScheduleType.WorkStealing);
+		else
+			return init(scheduleType);
+	}
+	
+	/**
+	 * To be executed by the main thread (i.e. inside the <code>main</code> method). Registers the main thread and event 
+	 * dispatch thread with ParaTask, and instantiates a task pool with the user-specified scheduling policy.
+	 * 
+	 * @return boolean If ParaTask has not been initialized before, this method returns <code>true</code> once the setup
+	 * is done. Otherwise (i.e., ParaTask has been initialized before) it returns <code>false</code>.
+	 * 
+	 * @author Mostafa Mehrabi
+	 * @throws IllegalAccessException 
+	 * @since  2015
+	 */
+	public static boolean init(ScheduleType scheduleType){
+		if (isInitialized())
+			return false;
 		while(!isInitialized){
-			
-			GuiThread.init();
-		
-			try {
-				//why do we need to reflect the function that we can call it ourselves?
-				ParaTaskHelper.setCompleteSlot = 
-					ParaTaskHelper.class.getDeclaredMethod("setComplete", new Class[] {TaskID.class});
-			} catch (SecurityException e) {
-				e.printStackTrace();
-			} catch (NoSuchMethodException e) {
+			try{
+				GuiThread.init();
+				setSchedulingType(scheduleType);
+				//Create the task pool
+				TaskpoolFactory.getTaskpool();
+				
+				//Initialize the EDT
+				EDT = GuiThread.getEventDispatchThread();
+				listener = new GuiEdtTaskListener();
+				isInitialized = true;
+			}catch(IllegalAccessException e){
+				System.out.println(e.getMessage());
 				e.printStackTrace();
 			}
-
-			//-- Create the task pool
-			TaskpoolFactory.getTaskpool();
-			
-			//-- initialize the EDT
-			EDT = GuiThread.getEventDispatchThread();
-			listener = new GuiEdtTaskListener();
-			/*
-			 * The ParaTask keywords notifyGUI and notifyInterimGUI has been removed.
-			 * All slots will be handled by the GUI EDT thread, and this feature has been
-			 * tested on both Java SE platform and Android platform, for both with GUI
-			 * and without GUI situations.
-			 * 
-			 * The SlotHandlingThread.java and SlotHandlingThreadTaskListener.java are 
-			 * also removed.
-			 * 
-			 * If there are other situations where we cannot depend on the GUI EDT thread
-			 * to handle slots, or you do want to have a separate thread act as the slot 
-			 * handling thread instead of the GUI EDT thread, please add these two Java 
-			 * files back, and initialize ParaTask.EDT and ParaTask.listener with their 
-			 * instances.
-			 * 
-			 * Here are the svn revision and URLs of these two Java files before
-			 * they are deleted:
-			 * 
-			 * revision 3717
-			 * 
-			 * https://svn.ece.auckland.ac.nz/svn/taschto/ParallelTask/branches/PTNotify/src/pt/runtime/SlotHandlingThread.java
-			 * https://svn.ece.auckland.ac.nz/svn/taschto/ParallelTask/branches/PTNotify/src/pt/runtime/SlotHandlingThreadTaskListener.java
-			 */
-			
-			isInitialized = true;
-			
-			System.out.println("ParaTask.init EDT id: " + EDT.getId() + " EDT name: " + EDT.getName());
 		}
+		return true;
 	}
 	
 	static AbstractTaskListener getEDTTaskListener() {
@@ -293,59 +223,5 @@ public class ParaTask {
 		return listener;
 	}	
 	
-	/**
-	 * Flattens a list of TaskIDs. Only has an effect if some of the TaskIDs were actually TaskIDGroups.
-	 * @param list	Input list of TaskIDs (with potentially some TaskIDGroups)
-	 * @return	A list containing only TaskIDs (i.e. expanding the TaskIDGroups)
-	 * @see #allTasksInGroup(TaskIDGroup)
-	 * 
-	 * @author Kingsley
-	 * @since 2014/04/08
-	 * When add dependency to a task(A), if the dependency is a TaskIDGroup, meaning that it is a Multi-Task,
-	 * the task(A) should directly depends on this Multi-Task, rather than all its sub-tasks.
-	 * 
-	 * This is because of the scheme of Late-expansion. At this point, Multi-Task may have not been executed yet,
-	 * then all its sub-tasks have not been created yet. 
-	 * 
-	 */
-	public static List<TaskID<?>> allTasksInList(List<TaskID<?>> list) {
-		ArrayList<TaskID<?>> result = new ArrayList<>();
-		//we are basically doing nothing in this function. 
-		Iterator<TaskID<?>> it = list.iterator();
-		while (it.hasNext()) {
-			
-			/*
-			TaskID id = it.next();
-			if (id instanceof TaskIDGroup) {
-				result.addAll(allTasksInGroup((TaskIDGroup)id));
-			} else {
-				result.add(id);
-			}
-			*/
-			
-			result.add(it.next());
-		}
-		return result;
-	}
 	
-	/**
-	 * A recursive convenience function that digs into the TaskIDGroup and returns all the individual TaskIDs.
-	 * @see #allTasksInList(List)
-	 * @return the TaskIDs inside <code>group</code> placed inside a new ArrayList
-	 * */
-	public static List<TaskID<?>> allTasksInGroup(TaskIDGroup<?> group) {
-		ArrayList<TaskID<?>> list = new ArrayList<>();
-		 
-		Iterator<TaskID<?>> it = group.getGroupIterator();
-		while (it.hasNext()) {
-			TaskID<?> id = it.next();
-			if (id instanceof TaskIDGroup) {
-				list.addAll(allTasksInGroup((TaskIDGroup<?>)id));
-			} else {
-				list.add(id);
-			}
-		}
-		return list;
-	}
-
 }

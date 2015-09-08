@@ -106,7 +106,7 @@ public class TaskID<T> {
 	// of a task, within the exception handlers of its enclosing tasks.
 	protected TaskID<?> enclosingTask = null;	
 	
-	private int executeOnThread = ParaTaskHelper.ANY_THREAD_TASK;
+	private int executeOnThread = ParaTask.ANY_THREAD_TASK;
 	
 	protected TaskInfo<T> taskInfo = null;
 	private T returnResult = null;
@@ -556,7 +556,7 @@ public class TaskID<T> {
 				while (!hasCompleted()) {
 					//is worker thread poisoned? Required to be cancelled, but not cancelled yet?
 					if (thisWorkerThread.isCancelRequired() && !thisWorkerThread.isCancelled()) {
-						LottoBox.tryLuck();
+						ThreadRedundancyHandler.informThreadPool();
 					}
 					
 					if (!thisWorkerThread.isCancelled()) {
@@ -567,7 +567,7 @@ public class TaskID<T> {
 						//until it is killed by JVM or Dalvik
 						try {
 							//200 mili-seconds of sleeping for the thread before it polls again
-							Thread.sleep(ParaTaskHelper.WORKER_SLEEP_DELAY);
+							Thread.sleep(ParaTask.WORKER_SLEEP_DELAY);
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 						}

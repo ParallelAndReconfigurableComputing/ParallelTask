@@ -7,9 +7,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
 
-public class LottoBox {
-	/**
-	 * <code>lottoNum</code> stands for the number of <b>poisoned</b> threads that a 
+public class ThreadRedundancyHandler {
+	/*
+	 * <code>numberOfRedundantThreads</code> stands for the number of <b>poisoned</b> threads that a 
 	 * specific <code>ThreadPool</code> (especially the <code>OneOff-task</code> thread pool)
 	 * knows about. A poisoned thread is a thread that is requested to <i>cancel</i> <b>but is not </b>
 	 * <i>cancelled</i> yet! A thread is normally poisoned as a result of changes in the size of 
@@ -18,27 +18,27 @@ public class LottoBox {
 	 * @author Mostafa Mehrabi
 	 * @since  16/9/2014
 	 * */
-	protected static AtomicInteger lottoNum = new AtomicInteger(0);
+	private static AtomicInteger numberOfRedundantThreads = new AtomicInteger(0);
 	
 	private final static ReentrantLock reentrantLock = new ReentrantLock();
-	/**
-	 * This method allows a poisoned thread (i.e. a thread that is requested to cancel but not cancelled yet)
-	 * to try its last chance for letting the thread pool know that it is poisoned. The thread pool will then 
-	 * remove this thread from the list of threads.
+	
+	/*
+	 * This method informs the thread pool that it can NOW remove a redundant thread from its 
+	 * corresponding pool, as the thread has finished its current task.
 	 * 
 	 * @author Mostafa Mehrabi
 	 * @since  15/9/2014
 	 * */
-	protected static void tryLuck(){
+	protected static void informThreadPool(){
 		while (true) {
 			if (reentrantLock.tryLock()) {
 				WorkerThread workerThread = (WorkerThread) Thread.currentThread();
-				if (lottoNum.get() > 0) {
+				if (numberOfRedundantThreads.get() > 0) {
 					//Inform Thread Pool
 					ThreadPool.removeThreadFromPool(workerThread.isMultiTaskWorker(), workerThread.getThreadID());
 					
 					//Count down the latch
-					lottoNum.decrementAndGet();
+					numberOfRedundantThreads.decrementAndGet();
 				
 					//Set it as a cancelled thread
 					workerThread.setCancelled(true);
@@ -47,10 +47,10 @@ public class LottoBox {
 					workerThread.requestCancel(false);
 				}
 				reentrantLock.unlock();
-				break;
+				return;
 			}else {
 				try {
-					Thread.sleep(1000);
+					Thread.sleep(ParaTask.WORKER_SLEEP_DELAY);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
@@ -58,16 +58,16 @@ public class LottoBox {
 		}
 	}
 	
-	/**
+	/*
 	 * This method is normally called by a <code>Thread Pool</code> (especially <code>OneOff-task</code> thread pools), as
 	 * a result of the size of that <code>Thread Pool</code> shrinking, which will consequently cause some of the redundant
 	 * threads to be <u>poisoned</u>. This method adds the number of redundant threads to <code>lottoNum</code>
 	 * 
-	 * @see #lottoNum
+	 * @see #numberOfRedundantThreads
 	 * @author Mostafa Mehrabi
 	 * @since  16/9/2014
 	 * */
-	protected static void setLotto(int delta){
-		lottoNum.addAndGet(delta);
+	protected static void setNumberOfRedundantThreads(int delta){
+		numberOfRedundantThreads.set(delta);
 	}
 }
