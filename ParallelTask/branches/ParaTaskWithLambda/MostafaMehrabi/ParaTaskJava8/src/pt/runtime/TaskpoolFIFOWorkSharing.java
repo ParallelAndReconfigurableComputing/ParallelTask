@@ -51,7 +51,7 @@ public class TaskpoolFIFOWorkSharing extends AbstractTaskPool {
 	protected void enqueueReadyTask(TaskID<?> taskID) {
 		//Multi-tasks are added here first because this scheduling is fully FIFO according to the enqueuing timestamp
 		
-		if (taskID.getExecuteOnThread() == ParaTaskHelper.ANY_THREAD_TASK){
+		if (taskID.getExecuteOnThread() == ParaTask.ANY_THREAD_TASK){
 			if (taskID instanceof TaskIDGroup){
 				globalMultiTaskQueue.add(taskID);
 			}

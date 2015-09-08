@@ -20,8 +20,10 @@
 package pt.runtime;
 
 import pi.RedLib.Reduction;
+
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
@@ -426,6 +428,23 @@ public class TaskIDGroup<T> extends TaskID<T> {
 		}
 	}
 
+	/*
+	 * A recursive convenience function that digs into the TaskIDGroup and returns all the individual TaskIDs.
+	 *
+	 * @return List<TaskID<?>> the TaskIDs inside <code>group</code> placed inside a new ArrayList
+	 * */
+	List<TaskID<?>> allTasksInGroup() {
+		ArrayList<TaskID<?>> listOfInnerTasks = new ArrayList<>();
+		
+		for (TaskID<?> innerTask : innerTasks){
+			if (innerTask instanceof TaskIDGroup<?>)
+				listOfInnerTasks.addAll(((TaskIDGroup<?>) innerTask).allTasksInGroup());
+			else
+				listOfInnerTasks.add(innerTask);
+		}
+		
+		return listOfInnerTasks;
+	}
 
 	/**
 	 * 

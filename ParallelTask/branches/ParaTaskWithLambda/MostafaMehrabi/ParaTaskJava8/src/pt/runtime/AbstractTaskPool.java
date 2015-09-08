@@ -213,7 +213,7 @@ public abstract class AbstractTaskPool implements Taskpool {
 				return nextTaskID;
 			
 			try {
-				Thread.sleep(ParaTaskHelper.WORKER_SLEEP_DELAY);
+				Thread.sleep(ParaTask.WORKER_SLEEP_DELAY);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}

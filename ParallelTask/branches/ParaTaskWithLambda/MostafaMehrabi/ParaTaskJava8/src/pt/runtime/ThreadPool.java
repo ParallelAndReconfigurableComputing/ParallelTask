@@ -246,7 +246,7 @@ public class ThreadPool {
 		}else if (oneOffTaskThreadPoolSize > newSize) {
 			int diff = oneOffTaskThreadPoolSize - newSize;
 
-			LottoBox.setLotto(diff);
+			ThreadRedundancyHandler.setNumberOfRedundantThreads(diff);
 			
 			reentrantLock.lock();
 			
@@ -279,7 +279,7 @@ public class ThreadPool {
 		}
 	}
 	
-	/**
+	/*
 	 * Before worker thread really stop working, give it a chance to tell the threadpool
 	 * its thread type and its thread id. Then the threadpool can remove it from the 
 	 * corresponding thread pool
@@ -303,7 +303,7 @@ public class ThreadPool {
 	 * Returns the approximate number of threads that are actively executing tasks.
 	 * 
 	 * */
-	public static int getActiveCount(ThreadPoolType type) {
+	public static int getNumberOfActiveThreads(ThreadPoolType type) {
 		switch (type) {
 		case ONEOFF:
 			return oneOffTaskWorkers.size();
