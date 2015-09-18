@@ -81,7 +81,7 @@ import pt.functionalInterfaces.FunctorTwoArgsWithReturn;
  * @author Mostafa Mehrabi
  * @since  7/9/2014
  */
-class TaskInfo<R> {
+public class TaskInfo<R> {
 	static {
 		ParaTask.init();
 	}
@@ -182,12 +182,12 @@ class TaskInfo<R> {
 	//make sure these steps are automated.. Should it be automated?
 	public void setTaskIDForSlotsAndHandlers(TaskID<R> taskID) {
 		if (slotsToNotify != null) {
-			for (Slot slot : slotsToNotify) {
+			for (Slot<?> slot : slotsToNotify) {
 				slot.setTaskID(taskID);
 			}
 		}
 		if (interSlotsToNotify != null) {
-			for (Slot slot : interSlotsToNotify){
+			for (Slot<?> slot : interSlotsToNotify){
 				slot.setTaskID(taskID);
 			}
 		}
@@ -195,7 +195,7 @@ class TaskInfo<R> {
 		if (!asyncExceptions.isEmpty()){
 			Set<Class<?>> exceptionClasses = asyncExceptions.keySet();
 			for (Class<?> exception : exceptionClasses){
-				Slot handler = asyncExceptions.get(exception);
+				Slot<?> handler = asyncExceptions.get(exception);
 				handler.setTaskID(taskID);
 			}
 		}
@@ -208,14 +208,14 @@ class TaskInfo<R> {
 		else if (handler == null)
 			throw new IllegalArgumentException("There is no exception handler specified for this exception");
 	
-		asyncExceptions.put(exceptionClass, (Slot)handler);
+		asyncExceptions.put(exceptionClass, (Slot<?>)handler);
 		hasAnySlots = true;
 	}
 
 	/**
 	 * Returns the handler associated to the specified exception. 
 	 */
-	public Slot getExceptionHandler(Class<?> occuredException) {
+	public Slot<?> getExceptionHandler(Class<?> occuredException) {
 		
 		if (asyncExceptions.isEmpty())
 			return null;
@@ -234,7 +234,7 @@ class TaskInfo<R> {
 		return interSlotsToNotify;
 	}
 
-	public List<Slot> getSlotsToNotify() {
+	public List<Slot<?>> getSlotsToNotify() {
 		return slotsToNotify;
 	}
 
@@ -286,7 +286,7 @@ class TaskInfo<R> {
 	
 	protected void setHandler(Slot<R> handler) {
 		if (slotsToNotify == null)
-			slotsToNotify = new ArrayList<Slot>();
+			slotsToNotify = new ArrayList<Slot<?>>();
 		this.slotsToNotify.add(handler);
 		hasAnySlots = true;
 	}
@@ -308,8 +308,10 @@ class TaskInfo<R> {
 	public TaskID<R> start() {
 		if(this.taskCount == 1)
 			return TaskpoolFactory.getTaskpool().enqueue(this);
-		else
-			return TaskpoolFactory.getTaskpool().enqueueMulti(this, this.taskCount);
+		else{
+			TaskIDGroup<R> taskGroup = TaskpoolFactory.getTaskpool().enqueueMulti(this, this.taskCount);
+			taskGroup.i
+		}
 	}
 
 	//The execute function must be implemented by each child class. 
