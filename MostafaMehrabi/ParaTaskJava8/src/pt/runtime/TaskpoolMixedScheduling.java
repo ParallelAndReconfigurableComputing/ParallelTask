@@ -21,6 +21,7 @@ package pt.runtime;
 
 import java.util.AbstractQueue;
 import java.util.ArrayList;
+
 import pt.queues.FifoLifoQueue;
 
 /**

@@ -1,4 +1,4 @@
-package pt.runtime;
+package pt.functionalInterfaces;
 
 /**
  * <code>NoParamFunctor</code> is a functional interface that does not 
@@ -11,6 +11,6 @@ package pt.runtime;
  */
 
 @FunctionalInterface
-public interface NoParamFunctor <R> {
+public interface FunctorNoArgsWithReturn <R> {
 	public R exec();
 }

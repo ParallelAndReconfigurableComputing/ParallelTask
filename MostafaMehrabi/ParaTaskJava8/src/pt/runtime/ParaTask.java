@@ -19,6 +19,34 @@
 
 package pt.runtime;
 
+import pt.functionalInterfaces.FunctorEightArgsNoReturn;
+import pt.functionalInterfaces.FunctorEightArgsWithReturn;
+import pt.functionalInterfaces.FunctorElevenArgsNoReturn;
+import pt.functionalInterfaces.FunctorElevenArgsWithReturn;
+import pt.functionalInterfaces.FunctorFiveArgsNoReturn;
+import pt.functionalInterfaces.FunctorFiveArgsWithReturn;
+import pt.functionalInterfaces.FunctorFourArgsNoReturn;
+import pt.functionalInterfaces.FunctorFourArgsWithReturn;
+import pt.functionalInterfaces.FunctorNineArgsNoReturn;
+import pt.functionalInterfaces.FunctorNineArgsWithReturn;
+import pt.functionalInterfaces.FunctorNoArgsNoReturn;
+import pt.functionalInterfaces.FunctorNoArgsWithReturn;
+import pt.functionalInterfaces.FunctorOneArgNoReturn;
+import pt.functionalInterfaces.FunctorOneArgWithReturn;
+import pt.functionalInterfaces.FunctorSevenArgsNoReturn;
+import pt.functionalInterfaces.FunctorSevenArgsWithReturn;
+import pt.functionalInterfaces.FunctorSixArgsNoReturn;
+import pt.functionalInterfaces.FunctorSixArgsWithReturn;
+import pt.functionalInterfaces.FunctorTenArgsNoReturn;
+import pt.functionalInterfaces.FunctorTenArgsWithReturn;
+import pt.functionalInterfaces.FunctorThreeArgsNoReturn;
+import pt.functionalInterfaces.FunctorThreeArgsWithReturn;
+import pt.functionalInterfaces.FunctorTwelveArgsNoReturn;
+import pt.functionalInterfaces.FunctorTwelveArgsWithReturn;
+import pt.functionalInterfaces.FunctorTwoArgsNoReturn;
+import pt.functionalInterfaces.FunctorTwoArgsWithReturn;
+import pt.runtime.TaskInfo.TaskType;
+
 /**
  * @author Mostafa Mehrabi
  * @author Nasser Giacaman
@@ -223,5 +251,248 @@ public class ParaTask {
 		return listener;
 	}	
 	
+	//****************************************************************************************TASK GENERATORS******************************************************************
+	//****************************************************************************************ONE-OFF TASKS********************************************************************
+	public static TaskInfo<Void> asTask(FunctorNoArgsNoReturn functor){
+		return new TaskInfoNoArgs<>(functor, TaskType.ONEOFF);
+	}
+	
+	public static <R> TaskInfo<R> asTask(FunctorNoArgsWithReturn<R> functor){
+		return new TaskInfoNoArgs<>(functor, TaskType.ONEOFF);
+	}
+	
+	public static <T1> TaskInfo<Void> asTask(FunctorOneArgNoReturn<T1> functor){
+		return new TaskInfoOneArg<>(functor, TaskType.ONEOFF);
+	}
+	
+	public static <R, T1> TaskInfo<R> asTask(FunctorOneArgWithReturn<R, T1> functor){
+		return new TaskInfoOneArg<>(functor, TaskType.ONEOFF);
+	}
+	
+	public static <T1, T2> TaskInfo<Void> asTask(FunctorTwoArgsNoReturn<T1, T2> functor){
+		return new TaskInfoTwoArgs<>(functor, TaskType.ONEOFF);
+	}
+	
+	public static <R, T1, T2> TaskInfo<R> asTask(FunctorTwoArgsWithReturn<R, T1, T2> functor){
+		return new TaskInfoTwoArgs<>(functor, TaskType.ONEOFF);
+	}
+	
+	public static <T1, T2, T3> TaskInfo<Void> asTask(FunctorThreeArgsNoReturn<T1, T2, T3> functor){
+		return new TaskInfoThreeArgs<>(functor, TaskType.ONEOFF);
+	}
+	
+	public static <R, T1, T2, T3> TaskInfo<R> asTask(FunctorThreeArgsWithReturn<R, T1, T2, T3> functor){
+		return new TaskInfoThreeArgs<>(functor, TaskType.ONEOFF);
+	}
+	
+	public static <T1, T2, T3, T4> TaskInfo<Void> asTask(FunctorFourArgsNoReturn<T1, T2, T3, T4> functor){
+		return new TaskInfoFourArgs<>(functor, TaskType.ONEOFF);
+	}
+	
+	public static <R, T1, T2, T3, T4> TaskInfo<R> asTask(FunctorFourArgsWithReturn<R, T1, T2, T3, T4> functor){
+		return new TaskInfoFourArgs<>(functor, TaskType.ONEOFF);
+	}
+	
+	public static <T1, T2, T3, T4, T5> TaskInfo<Void> asTask(FunctorFiveArgsNoReturn<T1, T2, T3, T4, T5> functor){
+		return new TaskInfoFiveArgs<>(functor, TaskType.ONEOFF);
+	}
+	
+	public static <R, T1, T2, T3, T4, T5> TaskInfo<R> asTask(FunctorFiveArgsWithReturn<R, T1, T2, T3, T4, T5> functor){
+		return new TaskInfoFiveArgs<>(functor, TaskType.ONEOFF);
+	}
+	
+	public static <T1, T2, T3, T4, T5, T6> TaskInfo<Void> asTask(FunctorSixArgsNoReturn<T1, T2, T3, T4, T5, T6> functor){
+		return new TaskInfoSixArgs<>(functor, TaskType.ONEOFF);
+	}
+	
+	public static <R, T1, T2, T3, T4, T5, T6> TaskInfo<R> asTask(FunctorSixArgsWithReturn<R, T1, T2, T3, T4, T5, T6> functor){
+		return new TaskInfoSixArgs<>(functor, TaskType.ONEOFF);
+	}
+	
+	public static <T1, T2, T3, T4, T5, T6, T7> TaskInfo<Void> asTask(FunctorSevenArgsNoReturn<T1, T2, T3, T4, T5, T6, T7> functor){
+		return new TaskInfoSevenArgs<>(functor, TaskType.ONEOFF);
+	}
+	
+	public static <R, T1, T2, T3, T4, T5, T6, T7> TaskInfo<R> asTask(FunctorSevenArgsWithReturn<R, T1, T2, T3, T4, T5, T6, T7> functor){
+		return new TaskInfoSevenArgs<>(functor, TaskType.ONEOFF); 
+	}
+	
+	public static <T1, T2, T3, T4, T5, T6, T7, T8> TaskInfo<Void> asTask(FunctorEightArgsNoReturn<T1, T2, T3, T4, T5, T6, T7, T8> functor){
+		return new TaskInfoEightArgs<>(functor, TaskType.ONEOFF);
+	}
+	
+	public static <R, T1, T2, T3, T4, T5, T6, T7, T8> TaskInfo<R> asTask(FunctorEightArgsWithReturn<R, T1, T2, T3, T4, T5, T6, T7, T8> functor){
+		return new TaskInfoEightArgs<>(functor, TaskType.ONEOFF);
+	}
+	
+	public static <T1, T2, T3, T4, T5, T6, T7, T8, T9> TaskInfo<Void> asTask(FunctorNineArgsNoReturn<T1, T2, T3, T4, T5, T6, T7, T8, T9> functor){
+		return new TaskInfoNineArgs<>(functor, TaskType.ONEOFF);
+	}
+	
+	public static <R, T1, T2, T3, T4, T5, T6, T7, T8, T9> TaskInfo<R> asTask(FunctorNineArgsWithReturn<R, T1, T2, T3, T4, T5, T6, T7, T8, T9> functor){
+		return new TaskInfoNineArgs<>(functor, TaskType.ONEOFF);
+	}
+	
+	public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> TaskInfo<Void> asTask(FunctorTenArgsNoReturn<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> functor){
+		return new TaskInfoTenArgs<>(functor, TaskType.ONEOFF);
+	}
+	
+	public static <R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> TaskInfo<R> asTask(FunctorTenArgsWithReturn<R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> functor){
+		return new TaskInfoTenArgs<>(functor, TaskType.ONEOFF);
+	}
+	
+	public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> TaskInfo<Void> asTask(FunctorElevenArgsNoReturn<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> functor){
+		return new TaskInfoElevenArgs<>(functor, TaskType.ONEOFF);
+	}
+	
+	public static <R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> TaskInfo<R> asTask(FunctorElevenArgsWithReturn<R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> functor){
+		return new TaskInfoElevenArgs<>(functor, TaskType.ONEOFF);
+	}
+	
+	public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> TaskInfo<Void> asTask(FunctorTwelveArgsNoReturn<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> functor){
+		return new TaskInfoTwelveArgs<>(functor, TaskType.ONEOFF);
+	}
+	
+	public static <R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> TaskInfo<R> asTask(FunctorTwelveArgsWithReturn<R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> functor){
+		return new TaskInfoTwelveArgs<>(functor, TaskType.ONEOFF);
+	}
+	
+	//***********************************************************************MULTI TASKS**************************************************************************************************
+	public static TaskInfo<Void> asMultiTask(FunctorNoArgsNoReturn functor){
+		return new TaskInfoNoArgs<>(functor, TaskType.MULTI);
+	}
+	
+	public static TaskInfo<Void> asMultiTask(FunctorNoArgsNoReturn functor, int taskCoun){
+		return new TaskInfoNoArgs<>(functor, TaskType.MULTI, taskCoun);
+	}
+	
+	public static <R> TaskInfo<R> asMultiTask(FunctorNoArgsWithReturn<R> functor){
+		return new TaskInfoNoArgs<>(functor, TaskType.MULTI);
+	}
+	
+	public static <R> TaskInfo<R> asMultiTask(FunctorNoArgsWithReturn<R> functor, int taskCount){
+		return new TaskInfoNoArgs<>(functor, TaskType.MULTI, taskCount);
+	}
+	
+	public static <T1> TaskInfo<Void> asMultiTask(FunctorOneArgNoReturn<T1> functor){
+		return new TaskInfoOneArg<>(functor, TaskType.MULTI);
+	}
+	
+	public static <T1> TaskInfo<Void> asMultiTask(FunctorOneArgNoReturn<T1> functor, int taskCount){
+		return new TaskInfoOneArg<>(functor, TaskType.MULTI, taskCount);
+	}
+	
+	public static <R, T1> TaskInfo<R> asMultiTask(FunctorOneArgWithReturn<R, T1> functor){
+		return new TaskInfoOneArg<>(functor, TaskType.MULTI);
+	}
+	
+	public static <R, T1> TaskInfo<R> asMultiTask(FunctorOneArgWithReturn<R, T1> functor, int taskCount){
+		return new TaskInfoOneArg<>(functor, TaskType.MULTI, taskCount);
+	}
+	
+	public static <T1, T2> TaskInfo<Void> asMultiTask(FunctorTwoArgsNoReturn<T1, T2> functor){
+		return new TaskInfoTwoArgs<>(functor, TaskType.MULTI);
+	}
+	
+	public static <T1, T2> TaskInfo<Void> asMultiTask(FunctorTwoArgsNoReturn<T1, T2> functor, int taskCount){
+		return new TaskInfoTwoArgs<>(functor, TaskType.MULTI, taskCount);
+	}
+	
+	public static <R, T1, T2> TaskInfo<R> asMultiTask(FunctorTwoArgsWithReturn<R, T1, T2> functor){
+		return new TaskInfoTwoArgs<>(functor, TaskType.MULTI);
+	}
+	
+	public static <R, T1, T2> TaskInfo<R> asMultiTask(FunctorTwoArgsWithReturn<R, T1, T2> functor, int taskCount){
+		return new TaskInfoTwoArgs<>(functor, TaskType.MULTI, taskCount);
+	}
+	
+	public static <T1, T2, T3> TaskInfo<Void> asMultiTask(FunctorThreeArgsNoReturn<T1, T2, T3> functor){
+		return new TaskInfoThreeArgs<>(functor, TaskType.MULTI);
+	}
+	
+	public static <T1, T2, T3> TaskInfo<Void> asMultiTask(FunctorThreeArgsNoReturn<T1, T2, T3> functor, int  taskCount){
+		return new TaskInfoThreeArgs<>(functor, TaskType.MULTI, taskCount);
+	}
+	
+	public static <R, T1, T2, T3> TaskInfo<R> asMultiTask(FunctorThreeArgsWithReturn<R, T1, T2, T3> functor){
+		return new TaskInfoThreeArgs<>(functor, TaskType.MULTI);
+	}
+	
+	public static <R, T1, T2, T3> TaskInfo<R> asMultiTask(FunctorThreeArgsWithReturn<R, T1, T2, T3> functor, int taskCount){
+		return new TaskInfoThreeArgs<>(functor, TaskType.MULTI, taskCount);
+	}
+	
+	//********************HERE HERE HERE HERE HERE****************************************************
+	public static <T1, T2, T3, T4> TaskInfo<Void> asMultiTask(FunctorFourArgsNoReturn<T1, T2, T3, T4> functor){
+		return new TaskInfoFourArgs<>(functor, TaskType.ONEOFF);
+	}
+	
+	public static <R, T1, T2, T3, T4> TaskInfo<R> asMultiTask(FunctorFourArgsWithReturn<R, T1, T2, T3, T4> functor){
+		return new TaskInfoFourArgs<>(functor, TaskType.ONEOFF);
+	}
+	
+	public static <T1, T2, T3, T4, T5> TaskInfo<Void> asMultiTask(FunctorFiveArgsNoReturn<T1, T2, T3, T4, T5> functor){
+		return new TaskInfoFiveArgs<>(functor, TaskType.ONEOFF);
+	}
+	
+	public static <R, T1, T2, T3, T4, T5> TaskInfo<R> asMultiTask(FunctorFiveArgsWithReturn<R, T1, T2, T3, T4, T5> functor){
+		return new TaskInfoFiveArgs<>(functor, TaskType.ONEOFF);
+	}
+	
+	public static <T1, T2, T3, T4, T5, T6> TaskInfo<Void> asMultiTask(FunctorSixArgsNoReturn<T1, T2, T3, T4, T5, T6> functor){
+		return new TaskInfoSixArgs<>(functor, TaskType.ONEOFF);
+	}
+	
+	public static <R, T1, T2, T3, T4, T5, T6> TaskInfo<R> asMultiTask(FunctorSixArgsWithReturn<R, T1, T2, T3, T4, T5, T6> functor){
+		return new TaskInfoSixArgs<>(functor, TaskType.ONEOFF);
+	}
+	
+	public static <T1, T2, T3, T4, T5, T6, T7> TaskInfo<Void> asMultiTask(FunctorSevenArgsNoReturn<T1, T2, T3, T4, T5, T6, T7> functor){
+		return new TaskInfoSevenArgs<>(functor, TaskType.ONEOFF);
+	}
+	
+	public static <R, T1, T2, T3, T4, T5, T6, T7> TaskInfo<R> asMultiTask(FunctorSevenArgsWithReturn<R, T1, T2, T3, T4, T5, T6, T7> functor){
+		return new TaskInfoSevenArgs<>(functor, TaskType.ONEOFF); 
+	}
+	
+	public static <T1, T2, T3, T4, T5, T6, T7, T8> TaskInfo<Void> asMultiTask(FunctorEightArgsNoReturn<T1, T2, T3, T4, T5, T6, T7, T8> functor){
+		return new TaskInfoEightArgs<>(functor, TaskType.ONEOFF);
+	}
+	
+	public static <R, T1, T2, T3, T4, T5, T6, T7, T8> TaskInfo<R> asMultiTask(FunctorEightArgsWithReturn<R, T1, T2, T3, T4, T5, T6, T7, T8> functor){
+		return new TaskInfoEightArgs<>(functor, TaskType.ONEOFF);
+	}
+	
+	public static <T1, T2, T3, T4, T5, T6, T7, T8, T9> TaskInfo<Void> asMultiTask(FunctorNineArgsNoReturn<T1, T2, T3, T4, T5, T6, T7, T8, T9> functor){
+		return new TaskInfoNineArgs<>(functor, TaskType.ONEOFF);
+	}
+	
+	public static <R, T1, T2, T3, T4, T5, T6, T7, T8, T9> TaskInfo<R> asMultiTask(FunctorNineArgsWithReturn<R, T1, T2, T3, T4, T5, T6, T7, T8, T9> functor){
+		return new TaskInfoNineArgs<>(functor, TaskType.ONEOFF);
+	}
+	
+	public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> TaskInfo<Void> asMultiTask(FunctorTenArgsNoReturn<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> functor){
+		return new TaskInfoTenArgs<>(functor, TaskType.ONEOFF);
+	}
+	
+	public static <R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> TaskInfo<R> asMultiTask(FunctorTenArgsWithReturn<R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> functor){
+		return new TaskInfoTenArgs<>(functor, TaskType.ONEOFF);
+	}
+	
+	public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> TaskInfo<Void> asMultiTask(FunctorElevenArgsNoReturn<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> functor){
+		return new TaskInfoElevenArgs<>(functor, TaskType.ONEOFF);
+	}
+	
+	public static <R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> TaskInfo<R> asMultiTask(FunctorElevenArgsWithReturn<R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> functor){
+		return new TaskInfoElevenArgs<>(functor, TaskType.ONEOFF);
+	}
+	
+	public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> TaskInfo<Void> asMultiTask(FunctorTwelveArgsNoReturn<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> functor){
+		return new TaskInfoTwelveArgs<>(functor, TaskType.ONEOFF);
+	}
+	
+	public static <R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> TaskInfo<R> asMultiTask(FunctorTwelveArgsWithReturn<R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> functor){
+		return new TaskInfoTwelveArgs<>(functor, TaskType.ONEOFF);
+	}
 	
 }

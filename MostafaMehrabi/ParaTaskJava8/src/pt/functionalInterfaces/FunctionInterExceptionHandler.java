@@ -1,6 +1,6 @@
-package pt.runtime;
+package pt.functionalInterfaces;
 
 @FunctionalInterface
 public interface FunctionInterExceptionHandler {
-	void doWork(Throwable e);
+	void processException(Throwable e);
 }
