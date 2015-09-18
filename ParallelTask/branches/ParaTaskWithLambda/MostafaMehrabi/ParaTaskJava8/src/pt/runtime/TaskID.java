@@ -682,7 +682,9 @@ public class TaskID<T> {
 				//Since slots are executed in the order they are enqueued, then this will be the last slot!
 				//We want to ensure that 'setComplete' is called after all slots are executed, so we enqueue
 				//the method as another slot at the end.
-				executeOneTaskSlot(new Slot(this::setComplete).setIsSetCompleteSlot(true));
+				Slot<Void> slot = new SlotNoArgs<>(this::setComplete);
+				slot.setIsSetCompleteSlot(true);
+				executeOneTaskSlot(slot);
 				
 			} else {
 				setComplete();
@@ -698,10 +700,10 @@ public class TaskID<T> {
 	 * @author Mostafa Mehrabi
 	 * @since 9/9/2014
 	 * */
-	protected Slot getExceptionHandler(Class<?> occurredException) {
+	protected Slot<?> getExceptionHandler(Class<?> occurredException) {
 		
 		//-- first, try to get handler defined immediately for this task
-		Slot handler = taskInfo.getExceptionHandler(occurredException);
+		Slot<?> handler = taskInfo.getExceptionHandler(occurredException);
 		
 		TaskID<?> currentTask = this;
 		//-- while we have not found a handler, and while there are other enclosing tasks
@@ -715,7 +717,7 @@ public class TaskID<T> {
 	
 	//-- returns the number of handlers that it will execute for this TaskID
 	private boolean executeExceptionHandler() {
-		Slot handler = getExceptionHandler(exception.getClass());
+		Slot<?> handler = getExceptionHandler(exception.getClass());
 		
 		if (handler != null) {
 			executeOneTaskSlot(handler);
@@ -729,7 +731,7 @@ public class TaskID<T> {
 		}
 	}
 	
-	void executeOneTaskSlot(Slot slot) {
+	void executeOneTaskSlot(Slot<?> slot) {
 		ParaTask.getEDTTaskListener().executeSlot(slot);
 	}
 	
@@ -738,8 +740,8 @@ public class TaskID<T> {
 	}
 	
 	protected int executeAllTaskSlots() {
-		List<Slot> slotsToNotify = taskInfo.getInterSlotsToNotify();
-		for (Slot slotToNotify : slotsToNotify)
+		List<Slot<?>> slotsToNotify = taskInfo.getInterSlotsToNotify();
+		for (Slot<?> slotToNotify : slotsToNotify)
 			executeOneTaskSlot(slotToNotify);
 		return taskInfo.getSlotsToNotify().size();
 	}

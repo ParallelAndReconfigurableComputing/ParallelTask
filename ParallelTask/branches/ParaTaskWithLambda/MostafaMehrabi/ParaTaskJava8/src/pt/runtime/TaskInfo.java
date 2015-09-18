@@ -1,4 +1,5 @@
 /*
+
  *  Copyright (C) 2010 Nasser Giacaman, Oliver Sinnen
  *
  *  This file is part of Parallel Task.
@@ -27,6 +28,34 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import pt.functionalInterfaces.FunctionInterExceptionHandler;
+import pt.functionalInterfaces.FunctorEightArgsNoReturn;
+import pt.functionalInterfaces.FunctorEightArgsWithReturn;
+import pt.functionalInterfaces.FunctorElevenArgsNoReturn;
+import pt.functionalInterfaces.FunctorElevenArgsWithReturn;
+import pt.functionalInterfaces.FunctorFiveArgsNoReturn;
+import pt.functionalInterfaces.FunctorFiveArgsWithReturn;
+import pt.functionalInterfaces.FunctorFourArgsNoReturn;
+import pt.functionalInterfaces.FunctorFourArgsWithReturn;
+import pt.functionalInterfaces.FunctorNineArgsNoReturn;
+import pt.functionalInterfaces.FunctorNineArgsWithReturn;
+import pt.functionalInterfaces.FunctorNoArgsNoReturn;
+import pt.functionalInterfaces.FunctorOneArgNoReturn;
+import pt.functionalInterfaces.FunctorSevenArgsNoReturn;
+import pt.functionalInterfaces.FunctorSevenArgsWithReturn;
+import pt.functionalInterfaces.FunctorSixArgsNoReturn;
+import pt.functionalInterfaces.FunctorSixArgsWithReturn;
+import pt.functionalInterfaces.FunctorTenArgsNoReturn;
+import pt.functionalInterfaces.FunctorTenArgsWithReturn;
+import pt.functionalInterfaces.FunctorThreeArgsNoReturn;
+import pt.functionalInterfaces.FunctorThreeArgsWithReturn;
+import pt.functionalInterfaces.FunctorTwelveArgsNoReturn;
+import pt.functionalInterfaces.FunctorTwelveArgsWithReturn;
+import pt.functionalInterfaces.FunctorTwoArgsNoReturn;
+import pt.functionalInterfaces.FunctorNoArgsWithReturn;
+import pt.functionalInterfaces.FunctorOneArgWithReturn;
+import pt.functionalInterfaces.FunctorTwoArgsWithReturn;
+
 /**
  * 
  * This class is used to store information regarding the task, which is not related 
@@ -52,7 +81,7 @@ import java.util.Set;
  * @author Mostafa Mehrabi
  * @since  7/9/2014
  */
-class TaskInfo<T> {
+class TaskInfo<R> {
 	static {
 		ParaTask.init();
 	}
@@ -60,69 +89,44 @@ class TaskInfo<T> {
 	static final int STAR = 0;
 
 	// for ParaTask in Java 8
-	private Functor<?> lambda;
-	private FunctorVoid lambdaVoid;
-	private StandardFunctor<?, ?> standardFunctor;
+	//private Functor<?> lambda;
 	
-	private int taskCount = 1;
+	protected int taskCount = 1;
 
-	private Thread registeringThread;
-	private List<Slot> slotsToNotify;
-	private List<Slot> interSlotsToNotify;
-	private List<TaskID<?>> dependences;
+	protected Thread registeringThread;
+	protected List<Slot<?>> slotsToNotify;
+	protected List<Slot<?>> interSlotsToNotify;
+	protected List<TaskID<?>> dependences;
 
 	// for implicit results/dequeuing
-	private int[] taskIdArgIndexes = new int[] {};
-	private int[] queueArgIndexes = new int[] {};
+	protected int[] taskIdArgIndexes = new int[] {};
+	protected int[] queueArgIndexes = new int[] {};
 
-	private boolean hasAnySlots = false;
-	private boolean registeredByGuiThread = false;
+	protected boolean hasAnySlots = false;
+	protected boolean isMultiTask = false;
+	protected boolean isInteractive = false;
+	protected boolean registeredByGuiThread = false;
+	enum TaskType{MULTI, INTERACTIVE, ONEOFF};
 
-	// -- Should always ensure that the registered exceptions are kept lined up
-	// with the handlers
-	// Maybe using a Map was better,
-	//private List<Class<?>> exceptions = null;//keeps the records of the exceptions occurred 
-	//private List<Slot> exceptionHandlers = null;//keeps the records of the handlers corresponding to those exceptions
-	private Map<Class<?>, Slot> asyncExceptions = new HashMap<Class<?>, Slot>();
-
-	private boolean isInteractive = false;
-
-	/**
-	 * 
-	 * @author Kingsley
-	 * @since 10/05/2013
-	 * 
-	 *        Used to identify if it is a sub task for a multi task
-	 * 
-	 * */
-	private boolean isSubTask = false;
-
-	//These constructors can at least automate the process of creating TaskID.
-	private TaskInfo(Functor<?> lambda) {
-		this.lambda = lambda;
-	}
-
-	private TaskInfo(FunctorVoid lambda) {
-		this.lambdaVoid = lambda;
-	}
+	protected Map<Class<?>, Slot<?>> asyncExceptions = new HashMap<Class<?>, Slot<?>>();
 	
-	private <R, P> TaskInfo(StandardFunctor<R, P> standardFunctor){
-		this.standardFunctor = standardFunctor;
-	}
+	/* 
+	 * Used to identify if it is a sub task for a multi task
+	 */
+	protected boolean isSubTask = false;
 
-	/**
+	protected TaskInfo(){}
+	
+	/*
 	 * Sets the number of tasks in a multiple-task.
-	 * 
-	 * @param count The number of multiple-tasks
 	 * 
 	 */
 	//some methods are returning the current instance of Task<T> which seems to be pointless
-	private TaskInfo<T> setCount(int count) {
+	protected void setCount(int count) {
 		if(count < 0) {
 			throw new IllegalArgumentException("the value for task count must be greater than 0 or equal to STAR (0)");
 		}
 		this.taskCount = count;
-		return this;
 	}
 	
 	boolean hasBeenRegisteredByGuiThread(){
@@ -162,7 +166,7 @@ class TaskInfo<T> {
 	}
 
 	//Why do we have to check if the GUI thread is the EDT?
-	public Thread setRegisteringThread() {
+	public void setRegisteringThread() {
 		try {
 			if (GuiThread.currentThreadIsEventDispatchThread()){//if the current thread is an event dispatch thread
 				registeringThread = ParaTask.getEDT();
@@ -173,19 +177,18 @@ class TaskInfo<T> {
 		} catch (Exception e) {
 			registeringThread = Thread.currentThread();
 		}
-		return registeringThread;
 	}
 
 	//make sure these steps are automated.. Should it be automated?
-	public void setTaskIDForSlotsAndHandlers(TaskID<T> taskID) {
+	public void setTaskIDForSlotsAndHandlers(TaskID<R> taskID) {
 		if (slotsToNotify != null) {
-			for (Iterator<Slot> it = slotsToNotify.iterator(); it.hasNext();) {
-				it.next().setTaskID(taskID);
+			for (Slot slot : slotsToNotify) {
+				slot.setTaskID(taskID);
 			}
 		}
 		if (interSlotsToNotify != null) {
-			for (Iterator<Slot> it = interSlotsToNotify.iterator(); it.hasNext();) {
-				it.next().setTaskID(taskID);
+			for (Slot slot : interSlotsToNotify){
+				slot.setTaskID(taskID);
 			}
 		}
 		
@@ -198,14 +201,7 @@ class TaskInfo<T> {
 		}
 	}
 
-	/**
-	 * This method should be used in the order that the exception handlers are
-	 * to be considered later on
-	 * 
-	 * @param exceptionClass
-	 * @param handler
-	 */
-	public TaskInfo<T> asyncCatch(Class<?> exceptionClass, FunctionInterExceptionHandler handler) {
+	void asyncCatch(Class<?> exceptionClass, FunctionInterExceptionHandler handler) {
 		
 		if (exceptionClass == null)
 			throw new IllegalArgumentException("There is no exception class specified!");
@@ -214,7 +210,6 @@ class TaskInfo<T> {
 	
 		asyncExceptions.put(exceptionClass, (Slot)handler);
 		hasAnySlots = true;
-		return this;
 	}
 
 	/**
@@ -225,18 +220,17 @@ class TaskInfo<T> {
 		if (asyncExceptions.isEmpty())
 			return null;
 		
-		else if (!asyncExceptions.containsKey(occuredException))
-			return null;
-			
-		else 
+		if (!asyncExceptions.containsKey(occuredException))
 			return asyncExceptions.get(occuredException);
+			
+		return null; 
 	}
 	
 	public boolean hasAnySlots() {
 		return hasAnySlots;
 	}
 	
-	public List<Slot> getInterSlotsToNotify() {
+	public List<Slot<?>> getInterSlotsToNotify() {
 		return interSlotsToNotify;
 	}
 
@@ -252,23 +246,18 @@ class TaskInfo<T> {
 		return isInteractive;
 	}
 
-	private TaskInfo<T> setInteractive(boolean isInteractive) {
+	protected void setInteractive(boolean isInteractive) {
 		this.isInteractive = isInteractive;
-		return this;
+	}
+	
+	protected void setMultiTask(boolean isMultiTask){
+		this.isMultiTask = isMultiTask;
 	}
 
-	public boolean hasRegisteredHandlers() {
+	protected boolean hasRegisteredHandlers() {
 		return !asyncExceptions.isEmpty();
 	}
 
-	/**
-	 * 
-	 * @author Kingsley
-	 * @since 10/05/2013
-	 * 
-	 *        Getter and Setter for isSubTask
-	 * 
-	 * */
 	protected boolean isSubTask() {
 		return isSubTask;
 	}
@@ -277,96 +266,51 @@ class TaskInfo<T> {
 		this.isSubTask = isSubTask;
 	}
 
-	//returns a functor as a task
-	public static <T> TaskInfo<T> asTask(Functor<T> fun) {
-		return new TaskInfo<T>(fun);
+	//This method is used by child classes to setup their task attributes
+	protected void rudimentarySetup(TaskType taskType, int taskCount){
+		
+		switch(taskType){
+		case MULTI:
+			setMultiTask(true);
+			setCount(taskCount);
+			break;
+		case INTERACTIVE:
+			setInteractive(true);
+			setCount(1);
+			break;
+		case ONEOFF:
+			setCount(1);
+			break;
+    	}		
 	}
 	
-	public static TaskInfo<Void> asTask(FunctorVoid fun) {
-		return new TaskInfo<Void>(fun);
-	}
-	
-	public static <R, P, T> TaskInfo<T> asTask(StandardFunctor<R, P> standardFunctor){
-		return new TaskInfo<T>(standardFunctor);
-	}
-	
-	//Once the final policy for which "Functor" to use is decide, make sure that 
-	//asTask, asMultiple and asIOTask methods are modified accordingly.
-	public static <T> TaskInfo<T> asMultiTask(Functor<T> fun, int count) {
-		return new TaskInfo<T>(fun).setCount(count);
-	}
-	
-	public static <T> TaskInfo<T> asMultiTask(Functor<T> fun) {
-		return new TaskInfo<T>(fun).setCount(STAR);
-	}
-	
-	public static TaskInfo<Void> asMultiTask(FunctorVoid fun, int count) {
-		return new TaskInfo<Void>(fun).setCount(count);
-	}
-	
-	public static TaskInfo<Void> asMultiTask(FunctorVoid fun) {
-		return new TaskInfo<Void>(fun).setCount(STAR);
-	}
-
-	public static <T> TaskInfo<T> asIOTask(Functor<T> fun) {
-		return new TaskInfo<T>(fun).setInteractive(true);
-	}
-
-	public static TaskInfo<Void> asIOTask(FunctorVoid fun) {
-		return new TaskInfo<Void>(fun).setInteractive(true);
-	}
-
-	public <T2> TaskInfo<T> withHandler(Functor<T2> handler) {
+	protected void setHandler(Slot<R> handler) {
 		if (slotsToNotify == null)
 			slotsToNotify = new ArrayList<Slot>();
-		this.slotsToNotify.add(new Slot(handler));
+		this.slotsToNotify.add(handler);
 		hasAnySlots = true;
-		return this;
 	}
 
-	public TaskInfo<T> withHandler(FunctorVoidWithOneArg<TaskID<?>> handler) {
-		if (slotsToNotify == null)
-			slotsToNotify = new ArrayList<Slot>();
-		this.slotsToNotify.add(new Slot(handler));
-		hasAnySlots = true;
-		return this;
-	}
-	
-	public TaskInfo<T> withHandler(FunctorVoid handler) {
-		if (slotsToNotify == null)
-			slotsToNotify = new ArrayList<Slot>();
-		this.slotsToNotify.add(new Slot(handler));
-		hasAnySlots = true;
-		return this;
-	}
 	
 	//with interim handlers could be pointless and unnecessary	
-	public TaskInfo<T> withInterimHandler(FunctorVoidWithTwoArgs<TaskID<?>, Object> handler) {
-		if (interSlotsToNotify == null)
-			interSlotsToNotify = new ArrayList<Slot>();
-		interSlotsToNotify.add(new Slot(handler));
-		return this;
-	}
+//	public TaskInfo<T> withInterimHandler(FunctorTwoArgsNoReturn<TaskID<?>, Object> handler) {
+//		if (interSlotsToNotify == null)
+//			interSlotsToNotify = new ArrayList<Slot>();
+//		interSlotsToNotify.add(new Slot(handler));
+//		return this;
+//	}
 
-	public TaskInfo<T> dependsOn(TaskID<?>... taskIDs) {
+	public void dependsOn(TaskID<?>... taskIDs) {
 		this.dependences = Arrays.asList(taskIDs);
-		return this;
 	}
 
 	//This is where a Task returns its corresponding TaskID
-	public TaskID<T> start() {
+	public TaskID<R> start() {
 		if(this.taskCount == 1)
 			return TaskpoolFactory.getTaskpool().enqueue(this);
 		else
 			return TaskpoolFactory.getTaskpool().enqueueMulti(this, this.taskCount);
 	}
 
-	Object execute() {
-		if (this.lambda != null)
-			return this.lambda.exec();
-		else {
-			this.lambdaVoid.exec();
-			return null;
-		}
-	}
+	//The execute function must be implemented by each child class. 
 }
