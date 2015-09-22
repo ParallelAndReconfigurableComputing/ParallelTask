@@ -100,7 +100,7 @@ public abstract class TaskThread extends Thread {
 		T result = null;
 		
 		try {
-			result = (T) taskInfo.execute();
+			result = (T)  taskInfo.execute();
 			
 			taskID.setReturnResult(result);
 			taskID.enqueueSlots(false);

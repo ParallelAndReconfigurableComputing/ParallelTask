@@ -72,7 +72,7 @@ public interface Taskpool {
 	* 
 	* 
 	* */	
-	public <T> TaskIDGroup<T> enqueueMulti(TaskInfo<T> taskinfo, int count);
+	public <T> TaskIDGroup<T> enqueueMulti(TaskInfo<T> taskinfo);
 	
 	/**
 	* The worker thread polls the task pool for a task.. If there isn't one, then it returns 
