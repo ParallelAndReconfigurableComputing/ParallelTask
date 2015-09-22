@@ -7,6 +7,8 @@ import pt.runtime.TaskInfo;
 
 class TaskInfoOneArg<R, T1> extends TaskInfo<R> {
 	
+	private T1 arg1;
+	
 	private FunctorOneArgNoReturn<T1> functorNoReturn = null;
 	private FunctorOneArgWithReturn<R, T1> functorWithReturn = null;
 	
@@ -28,7 +30,25 @@ class TaskInfoOneArg<R, T1> extends TaskInfo<R> {
 		this(functorWithReturn, taskType, STAR);
 	}
 	
-	R execute(T1 arg1){
+	public TaskID<R> start(T1 arg1) {
+		try{
+			this.arg1 = arg1;
+			
+			if(this.taskCount == 1)
+				return TaskpoolFactory.getTaskpool().enqueue(this);
+			else{
+				TaskIDGroup<R> taskGroup = TaskpoolFactory.getTaskpool().enqueueMulti(this);
+				return taskGroup;
+			}
+		}catch(IllegalArgumentException e){
+			System.out.println("An exception occurred in TaskInfoOneArg::start method!");
+			System.out.println("The error might have been caused by passing unexpected parameters!");
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	R execute(){
 		if (functorWithReturn!=null)
 			return functorWithReturn.exec(arg1);
 		functorNoReturn.exec(arg1);

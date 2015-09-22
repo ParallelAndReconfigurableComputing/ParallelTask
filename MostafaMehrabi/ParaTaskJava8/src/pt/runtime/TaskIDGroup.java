@@ -55,8 +55,8 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	private ReentrantLock reductionLock = new ReentrantLock();
 	private T reductionAnswer;
 	
-	//private int nextRelativeID = 0;
-	
+	/*Indicates how many sub tasks should be expanded, and its value can
+	only be set from {@link AbstractTaskPool#enqueueMulti()}*/
 	private int groupSize = 0;
 	private Reduction<T> reductionOperation = null; 
 	
@@ -87,35 +87,35 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	 * group.
 	 * */
 	public TaskIDGroup(int groupSize) {
-		this.groupSize = groupSize;
+		this.setCount(groupSize);
 	}
 	
 	/**this is only used to create a multi-task (the size is known before adding the inner tasks)*/
 	TaskIDGroup(int groupSize, TaskInfo<T> taskInfo) {
 		super(taskInfo);
 		this.isMultiTask = true;
-		this.groupSize = groupSize;
+		this.setCount(groupSize);
 		this.reductionOperation = null;
 	}
 	
 	TaskIDGroup(int groupSize, TaskInfo<T> taskInfo, boolean isMultiTask){
 		super(taskInfo);
 		this.isMultiTask = isMultiTask;
-		this.groupSize = groupSize;
+		this.setCount(groupSize);
 		this.reductionOperation = null;
 	}
 	
 	TaskIDGroup(int groupSize, TaskInfo<T> taskInfo, Reduction<T> reduction) {
 		super(taskInfo);
 		this.isMultiTask = true;
-		this.groupSize = groupSize;
+		this.setCount(groupSize);
 		this.reductionOperation = reduction;
 	}
 	
 	TaskIDGroup(int groupSize, TaskInfo<T> taskInfo, boolean isMultiTask, Reduction<T> reduction) {
 		super(taskInfo);
 		this.isMultiTask = isMultiTask;
-		this.groupSize = groupSize;
+		this.setCount(groupSize);
 		this.reductionOperation = reduction;
 	}
 	
@@ -129,6 +129,13 @@ public class TaskIDGroup<T> extends TaskID<T> {
 		return isMultiTask;
 	}
 	
+	int getCount() {
+		return groupSize;
+	}
+
+	void setCount(int groupSize) {
+		this.groupSize = groupSize;
+	}
 	/**
 	 * Add a task to this group. 
 	 * @param id	The <code>TaskID</code> to add
@@ -171,8 +178,6 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	 */
 	public T reduce(Reduction<T> reduction) throws ExecutionException, InterruptedException {
 		waitTillFinished();
-		
-		// TODO want to make this like the Parallel Iterator's reduction.. i.e. checks initial value, etc.. 
 		
 		if (groupSize == 0)			
 			return null;
@@ -235,7 +240,7 @@ public class TaskIDGroup<T> extends TaskID<T> {
 				for (TaskID<?> taskID : innerTasks ) {
 					Throwable exception = taskID.getException();
 					if (exception != null) {
-						Slot handler = getExceptionHandler(exception.getClass());
+						Slot<?> handler = getExceptionHandler(exception.getClass());
 						
 						if (handler != null) {
 							executeOneTaskSlot(handler);
@@ -257,7 +262,9 @@ public class TaskIDGroup<T> extends TaskID<T> {
 			if (nothingToQueue) {
 				setComplete();
 			} else {
-				executeOneTaskSlot(new Slot(this::setComplete).setIsSetCompleteSlot(true));
+				Slot<Void> slot = new SlotNoArgs<Void>(this::setComplete);
+				slot.setIsSetCompleteSlot(true);
+				executeOneTaskSlot(slot);
 			}
 		}else {
 //			System.out.println("Group size of "+ groupSize+ " not finished. Number of tasks completed so far: "+numCompleted);
@@ -309,7 +316,7 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	@Override
 	public TaskInfo<T> getTaskInfo() {
 		return taskInfo;
-		//throw new UnsupportedOperationException("TODO: Not implemented! Does a TaskIDGroup need to be able to use this method?");
+		//throw new UnsupportedOperationException("Does a TaskIDGroup need to be able to use this method?");
 	}
 
 	@Override

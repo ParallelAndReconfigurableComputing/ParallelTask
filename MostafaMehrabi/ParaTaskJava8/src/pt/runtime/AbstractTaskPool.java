@@ -133,14 +133,9 @@ public abstract class AbstractTaskPool implements Taskpool {
 	 * thread is a task-thread, then its corresponding task is recorded as the enclosing task. 
 	 */
 	public <T> TaskID<T> enqueue(TaskInfo<T> taskInfo) {
-		//List<TaskID<?>> allDependences = null;
-		List<TaskID<?>> allDependences = taskInfo.getDependences();
-		//currently the method "allTasksInList" is not doing anything
-		//so we can remove this part of the logic
-//		if (taskInfo.getDependences() != null)
-//			allDependences = ParaTask.allTasksInList(taskInfo.getDependences());
 		
-		TaskID<T> taskID = new TaskID<>(taskInfo);
+		List<TaskID<?>> allDependences = taskInfo.getDependences();
+		TaskID<T> taskID = new TaskID<T>(taskInfo);
 		
 		//determine if this task is being enqueued from within another task. If so, set the enclosing task (needed to 
 		//propagate exceptions to outer tasks (in case they have a suitable handler)).
@@ -165,19 +160,14 @@ public abstract class AbstractTaskPool implements Taskpool {
 	}	
 	
 	@Override
-	public <T> TaskIDGroup<T> enqueueMulti(TaskInfo<T> taskInfo, int count){
-		
+	public <T> TaskIDGroup<T> enqueueMulti(TaskInfo<T> taskInfo){
+		int count = taskInfo.taskCount;
 		if (count == TaskInfo.STAR)
 			count = ThreadPool.getMultiTaskThreadPoolSize();
 		
-		TaskIDGroup<T> group = new TaskIDGroup<T>(count, taskInfo);
-		group.setCount(count);
+		//currently there is no mechanism for TaskIDGroups where different tasks are scheduled within a group!
+		TaskIDGroup<T> group = new TaskIDGroup<T>(count, taskInfo, taskInfo.isMultiTask());
 		
-		//same thing here!
-//		List<TaskID<?>> allDependences = null;
-//		if (taskInfo.getDependences() != null)
-//			allDependences = ParaTask.allTasksInList(taskInfo.getDependences());
-			
 		List<TaskID<?>> allDependences = taskInfo.getDependences();
 		Thread registeringThread = taskInfo.setRegisteringThread();
 		
@@ -250,9 +240,11 @@ public abstract class AbstractTaskPool implements Taskpool {
 		it.start();
 	}
 	
-	/**
+	/*
 	 * Adds a task to the queue of waiting-tasks, which are waiting on their dependencies to finish.  
 	 * There is just one waiting queue, therefore adding to the waiting queue is not schedule-specific.
+	 * If a waiting task has dependencies, those dependencies will be set for the TaskID as well.
+	 * and They get the waiting task as a waiter for the dependencies.  
 	 */
 	protected void enqueueWaitingTask(TaskID<?> taskID, List<TaskID<?>> allDependences) {
 

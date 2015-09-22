@@ -23,38 +23,12 @@ package pt.runtime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import pt.functionalInterfaces.FunctionInterExceptionHandler;
-import pt.functionalInterfaces.FunctorEightArgsNoReturn;
-import pt.functionalInterfaces.FunctorEightArgsWithReturn;
-import pt.functionalInterfaces.FunctorElevenArgsNoReturn;
-import pt.functionalInterfaces.FunctorElevenArgsWithReturn;
-import pt.functionalInterfaces.FunctorFiveArgsNoReturn;
-import pt.functionalInterfaces.FunctorFiveArgsWithReturn;
-import pt.functionalInterfaces.FunctorFourArgsNoReturn;
-import pt.functionalInterfaces.FunctorFourArgsWithReturn;
-import pt.functionalInterfaces.FunctorNineArgsNoReturn;
-import pt.functionalInterfaces.FunctorNineArgsWithReturn;
-import pt.functionalInterfaces.FunctorNoArgsNoReturn;
-import pt.functionalInterfaces.FunctorOneArgNoReturn;
-import pt.functionalInterfaces.FunctorSevenArgsNoReturn;
-import pt.functionalInterfaces.FunctorSevenArgsWithReturn;
-import pt.functionalInterfaces.FunctorSixArgsNoReturn;
-import pt.functionalInterfaces.FunctorSixArgsWithReturn;
-import pt.functionalInterfaces.FunctorTenArgsNoReturn;
-import pt.functionalInterfaces.FunctorTenArgsWithReturn;
-import pt.functionalInterfaces.FunctorThreeArgsNoReturn;
-import pt.functionalInterfaces.FunctorThreeArgsWithReturn;
-import pt.functionalInterfaces.FunctorTwelveArgsNoReturn;
-import pt.functionalInterfaces.FunctorTwelveArgsWithReturn;
-import pt.functionalInterfaces.FunctorTwoArgsNoReturn;
-import pt.functionalInterfaces.FunctorNoArgsWithReturn;
-import pt.functionalInterfaces.FunctorOneArgWithReturn;
-import pt.functionalInterfaces.FunctorTwoArgsWithReturn;
+
 
 /**
  * 
@@ -81,7 +55,7 @@ import pt.functionalInterfaces.FunctorTwoArgsWithReturn;
  * @author Mostafa Mehrabi
  * @since  7/9/2014
  */
-public class TaskInfo<R> {
+public abstract class TaskInfo<R> {
 	static {
 		ParaTask.init();
 	}
@@ -166,7 +140,7 @@ public class TaskInfo<R> {
 	}
 
 	//Why do we have to check if the GUI thread is the EDT?
-	public void setRegisteringThread() {
+	public Thread setRegisteringThread() {
 		try {
 			if (GuiThread.currentThreadIsEventDispatchThread()){//if the current thread is an event dispatch thread
 				registeringThread = ParaTask.getEDT();
@@ -177,6 +151,7 @@ public class TaskInfo<R> {
 		} catch (Exception e) {
 			registeringThread = Thread.currentThread();
 		}
+		return registeringThread;
 	}
 
 	//make sure these steps are automated.. Should it be automated?
@@ -245,13 +220,17 @@ public class TaskInfo<R> {
 	public boolean isInteractive() {
 		return isInteractive;
 	}
-
+	
 	protected void setInteractive(boolean isInteractive) {
 		this.isInteractive = isInteractive;
 	}
 	
 	protected void setMultiTask(boolean isMultiTask){
 		this.isMultiTask = isMultiTask;
+	}
+	
+	public boolean isMultiTask(){
+		return this.isMultiTask;
 	}
 
 	protected boolean hasRegisteredHandlers() {
@@ -305,14 +284,16 @@ public class TaskInfo<R> {
 	}
 
 	//This is where a Task returns its corresponding TaskID
-	public TaskID<R> start() {
-		if(this.taskCount == 1)
-			return TaskpoolFactory.getTaskpool().enqueue(this);
-		else{
-			TaskIDGroup<R> taskGroup = TaskpoolFactory.getTaskpool().enqueueMulti(this, this.taskCount);
-			taskGroup.i
-		}
-	}
+//	public TaskID<R> start() {
+//		if(this.taskCount == 1)
+//			return TaskpoolFactory.getTaskpool().enqueue(this);
+//		else{
+//			TaskIDGroup<R> taskGroup = TaskpoolFactory.getTaskpool().enqueueMulti(this, this.taskCount);
+//			taskGroup.i
+//		}
+//	}
+	
+	abstract R execute();
 
 	//The execute function must be implemented by each child class. 
 }

@@ -74,16 +74,8 @@ import java.util.concurrent.locks.ReentrantLock;
 //a functor (i.e., R).
 public class TaskID<T> {
 	
-	/**
-	 * 
-	 * @author  Kingsley
-	 * @since 04/05/2013
-	 * 
-	 * Indicates how many sub tasks should be expanded, and its value can
-	 * only be set from {@link AbstractTaskPool#enqueueMulti()}
-	 * 
-	 * */
-	private int count = 0;
+	
+	//private int count = 0;
 	
 	/**
 	 * 
@@ -220,17 +212,6 @@ public class TaskID<T> {
 			throw new UnsupportedOperationException("Don't call this constructor if passing in 'false'!");
 		}
 	}
-	
-	
-	
-	protected int getCount() {
-		return count;
-	}
-
-	protected void setCount(int count) {
-		this.count = count;
-	}
-	
 	
 	protected boolean isSubTask() {
 		return isSubTask;
