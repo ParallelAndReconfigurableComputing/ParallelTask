@@ -49,7 +49,7 @@ public class TaskpoolFactory {
 					break;
 				}
 			}
-			lock.unlock(); 
+			lock.unlock();
 		}
 		return taskpool;
 	}

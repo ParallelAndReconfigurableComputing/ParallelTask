@@ -93,7 +93,7 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	/**this is only used to create a multi-task (the size is known before adding the inner tasks)*/
 	TaskIDGroup(int groupSize, TaskInfo<T> taskInfo) {
 		super(taskInfo);
-		this.isMultiTask = true;
+		this.isMultiTask = taskInfo.isMultiTask();
 		this.setCount(groupSize);
 		this.reductionOperation = null;
 	}
@@ -107,7 +107,7 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	
 	TaskIDGroup(int groupSize, TaskInfo<T> taskInfo, Reduction<T> reduction) {
 		super(taskInfo);
-		this.isMultiTask = true;
+		this.isMultiTask = taskInfo.isMultiTask();
 		this.setCount(groupSize);
 		this.reductionOperation = reduction;
 	}
@@ -262,7 +262,7 @@ public class TaskIDGroup<T> extends TaskID<T> {
 			if (nothingToQueue) {
 				setComplete();
 			} else {
-				Slot<Void> slot = new SlotNoArgs<Void>(this::setComplete);
+				Slot<Void> slot = new Slot<Void>(this::setComplete);
 				slot.setIsSetCompleteSlot(true);
 				executeOneTaskSlot(slot);
 			}

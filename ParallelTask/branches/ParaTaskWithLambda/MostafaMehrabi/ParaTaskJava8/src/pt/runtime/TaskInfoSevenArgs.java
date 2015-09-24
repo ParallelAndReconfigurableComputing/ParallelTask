@@ -3,7 +3,7 @@ package pt.runtime;
 import pt.functionalInterfaces.FunctorSevenArgsNoReturn;
 import pt.functionalInterfaces.FunctorSevenArgsWithReturn;
 
-class TaskInfoSevenArgs<R, T1, T2, T3, T4, T5, T6, T7> extends TaskInfo<R> {
+public class TaskInfoSevenArgs<R, T1, T2, T3, T4, T5, T6, T7> extends TaskInfo<R> {
 
 	private FunctorSevenArgsNoReturn<T1, T2, T3, T4, T5, T6, T7> functorNoReturn = null;
 	private FunctorSevenArgsWithReturn<R, T1, T2, T3, T4, T5, T6, T7> functorWithReturn = null;

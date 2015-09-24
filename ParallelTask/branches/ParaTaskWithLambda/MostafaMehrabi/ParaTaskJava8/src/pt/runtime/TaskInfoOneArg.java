@@ -5,7 +5,7 @@ import pt.functionalInterfaces.FunctorOneArgNoReturn;
 import pt.functionalInterfaces.FunctorOneArgWithReturn;
 import pt.runtime.TaskInfo;
 
-class TaskInfoOneArg<R, T1> extends TaskInfo<R> {
+public class TaskInfoOneArg<R, T1> extends TaskInfo<R> {
 	
 	private T1 arg1;
 	

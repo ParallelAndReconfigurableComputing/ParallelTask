@@ -178,9 +178,9 @@ public abstract class AbstractTaskPool implements Taskpool {
 			taskInfo.setTaskIDForSlotsAndHandlers(group);
 		
 		if (allDependences == null)
-			if (group.isInteractive()) 
-				startInteractiveTask(group);
-			else
+//			if (group.isInteractive()) 
+//				startInteractiveTask(group);
+//			else
 				enqueueReadyTask(group);
 		else// addDependences != null
 			enqueueWaitingTask(group, allDependences);
