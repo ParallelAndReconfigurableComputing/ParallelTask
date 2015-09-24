@@ -1,4 +1,5 @@
 /*
+
  *  Copyright (C) 2010 Nasser Giacaman, Oliver Sinnen
  *
  *  This file is part of Parallel Task.

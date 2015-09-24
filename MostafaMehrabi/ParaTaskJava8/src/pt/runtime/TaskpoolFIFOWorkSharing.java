@@ -50,7 +50,8 @@ public class TaskpoolFIFOWorkSharing extends AbstractTaskPool {
 	@Override
 	protected void enqueueReadyTask(TaskID<?> taskID) {
 		//Multi-tasks are added here first because this scheduling is fully FIFO according to the enqueuing timestamp
-		
+		//I think we should also check here if the TaskIDGroup is multi task, if not, then expand all its tasks into
+		//global OneOff TaskQueue, don't just put it into globalMultiTaskQueue
 		if (taskID.getExecuteOnThread() == ParaTask.ANY_THREAD_TASK){
 			if (taskID instanceof TaskIDGroup){
 				globalMultiTaskQueue.add(taskID);
@@ -114,7 +115,7 @@ public class TaskpoolFIFOWorkSharing extends AbstractTaskPool {
 			//Thread could not find a task from its private queue, now try the global multi task queue.
 			while ((nextTaskID = globalMultiTaskQueue.poll()) != null) {
 				// expand multi task
-				int count = nextTaskID.getCount();
+				int count = ((TaskIDGroup<?>)nextTaskID).getCount();
 				int multiTaskThreadPoolSize = ThreadPool.getMultiTaskThreadPoolSize();
 				TaskInfo<?> taskInfo = nextTaskID.getTaskInfo();
 

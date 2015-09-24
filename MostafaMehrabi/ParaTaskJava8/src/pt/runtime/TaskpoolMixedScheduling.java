@@ -121,7 +121,7 @@ public class TaskpoolMixedScheduling extends AbstractTaskPool {
 			while ((nextTaskID = mixedMultiTaskQueue.poll()) != null) {
 				
 				// expand multi task
-				count = nextTaskID.getCount();
+				count = ((TaskIDGroup<?>)nextTaskID).getCount();
 				
 				TaskInfo<?> taskInfo = nextTaskID.getTaskInfo();
 

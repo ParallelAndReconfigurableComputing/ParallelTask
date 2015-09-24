@@ -73,8 +73,9 @@ import java.util.concurrent.locks.ReentrantLock;
 //a TaskID's return type (i.e., T) is possibly equivalent to the return type of 
 //a functor (i.e., R).
 public class TaskID<T> {
-	
-	
+	static {
+		ParaTask.init();
+	}
 	//private int count = 0;
 	
 	/**
@@ -663,7 +664,7 @@ public class TaskID<T> {
 				//Since slots are executed in the order they are enqueued, then this will be the last slot!
 				//We want to ensure that 'setComplete' is called after all slots are executed, so we enqueue
 				//the method as another slot at the end.
-				Slot<Void> slot = new SlotNoArgs<>(this::setComplete);
+				Slot<Void> slot = new Slot<>(this::setComplete);
 				slot.setIsSetCompleteSlot(true);
 				executeOneTaskSlot(slot);
 				
@@ -721,8 +722,8 @@ public class TaskID<T> {
 	}
 	
 	protected int executeAllTaskSlots() {
-		List<Slot<?>> slotsToNotify = taskInfo.getInterSlotsToNotify();
-		for (Slot<?> slotToNotify : slotsToNotify)
+		List<Slot<T>> slotsToNotify = taskInfo.getInterSlotsToNotify();
+		for (Slot<T> slotToNotify : slotsToNotify)
 			executeOneTaskSlot(slotToNotify);
 		return taskInfo.getSlotsToNotify().size();
 	}

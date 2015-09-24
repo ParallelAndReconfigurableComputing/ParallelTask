@@ -61,8 +61,7 @@ import pt.runtime.TaskInfo.TaskType;
  * method. This will initialise various aspects of the ParaTask runtime.
  */
 public class ParaTask {
-	
-		
+			
 	//private static int threadPoolSize = Runtime.getRuntime().availableProcessors();
 	private static ScheduleType scheduleType = null;
 	private static boolean isInitialized = false;
@@ -158,7 +157,7 @@ public class ParaTask {
     public static void setSchedulingType(ScheduleType type) throws IllegalAccessException {
        if (isInitialized())
     		throw new IllegalAccessException("ParaTask has been initialized already!\n"
-    				+ " The scheduling policy must be declared prior to the initialization stage!");
+    				+ "The scheduling policy must be declared prior to, or at the initialization stage!");
     	scheduleType = type;
     }
     

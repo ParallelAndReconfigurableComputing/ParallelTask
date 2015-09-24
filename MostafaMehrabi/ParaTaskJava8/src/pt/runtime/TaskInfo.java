@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import pt.functionalInterfaces.FunctionInterExceptionHandler;
 
 
 /**
@@ -56,10 +55,6 @@ import pt.functionalInterfaces.FunctionInterExceptionHandler;
  * @since  7/9/2014
  */
 public abstract class TaskInfo<R> {
-	static {
-		ParaTask.init();
-	}
-	
 	static final int STAR = 0;
 
 	// for ParaTask in Java 8
@@ -68,8 +63,8 @@ public abstract class TaskInfo<R> {
 	protected int taskCount = 1;
 
 	protected Thread registeringThread;
-	protected List<Slot<?>> slotsToNotify;
-	protected List<Slot<?>> interSlotsToNotify;
+	protected List<Slot<R>> slotsToNotify;
+	protected List<Slot<R>> interSlotsToNotify;
 	protected List<TaskID<?>> dependences;
 
 	// for implicit results/dequeuing
@@ -80,9 +75,9 @@ public abstract class TaskInfo<R> {
 	protected boolean isMultiTask = false;
 	protected boolean isInteractive = false;
 	protected boolean registeredByGuiThread = false;
-	enum TaskType{MULTI, INTERACTIVE, ONEOFF};
+	public static enum TaskType{MULTI, INTERACTIVE, ONEOFF};
 
-	protected Map<Class<?>, Slot<?>> asyncExceptions = new HashMap<Class<?>, Slot<?>>();
+	protected Map<Class<?>, Slot<R>> asyncExceptions = new HashMap<Class<?>, Slot<R>>();
 	
 	/* 
 	 * Used to identify if it is a sub task for a multi task
@@ -157,12 +152,12 @@ public abstract class TaskInfo<R> {
 	//make sure these steps are automated.. Should it be automated?
 	public void setTaskIDForSlotsAndHandlers(TaskID<R> taskID) {
 		if (slotsToNotify != null) {
-			for (Slot<?> slot : slotsToNotify) {
+			for (Slot<R> slot : slotsToNotify) {
 				slot.setTaskID(taskID);
 			}
 		}
 		if (interSlotsToNotify != null) {
-			for (Slot<?> slot : interSlotsToNotify){
+			for (Slot<R> slot : interSlotsToNotify){
 				slot.setTaskID(taskID);
 			}
 		}
@@ -170,20 +165,20 @@ public abstract class TaskInfo<R> {
 		if (!asyncExceptions.isEmpty()){
 			Set<Class<?>> exceptionClasses = asyncExceptions.keySet();
 			for (Class<?> exception : exceptionClasses){
-				Slot<?> handler = asyncExceptions.get(exception);
+				Slot<R> handler = asyncExceptions.get(exception);
 				handler.setTaskID(taskID);
 			}
 		}
 	}
 
-	void asyncCatch(Class<?> exceptionClass, FunctionInterExceptionHandler handler) {
+	void asyncCatch(Class<?> exceptionClass, Slot<R> handler) {
 		
 		if (exceptionClass == null)
 			throw new IllegalArgumentException("There is no exception class specified!");
 		else if (handler == null)
 			throw new IllegalArgumentException("There is no exception handler specified for this exception");
 	
-		asyncExceptions.put(exceptionClass, (Slot<?>)handler);
+		asyncExceptions.put(exceptionClass, (Slot<R>)handler);
 		hasAnySlots = true;
 	}
 
@@ -205,11 +200,11 @@ public abstract class TaskInfo<R> {
 		return hasAnySlots;
 	}
 	
-	public List<Slot<?>> getInterSlotsToNotify() {
+	public List<Slot<R>> getInterSlotsToNotify() {
 		return interSlotsToNotify;
 	}
 
-	public List<Slot<?>> getSlotsToNotify() {
+	public List<Slot<R>> getSlotsToNotify() {
 		return slotsToNotify;
 	}
 
@@ -265,7 +260,7 @@ public abstract class TaskInfo<R> {
 	
 	protected void setHandler(Slot<R> handler) {
 		if (slotsToNotify == null)
-			slotsToNotify = new ArrayList<Slot<?>>();
+			slotsToNotify = new ArrayList<Slot<R>>();
 		this.slotsToNotify.add(handler);
 		hasAnySlots = true;
 	}

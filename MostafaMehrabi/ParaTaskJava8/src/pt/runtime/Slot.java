@@ -21,6 +21,9 @@ package pt.runtime;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import pt.functionalInterfaces.FunctorNoArgsNoReturn;
+import pt.functionalInterfaces.FunctorOneArgNoReturn;
+
 /**
  *This class allows the user to define a handler from one of the Functor types (functional interfaces)
  * which could be done by using lambda expressions as well. The user-defined handler will be associated
@@ -44,13 +47,24 @@ public class Slot<R>{
 	protected boolean isIntermediateResultSlot;
 	protected boolean isASetCompleteSlot;
 	
+	private FunctorNoArgsNoReturn functorNoArg = null;
+	private FunctorOneArgNoReturn<TaskID<R>> functorOneArg = null;
 	// this is the task for which this slot is attached (who should assign it?)
 	// cannot be assigned at the time the slot is created (since the TaskID wasn't created just yet)
-	protected TaskID<?> taskID = null; 		
+	protected TaskID<R> taskID = null; 		
 	
 	protected Slot(){}
 	
-	public Slot<?> setIsSetCompleteSlot(boolean setComplete) {
+	Slot(FunctorOneArgNoReturn<TaskID<R>> functor, TaskID<R> taskID){
+		this.taskID = taskID;
+		this.functorOneArg = functor;
+	}
+	
+	protected Slot(FunctorNoArgsNoReturn functor){
+		this.functorNoArg = functor;
+	}
+	
+	public Slot<R> setIsSetCompleteSlot(boolean setComplete) {
 		this.isASetCompleteSlot = setComplete;
 		return this;
 	}	
@@ -77,11 +91,11 @@ public class Slot<R>{
 		return interResultType;
 	}
 
-	public TaskID<?> getTaskID() {
+	public TaskID<R> getTaskID() {
 		return taskID;
 	}
 	
-	public void setTaskID(TaskID<?> taskID) {
+	public void setTaskID(TaskID<R> taskID) {
 		this.taskID = taskID;
 	}
 
@@ -89,7 +103,11 @@ public class Slot<R>{
 		return isIntermediateResultSlot;
 	}
 
-	//execute methods are implemented by child classes. 
+	void execute(){
+		if (this.functorOneArg!=null)
+			functorOneArg.exec(this.taskID);
+		functorNoArg.exec();
+	}
 }
 	
 	

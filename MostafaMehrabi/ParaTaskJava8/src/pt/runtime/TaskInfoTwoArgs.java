@@ -3,7 +3,7 @@ package pt.runtime;
 import pt.functionalInterfaces.FunctorTwoArgsNoReturn;
 import pt.functionalInterfaces.FunctorTwoArgsWithReturn;
 
-class TaskInfoTwoArgs<R, T1, T2> extends TaskInfo<R> {
+public class TaskInfoTwoArgs<R, T1, T2> extends TaskInfo<R> {
 	
 	private FunctorTwoArgsNoReturn<T1, T2> functorNoReturn = null;
 	private FunctorTwoArgsWithReturn<R, T1, T2> functorWithReturn = null;
