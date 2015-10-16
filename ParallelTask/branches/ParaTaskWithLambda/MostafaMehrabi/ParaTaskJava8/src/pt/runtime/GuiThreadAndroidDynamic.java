@@ -32,8 +32,7 @@ public class GuiThreadAndroidDynamic implements GuiThreadProxy {
 	private static Thread mainThread;
 
 	public void init() {
-		try {
-			
+		try {			
 				//gets a method object that reflects "android.os.Looper.getMainLooper()"
 				Class<?> looperClass = Class.forName("android.os.Looper");
 				Method getMainLooperMethod = looperClass.getMethod("getMainLooper");

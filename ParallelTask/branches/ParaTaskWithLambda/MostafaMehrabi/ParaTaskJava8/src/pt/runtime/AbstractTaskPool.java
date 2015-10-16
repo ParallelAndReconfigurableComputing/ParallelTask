@@ -32,6 +32,7 @@ import pt.queues.FifoLifoQueue;
 
 public abstract class AbstractTaskPool implements Taskpool {
 	
+		
 	protected final static int INITIAL_QUEUE_CAPACITY = 11;  
 	
 	protected final static Comparator<TaskID<?>> FIFO_TaskID_Comparator = new Comparator<TaskID<?>>() {
@@ -133,7 +134,6 @@ public abstract class AbstractTaskPool implements Taskpool {
 	 * thread is a task-thread, then its corresponding task is recorded as the enclosing task. 
 	 */
 	public <T> TaskID<T> enqueue(TaskInfo<T> taskInfo) {
-		
 		List<TaskID<?>> allDependences = taskInfo.getDependences();
 		TaskID<T> taskID = new TaskID<T>(taskInfo);
 		
@@ -178,9 +178,9 @@ public abstract class AbstractTaskPool implements Taskpool {
 			taskInfo.setTaskIDForSlotsAndHandlers(group);
 		
 		if (allDependences == null)
-//			if (group.isInteractive()) 
-//				startInteractiveTask(group);
-//			else
+			if (group.isInteractive()) 
+				startInteractiveTask(group);
+			else
 				enqueueReadyTask(group);
 		else// addDependences != null
 			enqueueWaitingTask(group, allDependences);

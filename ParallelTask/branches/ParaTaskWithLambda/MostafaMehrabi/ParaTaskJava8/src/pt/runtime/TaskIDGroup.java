@@ -275,10 +275,10 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	 *  TaskIDGroup does not need to have access to the fields of TaskID. It just stores all the TaskID objects, and makes
 	 *  invocation on the inner TaskIDs in the group (to simplify implementation). 
 	 */
-	@Override
-	public	void dependenceFinished(TaskID<?> otherTask) {
-		throw new UnsupportedOperationException("TODO: Not implemented!");
-	}
+//	@Override
+//	public	void dependenceFinished(TaskID<?> otherTask) {
+//		throw new UnsupportedOperationException("TODO: Not implemented!");
+//	}
 
 	@Override
 	public Throwable getException() {
@@ -319,10 +319,10 @@ public class TaskIDGroup<T> extends TaskID<T> {
 		//throw new UnsupportedOperationException("Does a TaskIDGroup need to be able to use this method?");
 	}
 
-	@Override
-	public void setComplete() {
-		status.set(COMPLETED);
-	}
+//	@Override
+//	public void setComplete() {
+//		status.set(COMPLETED);
+//	}
 
 	@Override
 	public void enqueueSlots(boolean onlyEnqueueFinishedSlot) {

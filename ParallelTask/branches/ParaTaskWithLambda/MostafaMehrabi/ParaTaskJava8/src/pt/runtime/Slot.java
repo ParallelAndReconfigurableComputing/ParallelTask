@@ -53,7 +53,7 @@ public class Slot<R>{
 	// cannot be assigned at the time the slot is created (since the TaskID wasn't created just yet)
 	protected TaskID<R> taskID = null; 		
 	
-	protected Slot(){}
+	Slot(){}
 	
 	Slot(FunctorOneArgNoReturn<TaskID<R>> functor, TaskID<R> taskID){
 		this.taskID = taskID;

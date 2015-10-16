@@ -102,21 +102,18 @@ public abstract class TaskThread extends Thread {
 		
 		try {
 			result = (T)  taskInfo.execute();
-			
 			taskID.setReturnResult(result);
 			taskID.enqueueSlots(false);
-			
 			threadTaskStack.pop();
 			return true;
 		} catch (IllegalArgumentException/*Exception*/ e) {
+			//e.printStackTrace();
+			taskID.setException(e);
+			threadTaskStack.pop();
 			e.printStackTrace();
-//			taskID.setException(e);
-//			currentTaskStack.pop();
-//			return false;
+			return false;
 		}
 		
-		threadTaskStack.pop();
-		return false; 
 	}
 	
 	/**
