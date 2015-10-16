@@ -61,6 +61,9 @@ import pt.runtime.TaskInfo.TaskType;
  * method. This will initialise various aspects of the ParaTask runtime.
  */
 public class ParaTask {
+//	static {
+//		ParaTask.init();
+//	}
 			
 	//private static int threadPoolSize = Runtime.getRuntime().availableProcessors();
 	private static ScheduleType scheduleType = null;
@@ -230,7 +233,6 @@ public class ParaTask {
 				setSchedulingType(scheduleType);
 				//Create the task pool
 				TaskpoolFactory.getTaskpool();
-				
 				//Initialize the EDT
 				EDT = GuiThread.getEventDispatchThread();
 				listener = new GuiEdtTaskListener();
@@ -250,6 +252,13 @@ public class ParaTask {
 		return listener;
 	}	
 	
+	public static <R> void registerSlotToNotify(TaskInfo<R> taskInfo, FunctorNoArgsNoReturn functor){
+		taskInfo.notify(new Slot<R>(functor));
+	}
+	
+	public static <R> void registerSlotToNotify(TaskInfo<R> taskInfo, FunctorOneArgNoReturn<TaskID<R>> functor, TaskID<R> taskID){
+		taskInfo.notify(new Slot<R>(functor, taskID));
+	}
 	//****************************************************************************************TASK GENERATORS******************************************************************
 	//****************************************************************************************ONE-OFF TASKS********************************************************************
 	public static TaskInfo<Void> asTask(FunctorNoArgsNoReturn functor){

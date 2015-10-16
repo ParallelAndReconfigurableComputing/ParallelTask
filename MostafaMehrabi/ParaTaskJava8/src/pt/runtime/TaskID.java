@@ -74,7 +74,9 @@ import java.util.concurrent.locks.ReentrantLock;
 //a functor (i.e., R).
 public class TaskID<T> {
 	static {
-		ParaTask.init();
+		if (!ParaTask.isInitialized()){
+			ParaTask.init();
+		}
 	}
 	//private int count = 0;
 	
@@ -658,9 +660,9 @@ public class TaskID<T> {
 				
 				if (hasUserError.get())
 					executeExceptionHandler();
-				if (hasSlots)
+				if (hasSlots){
 					executeAllTaskSlots();
-				
+				}
 				//Since slots are executed in the order they are enqueued, then this will be the last slot!
 				//We want to ensure that 'setComplete' is called after all slots are executed, so we enqueue
 				//the method as another slot at the end.
@@ -722,7 +724,7 @@ public class TaskID<T> {
 	}
 	
 	protected int executeAllTaskSlots() {
-		List<Slot<T>> slotsToNotify = taskInfo.getInterSlotsToNotify();
+		List<Slot<T>> slotsToNotify = taskInfo.getSlotsToNotify();
 		for (Slot<T> slotToNotify : slotsToNotify)
 			executeOneTaskSlot(slotToNotify);
 		return taskInfo.getSlotsToNotify().size();

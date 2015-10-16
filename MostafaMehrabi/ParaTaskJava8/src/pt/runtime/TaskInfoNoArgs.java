@@ -31,7 +31,7 @@ public class TaskInfoNoArgs<R> extends TaskInfo<R> {
 	public TaskID<R> start(){
 		try{
 			if(this.taskCount == 1)
-				return TaskpoolFactory.getTaskpool().enqueue(this);
+				return TaskpoolFactory.getTaskpool().enqueue(this);					
 			else{
 				TaskIDGroup<R> taskGroup = TaskpoolFactory.getTaskpool().enqueueMulti(this);
 				return taskGroup;
