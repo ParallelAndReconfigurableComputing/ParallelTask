@@ -715,6 +715,12 @@ public class TaskID<T> {
 		}
 	}
 	
+	//This doesn't enqueue interim slots, whenever interim handlers are called from
+	//within a TaskInfo, this method is called on the corresponding TaskID.
+	void executeInterimSlot(Slot<?> slot){
+		executeOneTaskSlot(slot);
+	}
+	
 	void executeOneTaskSlot(Slot<?> slot) {
 		ParaTask.getEDTTaskListener().executeSlot(slot);
 	}
