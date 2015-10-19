@@ -20,6 +20,7 @@
 package pt.runtime;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutionException;
 
 import pt.functionalInterfaces.FunctorNoArgsNoReturn;
 import pt.functionalInterfaces.FunctorOneArgNoReturn;
@@ -43,19 +44,20 @@ public class Slot<R>{
 
 	protected ConcurrentLinkedQueue<Object> interResults = null;
 	protected Class<?> interResultType = null;
-	
+		
 	protected boolean isIntermediateResultSlot;
 	protected boolean isASetCompleteSlot;
 	
 	private FunctorNoArgsNoReturn functorNoArg = null;
-	private FunctorOneArgNoReturn<TaskID<R>> functorOneArg = null;
+	private FunctorOneArgNoReturn<R> functorOneArg = null;
+	private R taskResult = null;
 	// this is the task for which this slot is attached (who should assign it?)
 	// cannot be assigned at the time the slot is created (since the TaskID wasn't created just yet)
 	protected TaskID<R> taskID = null; 		
 	
 	Slot(){}
 	
-	Slot(FunctorOneArgNoReturn<TaskID<R>> functor, TaskID<R> taskID){
+	Slot(FunctorOneArgNoReturn<R> functor, TaskID<R> taskID){
 		this.taskID = taskID;
 		this.functorOneArg = functor;
 	}
@@ -102,10 +104,19 @@ public class Slot<R>{
 	public boolean isIntermediateResultSlot() {
 		return isIntermediateResultSlot;
 	}
+	
+	private R getTaskResult(){
+		try {
+			return taskID.getReturnResult();
+		} catch (ExecutionException | InterruptedException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
 
 	void execute(){
 		if (this.functorOneArg!=null)
-			functorOneArg.exec(this.taskID);
+			functorOneArg.exec(this.getTaskResult());
 		functorNoArg.exec();
 	}
 }

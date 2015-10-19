@@ -19,6 +19,8 @@
 
 package pt.runtime;
 
+import java.util.concurrent.locks.ReentrantLock;
+
 import pt.functionalInterfaces.FunctorEightArgsNoReturn;
 import pt.functionalInterfaces.FunctorEightArgsWithReturn;
 import pt.functionalInterfaces.FunctorElevenArgsNoReturn;
@@ -71,6 +73,7 @@ public class ParaTask {
 
 	private static Thread EDT = null;		// a reference to the EDT
 	private static AbstractTaskListener listener;	// the EDT task listener
+	private static ReentrantLock lock;
 	
 	//for internal use only
 	static final String PT_PREFIX = "__pt__";
@@ -213,6 +216,12 @@ public class ParaTask {
 			return init(scheduleType);
 	}
 	
+	public static <R> void executeInterimHandler(Slot<R> slot){
+		lock.lock();
+		ParaTask.getEDTTaskListener().executeSlot(slot);
+		lock.unlock();
+	}
+	
 	/**
 	 * To be executed by the main thread (i.e. inside the <code>main</code> method). Registers the main thread and event 
 	 * dispatch thread with ParaTask, and instantiates a task pool with the user-specified scheduling policy.
@@ -236,6 +245,7 @@ public class ParaTask {
 				//Initialize the EDT
 				EDT = GuiThread.getEventDispatchThread();
 				listener = new GuiEdtTaskListener();
+				lock = new ReentrantLock();
 				isInitialized = true;
 			}catch(IllegalAccessException e){
 				System.out.println(e.getMessage());
@@ -256,7 +266,7 @@ public class ParaTask {
 		taskInfo.notify(new Slot<R>(functor));
 	}
 	
-	public static <R> void registerSlotToNotify(TaskInfo<R> taskInfo, FunctorOneArgNoReturn<TaskID<R>> functor, TaskID<R> taskID){
+	public static <R> void registerSlotToNotify(TaskInfo<R> taskInfo, FunctorOneArgNoReturn<R> functor, TaskID<R> taskID){
 		taskInfo.notify(new Slot<R>(functor, taskID));
 	}
 	//****************************************************************************************TASK GENERATORS******************************************************************
