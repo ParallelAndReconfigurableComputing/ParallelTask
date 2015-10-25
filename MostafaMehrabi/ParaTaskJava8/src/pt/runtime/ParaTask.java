@@ -21,6 +21,7 @@ package pt.runtime;
 
 import java.util.concurrent.locks.ReentrantLock;
 
+import pi.RedLib.Reduction;
 import pt.functionalInterfaces.FunctorEightArgsNoReturn;
 import pt.functionalInterfaces.FunctorEightArgsWithReturn;
 import pt.functionalInterfaces.FunctorElevenArgsNoReturn;
@@ -70,6 +71,7 @@ public class ParaTask {
 	//private static int threadPoolSize = Runtime.getRuntime().availableProcessors();
 	private static ScheduleType scheduleType = null;
 	private static boolean isInitialized = false;
+	private static boolean hasStartedWorking = false;
 
 	private static Thread EDT = null;		// a reference to the EDT
 	private static AbstractTaskListener listener;	// the EDT task listener
@@ -136,19 +138,35 @@ public class ParaTask {
 	public static Thread getEDT() {
 		return EDT;
 	}
+	
+	static void paraTaskStarted(boolean started){
+		ParaTask.hasStartedWorking = started;
+	}
+	
+	static boolean hasParaTaskStarted(){
+		return ParaTask.hasStartedWorking;
+	}
 		
 
     /**
      * Set the size of the thread pool. To have any effect, this must be executed very early before 
      * ParaTask creates the runtime. This method throws {@link IllegalArgumentException} if the parameter
-     * passed to it is smaller than one.
+     * passed to it is smaller than one. This method returns <code>false</code> if it fails to adjust thread pool. This
+     * happens when ParaTask has already started working (i.e., TaskInfos are enqueued and TaskIDs are
+     * created), otherwise it returns <code>true</code>
      * 
      * @param size
+     * @return boolean <code>true</code> if scheduling type is changed successfully, otherwise <code>false</code>.
      */
-    public static void setThreadPoolSize(ThreadPoolType threadPoolType, int size) {
+    public static boolean setThreadPoolSize(ThreadPoolType threadPoolType, int size) {
     	if (size < 1)
 			throw new IllegalArgumentException("Trying to create a Taskpool with " + size + " threads");
+    	if (hasParaTaskStarted())
+    		return false;
+    	if (!isInitialized())
+    		ParaTask.init();
 		ThreadPool.setPoolSize(threadPoolType,size);
+		return true;
     }
     
         
@@ -156,15 +174,19 @@ public class ParaTask {
      * Set the scheduling scheme. This only has an effect if no tasks have been executed yet 
      * (i.e. must be called before ParaTask is initialized). This method throws
      * {@link IllegalAccessExecption} if ParaTask is initialized earlier.
+     * This method returns <code>false</code> if it fails to adjust thread pool. This
+     * happens when ParaTask has already started working (i.e., TaskInfos are enqueued and TaskIDs are
+     * created), otherwise it returns <code>true</code>
      * 
      * @param type The schedule to use.
      * @throws IllegalAccessException 
+     * @return boolean <code>true</code> if scheduling type is changed successfully, otherwise <code>false</code>.
      */
-    public static void setSchedulingType(ScheduleType type) throws IllegalAccessException {
-       if (isInitialized())
-    		throw new IllegalAccessException("ParaTask has been initialized already!\n"
-    				+ "The scheduling policy must be declared prior to, or at the initialization stage!");
+    public static boolean setSchedulingType(ScheduleType type) throws IllegalAccessException {
+       if (ParaTask.hasParaTaskStarted())
+    		return false;
     	scheduleType = type;
+    	return true;
     }
     
     /**
@@ -220,6 +242,10 @@ public class ParaTask {
 		lock.lock();
 		ParaTask.getEDTTaskListener().executeSlot(slot);
 		lock.unlock();
+	}
+	
+	public static <T> void setReductionOperation(TaskIDGroup<T> taskGroup, Reduction<T> reduction){
+		taskGroup.setReduction(reduction);
 	}
 	
 	/**

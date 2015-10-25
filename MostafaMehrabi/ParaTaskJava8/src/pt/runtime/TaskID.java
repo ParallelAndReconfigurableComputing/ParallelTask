@@ -77,6 +77,9 @@ public class TaskID<T> {
 		if (!ParaTask.isInitialized()){
 			ParaTask.init();
 		}
+		if (!ParaTask.hasParaTaskStarted()){
+			ParaTask.paraTaskStarted(true);
+		}
 	}
 	//private int count = 0;
 	
