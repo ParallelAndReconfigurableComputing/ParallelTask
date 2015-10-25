@@ -170,13 +170,19 @@ public class TaskIDGroup<T> extends TaskID<T> {
 		return groupSize;
 	}
 	
+	void setReduction(Reduction<T> reduction){
+		reductionLock.lock();
+		this.reductionOperation = reduction;
+		reductionLock.unlock();
+	}
+	
 	/**
 	 * Perform a reduction on the set of results. A reduction is only to be performed once. 
 	 * If this is called a second time then the pre-calculated answer is returned.
 	 * @param red	The reduction to perform
 	 * @return The result of performing the reduction on the set of <code>TaskID</code>s contained in this group.
 	 */
-	public T reduce(Reduction<T> reduction) throws ExecutionException, InterruptedException {
+	T reduce(Reduction<T> reduction) throws ExecutionException, InterruptedException {
 		waitTillFinished();
 		
 		if (groupSize == 0)			
@@ -204,7 +210,7 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	 * @return The result for that task.
 	 */
 	@SuppressWarnings("unchecked")
-	public T getInnerTaskResult(int relativeID) throws ExecutionException, InterruptedException {
+	T getInnerTaskResult(int relativeID) throws ExecutionException, InterruptedException {
 		return (T) innerTasks.get(relativeID).getReturnResult();
 	}
 	
@@ -266,19 +272,9 @@ public class TaskIDGroup<T> extends TaskID<T> {
 				slot.setIsSetCompleteSlot(true);
 				executeOneTaskSlot(slot);
 			}
-		}else {
-//			System.out.println("Group size of "+ groupSize+ " not finished. Number of tasks completed so far: "+numCompleted);
 		}
 	}
 
-	/*
-	 *  TaskIDGroup does not need to have access to the fields of TaskID. It just stores all the TaskID objects, and makes
-	 *  invocation on the inner TaskIDs in the group (to simplify implementation). 
-	 */
-//	@Override
-//	public	void dependenceFinished(TaskID<?> otherTask) {
-//		throw new UnsupportedOperationException("TODO: Not implemented!");
-//	}
 
 	@Override
 	public Throwable getException() {
@@ -316,13 +312,7 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	@Override
 	public TaskInfo<T> getTaskInfo() {
 		return taskInfo;
-		//throw new UnsupportedOperationException("Does a TaskIDGroup need to be able to use this method?");
 	}
-
-//	@Override
-//	public void setComplete() {
-//		status.set(COMPLETED);
-//	}
 
 	@Override
 	public void enqueueSlots(boolean onlyEnqueueFinishedSlot) {
@@ -345,13 +335,7 @@ public class TaskIDGroup<T> extends TaskID<T> {
 		hasUserError.set(true);
 	}
 
-	/*
-	@Override
-	void setRemainingDependences(ArrayList<TaskID> deps) {
-		//throw new UnsupportedOperationException("TODO: Not yet implemented!");
-	}
-	*/
-
+	
 	@Override
 	public void setReturnResult(Object returnResult) {
 		throw new ParaTaskRuntimeException("Cannot set the return result for a TaskIDGroup");
