@@ -5,7 +5,7 @@
 	<property name="build.dir" value="bild" />
  	<property name="dist.dir"  value="release" />
 	<property name="productName" value="PTLambda"/>
- 	<property name="jarVersion" value="1.0.0"/>
+ 	<property name="jarVersion" value="1.0.1"/>
 	
 	<!-- Check the operating system -->
     <target name="checkOS">
@@ -57,7 +57,7 @@
 	
 	<!-- Compress the documentations into a jar file -->
 	<target name="docsJar" depends="documentation">
-		<jar basedir="${doc.dir}" destfile="${dist.dir}/${productName}-JavaDocs-${jarVersion}.jar" />
+		<jar basedir="${doc.dir}" destfile="${dist.dir}/${productName}-JavaDoc-${jarVersion}.jar" />
 	</target>
 	
 	<!-- Compress the source files into a jar file -->
