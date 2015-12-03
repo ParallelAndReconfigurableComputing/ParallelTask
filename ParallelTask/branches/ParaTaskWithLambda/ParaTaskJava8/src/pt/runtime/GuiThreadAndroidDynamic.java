@@ -3,9 +3,18 @@ package pt.runtime;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 
+/**
+ * This class provides a proxy to Android GUI thread,
+ * through which ParaTask framework retrieves information
+ * about the Android GUI thread.
+ * 
+ * @author Mostafa Mehrabi
+ * @since  18/8/2015
+ * */
 public class GuiThreadAndroidDynamic implements GuiThreadProxy {
 
 	private GuiThreadAndroidDynamic() {
+		this.init();
 	}
 
 	private static GuiThreadAndroidDynamic instance;
@@ -23,22 +32,24 @@ public class GuiThreadAndroidDynamic implements GuiThreadProxy {
 	private static Thread mainThread;
 
 	public void init() {
-		try {
-			// implement the following three lines using reflection
-			// Looper mainLooper = Looper.getMainLooper();
-			// handler = new Handler(mainLooper);
-			// mainThread = mainLooper.getThread();
+		try {			
+				//gets a method object that reflects "android.os.Looper.getMainLooper()"
+				Class<?> looperClass = Class.forName("android.os.Looper");
+				Method getMainLooperMethod = looperClass.getMethod("getMainLooper");
 			
-			Class<?> looperClass = Class.forName("android.os.Looper");
-			Method getMainLooperMethod = looperClass.getMethod("getMainLooper");
-			Object mainLooper = getMainLooperMethod.invoke(looperClass);
+				//invokes method "looperClass.getMainLooperMethod();"
+				Object mainLooper = getMainLooperMethod.invoke(looperClass);
 			
-			handlerClass = Class.forName("android.os.Handler");
-			Constructor<?> handlerCtor = handlerClass.getDeclaredConstructor(looperClass);
-			handler = handlerCtor.newInstance(mainLooper);
+				handlerClass = Class.forName("android.os.Handler");
+				Constructor<?> handlerCtor = handlerClass.getDeclaredConstructor(looperClass);
+				
+				
+				//gets a handler (i.e., and instance of android Handler class) by effectively calling
+				//handler = new Handler(LooperClass.getMainLooperMethod());
+				handler = handlerCtor.newInstance(mainLooper);
 
-			Method getThreadMethod = looperClass.getMethod("getThread");
-			mainThread = (Thread)getThreadMethod.invoke(mainLooper);
+				Method getThreadMethod = looperClass.getMethod("getThread");
+				mainThread = (Thread)getThreadMethod.invoke(mainLooper);
 		} catch (Exception e) {
 			// fatal error
 			throw new RuntimeException(e);

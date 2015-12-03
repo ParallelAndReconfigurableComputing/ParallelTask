@@ -19,27 +19,34 @@
 
 package pt.runtime;
 
-/*
+/**
+ * A task listener that execute event handlers on EDT. The 
+ * implemented <i>abstract</i> method passes a slot to the 
+ * <code>{@link #executeSlotOnEDT(Slot)}</code>. 
+ * The method thereof executes the slot in a runnable on
+ * GUI thread.
  * 
- * Extends the AbstractTaskListener to override the behaviour when this is used for the GUI EDT
- *
+ * @author Mostafa Mehrabi
+ * @since  21/9/2015
+ * 
  */
 public class GuiEdtTaskListener extends AbstractTaskListener {
 	
-	private void executeSlotOnEDT(final Slot slot) {
-		//GuiThread.invokeLater( () -> doExecuteSlot(slot));
-		GuiThread.invokeLater(new Runnable() {
-			@Override
-			public void run() {
-				doExecuteSlot(slot);
-			}
-		});
-	}
+//	private void executeSlotOnEDT(final Slot<?> slot) {
+//		//GuiThread.invokeLater( () -> doExecuteSlot(slot));
+//		GuiThread.invokeLater(new Runnable() {
+//			@Override
+//			public void run() {
+//				doExecuteSlot(slot);
+//			}
+//		});
+//	}
 
 	//why are we twisting the implementation here, adding function calls
 	//cost performance
-	public void executeSlot(Slot slot) {
-		this.executeSlotOnEDT(slot);
+	public void executeSlot(Slot<?> slot) {
+		//this.executeSlotOnEDT(slot);
+		GuiThread.invokeLater(()->doExecuteSlot(slot));
 	}
 
 	@Override
