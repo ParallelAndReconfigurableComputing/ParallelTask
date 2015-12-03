@@ -20,9 +20,7 @@
 
 package pt.runtime;
 
-import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -75,17 +73,15 @@ import java.util.concurrent.locks.ReentrantLock;
 //a TaskID's return type (i.e., T) is possibly equivalent to the return type of 
 //a functor (i.e., R).
 public class TaskID<T> {
-	
-	/**
-	 * 
-	 * @author  Kingsley
-	 * @since 04/05/2013
-	 * 
-	 * Indicates how many sub tasks should be expanded, and its value can
-	 * only be set from {@link AbstractTaskPool#enqueueMulti()}
-	 * 
-	 * */
-	private int count = 0;
+	static {
+		if (!ParaTask.isInitialized()){
+			ParaTask.init();
+		}
+		if (!ParaTask.hasParaTaskStarted()){
+			ParaTask.paraTaskStarted(true);
+		}
+	}
+	//private int count = 0;
 	
 	/**
 	 * 
@@ -104,24 +100,26 @@ public class TaskID<T> {
 	protected int globalID = -1;
 	protected int relativeID = 0;
 	
-	protected TaskID<?> enclosingTask = null;	// this is used in case we need to find an asynchrous exception handler
+	// This attribute is used in case we need to find an asynchronous exception handler
+	// of a task, within the exception handlers of its enclosing tasks.
+	protected TaskID<?> enclosingTask = null;	
 	
-	private int executeOnThread = ParaTaskHelper.ANY_THREAD_TASK;
+	private int executeOnThread = ParaTask.ANY_THREAD_TASK;
 	
-	protected Task<T> taskInfo = null;
+	protected TaskInfo<T> taskInfo = null;
 	private T returnResult = null;
 	
 	private int progress = 0;
 
-	protected AtomicBoolean hasCompleted = null;
-	protected boolean cancelled = false;
+	//protected AtomicBoolean hasCompleted = null;
+	//protected boolean cancelled = false;
 	protected AtomicBoolean cancelRequested = new AtomicBoolean(false);
 	
     //-- the registering thread has its own latch, since it is allowed to progress inside slots of this TaskID
     private CountDownLatch completedLatchForRegisteringThread= null;
     
     //-- all the other threads (non-registering threads) must wait at this latch, until slots complete
-    private CountDownLatch completedLatch = null;
+    private CountDownLatch completedLatchForNonRegisteringThreads = null;
     
 	private ReentrantLock changeStatusLock = null;
 	
@@ -135,7 +133,7 @@ public class TaskID<T> {
 	 * @author Mostafa Mehrabi
 	 * @since  4/8/2015
 	 * */
-	private ConcurrentLinkedQueue<TaskID<?>> waitingTasks = null;
+	private ConcurrentLinkedQueue<TaskID<?>> waitingTasks = new ConcurrentLinkedQueue<>();
 	
 	/**
 	 * TaskIDs that this task is waiting for to finish.
@@ -143,7 +141,8 @@ public class TaskID<T> {
 	 * @author Mostafa Mehrabi
 	 * @since  4/8/2015
 	 * */
-	private ConcurrentHashMap<TaskID<?>, Object> remainingDependences = null;	//-- TaskIDs this task is waiting for
+	private ConcurrentLinkedQueue<TaskID<?>> remainingDependences = new ConcurrentLinkedQueue<>();
+	//private ConcurrentHashMap<TaskID<?>, Object> remainingDependences = new ConcurrentHashMap<>();	//-- TaskIDs this task is waiting for
 	
 	/**
 	 * The group of tasks that this task belongs to, if it is a <code>subtask</code> of 
@@ -161,7 +160,7 @@ public class TaskID<T> {
 	static final protected int CANCELLED = 1;
 	static final protected int STARTED = 2;
 	static final protected int COMPLETED = 3;
-	protected AtomicInteger status = new AtomicInteger(CREATED);
+	protected AtomicInteger status = null; 
 	
 	/**
 	 * 
@@ -184,9 +183,8 @@ public class TaskID<T> {
 	 * */
 	
 	TaskID() {
-		//globalID = nextGlobalID.incrementAndGet();
-		completedLatch = new CountDownLatch(1);
-		hasCompleted = new AtomicBoolean(false);
+		completedLatchForNonRegisteringThreads = new CountDownLatch(1);
+		//hasCompleted = new AtomicBoolean(false);
 		status = new AtomicInteger(CREATED);
 		changeStatusLock = new ReentrantLock();
 	}
@@ -196,21 +194,14 @@ public class TaskID<T> {
 	 * This constructor receives information about, whether a task is interactive
 	 * as well as it sets the count down latch to one. 
 	 * */
-	public TaskID(Task<T> taskInfo) {
-		this();
-		
-		/*if(!taskInfo.isSubTask()){
-			globalID = nextGlobalID.incrementAndGet();
-		}*/
-		
+	public TaskID(TaskInfo<T> taskInfo) {
+		this();		
 		globalID = nextGlobalID.incrementAndGet();
-		
 		completedLatchForRegisteringThread = new CountDownLatch(1);
 		this.taskInfo = taskInfo;
 		isInteractive = taskInfo.isInteractive();
 		if (taskInfo != null) {
 			hasSlots = taskInfo.getSlotsToNotify() != null;
-//			hasHandlers = taskInfo.hasRegisteredHandlers();
 		}
 	}
 	
@@ -219,27 +210,14 @@ public class TaskID<T> {
 	public TaskID(boolean alreadyCompleted) {
 		if (alreadyCompleted) {
 			globalID = nextGlobalID.incrementAndGet();
-			//I think one of the count down latches must be registering thread.
-			//this.completedLatchForRegisteringThread = new CountDownLatch(0);
 			completedLatchForRegisteringThread = new CountDownLatch(0);
-			completedLatch = new CountDownLatch(0);
-			hasCompleted = new AtomicBoolean(true);
-			status = new AtomicInteger(STARTED);
+			completedLatchForNonRegisteringThreads = new CountDownLatch(0);
+			//hasCompleted = new AtomicBoolean(true);
+			status = new AtomicInteger(COMPLETED);
 		} else {
 			throw new UnsupportedOperationException("Don't call this constructor if passing in 'false'!");
 		}
 	}
-	
-	
-	
-	protected int getCount() {
-		return count;
-	}
-
-	protected void setCount(int count) {
-		this.count = count;
-	}
-	
 	
 	protected boolean isSubTask() {
 		return isSubTask;
@@ -247,14 +225,6 @@ public class TaskID<T> {
 
 	protected void setSubTask(boolean isSubTask) {
 		this.isSubTask = isSubTask;
-	}
-
-	/**
-	 * Checks to see if this task has successfully cancelled.
-	 * @return <code>true</code> if it has cancelled successfully, <code>false</code> otherwise. 
-	 */
-	public boolean cancelledSuccessfully() {
-		return cancelled;
 	}
 	
 	/**
@@ -288,17 +258,109 @@ public class TaskID<T> {
 	public int getProgress() {
 		return progress;
 	}
+		
+	/**
+	 * Returns the group that this task is part of (assuming it is a multi-task).  
+	 * @return	Returns the group associated with this task. If not part of a multi-task, then
+	 * returns <code>null</code>.
+	 */
+	public TaskIDGroup<?> getGroup() {
+		return group;
+	}
+	
+	/**
+	 * Returns the task's globally-unique ID.
+	 * @return	The task's unique ID.
+	 * @see CurrentTask#globalID()
+	 * @see CurrentTask#relativeID()
+	 * @see #getRelativeID()
+	 */
+	public int getGlobalID() {
+		return globalID;
+	}
+	
+	/**
+	 * Relative IDs are used to arrange the sub-tasks of a multi-task. This method returns the 
+	 * sub-task's relative ID in the multi-task.
+	 * @return The position, starting from 0, of this sub-task compared to it's sibling subtasks.
+	 * @see CurrentTask#globalID()
+	 * @see CurrentTask#relativeID()
+	 * @see #getGlobalID()  
+	 */
+	public int getRelativeID() {
+		return relativeID;
+	}
+	
+	void setRelativeID(int relativeID) {
+		this.relativeID = relativeID;
+	}
+	
+	TaskInfo<T> getTaskInfo() {
+		return taskInfo;
+	}
+	
+	/**
+	 * Tells if a task could start being executed. That means the task has been <code>CREATED</code>, and
+	 * is not <code>CANCELLED</code>. Returns <code>true</code> if the task can start,
+	 * and returns <code>false</code> otherwise.
+	 * 
+	 * @author Mostafa Mehrabi
+	 * @since  9/9/2014
+	 * */
+	boolean executeAttempt() {
+		synchronized (this) {
+			if (status.get() != CREATED){
+				//should the status be set to CANCELLED? Don't think so,
+				//the task could be started already when this method is
+				//called on it.
+				//status.set(CANCELLED);
+				return false;		
+			}		
+			status.set(STARTED);
+			return true;
+		}		
+	}
+	
+	
+	void setEnclosingTask(TaskID<?> enclosingTask) {
+		this.enclosingTask = enclosingTask;
+	}
+	
+	
+	TaskID<?> getEnclosingTask() {
+		return enclosingTask;
+	}
+	
 	
 	/**
 	 * Checks to see if this task has been requested to cancel.
 	 * @return <code>true</code> if it has been requested to cancel, <code>false</code> otherwise.
 	 * @see CurrentTask#cancelRequested()
 	 * @see #cancelAttempt()
-	 * @see #cancelledSuccessfully()
+	 * @see #hasBeenCancelled()
 	 */
 	public boolean cancelRequested() {
 		return cancelRequested.get();
 	}	
+
+	/**
+	 * Checks to see if this task has successfully cancelled.
+	 * @return <code>true</code> if it has cancelled successfully, <code>false</code> otherwise. 
+	 */
+	public boolean hasBeenCancelled() {
+		return status.get() == CANCELLED;
+	}
+	
+	/**
+	 * Checks to see whether the task has completed.
+	 * @return	<code>true</code> if it has completed, <code>false</code> otherwise
+	 * @see #getProgress()
+	 * @see CurrentTask#getProgress()
+	 */
+	public boolean hasCompleted() {
+		return status.get() == COMPLETED;
+	}
+	
 	
 	/**
 	 * Attempts to cancel the task. It first changes the state of the task to <code>CANCELLED</code>, and then
@@ -314,69 +376,62 @@ public class TaskID<T> {
 	 * @author Kingsley
 	 * 
 	 * @see #cancelRequested() 
+	 * 
 	 * @see CurrentTask#cancelRequested()
-	 * @see #cancelledSuccessfully()
+	 * @see #hasBeenCancelled()
+	 * 
 	 */
 	public boolean cancelAttempt() {
-		cancelRequested.set(true);
-		//shouldn't we have this expression within the if statement?
-		int prevStatus = status.getAndSet(CANCELLED);
-		
-		if (prevStatus == CREATED || cancelled) {
-			cancelled = true;
+		synchronized (this) {
+			cancelRequested.set(true);
+			
+			if (status.get() != CREATED){
+				//should the status be set to CANCELLED?
+				//status.set(CANCELLED);
+				return false;
+			}
+			
+			status.set(CANCELLED);
+			//cancelled = true;
 			return true;
-		}
-		
-		return false;
-		
-//		I think it should be this way!		
-//		if (status.get() != CREATED)
-//			return false;
-//		
-//		status.set(CANCELLED);
-//		cancelled = true;
-//		return true;
-		
+		}		
 	}
 	
-	/**
-	 * Returns the group that this task is part of (assuming it is a multi-task).  
-	 * @return	Returns the group associated with this task. If not part of a multi-task, then
-	 * returns <code>null</code>.
-	 */
-	public TaskIDGroup<?> getGroup() {
-		return group;
-	}
 	
 	/**
-	 * Tells if a task could start being executed. That means the task has been <code>CREATED</code>, and
-	 * is not <code>CANCELLED</code>. Returns <code>true</code> if the task can start,
-	 * and returns <code>false</code> otherwise.
+	 *  
+	 * This method is called when a task is complete. In order to set a task as "complete", this
+	 * method goes through the list of tasks that have been waiting for this task to finish, and
+	 * removes the task from their lists of dependences. Then it unblocks all the waiting threads,
+	 * even the registering thread (in case there are slots to execute), and sets the flag 'hasComplete' 
+	 * to <code>true</code>.
+	 * If this task is registered as a group of tasks, the method will go through all tasks that have 
+	 * been waiting for this group to finish, and then removes this group from their lists of dependences.
+	 * If any of those waiting tasks have their list of dependences emptied by removing this group, it will
+	 * be introduced to the task pool as a ready-to-execute task. 
 	 * 
 	 * @author Mostafa Mehrabi
-	 * @since  9/9/2014
+	 * @since 9/9/2014
 	 * */
-	boolean executeAttempt() {
-		int prevStatus = status.getAndSet(STARTED);
+	void setComplete() {
 		
-		//-- TODO if the status was not CREATED before this, then should probably set status to CANCELLED 
-		return prevStatus == CREATED;
+		changeStatusLock.lock();
+				
+		TaskID<?> waiter = null;
+		while ((waiter = waitingTasks.poll())!=null){
+				waiter.dependenceFinished(this);
+		}
 		
-//		I think it should be this way		
-//		if (status.get() != CREATED)
-//			return false;
-//		
-//		status.set(STARTED);
-//		return true;
+		completedLatchForRegisteringThread.countDown();	
+		completedLatchForNonRegisteringThreads.countDown();
+		status.set(COMPLETED);
+		changeStatusLock.unlock();
+		
+		if (group != null) 
+			group.oneMoreInnerTaskCompleted();			
 	}
+
 	
-	void setEnclosingTask(TaskID<?> enclosingTask) {
-		this.enclosingTask = enclosingTask;
-	}
-	
-	TaskID<?> getEnclosingTask() {
-		return enclosingTask;
-	}
 	
 	/**
 	 * A <code>waiter</code> is another task that is waiting for the instance of task to finish. Once a 
@@ -389,20 +444,16 @@ public class TaskID<T> {
 	 * @since  9/9/2014
 	 * */
 	void addWaiter(TaskID<?> waiter) {
-		if (hasCompleted.get()) {
+		if (hasCompleted()) {
 			waiter.dependenceFinished(this);
 		} else {
-			changeStatusLock.lock();
-			/*The task could be completed after acquiring the lock*/
-			if (!hasCompleted.get()) {
-				if (waitingTasks == null)
-					waitingTasks = new ConcurrentLinkedQueue<>();
-				
-				waitingTasks.add(waiter);
-			} else {
-				waiter.dependenceFinished(this);
+			synchronized(this){
+				if (!hasCompleted()) {
+					waitingTasks.add(waiter);
+				} else {
+					waiter.dependenceFinished(this);
+				}
 			}
-			changeStatusLock.unlock();
 		}
 	}
 	
@@ -423,44 +474,13 @@ public class TaskID<T> {
 	}
 	
 	//maybe remianingDependences can be a concurrent queue instead of hashMap?
-	void setRemainingDependences(List<TaskID<?>> deps) {
-		remainingDependences = new ConcurrentHashMap<>();
-		Iterator<TaskID<?>> it = deps.iterator();
-		while (it.hasNext()) {
-			remainingDependences.put(it.next(), "");
+	void setRemainingDependences(List<TaskID<?>> dependences) {
+		for (TaskID<?> dependency : dependences){
+			if (!remainingDependences.contains(dependency))
+				remainingDependences.add(dependency);
 		}
 	}
 	
-	/**
-	 * Returns the task's globally-unique ID.
-	 * @return	The task's unique ID.
-	 * @see CurrentTask#globalID()
-	 * @see CurrentTask#relativeID()
-	 * @see #relativeID()
-	 */
-	public int globalID() {
-		return globalID;
-	}
-	
-	/**
-	 * Relative IDs are used to arrange the sub-tasks of a multi-task. This method returns the 
-	 * sub-task's relative ID in the multi-task.
-	 * @return The position, starting from 0, of this sub-task compared to it's sibling subtasks.
-	 * @see CurrentTask#globalID()
-	 * @see CurrentTask#relativeID()
-	 * @see #globalID()  
-	 */
-	public int relativeID() {
-		return relativeID;
-	}
-	
-	void setRelativeID(int relativeID) {
-		this.relativeID = relativeID;
-	}
-	
-	Task<T> getTaskInfo() {
-		return taskInfo;
-	}
 	
 	/**
 	 * Returns the result of the task. In order to return the final result of a task we have to
@@ -474,7 +494,7 @@ public class TaskID<T> {
 	 */
 	public T getReturnResult() throws ExecutionException, InterruptedException {
 		waitTillFinished();
-		if (cancelledSuccessfully())
+		if (hasBeenCancelled())
 			throw new ParaTaskRuntimeException("Attempting to get the result of a cancelled Task!");
 		return returnResult;
 	}
@@ -509,36 +529,32 @@ public class TaskID<T> {
 	 * @author Kingsley
 	 * @since 25/05/2013
 	 * */
+	
 	public void waitTillFinished() throws ExecutionException, InterruptedException {		
-		if (!hasCompleted.get()) {
-			Thread t = Thread.currentThread();
+		if (!(hasCompleted() || hasBeenCancelled())) { 
+			//get the thread which is trying to finish the task.
+			Thread thisThread = Thread.currentThread();
 			
-			/* Only WorkerThreads should start a new TaskID.. all other threads belong to the user, or 
-			 * are InteractiveThreads (therefore it is OK for them to block) */
-			if (t instanceof WorkerThread) {
-				WorkerThread currentWorker = (WorkerThread) t;
+			// Only WorkerThreads can execute a new TaskID.. all other threads belong to the user, or 
+			// are InteractiveThreads (therefore it is OK for them to block) 
+			if (thisThread instanceof WorkerThread) {
+				WorkerThread thisWorkerThread = (WorkerThread) thisThread;
 				
-				// if still not completed then start a substitute thread
-				
-				/**
-				 * 
-				 * @author Kingsley
-				 * Add a new check condition here in order to check if it is poisoned
-				 * 
-				 * */
-				
-				while (!hasCompleted.get()) {
-					//the fact that so many classes provide the cancel request feature is confusing
-					if (currentWorker.isCancelRequired() && !currentWorker.isCancelled()) {
-						LottoBox.tryLuck();
+				while (!hasCompleted()) {
+					//is worker thread poisoned? Required to be cancelled, but not cancelled yet?
+					if (thisWorkerThread.isCancelRequired() && !thisWorkerThread.isCancelled()) {
+						ThreadRedundancyHandler.informThreadPool();
 					}
 					
-					if (!currentWorker.isCancelled()) {
+					if (!thisWorkerThread.isCancelled()) {
 						// causes the worker to either execute a task or sleep
-						currentWorker.executeAnotherTaskOrSleep();
+						thisWorkerThread.executeAnotherTaskOrSleep();
 					} else {
+						//if the worker thread is cancelled, then put it to sleep
+						//until it is killed by JVM or Dalvik
 						try {
-							Thread.sleep(1);
+							//200 mili-seconds of sleeping for the thread before it polls again
+							Thread.sleep(ParaTask.WORKER_SLEEP_DELAY);
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 						}
@@ -546,12 +562,10 @@ public class TaskID<T> {
 					
 				}
 			} else {
-				if (currentThreadIsTheRegisteredThread()) {
-//					System.out.println("current thread is the registering thread.. will await");
+				if (isCurrentThreadTheRegisteringThread()) {
 					completedLatchForRegisteringThread.await();
-//					System.out.println("finished await");
 				} else {
-					completedLatch.await();
+					completedLatchForNonRegisteringThreads.await();
 				}
 			}
 		}
@@ -564,14 +578,30 @@ public class TaskID<T> {
 		}
 	}
 	
-	protected boolean currentThreadIsTheRegisteredThread() {
-		Thread registered = taskInfo.getRegisteringThread();
-		if (registered == null)
+	/**
+	 * This method checks if the current thread is the one that has registered the task
+	 * associated to this instance of TaskID. For this purpose, it first checks if the
+	 * registering thread that was initially recorded by ParaTask framework, has registered
+	 * the task as well, and then checks if the current thread is the event dispatch thread
+	 * (i.e., GUI) and returns <code>true</code>, even though the current event dispatch thread
+	 * might be a different thread than the one registering the task. Otherwise, it simply
+	 * checks if the current thread is the one that registered thread. 
+	 * 
+	 * @author Mostafa Mehrabi
+	 * @since  18/8/2015
+	 * */
+	protected boolean isCurrentThreadTheRegisteringThread() {
+		Thread registeredThread = taskInfo.getRegisteringThread();
+		if (registeredThread == null)
 			return false;
-		if (registered == ParaTask.getEDT() && GuiThread.isEventDispatchThread())
+		/*This approach is still error prone, since the thread that was registered by ParaTask
+		 * initially, may not be the one registering the task, and yet, that registering thread
+		 * is killed and replaced by another GUI thread! Instead, it is better to use a boolean
+		 * flag for each task to indicate if it has been registered by GUI thread.*/
+		if (taskInfo.hasBeenRegisteredByGuiThread() && GuiThread.currentThreadIsEventDispatchThread())
 			return true;
 		else 
-			return registered == Thread.currentThread();
+			return registeredThread == Thread.currentThread();
 	}
 	
 	void setReturnResult(T returnResult) {
@@ -594,16 +624,7 @@ public class TaskID<T> {
 		}
 	}
 	
-	/**
-	 * Checks to see whether the task has completed.
-	 * @return	<code>true</code> if it has completed, <code>false</code> otherwise
-	 * @see #getProgress()
-	 * @see CurrentTask#getProgress()
-	 */
-	public boolean hasCompleted() {
-		return hasCompleted.get();
-	}
-
+	
 	/**
 	 * Checks to see whether the task had any errors. 
 	 * @return	<code>true</code> if there was an error, <code>false</code> otherwise
@@ -612,67 +633,7 @@ public class TaskID<T> {
 		return hasUserError.get();
 	}
 	
-	/**
-	 * Invoke all the dependent subtasks for group
-	 * 
-	 * This method is called when a task is complete. In order to set a task as "complete", this
-	 * method goes through the list of tasks that have been waiting for this task to finish, and
-	 * removes the task from their lists of dependences. Then it unblocks all the waiting threads,
-	 * even the registering thread (in case there are slots to execute), and sets the flag 'hasComplete' 
-	 * to <code>true</code>.
-	 * If this task is registered as a group of tasks, the method will go through all tasks that have 
-	 * been waiting for this group to finish, and then removes this group from their lists of dependences.
-	 * If any of those waiting tasks have their list of dependences emptied by removing this group, it will
-	 * be introduced to the task pool as a ready-to-execute task. 
-	 * 
-	 * @author Mostafa Mehrabi
-	 * @since 9/9/2014
-	 * */
-	void setComplete() {
-		
-//		System.out.println("SET COMPLETE...");
-		
-		/* dependences (gotta be atomic) */
-		changeStatusLock.lock();
-		TaskID<?> waiter = null;
-		
-		if (waitingTasks != null) {
-			while ((waiter = waitingTasks.poll()) != null) {
-				// remove this task from the waiter's dependences queue
-				waiter.dependenceFinished(this);
-			}
-		}
-		
-		completedLatchForRegisteringThread.countDown();	//-- in case there were slots
-		completedLatch.countDown();
-		hasCompleted.set(true);
-		changeStatusLock.unlock();
-		
-		//would it not be better to implement this part of the code as an overridden method
-		//in the child class TaskIDGroup
-		if (group != null) {
-			
-			waiter = null;
-			
-			if (((TaskID<?>)group).waitingTasks != null) {
-				ConcurrentLinkedQueue<TaskID<?>> taskIDsWaitingForGroup = ((TaskID<?>)group).waitingTasks;
-				
-				while ((waiter = taskIDsWaitingForGroup.poll()) != null) {
-					
-					//remove the current instance (i.e., group) from the list of dependencies of each waiting TaskID.
-					ConcurrentHashMap<TaskID<?>, Object> remainingDependencesOfGroup = waiter.remainingDependences;
-									
-					remainingDependencesOfGroup.remove(group);
-					if (remainingDependencesOfGroup.isEmpty()) {
-						TaskpoolFactory.getTaskpool().nowReady(waiter);
-					}
-					
-				}
-			}
-			
-			group.setComplete();
-		}
-	}
+	
 	
 	/**
 	 * In order to make sure a task is completed, the possible handlers (slots) that are queued by the task need 
@@ -684,34 +645,38 @@ public class TaskID<T> {
 	 */
 	void enqueueSlots(boolean onlyEnqueueFinishedSlot) {
 		
-		// TODO make use of the boolean passed in (and for multi-tasks) - i.e. don't execute slots of cancelled tasks?
-		
-		if (group != null && group.isMultiTask()) {
-			//-- part of a multi-task, will only enqueue the slots of the group when the last TaskID in the group completes
+		if (isMultiTask()) {
+			//Part of a multi-task, will only enqueue the slots of the group when the last TaskID in the group completes
 			group.oneMoreInnerTaskCompleted();
-			setComplete();	// TODO  this was never here before -- was deadlocking without it... 20/3/2010 
+			// This was never here before -- was deadlocking without it... 20/3/2010 
+			//This needs further investigation, whether it should be actually here? 
+			setComplete();	
 			
 		} else {
-			//-- even if this TaskID is within a group, it is a separate entity since not a multi-task
+			//Even if this TaskID is within a group, it is a separate entity since not a multi-task
 			
-			// TODO   if it has been cancelled, then probably don't want to execute the handlers... (except the setCompleteMethod())
+			//If it has been cancelled, then probably don't want to execute the handlers... (except the setCompleteMethod())
 			if (hasUserError() || hasSlots) {
 				
-//				System.out.println("HAS SLOTS..");
 				completedLatchForRegisteringThread.countDown(); //-- so that registering thread will not block in slots 
-				completedLatch.countDown();  // ADDED THIS?? -- I think this should be added after the slots and handlers are executed.
+				completedLatchForNonRegisteringThreads.countDown();  // ADDED THIS?? -- I think this should be added after the slots and handlers are executed.
 				
 				if (hasUserError.get())
-					executeHandlers();
-				if (hasSlots)
-					executeSlots();
-				
-				//-- 		since slots are executed in the order they are enqueued, then this will be the last slot! :-)
-				callTaskListener(new Slot(this::setComplete).setIsSetCompleteSlot(true));
+					executeExceptionHandler();
+				if (hasSlots){
+					executeAllTaskSlots();
+				}
+				//Since slots are executed in the order they are enqueued, then this will be the last slot!
+				//We want to ensure that 'setComplete' is called after all slots are executed, so we enqueue
+				//the method as another slot at the end.
+				Slot<Void> slot = new Slot<>(this::setComplete);
+				slot.setIsSetCompleteSlot(true);
+				executeOneTaskSlot(slot);
 				
 			} else {
 				setComplete();
 			}
+			
 		}
 	}
 	
@@ -722,50 +687,55 @@ public class TaskID<T> {
 	 * @author Mostafa Mehrabi
 	 * @since 9/9/2014
 	 * */
-	protected Slot getExceptionHandler(Class<?> occurredException) {
+	protected Slot<?> getExceptionHandler(Class<?> occurredException) {
 		
 		//-- first, try to get handler defined immediately for this task
-		Slot handler = taskInfo.getExceptionHandler(occurredException);
+		Slot<?> handler = taskInfo.getExceptionHandler(occurredException);
 		
-		TaskID<?> curTask = this;
+		TaskID<?> currentTask = this;
 		//-- while we have not found a handler, and while there are other enclosing tasks
-		while (handler == null && curTask.getEnclosingTask() != null) {
-			curTask = curTask.getEnclosingTask();
-			handler = curTask.getTaskInfo().getExceptionHandler(occurredException);
+		while (handler == null && currentTask.getEnclosingTask() != null) {
+			currentTask = currentTask.getEnclosingTask();
+			handler = currentTask.getTaskInfo().getExceptionHandler(occurredException);
 		}
 		
 		return handler;
 	}
 	
 	//-- returns the number of handlers that it will execute for this TaskID
-	private int executeHandlers() {
-		Slot handler = getExceptionHandler(exception.getClass());
+	private boolean executeExceptionHandler() {
+		Slot<?> handler = getExceptionHandler(exception.getClass());
 		
 		if (handler != null) {
-			callTaskListener(handler);
-			return 1;
+			executeOneTaskSlot(handler);
+			return true;
 		} else {
 			System.err.println("No asynchronous exception handler (i.e. asyncCatch clause) was specified when " +
 					"invoking:\n" +
-							"\n\tThe globalID of this task is "+ globalID() + ", and the encountered exception: ");
+							"\n\tThe globalID of this task is "+ getGlobalID() + ", and the encountered exception: ");
 			exception.printStackTrace();
-			return 0;
+			return false;
 		}
 	}
 	
-	void callTaskListener(Slot slot) {
-//		System.out.println("want to execute slot: "+slot.getMethod().getName());
-		ParaTask.getEDTTaskListener().executeSlot(slot);
-//		System.out.println("executed slot: "+slot.getMethod().getName());
+	//This doesn't enqueue interim slots, whenever interim handlers are called from
+	//within a TaskInfo, this method is called on the corresponding TaskID.
+	void executeInterimSlot(Slot<?> slot){
+		executeOneTaskSlot(slot);
 	}
 	
-	protected int executeIntermediateSlots() {
+	void executeOneTaskSlot(Slot<?> slot) {
+		ParaTask.getEDTTaskListener().executeSlot(slot);
+	}
+	
+	protected int executeIntermediateTaskSlots() {
 		return 0;
 	}
 	
-	protected int executeSlots() {
-		for (Iterator<Slot> it = taskInfo.getSlotsToNotify().iterator(); it.hasNext(); ) 
-			callTaskListener(it.next());
+	protected int executeAllTaskSlots() {
+		List<Slot<T>> slotsToNotify = taskInfo.getSlotsToNotify();
+		for (Slot<T> slotToNotify : slotsToNotify)
+			executeOneTaskSlot(slotToNotify);
 		return taskInfo.getSlotsToNotify().size();
 	}
 	
@@ -777,16 +747,18 @@ public class TaskID<T> {
 	 * Checks to see if this task is part of a multi-task group.
 	 * @return <code>true</code> if this task is part of a multi-task, <code>false</code> otherwise 
 	 */
+    //	shouldn't this be changed to isSubtask?
 	public boolean isMultiTask() {
-		return group != null;
+		return (group != null && group.isMultiTask());
 	}
 	
 	/**
-	 * Returns the size of the multi-task this task is part of. 
+	 * Returns the size of the multi-task this task is part of. I think this should be moved to 
+	 * TaskIDGroup, instead of TaskID.
 	 * @return	The multi-task size, otherwise returns 1 if this task is not part of a multi-task.
 	 */
-	public int multiTaskSize() {
-		if (group == null)
+	int multiTaskSize() {
+		if (!isMultiTask())
 			return 1;
 		return group.groupSize();
 	}
@@ -794,6 +766,7 @@ public class TaskID<T> {
 	int getExecuteOnThread() {
 		return executeOnThread;
 	}
+	
 	
 	void setExecuteOnThread(int executeOnThread) {
 		this.executeOnThread = executeOnThread;

@@ -20,8 +20,10 @@
 package pt.runtime;
 
 import pi.RedLib.Reduction;
+
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
@@ -53,12 +55,14 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	private ReentrantLock reductionLock = new ReentrantLock();
 	private T reductionAnswer;
 	
-	//private int nextRelativeID = 0;
-	
+	/*Indicates how many sub tasks should be expanded, and its value can
+	only be set from {@link AbstractTaskPool#enqueueMulti()}*/
 	private int groupSize = 0;
+	private Reduction<T> reductionOperation = null; 
 	
-	private boolean isMultiTask = false;   //-- only a multi-task if the group was created by ParaTask in a TASK(*) declaration
-											//-- this distinguishes it from user-created groups
+	//Only a multi-task if the group was created by ParaTask, this attribute 
+	//distinguishes it from user-created groups
+	private boolean isMultiTask = false;   
 	
 	private ParaTaskExceptionGroup exceptionGroup = null;
 	private CopyOnWriteArrayList<Throwable> exceptionList = new CopyOnWriteArrayList<Throwable>();
@@ -83,15 +87,36 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	 * group.
 	 * */
 	public TaskIDGroup(int groupSize) {
-		this.groupSize = groupSize;
+		this.setCount(groupSize);
 	}
 	
 	/**this is only used to create a multi-task (the size is known before adding the inner tasks)*/
-	TaskIDGroup(int groupSize, Task<T> taskInfo) {
+	TaskIDGroup(int groupSize, TaskInfo<T> taskInfo) {
 		super(taskInfo);
-		this.isMultiTask = true;
-		this.groupSize = groupSize;
-		this.taskInfo = taskInfo;
+		this.isMultiTask = taskInfo.isMultiTask();
+		this.setCount(groupSize);
+		this.reductionOperation = null;
+	}
+	
+	TaskIDGroup(int groupSize, TaskInfo<T> taskInfo, boolean isMultiTask){
+		super(taskInfo);
+		this.isMultiTask = isMultiTask;
+		this.setCount(groupSize);
+		this.reductionOperation = null;
+	}
+	
+	TaskIDGroup(int groupSize, TaskInfo<T> taskInfo, Reduction<T> reduction) {
+		super(taskInfo);
+		this.isMultiTask = taskInfo.isMultiTask();
+		this.setCount(groupSize);
+		this.reductionOperation = reduction;
+	}
+	
+	TaskIDGroup(int groupSize, TaskInfo<T> taskInfo, boolean isMultiTask, Reduction<T> reduction) {
+		super(taskInfo);
+		this.isMultiTask = isMultiTask;
+		this.setCount(groupSize);
+		this.reductionOperation = reduction;
 	}
 	
 	/**
@@ -104,6 +129,13 @@ public class TaskIDGroup<T> extends TaskID<T> {
 		return isMultiTask;
 	}
 	
+	int getCount() {
+		return groupSize;
+	}
+
+	void setCount(int groupSize) {
+		this.groupSize = groupSize;
+	}
 	/**
 	 * Add a task to this group. 
 	 * @param id	The <code>TaskID</code> to add
@@ -126,10 +158,8 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	 * Maybe a good idea that only allow to call this method paratask runtime internally, which means
 	 * it is used for multi task group only but not user defined group.
 	 * */
-	public void add(TaskID<?> id) {
+	public void addInnerTask(TaskID<?> id) {
 		innerTasks.add(id);
-		//id.setPartOfGroup(this);
-		//id.setRelativeID(nextRelativeID++);
 	}
 	
 	/**
@@ -140,19 +170,22 @@ public class TaskIDGroup<T> extends TaskID<T> {
 		return groupSize;
 	}
 	
+	void setReduction(Reduction<T> reduction){
+		reductionLock.lock();
+		this.reductionOperation = reduction;
+		reductionLock.unlock();
+	}
+	
 	/**
 	 * Perform a reduction on the set of results. A reduction is only to be performed once. 
 	 * If this is called a second time then the pre-calculated answer is returned.
 	 * @param red	The reduction to perform
 	 * @return The result of performing the reduction on the set of <code>TaskID</code>s contained in this group.
 	 */
-	public T reduce(Reduction<T> reduction) throws ExecutionException, InterruptedException {
+	T reduce(Reduction<T> reduction) throws ExecutionException, InterruptedException {
 		waitTillFinished();
 		
-		// TODO want to make this like the Parallel Iterator's reduction.. i.e. checks initial value, etc.. 
-		
-		if (groupSize == 0)
-			
+		if (groupSize == 0)			
 			return null;
 		
 		reductionLock.lock();
@@ -173,11 +206,11 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	 * Returns the result of a particular task.
 	 * @param relativeID The relative ID of the task whose result is wanted.
 	 * @see CurrentTask#relativeID()
-	 * @see TaskID#relativeID()
+	 * @see TaskID#getRelativeID()
 	 * @return The result for that task.
 	 */
 	@SuppressWarnings("unchecked")
-	public T getInnerTaskResult(int relativeID) throws ExecutionException, InterruptedException {
+	T getInnerTaskResult(int relativeID) throws ExecutionException, InterruptedException {
 		return (T) innerTasks.get(relativeID).getReturnResult();
 	}
 	
@@ -185,7 +218,7 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	 * Return an iterator for the set of <code>TaskID</code>s contained in this group.
 	 * @return	An iterator for this group of TaskIDs.
 	 */
-	public Iterator<TaskID<?>> groupMembers() {
+	public Iterator<TaskID<?>> getGroupIterator() {
 		return innerTasks.iterator();
 	}
 	
@@ -201,27 +234,25 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	void oneMoreInnerTaskCompleted() { 
 		int numCompleted = numTaskCompleted.incrementAndGet();
 		
-		if (groupSize == numCompleted) {
+		if (numCompleted == groupSize) {
 			//-- this is the last task in the multi-task group, therefore need to invoke slots/handlers
 			boolean nothingToQueue = true;
 			
+			
 			if (hasUserError()) {
 				
-				//-- loop through all the TaskIDs and if it had an exception, except the handler..
-				
-				// TODO at the moment, the handler uses the group's TaskID rather than the one for the specific task.. needs to be fixed!!
+				// at the moment, the handler uses the group's TaskID rather than the one for the specific task.. needs to be fixed!!
 
-				for (Iterator<TaskID<?>> it = groupMembers(); it.hasNext(); ) {
-					TaskID<?> task = it.next();
-					Throwable exception = task.getException();
+				for (TaskID<?> taskID : innerTasks ) {
+					Throwable exception = taskID.getException();
 					if (exception != null) {
-						Slot handler = getExceptionHandler(exception.getClass());
+						Slot<?> handler = getExceptionHandler(exception.getClass());
 						
 						if (handler != null) {
-							callTaskListener(handler);
+							executeOneTaskSlot(handler);
 							nothingToQueue = false;
 						} else {
-							System.err.println("No asynchronous exception handler found in Task " + task.globalID() + " for the following exception: ");
+							System.err.println("No asynchronous exception handler found in Task " + taskID.getGlobalID() + " for the following exception: ");
 							exception.printStackTrace();
 						}
 					}
@@ -230,29 +261,20 @@ public class TaskIDGroup<T> extends TaskID<T> {
 			
 			//-- executeSlots
 			if (hasSlots) {
-				executeSlots();
+				executeAllTaskSlots();
 				nothingToQueue = false;
-			} else {
-			}
+			} 
 
 			if (nothingToQueue) {
 				setComplete();
 			} else {
-				callTaskListener(new Slot(this::setComplete).setIsSetCompleteSlot(true));
+				Slot<Void> slot = new Slot<Void>(this::setComplete);
+				slot.setIsSetCompleteSlot(true);
+				executeOneTaskSlot(slot);
 			}
-		} else {
-//			System.out.println("Group size of "+ groupSize+ " not finished. Number of tasks completed so far: "+numCompleted);
 		}
 	}
 
-	/*
-	 *  TaskIDGroup does not need to have access to the fields of TaskID. It just stores all the TaskID objects, and makes
-	 *  invocation on the inner TaskIDs in the group (to simplify implementation). 
-	 */
-	@Override
-	void dependenceFinished(TaskID<?> otherTask) {
-		throw new UnsupportedOperationException("TODO: Not implemented!");
-	}
 
 	@Override
 	public Throwable getException() {
@@ -260,8 +282,8 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	}
 
 	/**
-	 * Get the result of a group of tasks. This is not a supported method for <code>TaskIDGroup</code>. To get the results,
-	 * must either perform a reduction or get results of the individual tasks. 
+	 * Get the result of a group of tasks. To use this method, an instance of a reduction operation
+	 * must be passed to the TaskID constructor, otherwise use {@link #getReturnResult(Reduction)}. 
 	 * 
 	 * @see #getReturnResult(Reduction)
 	 * @see #getInnerTaskResult(int)
@@ -269,66 +291,53 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	 */
 	@Override
 	public T getReturnResult() throws ExecutionException, InterruptedException {
-		throw new UnsupportedOperationException("This is a TaskIDGroup, you must either specify a Reduction or get individual results from the inner TaskID members.");
+		if (this.reductionOperation == null)
+			throw new UnsupportedOperationException("This is a TaskIDGroup, you must either specify a Reduction or get individual results from the inner TaskID members.");
+		return reduce(this.reductionOperation);
 	}
 
 	/**
 	 * Perform a reduction on the results contained in the group.  
-	 * @param red	The reduction to perform on the results of the contained <code>TaskIDs</code>
+	 * @param reductionOperation	The reduction to perform on the results of the contained <code>TaskIDs</code>
 	 * @return		The result after performing the specified reduction. 
 	 * @throws ExecutionException
 	 * @throws InterruptedException
 	 */
-	public T getReturnResult(Reduction<T> red) throws ExecutionException, InterruptedException {
-		return reduce(red);
+	public T getReturnResult(Reduction<T> reductionOperation) throws ExecutionException, InterruptedException {
+		if (reductionOperation == null)
+			throw new UnsupportedOperationException("This is a TaskIDGroup, you must either specify a Reduction or get individual results from the inner TaskID members.");
+		return reduce(reductionOperation);
 	}
 
 	@Override
-	Task<T> getTaskInfo() {
+	public TaskInfo<T> getTaskInfo() {
 		return taskInfo;
-		//throw new UnsupportedOperationException("TODO: Not implemented! Does a TaskIDGroup need to be able to use this method?");
+	}
+
+	@Override
+	public void enqueueSlots(boolean onlyEnqueueFinishedSlot) {
 	}
 
 	/**
-	 * Checks to see whether all the inner tasks have completed.
-	 */
+	 * This method is called by one of the inner tasks when it incurs an
+	 * exception. Therefore, the group knows that there is an exception 
+	 * within the group that needs handling. 
+	 * 
+	 * @param exception The exception instance that has been encountered by
+	 * an inner task.
+	 * 
+	 * @author Mostafa Mehrabi
+	 * @since  19/8/2015
+	 * */
 	@Override
-	public boolean hasCompleted() {
-		return super.hasCompleted();
-	}
-	
-	/**
-	 * Checks to see whether any of the inner tasks contained an error. 
-	 */
-	@Override
-	public boolean hasUserError() {
-		return super.hasUserError();
-	}
-
-	@Override
-	void setComplete() {
-		hasCompleted.set(true);
-	}
-
-	@Override
-	void enqueueSlots(boolean onlyEnqueueFinishedSlot) {
-	}
-
-	@Override
-	void setException(Throwable exception) {
+	public void setException(Throwable exception) {
 		exceptionList.add(exception);
 		hasUserError.set(true);
 	}
 
-	/*
+	
 	@Override
-	void setRemainingDependences(ArrayList<TaskID> deps) {
-		//throw new UnsupportedOperationException("TODO: Not yet implemented!");
-	}
-	*/
-
-	@Override
-	void setReturnResult(Object returnResult) {
+	public void setReturnResult(Object returnResult) {
 		throw new ParaTaskRuntimeException("Cannot set the return result for a TaskIDGroup");
 	}
 
@@ -363,7 +372,7 @@ public class TaskIDGroup<T> extends TaskID<T> {
 				if (taskID instanceof TaskIDGroup) {
 					TaskIDGroup<?> taskIDGroup = (TaskIDGroup<?>) taskID;
 					//don't we need to force expanding here? We are just receiving boolean variable
-					while (!taskIDGroup.getExpanded()) {
+					while (!taskIDGroup.isExpanded()) {
 						Thread.sleep(1);
 					}
 					taskIDGroup.waitTillFinished();
@@ -410,19 +419,36 @@ public class TaskIDGroup<T> extends TaskID<T> {
 		}
 	}
 
+	/*
+	 * A recursive convenience function that digs into the TaskIDGroup and returns all the individual TaskIDs.
+	 *
+	 * @return List<TaskID<?>> the TaskIDs inside <code>group</code> placed inside a new ArrayList
+	 * */
+	List<TaskID<?>> allTasksInGroup() {
+		ArrayList<TaskID<?>> listOfInnerTasks = new ArrayList<>();
+		
+		for (TaskID<?> innerTask : innerTasks){
+			if (innerTask instanceof TaskIDGroup<?>)
+				listOfInnerTasks.addAll(((TaskIDGroup<?>) innerTask).allTasksInGroup());
+			else
+				listOfInnerTasks.add(innerTask);
+		}
+		
+		return listOfInnerTasks;
+	}
 
 	/**
 	 * 
 	 * @author Kingsley
 	 * @since 08/05/2013
 	 * 
-	 * After a multi task worker thread expand a mult task, call this method to set a "true" value.
+	 * After a multi task worker thread expand a multi-task, call this method to set a "true" value.
 	 */
 	protected void setExpanded(boolean isExpanded) {
 		this.isExpanded = isExpanded;
 	}
 	
-	protected boolean getExpanded(){
+	protected boolean isExpanded(){
 		return isExpanded;
 	}
 }

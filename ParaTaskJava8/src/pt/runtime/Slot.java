@@ -20,6 +20,11 @@
 package pt.runtime;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutionException;
+
+import pt.functionalInterfaces.FunctorNoArgsNoReturn;
+import pt.functionalInterfaces.FunctorOneArgNoReturn;
+
 /**
  *This class allows the user to define a handler from one of the Functor types (functional interfaces)
  * which could be done by using lambda expressions as well. The user-defined handler will be associated
@@ -34,49 +39,34 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * 
  * */
 //Add the explanation for 'setComplete' later!
-public class Slot {	
-	final public static Slot quit = new Slot();
+public class Slot<R>{	
+	//final public static Slot<R> quit = new Slot<R>();
 
-	private ConcurrentLinkedQueue<Object> interResults = null;
-	private Class<?> interResultType = null;
+	protected ConcurrentLinkedQueue<Object> interResults = null;
+	protected Class<?> interResultType = null;
+		
+	protected boolean isIntermediateResultSlot;
+	protected boolean isASetCompleteSlot;
 	
-	private boolean isIntermediateResultSlot;
-	private boolean isASetCompleteSlot;
+	private FunctorNoArgsNoReturn functorNoArg = null;
+	private FunctorOneArgNoReturn<R> functorOneArg = null;
+	private R taskResult = null;
+	// this is the task for which this slot is attached (who should assign it?)
+	// cannot be assigned at the time the slot is created (since the TaskID wasn't created just yet)
+	protected TaskID<R> taskID = null; 		
 	
-	private TaskID<?> taskID = null; 	// this is the task for which this slot is attached to (who should assign it?)
-				// cannot be assigned at the time the slot is created (since the TaskID wasn't created just yet)
+	Slot(){}
 	
-	private Functor<?> handler;
-	private FunctorVoidWithOneArg<TaskID<?>> handlerWithArg;
-	private FunctorVoid voidHandler;
-	private FunctionInterExceptionHandler exceptionHanlder;
-	private FunctorVoidWithTwoArgs<TaskID<?>, Object> interimHandler;
-	
-	private Slot() {
+	Slot(FunctorOneArgNoReturn<R> functor, TaskID<R> taskID){
+		this.taskID = taskID;
+		this.functorOneArg = functor;
 	}
 	
-	public Slot(Functor<?> handler) {
-		this.handler = handler;
+	protected Slot(FunctorNoArgsNoReturn functor){
+		this.functorNoArg = functor;
 	}
 	
-	public Slot(FunctorVoid handler) {
-		this.voidHandler = handler;
-	}
-	
-	public Slot(FunctorVoidWithOneArg<TaskID<?>> handlerWithArg) {
-		this.handlerWithArg = handlerWithArg;
-	}
-	
-	public Slot(FunctionInterExceptionHandler handler) {
-		this.exceptionHanlder = handler;
-	}
-	
-	public Slot(FunctorVoidWithTwoArgs<TaskID<?>, Object> interimHandler) {
-		this.interimHandler = interimHandler;
-		this.isIntermediateResultSlot = true;
-	}
-	
-	public Slot setIsSetCompleteSlot(boolean setComplete) {
+	public Slot<R> setIsSetCompleteSlot(boolean setComplete) {
 		this.isASetCompleteSlot = setComplete;
 		return this;
 	}	
@@ -86,16 +76,16 @@ public class Slot {
 	}
 	
 	public void addIntermediateResult(Class<?> type, Object value) {
+		
 		if (interResults == null) {
 			interResults = new ConcurrentLinkedQueue<Object>();
 			interResultType = type;
 		}
 		
-		//else if (interResultType.equals(type))
 		interResults.add(value);
 	}
 	
-	private Object getNextIntermediateResultValue() {
+	Object getNextIntermediateResultValue() {
 		return interResults.poll();
 	}
 	
@@ -103,11 +93,11 @@ public class Slot {
 		return interResultType;
 	}
 
-	public TaskID<?> getTaskID() {
+	public TaskID<R> getTaskID() {
 		return taskID;
 	}
-	//how is a slot going to use a taskID?
-	public void setTaskID(TaskID<?> taskID) {
+	
+	public void setTaskID(TaskID<R> taskID) {
 		this.taskID = taskID;
 	}
 
@@ -115,20 +105,21 @@ public class Slot {
 		return isIntermediateResultSlot;
 	}
 	
-	void execute() {
-		if(this.handler != null)
-			this.handler.exec();
-		
-		if(this.handlerWithArg != null)
-			this.handlerWithArg.exec(this.taskID);
-		
-		if(this.voidHandler != null)
-			this.voidHandler.exec();
-		
-		if(this.interimHandler != null)
-			this.interimHandler.exec(this.taskID, getNextIntermediateResultValue());
-		
-		if(this.exceptionHanlder != null)
-			this.exceptionHanlder.doWork(this.taskID.getException());
+	private R getTaskResult(){
+		try {
+			return taskID.getReturnResult();
+		} catch (ExecutionException | InterruptedException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	void execute(){
+		if (this.functorOneArg!=null)
+			functorOneArg.exec(this.getTaskResult());
+		functorNoArg.exec();
 	}
 }
+	
+	
+		

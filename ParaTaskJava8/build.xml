@@ -43,7 +43,7 @@
 	
 	<!-- Compress the classes into a jar file -->
 	<target name="classesJar" depends="compile">
-		<jar  basedir="${build.dir}" destfile="${dist.dir}/${productName}-Runtime-${jarVersion}.jar" />
+		<jar  basedir="${build.dir}" destfile="${dist.dir}/${productName}-Runtime-${jarVersion}.jar"/>
 	</target>
 	
 	<!-- Document the source codes, export the documentations to the docs directory -->
@@ -52,17 +52,20 @@
 			<fileset dir="${src.dir}">
 				<include name="**/**" />
 			</fileset>
+			<classpath>
+				<pathelement location="./libs/ParaIterator-1.0.5-src.jar"/>
+			</classpath>
 		</javadoc>
 	</target>
 	
 	<!-- Compress the documentations into a jar file -->
 	<target name="docsJar" depends="documentation">
-		<jar basedir="${doc.dir}" destfile="${dist.dir}/${productName}-JavaDoc-${jarVersion}.jar" />
+		<jar destfile="${dist.dir}/${productName}-JavaDoc-${jarVersion}.jar" />
 	</target>
 	
 	<!-- Compress the source files into a jar file -->
 	<target name="sourcesJar">
-		<jar basedir="${src.dir}" destfile="${dist.dir}/${productName}-Src-${jarVersion}.jar"/>
+		<jar destfile="${dist.dir}/${productName}-Src-${jarVersion}.jar" basedir="${src.dir}" />
 	</target>
 	
 	<target name="main" depends="classesJar, docsJar, sourcesJar">

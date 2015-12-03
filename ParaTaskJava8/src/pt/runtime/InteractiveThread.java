@@ -21,24 +21,25 @@ package pt.runtime;
 
 import java.util.concurrent.ExecutionException;
 
+//Separate interactive threads are created for independent interactive tasks.
 public class InteractiveThread extends TaskThread {
 
-	private TaskID task = null;
+	private TaskID<?> taskID = null;
 	
-	public InteractiveThread(Taskpool taskpool, TaskID task) {
+	InteractiveThread(Taskpool taskpool, TaskID<?> taskID) {
 		/* interactive threads don't need access to the taskpool */
 		super(taskpool);
-		this.task = task;
+		this.taskID = taskID;
 	}
 
 	@Override
 	public void run() {	
 		
-		boolean success = executeTask(task);
+		boolean success = executeTask(taskID);
 		if (success) {
 			try {
-				if (!task.cancelledSuccessfully())
-					task.getReturnResult();
+				if (!taskID.hasBeenCancelled())
+					taskID.getReturnResult();
 			} catch (ExecutionException e) {
 				e.printStackTrace();
 			} catch (InterruptedException e) {
@@ -51,7 +52,7 @@ public class InteractiveThread extends TaskThread {
 //			System.err.println("FAILED!! InteractiveThread " + threadID + " ( " + Thread.currentThread().getId()+ ")"+ " wanted to execute task: " + task.getGlobalID() + " of method: " 
 //					+ task.getTaskInfo().getMethod().getName());
 		}
-		taskpool.interactiveTaskCompleted(task);
+		taskpool.interactiveTaskCompleted(taskID);
 		
 		// TODO make this more efficient by recycling interactive threads
 	}

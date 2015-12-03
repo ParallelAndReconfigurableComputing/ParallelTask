@@ -21,8 +21,6 @@ package pt.runtime;
 
 import java.util.AbstractQueue;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.concurrent.PriorityBlockingQueue;
 
 import pt.queues.FifoLifoQueue;
 
@@ -55,18 +53,18 @@ public class TaskpoolMixedScheduling extends AbstractTaskPool {
 	protected void enqueueReadyTask(TaskID<?> taskID) {
 		//if the task cannot be executed on arbitrary threads, regardless of being
 		//a TaskIDGroup or a OneOff task, it will be enqueued to a private queue
-		if (taskID.getExecuteOnThread() != ParaTaskHelper.ANY_THREAD_TASK){
-			privateQueues.get(taskID.getExecuteOnThread()).add(taskID);
+		if (taskID.getExecuteOnThread() != ParaTask.ANY_THREAD_TASK){
+			privateTaskQueues.get(taskID.getExecuteOnThread()).add(taskID);
 		}
 		
 		//if the task can be executed on arbitrary threads, and is a group task
 		else if (taskID instanceof TaskIDGroup){
-			mixedMultiTaskqueue.addGlobal(taskID);
+			mixedMultiTaskQueue.addGlobal(taskID);
 		}
 		
 		//if the task can be executed on arbitrary threads, and is a one off task
 		else{
-			mixedOneoffTaskqueue.addGlobal(taskID);
+			mixedOneOffTaskQueue.addGlobal(taskID);
 		}
 		
 	}
@@ -95,78 +93,73 @@ public class TaskpoolMixedScheduling extends AbstractTaskPool {
 	 *@since  14/9/2014
 	 * */
 	@Override
-	public TaskID workerPollNextTask() {
+	public TaskID<?> workerPollNextTask() {
 		
-		WorkerThread wt = (WorkerThread) Thread.currentThread();
-		int workerID = wt.getThreadID();
+		WorkerThread workerThread = (WorkerThread) Thread.currentThread();
+		int workerID = workerThread.getThreadID();
 		
-		TaskID next = null;
+		TaskID<?> nextTaskID = null;
 		
-		if (wt.isMultiTaskWorker()) {
-			next = privateQueues.get(workerID).poll();
+		if (workerThread.isMultiTaskWorker()) {
 			
-			while (next != null) {
+			while ((nextTaskID = privateTaskQueues.get(workerID).poll()) != null) {
 				
 				//-- attempt to execute this task
-				if (next.executeAttempt()) {
+				if (nextTaskID.executeAttempt()) {
 					//-- no cancel attempt was successful so far, therefore may execute this task
-					return next;
+					return nextTaskID;
 				} else {
 					//-- task was successfully cancelled beforehand, therefore grab another task
-					next.enqueueSlots(true);	//-- task is considered complete, so execute slots
-					//-- TODO maybe should not execute slots for cancelled tasks, just the completedSlot() ?? 
+					nextTaskID.enqueueSlots(true);	//-- task is considered complete, so execute slots
 				}
-				
-				next = privateQueues.get(workerID).poll();
 			}
 			
+			int currentMultiTaskThreadPool = ThreadPool.getMultiTaskThreadPoolSize();
+			int count = 0;
 			// If the private queue of this multi-task does not have an executable task...
 			// get task from mixed-schedule queue.. if no suitable task found, return null
-			while ((next = mixedMultiTaskqueue.poll()) != null) {
+			while ((nextTaskID = mixedMultiTaskQueue.poll()) != null) {
 				
 				// expand multi task
-				int count = next.getCount();
-				int currentMultiTaskThreadPool = ThreadPool.getMultiTaskThreadPoolSize();
-				Task taskinfo = next.getTaskInfo();
+				count = ((TaskIDGroup<?>)nextTaskID).getCount();
+				
+				TaskInfo<?> taskInfo = nextTaskID.getTaskInfo();
 
 				// indicate this is a sub task
-				taskinfo.setSubTask(true);
+				taskInfo.setSubTask(true);
 				
 				for (int i = 0; i < count; i++) {
-					TaskID taskID = new TaskID(taskinfo);
+					TaskID<?> taskID = new TaskID(taskInfo);
 					
 					taskID.setRelativeID(i);
 					taskID.setExecuteOnThread(i%currentMultiTaskThreadPool);
 					
 					taskID.setSubTask(true);
 					
-					taskID.setPartOfGroup(((TaskIDGroup)next));
-					((TaskIDGroup)next).add(taskID);
+					taskID.setPartOfGroup(((TaskIDGroup<?>)nextTaskID));
+					((TaskIDGroup<?>)nextTaskID).addInnerTask(taskID);
 					enqueueReadyTask(taskID);
 					
 				}
-				((TaskIDGroup)next).setExpanded(true);
+				((TaskIDGroup<?>)nextTaskID).setExpanded(true);
 			}
+			//return null;
 		}else {
 			// If the worker thread is not a multi-task thread look into the one off mixed queue...
 			// get task from mixed-schedule queue.. if no suitable task found, return null
-			while ((next = mixedOneoffTaskqueue.poll()) != null) {
-				int savedFor = next.getExecuteOnThread();
+			while ((nextTaskID = mixedOneOffTaskQueue.poll()) != null) {
+				int savedFor = nextTaskID.getExecuteOnThread();
 				
 				// check if this task is saved for another worker thread
-				if (savedFor == ParaTaskHelper.ANY_THREAD_TASK || savedFor == workerID) {
-					if (next.executeAttempt()) {
-						return next;
+				if (savedFor == ParaTask.ANY_THREAD_TASK || savedFor == workerID) {
+					if (nextTaskID.executeAttempt()) {
+						return nextTaskID;
 					} else {
-						//-- task was successfully cancelled beforehand, therefore grab another task
-						next.enqueueSlots(true);	//-- task is considered complete, so execute slots
-						//-- TODO maybe should not execute slots for cancelled tasks, just the completedSlot() ?? 
+						// task was successfully cancelled beforehand, so execute slots
+						nextTaskID.enqueueSlots(true);	
 					}
 				} else {
-					
-					
-		  			//privateQueues[savedFor].add(next);
-					privateQueues.get(savedFor).add(next);
+					privateTaskQueues.get(savedFor).add(nextTaskID);
 				}
 			}
 		}
@@ -180,12 +173,12 @@ public class TaskpoolMixedScheduling extends AbstractTaskPool {
 	protected void initialise() {
 	
 		//For multi task
-		mixedMultiTaskqueue = new FifoLifoQueue<TaskID<?>>();
+		mixedMultiTaskQueue = new FifoLifoQueue<TaskID<?>>();
 		
-		privateQueues = new ArrayList<AbstractQueue<TaskID<?>>>();
+		privateTaskQueues = new ArrayList<AbstractQueue<TaskID<?>>>();
 		
 		//For one-off task
-		mixedOneoffTaskqueue = new FifoLifoQueue<TaskID<?>>();
+		mixedOneOffTaskQueue = new FifoLifoQueue<TaskID<?>>();
 		
 		initialiseWorkerThreads();
 	}
