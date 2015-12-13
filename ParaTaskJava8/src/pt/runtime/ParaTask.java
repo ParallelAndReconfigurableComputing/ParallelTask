@@ -233,7 +233,7 @@ public class ParaTask {
 	 */
 	public static boolean init(){
 		if (scheduleType == null)
-			return init(ScheduleType.WorkStealing);
+			return init(ScheduleType.MixedSchedule);
 		else
 			return init(scheduleType);
 	}
@@ -283,7 +283,7 @@ public class ParaTask {
 	
 	static AbstractTaskListener getEDTTaskListener() {
 		if (EDT == null) {
-			throw new RuntimeException("Please call ParaTask.init() early in the main method of your application!");
+			throw new RuntimeException("ParaTask must be initialized early in the main method of application!");
 		}
 		return listener;
 	}	
