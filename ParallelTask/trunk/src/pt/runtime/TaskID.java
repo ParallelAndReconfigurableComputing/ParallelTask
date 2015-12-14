@@ -163,7 +163,25 @@ public class TaskID<E> {
 	protected void setSubTask(boolean isSubTask) {
 		this.isSubTask = isSubTask;
 	}
-
+	
+	
+	/**
+	 * 	@Author	Weng Hao
+	 * 	
+	 * 	Used to record the depth level for a task.
+	 * 	Primarily used for the TaskpoolLIFOWorkFirstTaskDepth for the Task Depth Control.
+	 * 	Default depth of a task is set to 1.
+	 */
+	
+	private int taskDepth = 1;
+	
+	int getTaskDepth() {
+		return taskDepth;
+	}
+	
+	void setTaskDepth(int taskDepth) {
+		this.taskDepth = taskDepth;
+	}
 	/**
 	 * Checks to see if this task has successfully cancelled.
 	 * @return <code>true</code> if it has cancelled successfully, <code>false</code> otherwise. 
