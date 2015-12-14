@@ -47,15 +47,7 @@ public class TaskpoolFactory {
 				case WorkStealing:
 					taskpool = new TaskpoolLIFOWorkStealing();
 					break;
-				case WorkFirstTaskDepth:
-					taskpool = new TaskpoolLIFOWorkFirstTaskDepth();
-					break;
-				case WorkFirstLocal:
-					taskpool = new TaskpoolLIFOWorkFirstTaskDepth();
-					break;
-				case WorkFirstGlobal:
-					taskpool = new TaskpoolLIFOWorkFirstTaskDepth();
-					break;				default:
+				default:
 					break;
 				}
 			}
