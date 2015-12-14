@@ -111,30 +111,7 @@ public class ParaTask {
 		 * dispatch thread), this behaves as work-sharing. A worker thread always favours to execute tasks 
 		 * from its local queue before helping with the global shared queue.    
 		 */
-		MixedSchedule,
-		
-		/**
-		 * 	New: WorkFirst - Task Depth Control. A variation of WorkStealing. When the depth level 	of a task 
-		 * 	has been found to exceed the task depth threshold, the task will not be enqueued and will be 
-		 * 	processed directly instead.
-		 */
-		WorkFirstTaskDepth,
-		
-		/**
-		 * 	New: WorkFirst - Global Task Population Control. A variation of WorkStealing. Restricts the number
-		 * 	of tasks enqueued in the task scheduler at any given time. If the number of tasks enqueued in the
-		 * 	system exceeds the given threshold, then the task scheduler will stop enqueuing and will process
-		 * 	tasks directly instead.
-		 */
-		WorkFirstGlobal,
-		
-		/**
-		 * 	New: WorkFirst - Local Task Queue Control. A variation of WorkStealing. Restricts the number of
-		 * 	tasks that can be enqueued in each individual local one-off task queue. If the number of tasks in
-		 * 	a local one-off task queue exceeds the given threshold, then the affected task queue will no longer
-		 * 	enqueue further tasks and will directly process the task instead.
-		 */
-		WorkFirstLocal
+		MixedSchedule
 	};
 		
 		
@@ -303,90 +280,6 @@ public class ParaTask {
 			}
 		}
 		return true;
-	}
-	
-	/**
-	 * 	Sets the threshold value for Work-First. When the threshold value has been exceeded,
-	 * 	tasks will no longer be enqueued and will be processed directly by the workers
-	 * 	instead.
-	 * 	In WorkFirstTaskDepth, the setThreshold() refers to the task depth threshold.
-	 * 	In WorkFirstGlobal, the setThreshold() refers to the upper bound threshold value.
-	 * 	The secondary method, setLowerBoundThreshold() refers to the lower bound threshold value
-	 * 	which will be described in setLowerBoundThreshold().
-	 * 	In WorkFirstLocal, the setThreshold() refers to the number of tasks permitted in each
-	 * 	local one-off task queue, before Work-First is enforced.
-	 * 	@param threshold
-	 *  @return <code>true</code> if successful, otherwise <code>false</code>
-	 *  @warning Code has not been thoroughly tested yet.
-	 */
-	public static boolean setThreshold(int threshold) {
-		switch (ParaTask.getScheduleType()) {
-		case WorkFirstTaskDepth:
-			TaskpoolLIFOWorkFirstTaskDepth.setThreshold(threshold);
-			return true;
-		case WorkFirstGlobal:
-			TaskpoolLIFOWorkFirstGlobal.setThreshold(threshold);
-			return true;
-		case WorkFirstLocal:
-			TaskpoolLIFOWorkFirstLocal.setThreshold(threshold);
-			return true;
-		default:
-			return false;			
-		}
-	}
-	
-	/**
-	 * 	Only applicable to the WorkFirstGlobal task scheduler.
-	 * 	Sets the lower bound threshold value for the Work-First Global Task Population Control.
-	 * 	While the upper bound threshold is used to halt enqueuing for the task scheduler, the
-	 * 	lower bound threshold determines when the task scheduler is allowed to resume enqueuing
-	 *  in the system again.
-	 *  
-	 *  @return <code>true</code> if successful, otherwise <code>false</code>
-	 *  @warning Code has not been thoroughly tested yet.
-	 */
-	public static boolean setLowerBoundThreshold(int threshold) {
-		switch (ParaTask.getScheduleType()) {
-		case WorkFirstGlobal:
-			TaskpoolLIFOWorkFirstGlobal.setLowerBoundThreshold(threshold);
-			return true;
-		default:
-			return false;
-		}
-	}
-	
-	/**
-	 *	Returns the threshold value set for the Work-First task scheduler.
-	 *	For the WorkFirstGlobal, this value refers to the upper bound threshold value
-	 *	which is used to restrict the number of enqueued tasks in the task scheduler.
-	 * 	@return integer value that indicates the threshold for Work-First task scheduler. 
-	 *  @warning Code has not been thoroughly tested yet.
-	 */
-	public static int getThreshold() {
-		switch (ParaTask.getScheduleType()) {
-		case WorkFirstTaskDepth:
-			return TaskpoolLIFOWorkFirstTaskDepth.getThreshold();
-		case WorkFirstGlobal:
-			return TaskpoolLIFOWorkFirstGlobal.getThreshold();
-		case WorkFirstLocal:
-			return TaskpoolLIFOWorkFirstLocal.getThreshold();
-		default:
-			return 0;
-		}
-	}
-	
-	/**
-	 * 	Only applicable to the WorkFirstGlobal task scheduler.
-	 * 	@return the lower bound threshold value for the Global Task Population Control.
-	 *  @warning Code has not been thoroughly tested yet.
-	 */
-	public static int getLowerBoundThreshold() {
-		switch (ParaTask.getScheduleType()) {
-		case WorkFirstGlobal:
-			return TaskpoolLIFOWorkFirstGlobal.getLowerBoundThreshold();
-		default:
-			return 0;
-		}
 	}
 	
 	static AbstractTaskListener getEDTTaskListener() {

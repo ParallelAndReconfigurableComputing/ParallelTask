@@ -162,15 +162,7 @@ public class TaskID<T> {
 	static final protected int COMPLETED = 3;
 	protected AtomicInteger status = null; 
 	
-	/**
-	 * 	@Author	Weng Hao
-	 * 	
-	 * 	Used to record the depth level for a task.
-	 * 	Primarily used for the TaskpoolLIFOWorkFirstTaskDepth for the Task Depth Control.
-	 * 	Default depth of a task is set to 1.
-	 */
-	
-	private int taskDepth = 1;	/**
+	/*
 	 * 
 	 * @author Kingsley
 	 * @since 10/05/2013
@@ -234,13 +226,7 @@ public class TaskID<T> {
 	protected void setSubTask(boolean isSubTask) {
 		this.isSubTask = isSubTask;
 	}
-	int getTaskDepth() {
-		return taskDepth;
-	}
 	
-	void setTaskDepth(int taskDepth) {
-		this.taskDepth = taskDepth;
-	}	
 	/**
 	 * Checks to see if this task is an interactive task.
 	 * 
