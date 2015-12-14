@@ -56,7 +56,7 @@ public class ParaTask {
 	 * */
 	
 	//private static int threadPoolSize = Runtime.getRuntime().availableProcessors();
-	private static ScheduleType scheduleType = ScheduleType.WorkStealing;
+	private static ScheduleType scheduleType = ScheduleType.MixedSchedule;
 	private static boolean isInitialized = false;
 
 	private static Thread EDT = null;		// a reference to the EDT
