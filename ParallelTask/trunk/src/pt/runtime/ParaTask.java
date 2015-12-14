@@ -387,6 +387,7 @@ public class ParaTask {
 	 * 	In WorkFirstLocal, the setThreshold() refers to the number of tasks permitted in each
 	 * 	local one-off task queue, before Work-First is enforced.
 	 * 	@param threshold
+	 *  @warning Code has not been thoroughly tested yet.
 	 */
 	public static void setThreshold(int threshold) {
 		switch (ParaTask.getScheduleType()) {
@@ -408,6 +409,7 @@ public class ParaTask {
 	 * 	While the upper bound threshold is used to halt enqueuing for the task scheduler, the
 	 * 	lower bound threshold determines when the task scheduler is allowed to resume enqueuing
 	 *  in the system again.
+	 *  @warning Code has not been thoroughly tested yet.
 	 */
 	public static void setLowerBoundThreshold(int threshold) {
 		switch (ParaTask.getScheduleType()) {
@@ -422,6 +424,7 @@ public class ParaTask {
 	 *	For the WorkFirstGlobal, this value refers to the upper bound threshold value
 	 *	which is used to restrict the number of enqueued tasks in the task scheduler.
 	 * 	@return
+	 *  @warning Code has not been thoroughly tested yet.
 	 */
 	public static int getThreshold() {
 		switch (ParaTask.getScheduleType()) {
@@ -440,6 +443,7 @@ public class ParaTask {
 	/**
 	 * 	Only applicable to the WorkFirstGlobal task scheduler.
 	 * 	Returns the lower bound threshold value for the Global Task Population Control.
+	 *  @warning Code has not been thoroughly tested yet.
 	 */
 	public static int getLowerBoundThreshold() {
 		switch (ParaTask.getScheduleType()) {
