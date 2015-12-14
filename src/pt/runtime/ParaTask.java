@@ -121,7 +121,7 @@ public class ParaTask {
 		 * 	enqueue further tasks and will directly process the task instead.
 		 */
 		WorkFirstLocal
- };
+};
 		
 		
    /**
