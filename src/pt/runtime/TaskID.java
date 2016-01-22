@@ -83,7 +83,8 @@ public class TaskID<E> {
 	protected int globalID = -1;
 	protected int relativeID = 0;
 	
-	protected TaskID<?> enclosingTask = null;	// this is used in case we need to find an asynchrous exception handler
+	// this is used in case we need to find an asynchronous exception handler
+	protected TaskID<?> enclosingTask = null;	
 	
 	private int executeOnThread = ParaTaskHelper.ANY_THREAD_TASK;
 	
@@ -96,10 +97,10 @@ public class TaskID<E> {
 	protected boolean cancelled = false;
 	protected AtomicBoolean cancelRequested = new AtomicBoolean(false);
 	
-    //-- the registering thread has its own latch, since it is allowed to progress inside slots of this TaskID
+    // the registering thread has its own latch, since it is allowed to progress inside slots of this TaskID
     private CountDownLatch completedLatchForRegisteringThread= null;
     
-    //-- all the other threads (non-registering threads) must wait at this latch, until slots complete
+    // all the other threads (non-registering threads) must wait at this latch, until slots complete
     private CountDownLatch completedLatch = null;
     
 	private ReentrantLock changeStatusLock = null;
@@ -109,10 +110,10 @@ public class TaskID<E> {
 	
 	private boolean isInteractive = false;
 	
-	private ConcurrentLinkedQueue<TaskID> waitingTasks = null;	//-- TaskIDs waiting for this task 
-	private ConcurrentHashMap<TaskID, Object> remainingDependences = null;	//-- TaskIDs this task is waiting for
+	private ConcurrentLinkedQueue<TaskID<?>> waitingTasks = null;	// TaskIDs waiting for this task 
+	private ConcurrentHashMap<TaskID<?>, Object> remainingDependences = null;	// TaskIDs this task is waiting for
 	
-	protected TaskIDGroup group = null;
+	protected TaskIDGroup<E> group = null;
 	
 	protected boolean hasSlots = false;
 
@@ -126,7 +127,7 @@ public class TaskID<E> {
 	private boolean firstQueueClaimed = false;
 	private PipelineThread pipelineThread = null; 
 	
-	/**
+	/*
 	 * 
 	 * @Author  Kingsley
 	 * @since 04/05/2013
@@ -146,7 +147,7 @@ public class TaskID<E> {
 		this.count = count;
 	}
 	
-	/**
+	/*
 	 * 
 	 * @Author  Kingsley
 	 * @since 21/05/2013
@@ -165,7 +166,7 @@ public class TaskID<E> {
 	}
 	
 	
-	/**
+	/*
 	 * 	@Author	Weng Hao
 	 * 	
 	 * 	Used to record the depth level for a task.
@@ -182,7 +183,8 @@ public class TaskID<E> {
 	void setTaskDepth(int taskDepth) {
 		this.taskDepth = taskDepth;
 	}
-	/**
+	
+	/*
 	 * Checks to see if this task has successfully cancelled.
 	 * @return <code>true</code> if it has cancelled successfully, <code>false</code> otherwise. 
 	 */
@@ -414,10 +416,6 @@ public class TaskID<E> {
 	TaskID(TaskInfo taskInfo) {
 		this();
 		
-		/*if(!taskInfo.isSubTask()){
-			globalID = nextGlobalID.incrementAndGet();
-		}*/
-		
 		globalID = nextGlobalID.incrementAndGet();
 		
 		completedLatchForRegisteringThread = new CountDownLatch(1);
@@ -429,10 +427,6 @@ public class TaskID<E> {
 		}
 	}
 	
-	//-- return true if successfully canceled
-	//-- TODO at the moment this is not a perfect implementation, since a 2nd (and 3rd, etc) call to this method might return false, 
-	// even if it has successfully cancelled.. (this can be correctly by locking - but don't want to introcuce the overhead of locking every 
-	// time a task is started..)
 	/**
 	 * Attempts to cancel the task. It first changes the state of the task to <code>CANCELLED</code>, and then
 	 * checks if the previous status of the task was <code>CREATED</code> or if the task is already cancelled. 
@@ -461,9 +455,6 @@ public class TaskID<E> {
 		}
 		
 		int prevStatus = status.getAndSet(CANCELLED);
-		
-		// TODO currently this only returns true if this is the first time attempting to cancel.. should be 
-		// fixed so that it also returns true if it was cancelled before..(but this requires locking etc).
 		
 		if (prevStatus == CREATED || cancelled) {
 			cancelled = true;
@@ -514,7 +505,7 @@ public class TaskID<E> {
 	 * @author Mostafa Mehrabi
 	 * @since  9/9/2014
 	 * */
-	void addWaiter(TaskID waiter) {
+	void addWaiter(TaskID<?> waiter) {
 		if (hasCompleted.get()) {
 			waiter.dependenceFinished(this);
 		} else {
@@ -522,7 +513,7 @@ public class TaskID<E> {
 			
 			if (!hasCompleted.get()) {
 				if (waitingTasks == null)
-					waitingTasks = new ConcurrentLinkedQueue<TaskID>();
+					waitingTasks = new ConcurrentLinkedQueue<TaskID<?>>();
 				
 				waitingTasks.add(waiter);
 			} else {
@@ -549,16 +540,16 @@ public class TaskID<E> {
 	 *  @author Mostafa Mehrabi
 	 *  @since  9/9/2014
 	 * */
-	void dependenceFinished(TaskID otherTask) {
+	void dependenceFinished(TaskID<?> otherTask) {
 		remainingDependences.remove(otherTask);
 		if (remainingDependences.isEmpty()) {
 			TaskpoolFactory.getTaskpool().nowReady(this);
 		}
 	}
 	
-	void setRemainingDependences(ArrayList<TaskID> deps) {
-		remainingDependences = new ConcurrentHashMap<TaskID, Object>();
-		Iterator<TaskID> it = deps.iterator();
+	void setRemainingDependences(ArrayList<TaskID<?>> deps) {
+		remainingDependences = new ConcurrentHashMap<TaskID<?>, Object>();
+		Iterator<TaskID<?>> it = deps.iterator();
 		while (it.hasNext()) {
 			remainingDependences.put(it.next(), "");
 		}
