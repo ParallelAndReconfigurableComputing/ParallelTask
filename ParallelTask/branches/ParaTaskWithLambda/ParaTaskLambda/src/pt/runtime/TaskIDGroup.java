@@ -314,9 +314,10 @@ public class TaskIDGroup<T> extends TaskID<T> {
 		return taskInfo;
 	}
 
-	@Override
-	public void enqueueSlots(boolean onlyEnqueueFinishedSlot) {
-	}
+//  this method can be inherited from the parent class (TaskID)
+//	@Override
+//	public void enqueueSlots(boolean onlyEnqueueFinishedSlot) {
+//	}
 
 	/**
 	 * This method is called by one of the inner tasks when it incurs an

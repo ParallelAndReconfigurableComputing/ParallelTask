@@ -647,7 +647,8 @@ public class TaskID<T> {
 		
 		if (isMultiTask()) {
 			//Part of a multi-task, will only enqueue the slots of the group when the last TaskID in the group completes
-			group.oneMoreInnerTaskCompleted();
+			//already been called in the setComplete method
+			//group.oneMoreInnerTaskCompleted();
 			// This was never here before -- was deadlocking without it... 20/3/2010 
 			//This needs further investigation, whether it should be actually here? 
 			setComplete();	
