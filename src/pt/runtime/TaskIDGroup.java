@@ -304,15 +304,17 @@ public class TaskIDGroup<E> extends TaskID<E> {
 	public boolean hasUserError() {
 		return super.hasUserError();
 	}
+	
+//	this method can be inherited from the parent class (TaskID)
+//	@Override
+//	void setComplete() {
+//		hasCompleted.set(true);
+//	}
 
-	@Override
-	void setComplete() {
-		hasCompleted.set(true);
-	}
-
-	@Override
-	void enqueueSlots(boolean onlyEnqueueFinishedSlot) {
-	}
+//	this method can be inherited from the parent class (TaskID)
+//	@Override
+//	void enqueueSlots(boolean onlyEnqueueFinishedSlot) {
+//	}
 
 	@Override
 	void setException(Throwable exception) {

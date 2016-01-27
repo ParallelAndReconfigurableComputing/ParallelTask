@@ -675,7 +675,9 @@ public class TaskID<E> {
 				}
 			}
 		}
-		
+		else{
+			System.out.println("Task is already finished");
+		}
 		//-- task has completed.. was there a user error?
 		if (hasUserError.get()) {
 			throw new ExecutionException(exception);
@@ -748,11 +750,8 @@ public class TaskID<E> {
 	 * */
 	void setComplete() {
 		
-//		System.out.println("SET COMPLETE...");
-		
-		/* dependences (gotta be atomic) */
 		changeStatusLock.lock();
-		TaskID waiter = null;
+		TaskID<?> waiter = null;
 		
 		if (waitingTasks != null) {
 			while ((waiter = waitingTasks.poll()) != null) {
@@ -761,33 +760,35 @@ public class TaskID<E> {
 			}
 		}
 		
-		completedLatchForRegisteringThread.countDown();	//-- in case there were no slots
+		completedLatchForRegisteringThread.countDown();	//-- in case there were slots
 		completedLatch.countDown();
 		hasCompleted.set(true);
 		changeStatusLock.unlock();
 		
 		if (group != null) {
+			group.oneMoreInnerTaskCompleted();
 			
-			TaskID groupWaiter = null;
-			
-			if (((TaskID)group).waitingTasks != null) {
-				ConcurrentLinkedQueue<TaskID> groupWaitingTaskIDs = ((TaskID)group).waitingTasks;
-				
-				while ((groupWaiter = groupWaitingTaskIDs.poll()) != null) {
-					// removes the waiter from the queue
-					//groupWaiter.dependenceFinished(group);
-					
-					ConcurrentHashMap groupRemainingDependences = groupWaiter.remainingDependences;
-									
-					groupRemainingDependences.remove(group);
-					if (groupRemainingDependences.isEmpty()) {
-						TaskpoolFactory.getTaskpool().nowReady(groupWaiter);
-					}
-					
-				}
-			}
-			
-			group.setComplete();
+			//presumably the following lines of code are redundant!
+//			TaskID<?> groupWaiter = null;
+//			
+//			if (((TaskID)group).waitingTasks != null) {
+//				ConcurrentLinkedQueue<TaskID> groupWaitingTaskIDs = ((TaskID)group).waitingTasks;
+//				
+//				while ((groupWaiter = groupWaitingTaskIDs.poll()) != null) {
+//					// removes the waiter from the queue
+//					//groupWaiter.dependenceFinished(group);
+//					
+//					ConcurrentHashMap groupRemainingDependences = groupWaiter.remainingDependences;
+//									
+//					groupRemainingDependences.remove(group);
+//					if (groupRemainingDependences.isEmpty()) {
+//						TaskpoolFactory.getTaskpool().nowReady(groupWaiter);
+//					}
+//					
+//				}
+//			}
+//			
+//			group.setComplete();
 		}
 	}
 	
@@ -808,7 +809,7 @@ public class TaskID<E> {
 		
 		if (group != null && group.isMultiTask()) {
 			//-- part of a multi-task, will only enqueue the slots of the group when the last TaskID in the group completes
-			group.oneMoreInnerTaskCompleted();
+			//group.oneMoreInnerTaskCompleted();
 			setComplete();	// TODO  this was never here before -- was deadlocking without it... 20/3/2010 
 			
 		} else {
