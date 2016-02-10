@@ -427,8 +427,8 @@ public class TaskID<T> {
 		status.set(COMPLETED);
 		changeStatusLock.unlock();
 		
-		if (group != null) 
-			group.oneMoreInnerTaskCompleted();			
+//		if (group != null) 
+//			group.oneMoreInnerTaskCompleted();			
 	}
 
 	
@@ -648,10 +648,8 @@ public class TaskID<T> {
 		if (isMultiTask()) {
 			//Part of a multi-task, will only enqueue the slots of the group when the last TaskID in the group completes
 			//already been called in the setComplete method
-			//group.oneMoreInnerTaskCompleted();
-			// This was never here before -- was deadlocking without it... 20/3/2010 
-			//This needs further investigation, whether it should be actually here? 
-			setComplete();	
+			group.oneMoreInnerTaskCompleted();
+			//setComplete();	
 			
 		} else {
 			//Even if this TaskID is within a group, it is a separate entity since not a multi-task
