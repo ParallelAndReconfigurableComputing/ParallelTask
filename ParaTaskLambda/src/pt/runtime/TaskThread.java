@@ -106,11 +106,14 @@ public abstract class TaskThread extends Thread {
 			taskID.enqueueSlots(false);
 			threadTaskStack.pop();
 			return true;
-		} catch (IllegalArgumentException/*Exception*/ e) {
+		} catch (Exception e) {
 			//e.printStackTrace();
 			taskID.setException(e);
 			threadTaskStack.pop();
-			e.printStackTrace();
+			//this should come after popping the task from
+			//the stack, in case the handler is activated 
+			//straight away!
+			taskID.enqueueSlots(false);
 			return false;
 		}
 		
