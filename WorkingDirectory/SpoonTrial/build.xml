@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project name="ParaTaskWithAnnotations" default="main" basedir=".">
+
+	<property name="src.dir"      value="src"  />
+	<property name="test.dir"     value="test" />
+	<property name="dist.dir"     value="dist" />
+	<property name="gen.dir"      value="${dist.dir}/gen" />
+	<property name="classes.dir"  value="${dist.dir}/classes" />
+	<property name="lib.dir"      value="libs" />
+	<property name="spoon.jar"    value="${lib.dir}/spoon-core-1.4-jar-with-dependencies.jar"/>
+
+	<!-- Check the operating system -->
+	<target name="CheckOS">
+		<condition property="isWindows">
+			<os family="windows" />
+		</condition>
+		
+		<condition property="isLinux">
+			<os family="unix" />
+		</condition>
+	</target>
+	
+	<!-- Decide about the path delimiter based on OS -->
+	<target name="WinDelimiter" depends="CheckOS" if="isWindows">
+		<property name="Delim" value=";" />
+		<echo message="Operating system is Windows, delimiter is ;"></echo>
+	</target>
+	
+	<target name="LinDelimiter" depends="CheckOS" if="isLinux">
+		<property name="Delim" value=":" />	
+		<echo message="Operating system is Linux, delimiter is :"></echo>
+	</target>
+	
+ 	<!-- At this stage the delimiter is decided -->
+	<target name="clean" depends="WinDelimiter, LinDelimiter" >
+	 		<delete dir="${dist.dir}" />
+			<delete dir="${classes.dir}" />
+			<delete dir="${gen.dir}" />
+ 	</target>
+		
+	<target name="init" depends="clean" description="Creating the folders.">
+		<mkdir dir="${dist.dir}" />
+		<mkdir dir="${classes.dir}" />
+		<mkdir dir="${gen.dir}" />
+	</target>
+
+	<target name="compile" depends="init" description="Compiles the java code">
+		<javac includeantruntime="true" srcdir="${src.dir}" destdir="${classes.dir}">
+			<classpath>
+				<pathelement location="${spoon.jar}" />
+			</classpath>
+		</javac>
+	</target>
+
+	
+	<target name="process" depends="compile" description="Process the annotated code">
+		<exec executable="java">
+			<arg line="-cp ${spoon.jar}${Delim}dist/classes spoon.Launcher -o ${gen.dir} -i input/ -p pt.processors.FutureProcessor" />
+		</exec>
+	</target>
+	
+	<target name="main" depends="process">
+		<description>Main Target</description>
+	</target>
+</project>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project name="AnnotationProcessing" default="main" basedir=".">
+	<property name="src.dir"  value="src"></property>
+	<property name="build.dir" value="bin"></property>
+	<property name="libs.dir"  value="libs"></property>
+	<property name="gen.dir"  value="gen"></property>
+	<property name="jar.name"  value="${libs.dir}/PT-AnnotationProcessor.jar"></property>
+	<property name="spoon.jar" value="${libs.dir}/spoon-core-5.0.2-jar-with-dependencies.jar"></property>
+	
+	<target name="clear" description="Deleting the previously created folders">
+		<delete dir="${build.dir}"></delete>
+		<delete dir="${gen.dir}"></delete>
+	</target>
+	
+	<target name="makeDir" depends="clear" description="Making the required directories">
+		<mkdir dir="${build.dir}"/>
+		<mkdir dir="${gen.dir}"/>
+	</target>
+	
+	<target name="main" depends="makeDir">
+		<exec executable="java">
+			<arg line="-cp ${jar.name};${spoon.jar} spoon.Launcher -o ${gen.dir} -i ${src.dir} -p processors.FutureProcessor" />
+		</exec>
+		<echo message="Finished"></echo>
+	</target>
+</project>
