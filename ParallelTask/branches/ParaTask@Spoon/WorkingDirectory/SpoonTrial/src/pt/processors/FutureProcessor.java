@@ -8,6 +8,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import pt.annotations.Future;
+import pt.runtime.ParaTask;
+import pt.runtime.TaskInfo;
+import pt.runtime.TaskInfoNoArgs;
 import spoon.processing.AbstractAnnotationProcessor;
 import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtCodeSnippetStatement;
@@ -18,7 +21,9 @@ import spoon.reflect.declaration.CtAnnotation;
 import spoon.reflect.declaration.CtVariable;
 import spoon.reflect.declaration.ModifierKind;
 import spoon.support.reflect.code.CtBinaryOperatorImpl;
+import spoon.support.reflect.code.CtBlockImpl;
 import spoon.support.reflect.code.CtInvocationImpl;
+import spoon.support.reflect.code.CtLocalVariableImpl;
 import spoon.support.reflect.code.CtVariableAccessImpl;
 
 
@@ -29,8 +34,10 @@ public class FutureProcessor extends
 	List<String> arguments = null;
 	String taskIDName = null;
 	String returnType = null;
+	String variableName = null;
 	StringBuilder paraTaskExpression = null;
 	CtVariable<?> element = null;
+	
 	
 	public void process(Future annotation, CtVariable<?> element) {
 		
@@ -38,23 +45,25 @@ public class FutureProcessor extends
 		
 		this.element = element;
 		
-		String name = element.getSimpleName();
+		variableName = element.getSimpleName();
 		
-		taskIDName = SpoonUtils.getFutureName(name);
+		taskIDName = SpoonUtils.getFutureName(variableName);
 		
 		returnType = element.getType().getSimpleName();
 				
 		CtExpression<?> defaultExpression = element.getDefaultExpression();
 		
 		System.out.println("----------------------------------------------------------------------");
-		System.out.println("Element simple name: " + name);
+		System.out.println("Element simple name: " + variableName);
 		System.out.println("getDefaultExpression.getClass: " + defaultExpression.getClass());
 		System.out.println("And the expression is (toString): " + defaultExpression.toString());
 		System.out.println("Return type is: " + returnType);
 		System.out.println("----------------------------------------------------------------------");
 		
+		invocations = new ArrayList<>();
+		listInvocationsOfThisExp(defaultExpression);
 		
-		if(!isExpressionValid(defaultExpression)) {
+		if(invocations.isEmpty()) {
 			throw new RuntimeException("FUTURE ANNOTATION HAS NOT BEEN USED FOR A VALID EXPRESSION!\n"
 					+ "THE EXPRESSION MUST EITHER BE AN INVOCATION, OR A BINARY EXPRESSINO THAT CONTAINS AN INVOCATION!\n"
 					+ "YOUR EXPRESSION: " + defaultExpression.toString());
@@ -62,9 +71,6 @@ public class FutureProcessor extends
 		}
 		
 		paraTaskExpression = new StringBuilder();
-		
-		invocations = new ArrayList<>();
-		listInvocationsOfThisExp(defaultExpression);
 		processInvocations();
 	
 	}
@@ -96,11 +102,22 @@ public class FutureProcessor extends
 		return;
 	}
 	
+	/**
+	 * This method finds the parameters that are sent as
+	 * arguments, to the invocations that exist in an 
+	 * expression.
+	 * 
+	 */
 	public void processInvocations(){
 		for(CtInvocationImpl<?> invocation : invocations)
 			processThisInvocation(invocation);
 	}
 	
+	/**
+	 * This method finds the parameters that are sent
+	 * as arguments, to one invocation!
+	 * @param invocation
+	 */
 	public void processThisInvocation(CtInvocationImpl<?> invocation){
 		
 		
@@ -133,15 +150,14 @@ public class FutureProcessor extends
 				
 				if(SpoonUtils.isFutureArgument(element, argName)) {
 					argLs.add(argName);
-					
-					if(!lambdaArgs.isEmpty())
-						lambdaArgs += ", ";
-					
-					lambdaArgs += SpoonUtils.getLambdaArgName(argName);
-			
-					//TODO
-					invocationExp = invocationExp.replace(argName, "(" + argVarAccess.getType() + ")" + SpoonUtils.getLambdaArgName(argName));
 				}
+				
+				if(!lambdaArgs.isEmpty())
+					lambdaArgs += ", ";
+					
+				lambdaArgs += SpoonUtils.getLambdaArgName(argName);
+			
+				invocationExp = invocationExp.replace(argName, "(" + argVarAccess.getType() + ")" + SpoonUtils.getLambdaArgName(argName));
 				
 			}
 			
@@ -155,7 +171,7 @@ public class FutureProcessor extends
 			}
 		}
 		
-		//Set<CtAnnotation<? extends Annotation>> ats = element.getAnnotations();
+		Set<CtAnnotation<? extends Annotation>> ats = element.getAnnotations();
 		
 		for(CtAnnotation<? extends Annotation> a : ats) {
 			//System.out.println("@@ Got " + a.toString());
@@ -179,11 +195,16 @@ public class FutureProcessor extends
 					}
 				}
 				
+				/*
+				 * It is better not to permit method references for notifies, rather we can
+				 * ordinary method calls for the lambda expression that is sent to a handler.
+				 * Unless we want to force that all handler methods have no arguments at all!
+				 */
 				if (!notifies.isEmpty()) {
 					String[] handlers = notifies.split("(\\s)*;(\\s)*");
 					for (String handler : handlers) {
 						//System.out.println("handler: " + handler);
-						
+						//just define a slot as: "()->handler" - print this out, to see what we get!
 						Pattern voidHandler = Pattern.compile("([^:]+::)?([a-zA-Z0-9_]+)(\\(\\s*\\))?");
 						
 						Pattern handlerWithArg = Pattern.compile("([^:]+::)?([a-zA-Z0-9_]+)(\\(\\s*\\?\\s*\\))");
@@ -230,8 +251,8 @@ public class FutureProcessor extends
 				finalResult += "final ";
 			}
 			
-			finalResult += returnType + " " + name + " = "
-					+ SpoonUtils.getFutureName(name) + ".getResult()";
+			finalResult += returnType + " " + variableName + " = "
+					+ SpoonUtils.getFutureName(variableName) + ".getResult()";
 			
 			CtCodeSnippetStatement finalResultStatement = getFactory().Core()
 					.createCodeSnippetStatement();
@@ -240,7 +261,7 @@ public class FutureProcessor extends
 			access.insertBefore(finalResultStatement);
 		}
 				
-		CtCodeSnippetStatement newStatement = new CtFutureDefCodeSnippetStatement(name, getFactory().Core().getMainFactory());
+		CtCodeSnippetStatement newStatement = new CtFutureDefCodeSnippetStatement(variableName, getFactory().Core().getMainFactory());
 		newStatement.setValue(paraTaskExpression.toString());
 		SpoonUtils.replace(block, (CtStatement)element, newStatement);
 		

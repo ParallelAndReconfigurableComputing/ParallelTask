@@ -53,6 +53,14 @@ public class SpoonUtils {
 		block.setStatements(newLs);
 	}
 
+	/**
+	 * Finds the occurrence of a future variable within the block
+	 * of that future variable. However, this only finds the first
+	 * occurrence of that future variable, and not the others.
+	 * @param block
+	 * @param varDefinition
+	 * @return
+	 */
 	public static CtStatement findVarAccessOtherThanFutureDefinition(CtBlock<?> block,
 			CtLocalVariable<?> varDefinition) {
 		List<CtStatement> ls = block.getStatements();
@@ -95,6 +103,14 @@ public class SpoonUtils {
 		return false;
 	}
 	
+	/**
+	 * Finds out whether an argument used within an invocation is itself a
+	 * future variable. 
+	 * 
+	 * @param element
+	 * @param argName
+	 * @return
+	 */
 	public static boolean isFutureArgument(CtVariable<?> element, String argName) {
 		if (!argName.matches("[a-zA-Z0-9_]+")) {
 			return false;
@@ -128,4 +144,5 @@ public class SpoonUtils {
 	public static String getLambdaArgName(String name) {
 		return "__" + name + "__arg__";
 	}
+	
 }
