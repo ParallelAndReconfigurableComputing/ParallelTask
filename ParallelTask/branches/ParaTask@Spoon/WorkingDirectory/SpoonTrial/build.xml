@@ -8,6 +8,7 @@
 	<property name="classes.dir"  value="${dist.dir}/classes" />
 	<property name="lib.dir"      value="libs" />
 	<property name="spoon.jar"    value="${lib.dir}/spoon-core-1.4-jar-with-dependencies.jar"/>
+	<property name="PT.jar"		  value="${lib.dir}/PTLambda-Runtime-1.0.1.jar"/>
 
 	<!-- Check the operating system -->
 	<target name="CheckOS">
@@ -48,6 +49,7 @@
 		<javac includeantruntime="true" srcdir="${src.dir}" destdir="${classes.dir}">
 			<classpath>
 				<pathelement location="${spoon.jar}" />
+				<pathelement location="${PT.jar}"/>
 			</classpath>
 		</javac>
 	</target>

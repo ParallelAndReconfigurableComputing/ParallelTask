@@ -7,6 +7,6 @@ import static java.lang.annotation.ElementType.LOCAL_VARIABLE;
 
 @Target(LOCAL_VARIABLE)
 public @interface AsyncCatch {
-    Class throwable();
+    Class<? extends Exception> throwable();
     String handler();
 }

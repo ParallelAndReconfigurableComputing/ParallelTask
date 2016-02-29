@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import pt.annotations.Future;
@@ -61,37 +62,57 @@ public class SpoonUtils {
 	 * @param varDefinition
 	 * @return
 	 */
-	public static CtStatement findVarAccessOtherThanFutureDefinition(CtBlock<?> block,
+	public static List<CtStatement> findVarAccessOtherThanFutureDefinition(CtBlock<?> block,
 			CtLocalVariable<?> varDefinition) {
-		List<CtStatement> ls = block.getStatements();
+		List<CtStatement> blockStatements = block.getStatements();
+		List<CtStatement> statementsWithThisFutureVariable = new ArrayList<>();
 		boolean foundDef = false;
+		
 		String varName = varDefinition.getSimpleName();
-		for (CtStatement s : ls) {
-			if (!foundDef) {
-				if (s == varDefinition) {
+		
+		for (CtStatement statement : blockStatements) {
+			String statementString = statement.toString();
+			System.out.println("statement: " + statementString + " and variable name: " + varName);
+			
+			if (!foundDef){
+				if (statement.equals(varDefinition))
 					foundDef = true;
-				}
-			} else {
-				String code = s.toString();
-				//System.out.println("findVarAccessStatement check: \n" + code);
-				
-				Pattern regex = Pattern.compile(
-					    "\\b     # word boundary\n" +
-					    varName+"# var name\n" +
-					    "\\b     # word boundary\n" +
-					    "(?!     # Lookahead assertion: Make sure there is no...\n" +
-					    " \\s*   # optional whitespace\n" +
-					    " \\(    # opening parenthesis\n" +
-					    ")       # ...at this position in the string", 
-					    Pattern.COMMENTS);
-				
-				if (regex.matcher(code).find() && !hasAnnotation(s, Future.class)) {
-					return s;
+			}
+			
+			else {
+				String regex = "\\b" + varName + "\\b";
+				Pattern pattern = Pattern.compile(regex);
+				Matcher matcher = pattern.matcher(statementString);
+				if(matcher.find()){
+					statementsWithThisFutureVariable.add(statement);
 				}
 			}
 		}
+//			if (!foundDef) {
+//				if (s == varDefinition) {
+//					foundDef = true;
+//				}
+//			} else {
+//				String code = s.toString();
+//				//System.out.println("findVarAccessStatement check: \n" + code);
+//				
+//				Pattern regex = Pattern.compile(
+//					    "\\b     # word boundary\n" +
+//					    varName+"# var name\n" +
+//					    "\\b     # word boundary\n" +
+//					    "(?!     # Lookahead assertion: Make sure there is no...\n" +
+//					    " \\s*   # optional whitespace\n" +
+//					    " \\(    # opening parenthesis\n" +
+//					    ")       # ...at this position in the string", 
+//					    Pattern.COMMENTS);
+//				
+//				if (regex.matcher(code).find() && !hasAnnotation(s, Future.class)) {
+//					statementsWithThisFutureVariable.add(s);
+//				}
+//			}
+//		}
 
-		return null;
+		return statementsWithThisFutureVariable;
 	}
 	
 	public static boolean hasAnnotation(CtStatement s, Class<?> clazz) {
@@ -131,18 +152,22 @@ public class SpoonUtils {
 		return false;
 	}
 	
-	public static String getFutureName(String name) {
-		return "__" + name + "__";
+	public static String getTaskIDName(String name) {
+		return "__" + name + "TaskID__";
 	}
 	
-	public static String getOrigName(String futureName) {
-		if(!futureName.startsWith("__") || !futureName.endsWith("__"))
-			throw new IllegalArgumentException("not a valid future name: " + futureName);
-		return futureName.substring(2, futureName.length() - 2);
+	public static String getOrigName(String taskIDName) {
+		if(!taskIDName.startsWith("__") || !taskIDName.endsWith("__"))
+			throw new IllegalArgumentException("not a valid future name: " + taskIDName);
+		return taskIDName.substring(2, (taskIDName.length() - "TaskID__".length()));
 	}
 	
 	public static String getLambdaArgName(String name) {
-		return "__" + name + "__arg__";
+		return "__" + name + "Arg__";
+	}
+	
+	public static String getTaskName(String name){
+		return "__" + name + "Task__";
 	}
 	
 }
