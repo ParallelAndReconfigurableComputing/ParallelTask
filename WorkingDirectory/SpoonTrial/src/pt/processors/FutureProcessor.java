@@ -2,16 +2,20 @@ package pt.processors;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import pt.annotations.AsyncCatch;
 import pt.annotations.Future;
 import pt.runtime.ParaTask;
 import pt.runtime.TaskInfo;
 import pt.runtime.TaskInfoNoArgs;
 import spoon.processing.AbstractAnnotationProcessor;
+import spoon.reflect.code.CtAssignment;
 import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtCodeSnippetStatement;
 import spoon.reflect.code.CtExpression;
@@ -20,24 +24,28 @@ import spoon.reflect.code.CtStatement;
 import spoon.reflect.declaration.CtAnnotation;
 import spoon.reflect.declaration.CtVariable;
 import spoon.reflect.declaration.ModifierKind;
+import spoon.support.reflect.code.CtAssignmentImpl;
 import spoon.support.reflect.code.CtBinaryOperatorImpl;
 import spoon.support.reflect.code.CtBlockImpl;
 import spoon.support.reflect.code.CtInvocationImpl;
 import spoon.support.reflect.code.CtLocalVariableImpl;
 import spoon.support.reflect.code.CtVariableAccessImpl;
+import spoon.support.reflect.declaration.CtExecutableImpl;
 
 
 public class FutureProcessor extends
 		AbstractAnnotationProcessor<Future, CtVariable<?>> {
 	
 	List<CtInvocationImpl<?>> invocations = null;
-	List<String> arguments = null;
+	List<String> lambdaExpressionArguments = null;
+	List<String> notifyHandlers = null;
+	List<String> dependencies = null;
 	String taskIDName = null;
 	String returnType = null;
 	String variableName = null;
 	StringBuilder paraTaskExpression = null;
 	CtVariable<?> element = null;
-	
+	Map<Class<? extends Exception>, String> asynchExceptions = null;
 	
 	public void process(Future annotation, CtVariable<?> element) {
 		
@@ -47,7 +55,7 @@ public class FutureProcessor extends
 		
 		variableName = element.getSimpleName();
 		
-		taskIDName = SpoonUtils.getFutureName(variableName);
+		taskIDName = SpoonUtils.getTaskIDName(variableName);
 		
 		returnType = element.getType().getSimpleName();
 				
@@ -61,7 +69,12 @@ public class FutureProcessor extends
 		System.out.println("----------------------------------------------------------------------");
 		
 		invocations = new ArrayList<>();
-		listInvocationsOfThisExp(defaultExpression);
+		paraTaskExpression = new StringBuilder();
+		dependencies =  new ArrayList<String>();
+		notifyHandlers = new ArrayList<String>();
+		asynchExceptions = new HashMap<Class<? extends Exception>, String>();
+		
+		listInvocationsOfThisExpression(defaultExpression);
 		
 		if(invocations.isEmpty()) {
 			throw new RuntimeException("FUTURE ANNOTATION HAS NOT BEEN USED FOR A VALID EXPRESSION!\n"
@@ -70,36 +83,164 @@ public class FutureProcessor extends
 			
 		}
 		
-		paraTaskExpression = new StringBuilder();
 		processInvocations();
-	
+		processFutureAttributes();
+		processAsyncCatches();	
+		findVariableUsageInBlcok();
 	}
 
 
-	public boolean isExpressionValid(CtExpression<?> expression){
-		if (expression instanceof CtInvocationImpl<?>)
-			return true;
-		if (expression instanceof CtBinaryOperatorImpl<?>){
-			if(isExpressionValid(((CtBinaryOperatorImpl<?>) expression).getLeftHandOperand()))
-				return true;
-			
-			if(isExpressionValid(((CtBinaryOperatorImpl<?>) expression).getRightHandOperand()))
-				return true;
-		}
-			
-		return false;
-	}
-	
-	public void listInvocationsOfThisExp(CtExpression<?> expression){
+	/**
+	 * Lists all of the invocations that are in an expression.
+	 * @param expression
+	 */
+	public void listInvocationsOfThisExpression(CtExpression<?> expression){
 		if (expression instanceof CtInvocationImpl<?>){
 			invocations.add((CtInvocationImpl<?>)expression);
 			return;
 		}
 		else if (expression instanceof CtBinaryOperatorImpl<?>){
-			listInvocationsOfThisExp(((CtBinaryOperatorImpl<?>) expression).getLeftHandOperand());
-			listInvocationsOfThisExp(((CtBinaryOperatorImpl<?>) expression).getRightHandOperand());
+			listInvocationsOfThisExpression(((CtBinaryOperatorImpl<?>) expression).getLeftHandOperand());
+			listInvocationsOfThisExpression(((CtBinaryOperatorImpl<?>) expression).getRightHandOperand());
 		}
 		return;
+	}
+	
+	/**
+	 * Finds out whether this argument of an invocation should be added as
+	 * dependencies and/or argument for the lambda expression!
+	 * @param argument
+	 */
+	public void processArgument (CtExpression<?> argument){
+		
+		if (argument instanceof CtInvocationImpl<?>){
+			CtInvocationImpl<?> invocation = (CtInvocationImpl<?>) argument;
+			List<CtExpression<?>> arguments = invocation.getArguments();
+			for (CtExpression<?> arg : arguments){
+				processArgument(arg);
+			}				
+		}
+		
+		else if (argument instanceof CtBinaryOperatorImpl<?>){
+			processArgument(((CtBinaryOperatorImpl<?>) argument).getLeftHandOperand());
+			processArgument(((CtBinaryOperatorImpl<?>) argument).getRightHandOperand());
+		}
+		
+		else if (argument instanceof CtVariableAccessImpl<?>){
+			CtVariableAccessImpl<?> variableAccess = (CtVariableAccessImpl<?>) argument;
+			String argName = variableAccess.toString();
+			String argTasIDName = SpoonUtils.getTaskIDName(argName);
+			if(SpoonUtils.isFutureArgument(element, argName)){
+				dependencies.add(argTasIDName);
+			}
+			String lambdaArg = argTasIDName + ".getResult()";
+			lambdaExpressionArguments.add(lambdaArg);
+		}
+	}
+	
+	
+	public void processFutureAttributes(){
+		Set<CtAnnotation<?>> annotations = element.getAnnotations();
+		for (CtAnnotation<? extends Annotation> ctAnno : annotations){
+			Annotation annotation = ctAnno.getActualAnnotation();
+			if (annotation instanceof Future){
+				Future future = (Future) annotation;
+				String dependsOn = future.depends();
+				String notifies = future.notifies();
+				
+				if (dependsOn != ""){
+					String[] depends = dependsOn.split(",");
+					for (String depend : depends){
+						depend = depend.trim();
+						if(!SpoonUtils.isFutureArgument(element, depend))
+							throw new RuntimeException("One or more dependencies specified for future "
+									+ "variable " + variableName + " are not future variables!");
+						dependencies.add(SpoonUtils.getTaskIDName(depend));
+					}
+				}
+				
+				if(notifies != ""){
+					String[] notifyHandlers = notifies.split(";");
+							
+					for (String notifyHandler : notifyHandlers){
+						notifyHandler = notifyHandler.trim();
+						notifyHandler = "( ) -> " + notifyHandler;
+						this.notifyHandlers.add(notifyHandler);
+					}
+				}
+				/*The first @Future for a variable is considered!*/
+				break;
+			}
+		}
+	}
+	
+	public void processAsyncCatches(){
+		Set<CtAnnotation<?>> annotations = element.getAnnotations();
+		for (CtAnnotation<? extends Annotation> ctAnno : annotations){
+			Annotation annotation = ctAnno.getActualAnnotation();
+			if (annotation instanceof AsyncCatch){
+				AsyncCatch asyncCatch = (AsyncCatch) annotation;
+				try{
+					Class<? extends Exception> exceptionClass = asyncCatch.throwable();
+					String handler = asyncCatch.handler();
+					handler = "() -> " + handler;
+					this.asynchExceptions.put(exceptionClass, handler);
+				}catch(Exception e){
+					//e.printStackTrace();
+				}
+			}
+		}
+	}
+
+	public void findVariableUsageInBlcok(){
+		
+		CtBlock<?> block = (CtBlock<?>)element.getParent();
+		
+		String regex = "\\b" + variableName + "\\b";
+		String replacement = SpoonUtils.getTaskIDName(variableName);
+		Pattern pattern = Pattern.compile(regex);
+				
+		List<CtStatement> variableAccessStatements = SpoonUtils.findVarAccessOtherThanFutureDefinition(block, (CtLocalVariable<?>)element);
+		System.out.println("Statements returned with future variable access: ");
+		for (CtStatement variableAccessStatement : variableAccessStatements) {
+			
+			if (variableAccessStatement instanceof CtAssignment<?, ?>){
+				CtAssignment<?, ?> assignment = (CtAssignment<?, ?>) variableAccessStatement;
+				CtExpression<?> var = assignment.getAssigned();
+				System.out.println("////////////////////////////////////////////////");
+				System.out.println("assignment statement: " + assignment.toString());
+				System.out.println("variable of the assignment: " + var.toString());
+				System.out.println("////////////////////////////////////////////////");
+			}
+			
+			String statement = variableAccessStatement.toString();
+			System.out.println(statement);
+			
+			Matcher matcher = pattern.matcher(statement);
+			matcher.replaceAll(replacement);
+			
+			String finalResult = "";
+			Set<ModifierKind> mods = element.getModifiers();
+			if (!mods.contains(ModifierKind.FINAL)) {
+				finalResult += "final ";
+			}
+			
+			finalResult += returnType + " " + variableName + " = "
+					+ SpoonUtils.getTaskIDName(variableName) + ".getResult()";
+			
+			CtCodeSnippetStatement finalResultStatement = getFactory().Core()
+					.createCodeSnippetStatement();
+			finalResultStatement.setValue(finalResult);
+			
+			variableAccessStatement.insertBefore(finalResultStatement);
+		}
+				
+		CtCodeSnippetStatement newStatement = new CtFutureDefCodeSnippetStatement(variableName, getFactory().Core().getMainFactory());
+		newStatement.setValue(paraTaskExpression.toString());
+		SpoonUtils.replace(block, (CtStatement)element, newStatement);
+		
+		System.out.println("\n\n\n");
+	
 	}
 	
 	/**
@@ -110,7 +251,7 @@ public class FutureProcessor extends
 	 */
 	public void processInvocations(){
 		for(CtInvocationImpl<?> invocation : invocations)
-			processThisInvocation(invocation);
+			processInvocation(invocation);
 	}
 	
 	/**
@@ -118,7 +259,37 @@ public class FutureProcessor extends
 	 * as arguments, to one invocation!
 	 * @param invocation
 	 */
-	public void processThisInvocation(CtInvocationImpl<?> invocation){
+	public void processInvocation(CtInvocationImpl<?> invocation){
+		
+		
+		List<CtExpression<?>> arguments = invocation.getArguments();
+		String invocationExp = invocation.toString();
+		String invocationSignature = invocation.getSignature();
+		
+		System.out.println("********************PROCESS INVOCATION*************************");
+		System.out.println("getExecutable: " + invocation.getExecutable());
+		System.out.println("invocation.toString: " + invocationExp);
+		System.out.println("invocation.getSignature: " + invocationSignature);
+		System.out.println("********************PROCESS INVOCATION*************************");
+		
+		lambdaExpressionArguments = new ArrayList<>();
+		
+		/* Figure out if there are any arguments that we need to remember
+		 * as dependencies, or arguments to our lambda expression.*/
+		for(CtExpression<?> argument : arguments) {
+			processArgument(argument);
+		}
+			
+	}
+	
+	
+	
+	/**
+	 * This method finds the parameters that are sent
+	 * as arguments, to one invocation!
+	 * @param invocation
+	 */
+	public void _processThisInvocation(CtInvocationImpl<?> invocation){
 		
 		
 		System.out.println("getExecutable: " + invocation.getExecutable());
@@ -167,7 +338,7 @@ public class FutureProcessor extends
 					+ ") -> ").append(invocationExp).append(")");
 			
 			for(String fArg : argLs) {
-				paraTaskExpression.append(".dependsOnAsArg(" + SpoonUtils.getFutureName(fArg) + ")");
+				paraTaskExpression.append(".dependsOnAsArg(" + SpoonUtils.getTaskIDName(fArg) + ")");
 			}
 		}
 		
@@ -191,7 +362,7 @@ public class FutureProcessor extends
 				if (!depends.isEmpty()) {
 					String[] deps = depends.split(",");
 					for(String dep : deps) {
-						paraTaskExpression.append(".dependsOn(" + SpoonUtils.getFutureName(dep) + ")");
+						paraTaskExpression.append(".dependsOn(" + SpoonUtils.getTaskIDName(dep) + ")");
 					}
 				}
 				
@@ -243,23 +414,24 @@ public class FutureProcessor extends
 		
 		CtBlock<?> block = (CtBlock<?>)element.getParent();
 		
-		CtStatement access = SpoonUtils.findVarAccessOtherThanFutureDefinition(block, (CtLocalVariable<?>)element);
-		if (access != null) {
-			String finalResult = "";
-			Set<ModifierKind> mods = element.getModifiers();
-			if (!mods.contains(ModifierKind.FINAL)) {
-				finalResult += "final ";
-			}
-			
-			finalResult += returnType + " " + variableName + " = "
-					+ SpoonUtils.getFutureName(variableName) + ".getResult()";
-			
-			CtCodeSnippetStatement finalResultStatement = getFactory().Core()
-					.createCodeSnippetStatement();
-			finalResultStatement.setValue(finalResult);
-			
-			access.insertBefore(finalResultStatement);
-		}
+		//CtStatement access = SpoonUtils.findVarAccessOtherThanFutureDefinition(block, (CtLocalVariable<?>)element);
+		CtStatement access = null;
+//		if (access != null) {
+//			String finalResult = "";
+//			Set<ModifierKind> mods = element.getModifiers();
+//			if (!mods.contains(ModifierKind.FINAL)) {
+//				finalResult += "final ";
+//			}
+//			
+//			finalResult += returnType + " " + variableName + " = "
+//					+ SpoonUtils.getTaskIDName(variableName) + ".getResult()";
+//			
+//			CtCodeSnippetStatement finalResultStatement = getFactory().Core()
+//					.createCodeSnippetStatement();
+//			finalResultStatement.setValue(finalResult);
+//			
+//			access.insertBefore(finalResultStatement);
+//		}
 				
 		CtCodeSnippetStatement newStatement = new CtFutureDefCodeSnippetStatement(variableName, getFactory().Core().getMainFactory());
 		newStatement.setValue(paraTaskExpression.toString());
