@@ -17,6 +17,7 @@ import pt.runtime.TaskInfoNoArgs;
 import spoon.processing.AbstractAnnotationProcessor;
 import spoon.reflect.code.CtAssignment;
 import spoon.reflect.code.CtBlock;
+import spoon.reflect.code.CtCodeSnippetExpression;
 import spoon.reflect.code.CtCodeSnippetStatement;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtLocalVariable;
@@ -132,9 +133,10 @@ public class FutureProcessor extends
 			String argTasIDName = SpoonUtils.getTaskIDName(argName);
 			if(SpoonUtils.isFutureArgument(element, argName)){
 				dependencies.add(argTasIDName);
+				variableAccess.getVariable().setSimpleName(argTasIDName+".getResult()");
+				argName = argTasIDName;
 			}
-			String lambdaArg = argTasIDName + ".getResult()";
-			lambdaExpressionArguments.add(lambdaArg);
+			lambdaExpressionArguments.add(argName);
 		}
 	}
 	
@@ -195,44 +197,57 @@ public class FutureProcessor extends
 	public void findVariableUsageInBlcok(){
 		
 		CtBlock<?> block = (CtBlock<?>)element.getParent();
+		String statement = null;
+		boolean assignmentStatement = false;
 		
 		String regex = "\\b" + variableName + "\\b";
-		String replacement = SpoonUtils.getTaskIDName(variableName);
 		Pattern pattern = Pattern.compile(regex);
 				
-		List<CtStatement> variableAccessStatements = SpoonUtils.findVarAccessOtherThanFutureDefinition(block, (CtLocalVariable<?>)element);
-		System.out.println("Statements returned with future variable access: ");
+		List<CtStatement> variableAccessStatements = SpoonUtils.findVarAccessOtherThanFutureDefinition(block, element);
+		
 		for (CtStatement variableAccessStatement : variableAccessStatements) {
 			
-			if (variableAccessStatement instanceof CtAssignment<?, ?>){
-				CtAssignment<?, ?> assignment = (CtAssignment<?, ?>) variableAccessStatement;
-				CtExpression<?> var = assignment.getAssigned();
-				System.out.println("////////////////////////////////////////////////");
-				System.out.println("assignment statement: " + assignment.toString());
-				System.out.println("variable of the assignment: " + var.toString());
-				System.out.println("////////////////////////////////////////////////");
+			if (variableAccessStatement instanceof CtAssignmentImpl<?, ?>){
+				assignmentStatement = true;
 			}
 			
-			String statement = variableAccessStatement.toString();
-			System.out.println(statement);
+			if (assignmentStatement){
+				CtAssignment<?, ?> assignment = (CtAssignment<?, ?>) variableAccessStatement;
+				statement = assignment.getAssignment().toString();
+			}
+			else{
+				statement = variableAccessStatement.toString();
+			}
 			
 			Matcher matcher = pattern.matcher(statement);
-			matcher.replaceAll(replacement);
+			statement = matcher.replaceAll(taskIDName+".getResult()");
 			
-			String finalResult = "";
-			Set<ModifierKind> mods = element.getModifiers();
-			if (!mods.contains(ModifierKind.FINAL)) {
-				finalResult += "final ";
+			if (assignmentStatement){
+				CtAssignment<?, ?> assignment = (CtAssignment<?, ?>) variableAccessStatement;
+				CtCodeSnippetExpression<?> codeSnippet = getFactory().Core().createCodeSnippetExpression();
+				codeSnippet.setValue(statement);
+				assignment.setAssignment((CtExpression)codeSnippet);
 			}
 			
-			finalResult += returnType + " " + variableName + " = "
-					+ SpoonUtils.getTaskIDName(variableName) + ".getResult()";
-			
-			CtCodeSnippetStatement finalResultStatement = getFactory().Core()
-					.createCodeSnippetStatement();
-			finalResultStatement.setValue(finalResult);
-			
-			variableAccessStatement.insertBefore(finalResultStatement);
+			else{
+				CtCodeSnippetStatement codeSnippet = getFactory().Core().createCodeSnippetStatement();
+				codeSnippet.setValue(statement);
+				variableAccessStatement.replace(codeSnippet);
+			}
+//			String finalResult = "";
+//			Set<ModifierKind> mods = element.getModifiers();
+//			if (!mods.contains(ModifierKind.FINAL)) {
+//				finalResult += "final ";
+//			}
+//			
+//			finalResult += returnType + " " + variableName + " = "
+//					+ SpoonUtils.getTaskIDName(variableName) + ".getResult()";
+//			
+//			CtCodeSnippetStatement finalResultStatement = getFactory().Core()
+//					.createCodeSnippetStatement();
+//			finalResultStatement.setValue(finalResult);
+//			
+//			variableAccessStatement.insertBefore(finalResultStatement);
 		}
 				
 		CtCodeSnippetStatement newStatement = new CtFutureDefCodeSnippetStatement(variableName, getFactory().Core().getMainFactory());
