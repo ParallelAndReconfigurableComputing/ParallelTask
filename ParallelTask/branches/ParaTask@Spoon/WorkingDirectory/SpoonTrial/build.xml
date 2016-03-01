@@ -57,7 +57,7 @@
 	
 	<target name="process" depends="compile" description="Process the annotated code">
 		<exec executable="java">
-			<arg line="-cp ${spoon.jar}${Delim}dist/classes spoon.Launcher -o ${gen.dir} -i input/ -p pt.processors.FutureProcessor" />
+			<arg line="-cp ${spoon.jar}${Delim}dist/classes spoon.Launcher -o ${gen.dir} -i input/test/SimpleAnnotation.java -p pt.processors.FutureProcessor" />
 		</exec>
 	</target>
 	
