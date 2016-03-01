@@ -250,11 +250,11 @@ public class FutureProcessor extends
 //			variableAccessStatement.insertBefore(finalResultStatement);
 		}
 				
-		CtCodeSnippetStatement newStatement = new CtFutureDefCodeSnippetStatement(variableName, getFactory().Core().getMainFactory());
-		newStatement.setValue(paraTaskExpression.toString());
-		SpoonUtils.replace(block, (CtStatement)element, newStatement);
-		
-		System.out.println("\n\n\n");
+//		CtCodeSnippetStatement newStatement = new CtFutureDefCodeSnippetStatement(variableName, getFactory().Core().getMainFactory());
+//		newStatement.setValue(paraTaskExpression.toString());
+//		SpoonUtils.replace(block, (CtStatement)element, newStatement);
+//		
+//		System.out.println("\n\n\n");
 	
 	}
 	

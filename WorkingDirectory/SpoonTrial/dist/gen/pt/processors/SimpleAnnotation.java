@@ -19,7 +19,7 @@ public class SimpleAnnotation {
     }
     
     public void testAnno() {
-        ;
+        int Var = foo(5 ,8);
         @pt.annotations.Future
 int Var1 = (foo1(3)) + (foo(foo1(2) ,__VarTaskID__.getResult()));
         System.out.println(("The result is: " + Var1));
