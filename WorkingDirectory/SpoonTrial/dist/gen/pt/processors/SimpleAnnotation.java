@@ -26,9 +26,8 @@ int Var1 = (foo1(3)) + (foo(foo1(2) ,__VarTaskID__.getResult()));
         boolean Var2 = foo2(true);
         @pt.annotations.Future
 boolean Var3 = foo2(!__Var2TaskID__.getResult());
-        Var2 = __Var2TaskID__.getResult() && false;
-        boolean Var4 = Var2 || Var3;
-        foo4(Var2);
+        foo4(__Var2TaskID__.getResult());
+        boolean Var4 = __Var2TaskID__.getResult() || Var3;
     }
     
 }

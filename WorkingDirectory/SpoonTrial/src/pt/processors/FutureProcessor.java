@@ -200,6 +200,7 @@ public class FutureProcessor extends
 		String statement = null;
 		boolean assignmentStatement = false;
 		
+		
 		String regex = "\\b" + variableName + "\\b";
 		Pattern pattern = Pattern.compile(regex);
 				
@@ -228,26 +229,11 @@ public class FutureProcessor extends
 				codeSnippet.setValue(statement);
 				assignment.setAssignment((CtExpression)codeSnippet);
 			}
-			
 			else{
 				CtCodeSnippetStatement codeSnippet = getFactory().Core().createCodeSnippetStatement();
 				codeSnippet.setValue(statement);
 				variableAccessStatement.replace(codeSnippet);
 			}
-//			String finalResult = "";
-//			Set<ModifierKind> mods = element.getModifiers();
-//			if (!mods.contains(ModifierKind.FINAL)) {
-//				finalResult += "final ";
-//			}
-//			
-//			finalResult += returnType + " " + variableName + " = "
-//					+ SpoonUtils.getTaskIDName(variableName) + ".getResult()";
-//			
-//			CtCodeSnippetStatement finalResultStatement = getFactory().Core()
-//					.createCodeSnippetStatement();
-//			finalResultStatement.setValue(finalResult);
-//			
-//			variableAccessStatement.insertBefore(finalResultStatement);
 		}
 				
 //		CtCodeSnippetStatement newStatement = new CtFutureDefCodeSnippetStatement(variableName, getFactory().Core().getMainFactory());
