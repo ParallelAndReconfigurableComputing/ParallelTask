@@ -33,10 +33,12 @@ public class SimpleAnnotation {
 		@Future
 		boolean Var3 = foo2(!Var2);
 		
-		Var2 = Var2 && false;
+		//Var2 = Var2 && false;
+	
+		foo4(Var2);
 		
 		boolean Var4 = (Var2 || Var3);
 		
-		foo4(Var2);
+		
 	}
 }
