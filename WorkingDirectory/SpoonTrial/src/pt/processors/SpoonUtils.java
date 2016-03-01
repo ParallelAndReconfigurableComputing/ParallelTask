@@ -72,7 +72,7 @@ public class SpoonUtils {
 		
 		for (CtStatement statement : blockStatements) {
 			String statementString = statement.toString();
-			System.out.println("statement: " + statementString + " and variable name: " + varName);
+			//System.out.println("statement: " + statementString + " and variable name: " + varName + ", and statement type: " + statement.getClass());
 			
 			if (!foundDef){
 				if (statement.equals(element))
