@@ -59,23 +59,23 @@ public class SpoonUtils {
 	 * of that future variable. However, this only finds the first
 	 * occurrence of that future variable, and not the others.
 	 * @param block
-	 * @param varDefinition
+	 * @param element
 	 * @return
 	 */
 	public static List<CtStatement> findVarAccessOtherThanFutureDefinition(CtBlock<?> block,
-			CtLocalVariable<?> varDefinition) {
+			CtVariable<?> element) {
 		List<CtStatement> blockStatements = block.getStatements();
 		List<CtStatement> statementsWithThisFutureVariable = new ArrayList<>();
 		boolean foundDef = false;
 		
-		String varName = varDefinition.getSimpleName();
+		String varName = element.getSimpleName();
 		
 		for (CtStatement statement : blockStatements) {
 			String statementString = statement.toString();
 			System.out.println("statement: " + statementString + " and variable name: " + varName);
 			
 			if (!foundDef){
-				if (statement.equals(varDefinition))
+				if (statement.equals(element))
 					foundDef = true;
 			}
 			
