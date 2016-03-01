@@ -63,7 +63,7 @@ public class SpoonUtils {
 	 * @return
 	 */
 	public static List<CtStatement> findVarAccessOtherThanFutureDefinition(CtBlock<?> block,
-			CtVariable<?> element) {
+			CtLocalVariable<?> element) {
 		List<CtStatement> blockStatements = block.getStatements();
 		List<CtStatement> statementsWithThisFutureVariable = new ArrayList<>();
 		boolean foundDef = false;

@@ -204,7 +204,7 @@ public class FutureProcessor extends
 		String regex = "\\b" + variableName + "\\b";
 		Pattern pattern = Pattern.compile(regex);
 				
-		List<CtStatement> variableAccessStatements = SpoonUtils.findVarAccessOtherThanFutureDefinition(block, element);
+		List<CtStatement> variableAccessStatements = SpoonUtils.findVarAccessOtherThanFutureDefinition(block, (CtLocalVariable<?>)element);
 		
 		for (CtStatement variableAccessStatement : variableAccessStatements) {
 			
