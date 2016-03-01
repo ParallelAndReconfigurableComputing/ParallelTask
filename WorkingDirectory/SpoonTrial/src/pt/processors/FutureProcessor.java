@@ -148,7 +148,7 @@ public class FutureProcessor extends
 				String dependsOn = future.depends();
 				String notifies = future.notifies();
 				
-				if (dependsOn != ""){
+				if (!dependsOn.isEmpty()){
 					String[] depends = dependsOn.split(",");
 					for (String depend : depends){
 						depend = depend.trim();
@@ -159,7 +159,7 @@ public class FutureProcessor extends
 					}
 				}
 				
-				if(notifies != ""){
+				if(!notifies.isEmpty()){
 					String[] notifyHandlers = notifies.split(";");
 							
 					for (String notifyHandler : notifyHandlers){
