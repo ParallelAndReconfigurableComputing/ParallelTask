@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+
 import pt.annotations.AsyncCatch;
 import pt.annotations.Future;
 import pt.runtime.ParaTask;
@@ -29,11 +30,13 @@ import spoon.reflect.reference.CtTypeReference;
 import spoon.support.reflect.code.CtAssignmentImpl;
 import spoon.support.reflect.code.CtBinaryOperatorImpl;
 import spoon.support.reflect.code.CtBlockImpl;
+import spoon.support.reflect.code.CtCodeSnippetExpressionImpl;
 import spoon.support.reflect.code.CtCodeSnippetStatementImpl;
 import spoon.support.reflect.code.CtInvocationImpl;
 import spoon.support.reflect.code.CtLocalVariableImpl;
 import spoon.support.reflect.code.CtVariableAccessImpl;
 import spoon.support.reflect.declaration.CtExecutableImpl;
+import spoon.support.reflect.reference.CtTypeReferenceImpl;
 
 
 public class FutureProcessor extends
@@ -77,7 +80,7 @@ public class FutureProcessor extends
 		notifyHandlers = new ArrayList<String>();
 		asynchExceptions = new HashMap<Class<? extends Exception>, String>();
 		
-		System.out.println("Listing invocations for: " + element.getDefaultExpression());
+		System.out.println("Listing invocations for: " + defaultExpression);
 		listInvocationsOfThisExpression(defaultExpression);
 		
 		if(invocations.isEmpty()) {
@@ -101,6 +104,7 @@ public class FutureProcessor extends
 	 * @param expression
 	 */
 	public void listInvocationsOfThisExpression(CtExpression<?> expression){
+		
 		if (expression instanceof CtInvocationImpl<?>){
 			invocations.add((CtInvocationImpl<?>)expression);
 			return;
@@ -109,6 +113,14 @@ public class FutureProcessor extends
 			listInvocationsOfThisExpression(((CtBinaryOperatorImpl<?>) expression).getLeftHandOperand());
 			listInvocationsOfThisExpression(((CtBinaryOperatorImpl<?>) expression).getRightHandOperand());
 		}
+		else if (expression instanceof CtCodeSnippetExpressionImpl<?>){
+			CtCodeSnippetExpressionImpl<?> expressionImpl = (CtCodeSnippetExpressionImpl<?>) expression;
+			//expression.
+		}
+		else {
+			System.out.println("Currently not supported: Expression type: " + expression.getClass());
+		}
+		
 		return;
 	}
 	
@@ -263,7 +275,7 @@ public class FutureProcessor extends
 				codeSnippetStatement.setValue(statement);
 			}
 			else if (variableAccessStatement instanceof CtInvocationImpl<?>){
-				System.out.println("replacing " + statement + " for invocation");
+				
 				CtInvocationImpl<?> invocationImp = (CtInvocationImpl<?>) variableAccessStatement;
 				invocationImp.setArguments(modifiedInvocationArguments);
 			}
