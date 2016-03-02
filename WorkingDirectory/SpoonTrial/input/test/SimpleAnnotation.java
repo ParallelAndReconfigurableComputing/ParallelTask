@@ -24,20 +24,24 @@ public class SimpleAnnotation {
 		int Var = foo(5, 8);
 		
 		@Future
-		int Var1 = foo1(3) + foo(foo1(2), Var);
-		System.out.println("The result is: " + Var1);
+		int VarX = foo(Var, 6);
 		
 		@Future
-		boolean Var2 = foo2(true);
+		boolean Var1 = foo2(true);
 		
 		@Future
-		boolean Var3 = foo2(!Var2);
+		int Var2 = foo1(VarX) + foo(foo1(2), Var);
+		
+		System.out.println("The result of Var2 is: " + (Var2*Var));
+		
+		@Future
+		boolean Var3 = foo2(!Var1);
 		
 		//Var2 = Var2 && false;
 	
-		foo4(Var2);
+		foo4(Var1 && Var3);
 		
-		boolean Var4 = (Var2 || Var3);
+		boolean Var4 = (Var1 || Var3);
 		
 		
 	}
