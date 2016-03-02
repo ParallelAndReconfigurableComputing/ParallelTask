@@ -9,7 +9,6 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
 import pt.annotations.AsyncCatch;
 import pt.annotations.Future;
 import pt.runtime.ParaTask;
@@ -33,6 +32,7 @@ import spoon.support.reflect.code.CtBlockImpl;
 import spoon.support.reflect.code.CtCodeSnippetExpressionImpl;
 import spoon.support.reflect.code.CtCodeSnippetStatementImpl;
 import spoon.support.reflect.code.CtInvocationImpl;
+import spoon.support.reflect.code.CtLiteralImpl;
 import spoon.support.reflect.code.CtLocalVariableImpl;
 import spoon.support.reflect.code.CtVariableAccessImpl;
 import spoon.support.reflect.declaration.CtExecutableImpl;
@@ -54,7 +54,7 @@ public class FutureProcessor extends
 	Map<Class<? extends Exception>, String> asynchExceptions = null;
 	
 	public void process(Future annotation, CtVariable<?> element) {
-		
+		System.out.println("+++++++++++++++++++++++++++++STARTING NEW ANNOTATION++++++++++++++++++++++++++++");
 		System.out.println("Current element: \n" + element.toString());
 		
 		this.element = element;
@@ -80,7 +80,7 @@ public class FutureProcessor extends
 		notifyHandlers = new ArrayList<String>();
 		asynchExceptions = new HashMap<Class<? extends Exception>, String>();
 		
-		System.out.println("Listing invocations for: " + defaultExpression);
+		System.out.println("Listing invocations for: " + defaultExpression + " of type: " + defaultExpression.getClass());
 		listInvocationsOfThisExpression(defaultExpression);
 		
 		if(invocations.isEmpty()) {
@@ -96,6 +96,7 @@ public class FutureProcessor extends
 		processFutureAttributes();
 		processAsyncCatches();	
 		findVariableUsageInBlcok();
+		System.out.println("++++++++++++++++++++++++++++END OF ANNOTATION++++++++++++++++++++++++++++++");
 	}
 
 
@@ -215,13 +216,33 @@ public class FutureProcessor extends
 		
 		CtBlock<?> block = (CtBlock<?>)element.getParent();
 		String statement = null;
+		String replacement = taskIDName + ".getResult()";
 		List<CtExpression<?>> invocationArguments = null;
 		List<CtExpression<?>> modifiedInvocationArguments = null;
+		List<CtExpression<?>> expressionsOfStatement = null;
 		
 		String regex = "\\b" + variableName + "\\b";
 		Pattern pattern = Pattern.compile(regex);
 				
-		List<CtStatement> variableAccessStatements = SpoonUtils.findVarAccessOtherThanFutureDefinition(block, (CtLocalVariable<?>)element);
+		List<CtStatement> variableAccessStatements = SpoonUtils.findVarAccessOtherThanFutureDefinition(block, element);
+		for (CtStatement variableAccessStatement : variableAccessStatements){
+			expressionsOfStatement = new ArrayList<>();
+			
+			if (variableAccessStatement instanceof CtLocalVariableImpl<?>){
+				CtLocalVariableImpl<?> localVariableImple = (CtLocalVariableImpl<?>) variableAccessStatement;
+				CtExpression<?> expression = localVariableImple.getDefaultExpression();
+				expressionsOfStatement.add(expression);				
+			}
+			
+			else if (variableAccessStatement instanceof CtInvocationImpl<?>){
+				CtInvocationImpl<?> invocationImpl = (CtInvocationImpl<?>) variableAccessStatement;
+				expressionsOfStatement = invocationImpl.getArguments();
+			}
+			
+			
+			
+			modifyExpressions(expressionsOfStatement, replacement);
+		}
 		
 		for (CtStatement variableAccessStatement : variableAccessStatements) {
 			boolean invocation = false; boolean localVariable = false; boolean cdSnippetSt = false;
@@ -230,6 +251,13 @@ public class FutureProcessor extends
 			System.out.println("statement: " + variableAccessStatement.toString() + ", and statement type: " + variableAccessStatement.getClass());
 			
 			if (variableAccessStatement instanceof CtLocalVariableImpl<?>){
+				/*
+				 * Note: If an instance of CtLocalVariableImpl statement has an expression which is a boolean operation, or 
+				 * an invocation, the expression needs to change accordingly for a boolean operation or an invocation. Otherwise,
+				 * the expression will not be identified as an invocation or boolean operation after modification anymore!
+				 */
+				if (((CtLocalVariableImpl<?>) variableAccessStatement).getDefaultExpression() instanceof CtInvocationImpl<?> )
+					System.out.println("Also instance of invocation!");
 				localVariable = true;
 				CtLocalVariableImpl<?> variableImpl = (CtLocalVariableImpl<?>) variableAccessStatement;
 				statement = variableImpl.getDefaultExpression().toString();
@@ -251,6 +279,14 @@ public class FutureProcessor extends
 			
 			if (invocation){
 				for (CtExpression<?> argument : invocationArguments){
+					if (argument instanceof CtBinaryOperatorImpl<?>){
+						CtBinaryOperatorImpl<?> operation = (CtBinaryOperatorImpl<?>) argument;
+						if(operation.getLeftHandOperand().getClass().equals(CtLiteralImpl.class)){
+							CtLiteralImpl<?> literal = (CtLiteralImpl<?>) operation.getLeftHandOperand();
+							System.out.println("literal is of type " + literal.getType());
+						}
+						System.out.println("right operand " + operation.getRightHandOperand().getClass());
+					}
 					Matcher matcher = pattern.matcher(argument.toString());
 					String temp = matcher.replaceAll(taskIDName+".getResult()");
 					CtCodeSnippetExpression<?> tempArg = getFactory().Core().createCodeSnippetExpression();
@@ -289,6 +325,10 @@ public class FutureProcessor extends
 	
 	}
 	
+	public void modifyExpressions (List<CtExpression<?>> expressions, String replacement){
+		
+	}
+	
 	/**
 	 * This method finds the parameters that are sent as
 	 * arguments, to the invocations that exist in an 
@@ -309,15 +349,15 @@ public class FutureProcessor extends
 		
 		
 		List<CtExpression<?>> arguments = invocation.getArguments();
-		String invocationExp = invocation.toString();
-		String invocationSignature = invocation.getSignature();
+//		String invocationExp = invocation.toString();
+//		String invocationSignature = invocation.getSignature();
 		
-		System.out.println("********************PROCESS INVOCATION*************************");
-		System.out.println("getExecutable: " + invocation.getExecutable());
-		System.out.println("invocation.toString: " + invocationExp);
-		System.out.println("invocation.getSignature: " + invocationSignature);
-		System.out.println("********************PROCESS INVOCATION*************************");
-		
+//		System.out.println("********************PROCESS INVOCATION*************************");
+//		System.out.println("getExecutable: " + invocation.getExecutable());
+//		System.out.println("invocation.toString: " + invocationExp);
+//		System.out.println("invocation.getSignature: " + invocationSignature);
+//		System.out.println("********************PROCESS INVOCATION*************************");
+//		
 		lambdaExpressionArguments = new ArrayList<>();
 		
 		/* Figure out if there are any arguments that we need to remember
