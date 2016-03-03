@@ -32,7 +32,7 @@ public class SimpleAnnotation {
 		@Future
 		int Var2 = foo1(VarX) + foo(foo1(2), Var);
 		
-		System.out.println("The result of Var2 is: " + (Var2*Var));
+		System.out.println(Var + Var2/*" The result of Var2 is: " + (Var2*Var)*/);
 		
 		@Future
 		boolean Var3 = foo2(!Var1);

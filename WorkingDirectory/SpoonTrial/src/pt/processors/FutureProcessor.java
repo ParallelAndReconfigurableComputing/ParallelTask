@@ -26,6 +26,7 @@ import spoon.reflect.declaration.CtAnnotation;
 import spoon.reflect.declaration.CtVariable;
 import spoon.reflect.declaration.ModifierKind;
 import spoon.reflect.reference.CtTypeReference;
+import spoon.reflect.reference.CtVariableReference;
 import spoon.support.reflect.code.CtAssignmentImpl;
 import spoon.support.reflect.code.CtBinaryOperatorImpl;
 import spoon.support.reflect.code.CtBlockImpl;
@@ -37,6 +38,7 @@ import spoon.support.reflect.code.CtLocalVariableImpl;
 import spoon.support.reflect.code.CtVariableAccessImpl;
 import spoon.support.reflect.declaration.CtExecutableImpl;
 import spoon.support.reflect.reference.CtTypeReferenceImpl;
+import spoon.support.reflect.reference.CtVariableReferenceImpl;
 
 
 public class FutureProcessor extends
@@ -235,7 +237,21 @@ public class FutureProcessor extends
 			}
 			
 			else if (variableAccessStatement instanceof CtInvocationImpl<?>){
+				System.out.println("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+- INVOCATION FOUND -+-+-+-+-+-+-+-+-+-+-+-+-+-");
 				CtInvocationImpl<?> invocationImpl = (CtInvocationImpl<?>) variableAccessStatement;
+			//	System.out.println("invocation executable: " + invocationImpl.getExecutable().toString());
+//				System.out.println("invocation target: " + invocationImpl.getTarget().toString());
+//				System.out.println("invocation index: ");
+//				List<CtExpression<Integer>> indicies = invocationImpl.getIndexExpressions();
+//				for (CtExpression<Integer> index : indicies){
+//					System.out.println("index exp: " + index.toString());
+//				}
+//				System.out.println("invocation arguments: ");
+//				List<CtExpression<?>> arguments = invocationImpl.getArguments();
+//				for (CtExpression<?> argument : arguments){
+//					System.out.println("argument: " + argument.toString());
+//				}
+				System.out.println("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+- INVOCATION FOUND -+-+-+-+-+-+-+-+-+-+-+-+-+-");
 				expressionsOfStatement = invocationImpl.getArguments();
 			}
 			
@@ -283,9 +299,30 @@ public class FutureProcessor extends
 						CtBinaryOperatorImpl<?> operation = (CtBinaryOperatorImpl<?>) argument;
 						if(operation.getLeftHandOperand().getClass().equals(CtLiteralImpl.class)){
 							CtLiteralImpl<?> literal = (CtLiteralImpl<?>) operation.getLeftHandOperand();
-							System.out.println("literal is of type " + literal.getType());
+							System.out.println("literal is of type: " + literal.getType());
+							System.out.println("literal signature: " + literal.getSignature());
 						}
+						if(operation.getRightHandOperand().getClass().equals(CtLiteralImpl.class)){
+							CtLiteralImpl<?> literal = (CtLiteralImpl<?>) operation.getLeftHandOperand();
+							System.out.println("literal is of type: " + literal.getType());
+							System.out.println("literal signature: " + literal.getSignature());
+						}
+						System.out.println("left operand " + operation.getLeftHandOperand().getClass());
+						System.out.println("left operand signature: " + operation.getLeftHandOperand().getSignature());
 						System.out.println("right operand " + operation.getRightHandOperand().getClass());
+						String str = operation.getRightHandOperand().getSignature();
+						str = "__" + str + "__";
+						CtExpression<?> right = operation.getRightHandOperand();
+						if (right instanceof CtVariableAccessImpl<?>){
+							CtVariableAccessImpl<?> vA = (CtVariableAccessImpl<?>) right;
+							CtVariableReference vR = vA.getVariable();
+							System.out.println("vR simple name: " + vR.getSimpleName());
+							vR.setSimpleName(str);
+							System.out.println("vR simple name: " + vR.getSimpleName());
+							vA.setVariable(vR);
+							//right.replace(vA);
+						}
+						System.out.println("right operand signature: " + ((CtVariableAccessImpl<?>) right).getVariable().getSimpleName());
 					}
 					Matcher matcher = pattern.matcher(argument.toString());
 					String temp = matcher.replaceAll(taskIDName+".getResult()");
