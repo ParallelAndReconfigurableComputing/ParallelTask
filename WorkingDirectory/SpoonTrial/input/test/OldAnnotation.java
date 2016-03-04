@@ -1,7 +1,8 @@
 import pt.annotations.Future;
 
 public class OldAnnotation {
-
+	
+	
 	public static Void foo(int x) throws InterruptedException{
 		Thread.sleep(5000);
 		System.out.println("Argument value: " + x);

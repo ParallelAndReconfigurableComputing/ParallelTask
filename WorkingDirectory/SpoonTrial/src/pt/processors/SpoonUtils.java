@@ -400,30 +400,37 @@ public class SpoonUtils {
 	 * @param argName
 	 * @return
 	 */
-	public static boolean isFutureArgument(CtVariable<?> element, String argName) {
+	public static CtVariable<?> getDeclarationStatement(CtVariable<?> element, String argName) {
 		if (!argName.matches("[a-zA-Z0-9_]+")) {
-			return false;
+			return null;
 		}
-		System.out.println("********SEARCHING FOR : " + argName + " in " + element.toString() + "************");
 		CtBlock<?> block = (CtBlock<?>)element.getParent();
 		while(block != null){
 			List<CtStatement> blockStatements = block.getStatements();
 			
 			for(CtStatement statement : blockStatements) {
-				System.out.println(statement);
 				if(statement == element)
 					break;
 				
-				if (statement instanceof CtVariable<?>){
-					CtVariable<?> varDeclaration = (CtVariable<?>) statement; 
-					if (hasAnnotation(statement, Future.class) && varDeclaration.getSimpleName().equals(argName))
-						return true;
+				if (statement instanceof CtLocalVariable<?>){
+					if(statement instanceof CtVariable<?>){
+						CtVariable<?> variableDeclaration = (CtVariable<?>) statement;
+						if(variableDeclaration.getSimpleName().equals(argName))
+							return variableDeclaration;
+					}
 				}
 			}
 			
 			block = block.getParent(CtBlock.class);
 		}
-		return false;
+		return null;
+	}
+	
+	public static boolean isFutureArgument(CtVariable<?> element, String argName){
+		CtVariable<?> declaration = getDeclarationStatement(element, argName);
+		if(declaration == null)
+			return false;
+		return true;
 	}
 	
 	public static String getTaskIDName(String name) {
@@ -440,7 +447,6 @@ public class SpoonUtils {
 		if(name.startsWith("__") && name.endsWith("__.getResult()")){
 			String originalName = getOrigName(name);
 			if(isFutureArgument(element, originalName)){
-				System.out.println(name + "is a future variable");
 				return true;
 			}
 		}
