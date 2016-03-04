@@ -23,11 +23,11 @@ public class OldAnnotation {
     }
     
     public static void main(String[] args) {
-        int Var = OldAnnotation.foo3(10);
+        TaskInfoNoArgs<Integer> __VarTask__ = ((TaskInfoNoArgs<Integer>)(OldAnnotation.foo3(10)));
         try {
-            Void Var1 = OldAnnotation.foo(5);
-            int Var2 = OldAnnotation.foo1(6 ,__VarTaskID__.getResult());
-            int Var3 = OldAnnotation.foo2(__Var2TaskID__.getResult());
+            TaskInfoNoArgs<java.lang.Void> __Var1Task__ = ((TaskInfoNoArgs<java.lang.Void>)(OldAnnotation.foo(5)));
+            TaskInfoOneArg<Integer> __Var2Task__ = ((TaskInfoOneArg<Integer>)(OldAnnotation.foo1(6 ,__VarTaskID__.getResult())));
+            TaskInfoOneArg<Integer> __Var3Task__ = ((TaskInfoOneArg<Integer>)(OldAnnotation.foo2(__Var2TaskID__.getResult())));
             System.out.println(("The result of Var2 + Var3 is: " + (__Var2TaskID__.getResult() + __Var3TaskID__.getResult())));
         } catch (InterruptedException e) {
             e.printStackTrace();

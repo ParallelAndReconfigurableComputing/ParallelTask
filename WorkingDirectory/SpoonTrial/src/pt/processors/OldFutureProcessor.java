@@ -17,7 +17,9 @@ import spoon.processing.AbstractAnnotationProcessor;
 import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
+import spoon.reflect.code.CtLiteral;
 import spoon.reflect.code.CtStatement;
+import spoon.reflect.code.CtVariableAccess;
 import spoon.reflect.declaration.CtAnnotation;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtVariable;
@@ -100,6 +102,7 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 				}
 			}
 		}
+		System.out.println("element " + thisElementName + " depends on " + dependencies.toString());
 	}
 	
 	public void processNotifications(){
@@ -118,29 +121,29 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 		}
 	}
 	
-	public int foo(int x, int y, int z){
-		return x + y + z;
-	}
-	
 	public void processNewStatement(){
 		
 		CtInvocation<?> invocation = (CtInvocation<?>) thisAnnotatedElement.getDefaultExpression();
 		List<CtExpression<?>> arguments = invocation.getArguments();
 		
 		for (CtExpression<?> argument : arguments){
-			String argName = argument.toString();
-			if(SpoonUtils.isTaskIDReplacement(thisAnnotatedElement, argName)){
-				String origName = SpoonUtils.getOrigName(argName);
-				CtVariable<?> declaration = SpoonUtils.getDeclarationStatement(thisAnnotatedElement, origName);
-				CtTypeReference taskIDType = getTaskIDType(declaration);
-				argument.setType(taskIDType);
-				argumentsAndTypes.put(argument.getType().toString(), SpoonUtils.getTaskIDName(origName));
+			if (!(argument instanceof CtLiteral<?>)){
+				String argName = argument.toString();
+				if(SpoonUtils.isTaskIDReplacement(thisAnnotatedElement, argName)){
+					String origName = SpoonUtils.getOrigName(argName);
+					CtVariable<?> declaration = SpoonUtils.getDeclarationStatement(thisAnnotatedElement, origName);
+					CtTypeReference taskIDType = getTaskIDType(declaration);
+					argument.setType(taskIDType);
+					argumentsAndTypes.put(argument.getType().toString(), SpoonUtils.getTaskIDName(origName));
+				}
+				else{
+					argumentsAndTypes.put(SpoonUtils.getType(argument.getType().toString()), argName);
+				}
+				listOfArguments.add(argument);
 			}
-			else{
-				argumentsAndTypes.put(SpoonUtils.getType(argument.getType().toString()), argName);
-			}
-			listOfArguments.add(argument);
 		}
+		
+		System.out.println("map of arguments: " + argumentsAndTypes.toString());
 		
 		modifyThisStatement();
 	}
@@ -211,6 +214,7 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 	public CtTypeReference<?> getTaskIDType(CtVariable<?> declaration){
 		
 		String declarationType = declaration.getType().toString();
+		System.out.println("declaration type: " + declarationType);
 		String taskType = SpoonUtils.getType(declarationType);
 		taskType = "TaskID<" + taskType + ">";
 		CtTypeReference<?> taskIDType = getFactory().Core().createTypeReference();

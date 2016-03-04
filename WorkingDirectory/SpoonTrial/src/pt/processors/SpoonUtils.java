@@ -404,6 +404,8 @@ public class SpoonUtils {
 		if (!argName.matches("[a-zA-Z0-9_]+")) {
 			return null;
 		}
+		
+		argName = getTaskName(argName);
 		CtBlock<?> block = (CtBlock<?>)element.getParent();
 		while(block != null){
 			List<CtStatement> blockStatements = block.getStatements();
@@ -415,8 +417,9 @@ public class SpoonUtils {
 				if (statement instanceof CtLocalVariable<?>){
 					if(statement instanceof CtVariable<?>){
 						CtVariable<?> variableDeclaration = (CtVariable<?>) statement;
-						if(variableDeclaration.getSimpleName().equals(argName))
+						if(variableDeclaration.getSimpleName().equals(argName)){
 							return variableDeclaration;
+						}
 					}
 				}
 			}
@@ -430,6 +433,7 @@ public class SpoonUtils {
 		CtVariable<?> declaration = getDeclarationStatement(element, argName);
 		if(declaration == null)
 			return false;
+		System.out.println("declaration: " + declaration.toString());
 		return true;
 	}
 	
