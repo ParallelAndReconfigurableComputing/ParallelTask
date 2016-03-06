@@ -11,34 +11,22 @@ import java.util.regex.Pattern;
 
 import pt.annotations.AsyncCatch;
 import pt.annotations.Future;
-import pt.runtime.ParaTask;
-import pt.runtime.TaskInfo;
-import pt.runtime.TaskInfoNoArgs;
 import spoon.processing.AbstractAnnotationProcessor;
-import spoon.reflect.code.CtAssignment;
 import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtCodeSnippetExpression;
 import spoon.reflect.code.CtCodeSnippetStatement;
 import spoon.reflect.code.CtExpression;
-import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.declaration.CtAnnotation;
 import spoon.reflect.declaration.CtVariable;
-import spoon.reflect.declaration.ModifierKind;
-import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.reference.CtVariableReference;
-import spoon.support.reflect.code.CtAssignmentImpl;
 import spoon.support.reflect.code.CtBinaryOperatorImpl;
-import spoon.support.reflect.code.CtBlockImpl;
 import spoon.support.reflect.code.CtCodeSnippetExpressionImpl;
 import spoon.support.reflect.code.CtCodeSnippetStatementImpl;
 import spoon.support.reflect.code.CtInvocationImpl;
 import spoon.support.reflect.code.CtLiteralImpl;
 import spoon.support.reflect.code.CtLocalVariableImpl;
 import spoon.support.reflect.code.CtVariableAccessImpl;
-import spoon.support.reflect.declaration.CtExecutableImpl;
-import spoon.support.reflect.reference.CtTypeReferenceImpl;
-import spoon.support.reflect.reference.CtVariableReferenceImpl;
 
 
 public class FutureProcessor extends
@@ -55,6 +43,7 @@ public class FutureProcessor extends
 	CtVariable<?> element = null;
 	Map<Class<? extends Exception>, String> asynchExceptions = null;
 	
+	@Override
 	public void process(Future annotation, CtVariable<?> element) {
 		System.out.println("+++++++++++++++++++++++++++++STARTING NEW ANNOTATION++++++++++++++++++++++++++++");
 		System.out.println("Current element: \n" + element.toString());

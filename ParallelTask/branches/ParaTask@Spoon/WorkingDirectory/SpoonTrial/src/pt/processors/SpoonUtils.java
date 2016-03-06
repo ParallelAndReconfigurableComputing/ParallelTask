@@ -9,17 +9,12 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.swing.text.StyledEditorKit.ForegroundAction;
-
-import pt.annotations.Future;
 import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtCatch;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.code.CtStatement;
-import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtAnnotation;
-import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtVariable;
 import spoon.reflect.reference.CtVariableReference;
 import spoon.support.reflect.code.CtArrayAccessImpl;
@@ -50,10 +45,6 @@ import spoon.support.reflect.code.CtTryImpl;
 import spoon.support.reflect.code.CtUnaryOperatorImpl;
 import spoon.support.reflect.code.CtVariableAccessImpl;
 import spoon.support.reflect.code.CtWhileImpl;
-import spoon.support.reflect.declaration.CtConstructorImpl;
-import spoon.support.reflect.reference.CtExecutableReferenceImpl;
-import spoon.support.reflect.reference.CtVariableReferenceImpl;
-import spoon.template.ExpressionTemplateParameter;
 
 public class SpoonUtils {
 
@@ -296,7 +287,11 @@ public class SpoonUtils {
 			}
 			
 			else if (expression instanceof CtConditionalImpl<?>){
-				
+				CtConditionalImpl<?> condImpl = (CtConditionalImpl<?>) expression;
+				expressionsToModify.add(condImpl.getCondition());
+				expressionsToModify.add(condImpl.getElseExpression());
+				expressionsToModify.add(condImpl.getThenExpression());
+				modifyExpressions(expressionsToModify, regex, replacement);
 			}
 			else if (expression instanceof CtNewArrayImpl<?>){
 				
@@ -400,25 +395,31 @@ public class SpoonUtils {
 	 * @param argName
 	 * @return
 	 */
-	public static CtVariable<?> getDeclarationStatement(CtVariable<?> element, String argName) {
+	public static CtStatement getDeclarationStatement(CtVariable<?> element, String argName) {
 		if (!argName.matches("[a-zA-Z0-9_]+")) {
 			return null;
 		}
 		
-		argName = getTaskName(argName);
+		if(!element.getSimpleName().equals(argName))
+			argName = getTaskName(argName);
 		CtBlock<?> block = (CtBlock<?>)element.getParent();
 		while(block != null){
 			List<CtStatement> blockStatements = block.getStatements();
 			
 			for(CtStatement statement : blockStatements) {
-				if(statement == element)
-					break;
+				
+				if(statement == element){
+					if(element.getSimpleName().equals(argName))
+						return statement;
+					else
+						break;
+				}
 				
 				if (statement instanceof CtLocalVariable<?>){
 					if(statement instanceof CtVariable<?>){
 						CtVariable<?> variableDeclaration = (CtVariable<?>) statement;
 						if(variableDeclaration.getSimpleName().equals(argName)){
-							return variableDeclaration;
+							return statement;
 						}
 					}
 				}
@@ -430,7 +431,7 @@ public class SpoonUtils {
 	}
 	
 	public static boolean isFutureArgument(CtVariable<?> element, String argName){
-		CtVariable<?> declaration = getDeclarationStatement(element, argName);
+		CtLocalVariable<?> declaration = (CtLocalVariable<?>)getDeclarationStatement(element, argName);
 		if(declaration == null)
 			return false;
 		System.out.println("declaration: " + declaration.toString());
@@ -441,10 +442,25 @@ public class SpoonUtils {
 		return "__" + name + "TaskID__";
 	}
 	
-	public static String getOrigName(String taskIDName) {
-		if(!taskIDName.startsWith("__") || !taskIDName.endsWith("__.getResult()"))
-			throw new IllegalArgumentException("not a valid future name: " + taskIDName);
-		return taskIDName.substring(2, (taskIDName.length() - "TaskID__.getResult()".length()));
+	public static String getLambdaArgName(String name) {
+		return "__" + name + "Arg__";
+	}
+	
+	public static String getTaskName(String name){
+		return "__" + name + "Task__";
+	}
+	
+	
+	public static String getOrigName(String elementName) {
+		if(elementName.startsWith("__") && elementName.endsWith("TaskID__.getResult()"))
+			return elementName.substring("__".length(), (elementName.length() - "TaskID__.getResult()".length()));
+		else if (elementName.startsWith("__") && elementName.endsWith("Task__"))
+			return elementName.substring("__".length(), (elementName.length() - "Task__".length()));
+		else if (elementName.startsWith("__") && elementName.endsWith("TaskID__"))
+			return elementName.substring("__".length(), (elementName.length() - "TaskID__".length()));
+		else if (elementName.contains("<") && elementName.contains(">") && (elementName.lastIndexOf("<") < elementName.indexOf(">")))
+			return elementName.substring(elementName.lastIndexOf("<"), elementName.indexOf(">"));
+		return elementName;
 	}
 	
 	public static boolean isTaskIDReplacement(CtVariable<?> element, String name){
@@ -457,12 +473,5 @@ public class SpoonUtils {
 		return false;
 	}
 	
-	public static String getLambdaArgName(String name) {
-		return "__" + name + "Arg__";
-	}
-	
-	public static String getTaskName(String name){
-		return "__" + name + "Task__";
-	}
 	
 }
