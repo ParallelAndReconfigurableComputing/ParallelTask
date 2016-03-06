@@ -33,7 +33,7 @@ public class OldAnnotation {
 			@Future(depends="Var1")
 			int Var2 = foo1(6, Var);
 		
-			@Future
+			@Future(depends="Var1, Var")
 			int Var3 = foo2(Var2);
 		
 			System.out.println("The result of Var2 + Var3 is: " + (Var2 + Var3));

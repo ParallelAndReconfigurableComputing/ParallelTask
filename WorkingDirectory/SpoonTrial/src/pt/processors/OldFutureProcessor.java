@@ -8,23 +8,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import pt.annotations.AnnotationProcessingFilter;
 import pt.annotations.Future;
-import pt.runtime.ParaTask;
-import pt.runtime.TaskID;
-import pt.runtime.TaskInfo;
-import pt.runtime.TaskInfoThreeArgs;
 import spoon.processing.AbstractAnnotationProcessor;
 import spoon.reflect.code.CtBlock;
+import spoon.reflect.code.CtCodeSnippetExpression;
+import spoon.reflect.code.CtCodeSnippetStatement;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtLiteral;
+import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtVariableAccess;
 import spoon.reflect.declaration.CtAnnotation;
-import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtVariable;
 import spoon.reflect.reference.CtTypeReference;
-import spoon.support.reflect.code.CtCodeSnippetExpressionImpl;
+import spoon.support.reflect.code.CtInvocationImpl;
+import spoon.support.reflect.code.CtLocalVariableImpl;
 
 public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVariable<?>>{
 
@@ -83,6 +83,7 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 				String originalArgumentName = SpoonUtils.getOrigName(argument.toString());
 				dependencies.add(SpoonUtils.getTaskIDName(originalArgumentName));
 			}
+			listOfArguments.add(argument);
 		}
 		
 		Set<CtAnnotation<?>> annotations = thisAnnotatedElement.getAnnotations();
@@ -93,9 +94,12 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 				String dependsOn = future.depends();
 				if (!dependsOn.isEmpty()){
 					String[] dependsArray = dependsOn.split(",");
-					for (String depends : dependsArray)							
-							dependencies.add(SpoonUtils.getTaskIDName(depends));
-					
+					for (String depends : dependsArray){
+						//if not trimmed, duplicates with invisible white-space
+						//get added
+						depends = depends.trim(); 
+						dependencies.add(SpoonUtils.getTaskIDName(depends));
+					}
 					/*if more than one future annotation is assigned to a variable
 					 * (theoretically shouldn't be allowed), we only accept the first!*/
 					break;
@@ -127,11 +131,11 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 		List<CtExpression<?>> arguments = invocation.getArguments();
 		
 		for (CtExpression<?> argument : arguments){
-			if (!(argument instanceof CtLiteral<?>)){
+			if (argument instanceof CtVariableAccess<?>){
 				String argName = argument.toString();
 				if(SpoonUtils.isTaskIDReplacement(thisAnnotatedElement, argName)){
 					String origName = SpoonUtils.getOrigName(argName);
-					CtVariable<?> declaration = SpoonUtils.getDeclarationStatement(thisAnnotatedElement, origName);
+					CtLocalVariable<?> declaration = (CtLocalVariable<?>)SpoonUtils.getDeclarationStatement(thisAnnotatedElement, origName);
 					CtTypeReference taskIDType = getTaskIDType(declaration);
 					argument.setType(taskIDType);
 					argumentsAndTypes.put(argument.getType().toString(), SpoonUtils.getTaskIDName(origName));
@@ -139,7 +143,6 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 				else{
 					argumentsAndTypes.put(SpoonUtils.getType(argument.getType().toString()), argName);
 				}
-				listOfArguments.add(argument);
 			}
 		}
 		
@@ -199,11 +202,9 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 	}
 
 	public String getLambdaName(){
-		String taskLambdaName = "TaskInfo";
-		taskLambdaName += getNumArgs() + "<" + SpoonUtils.getType(thisElementReturnType)+">";
-		return taskLambdaName;
+		return "TaskInfo" + getNumArgs() + "<" + SpoonUtils.getType(thisElementReturnType)+">";
 	}
-
+	
 	public String getFunctorName(){
 		String functorName = "Functor";
 		String returnPhrase = (thisElementReturnType.contains("Void")) ? "NoReturn<Void" : ("WithReturn<"+SpoonUtils.getType(thisElementReturnType));
@@ -211,11 +212,11 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 		return functorName;
 	}
 	
-	public CtTypeReference<?> getTaskIDType(CtVariable<?> declaration){
+	public CtTypeReference getTaskIDType(CtVariable<?> declaration){
 		
 		String declarationType = declaration.getType().toString();
-		System.out.println("declaration type: " + declarationType);
 		String taskType = SpoonUtils.getType(declarationType);
+		taskType = SpoonUtils.getOrigName(taskType);
 		taskType = "TaskID<" + taskType + ">";
 		CtTypeReference<?> taskIDType = getFactory().Core().createTypeReference();
 		taskIDType.setSimpleName(taskType);
@@ -231,6 +232,40 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 		typeCasts.add(newType);
 		invocation.setTypeCasts(typeCasts);
 		thisAnnotatedElement.setSimpleName(SpoonUtils.getTaskName(thisElementName));
-		System.out.println(thisAnnotatedElement.toString());
+		addNewStatements();
+	}
+	
+	public void addNewStatements(){
+		String statement1 = "";
+		String statement2 = "";
+		int argIndex = 0;
+		CtBlock<?> thisBlock = (CtBlock<?>) thisAnnotatedElement.getParent();
+		AnnotationProcessingFilter<CtStatement> filter = new AnnotationProcessingFilter<CtStatement>
+								(SpoonUtils.getDeclarationStatement(thisAnnotatedElement, thisElementName));
+		thisBlock.insertAfter(filter, newStatements());
+	}
+	
+	public CtStatement newStatements(){
+		CtLocalVariableImpl<?> localVar = (CtLocalVariableImpl<?>) getFactory().Core().createLocalVariable();
+		String startPhrase = ".start(";
+		Set<String> argsAndTypes = argumentsAndTypes.keySet();
+		int counter = 0;
+		for(String arg : argsAndTypes){
+			counter++;
+			startPhrase += argumentsAndTypes.get(arg);
+			if(counter != argsAndTypes.size())
+				startPhrase += ", ";
+		}
+		startPhrase += ")";
+		startPhrase = SpoonUtils.getTaskName(thisElementName) + startPhrase;
+		
+		CtCodeSnippetExpression defaultExp = getFactory().Core().createCodeSnippetExpression();
+		defaultExp.setValue(startPhrase);
+		
+		CtTypeReference taskIDType = getTaskIDType(thisAnnotatedElement);
+		localVar.setType(taskIDType);
+		localVar.setSimpleName(SpoonUtils.getTaskIDName(thisElementName));
+		localVar.setDefaultExpression((CtExpression)defaultExp);
+		return localVar;
 	}
 }
