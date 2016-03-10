@@ -57,7 +57,8 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 		processInvocation();
 		processDependencies();
 		processNotifications();
-		processNewStatement();
+		processInvocationArguments(thisAnnotatedElement.getDefaultExpression());
+		modifyThisStatement();
 	}
 
 	public void processInvocation(){
@@ -83,7 +84,6 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 				String originalArgumentName = SpoonUtils.getOrigName(argument.toString());
 				dependencies.add(SpoonUtils.getTaskIDName(originalArgumentName));
 			}
-			listOfArguments.add(argument);
 		}
 		
 		Set<CtAnnotation<?>> annotations = thisAnnotatedElement.getAnnotations();
@@ -125,9 +125,10 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 		}
 	}
 	
-	public void processNewStatement(){
-		
-		CtInvocation<?> invocation = (CtInvocation<?>) thisAnnotatedElement.getDefaultExpression();
+	public void processInvocationArguments(CtExpression<?> expression){
+		if (!(expression instanceof CtInvocation<?>))
+			return;
+		CtInvocation<?> invocation = (CtInvocation<?>) expression;
 		List<CtExpression<?>> arguments = invocation.getArguments();
 		
 		for (CtExpression<?> argument : arguments){
@@ -143,12 +144,11 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 				else{
 					argumentsAndTypes.put(SpoonUtils.getType(argument.getType().toString()), argName);
 				}
+				listOfArguments.add(argument);
 			}
 		}
 		
 		System.out.println("map of arguments: " + argumentsAndTypes.toString());
-		
-		modifyThisStatement();
 	}
 	
 	public String getNumArgs(){
