@@ -21,6 +21,8 @@ import pt.runtime.TaskInfoOneArg;
 
 //FunctorNoArgsNoReturn MUST not have a generic type in front of it!
 
+//Modify ParaTask such that if Scheduling task is not set, it can set it by itself!
+
 public class OldAnnotation {
     public static Void foo(int x) throws InterruptedException {
         java.lang.Thread.sleep(5000);
