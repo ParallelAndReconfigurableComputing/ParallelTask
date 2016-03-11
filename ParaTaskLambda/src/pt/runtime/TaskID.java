@@ -74,9 +74,9 @@ import java.util.concurrent.locks.ReentrantLock;
 //a functor (i.e., R).
 public class TaskID<T> {
 	static {
-		if (!ParaTask.isInitialized()){
-			ParaTask.init();
-		}
+//		if (!ParaTask.isInitialized()){
+//			ParaTask.init();
+//		}
 		if (!ParaTask.hasParaTaskStarted()){
 			ParaTask.paraTaskStarted(true);
 		}

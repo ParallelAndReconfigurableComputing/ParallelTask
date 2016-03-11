@@ -34,6 +34,7 @@ public class TaskpoolFactory {
 	public static Taskpool getTaskpool() {
 		if (ParaTask.getScheduleType() == null)
 			throw new IllegalStateException("ParaTask scheduling type is not specified yet!\nEither initialize ParaTask, or specify the scheduling type!");
+		System.out.println("Scheduling type: " + ParaTask.getScheduleType());
 		if (taskpool == null) {
 			lock.lock();
 			if (taskpool == null) {

@@ -83,6 +83,11 @@ public abstract class TaskInfo<R> {
 	 * Used to identify if it is a sub task for a multi task
 	 */
 	protected boolean isSubTask = false;
+	
+	static{
+		if (!ParaTask.isInitialized())
+			ParaTask.init();
+	}
 
 	protected TaskInfo(){}
 	
