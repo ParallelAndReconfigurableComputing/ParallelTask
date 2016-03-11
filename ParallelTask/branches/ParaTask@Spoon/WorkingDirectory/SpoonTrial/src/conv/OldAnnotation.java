@@ -45,9 +45,11 @@ public class OldAnnotation {
     }
     
     public static void main(String[] args) throws InterruptedException, IllegalAccessException{
-    	ParaTask.setSchedulingType(ScheduleType.MixedSchedule);
+    	
         TaskInfoNoArgs<Integer> __VarTask__ = ((TaskInfoNoArgs<Integer>)(ParaTask.asTask((FunctorNoArgsWithReturn<Integer>)() -> OldAnnotation.foo3(10))));
+        
         TaskID<Integer> __VarTaskID__ = __VarTask__.start();
+        ParaTask.setSchedulingType(ScheduleType.MixedSchedule);
         try {
             TaskInfoNoArgs<java.lang.Void> __Var1Task__ = ((TaskInfoNoArgs<java.lang.Void>)(ParaTask.asTask((FunctorNoArgsNoReturn)() -> {try{OldAnnotation.foo(5);}catch(Exception e){e.printStackTrace();}})));
             TaskID<java.lang.Void> __Var1TaskID__ = __Var1Task__.start();
