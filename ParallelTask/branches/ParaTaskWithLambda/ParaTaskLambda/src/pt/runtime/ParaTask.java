@@ -183,7 +183,7 @@ public class ParaTask {
      * @throws IllegalAccessException 
      * @return boolean <code>true</code> if scheduling type is changed successfully, otherwise <code>false</code>.
      */
-    public static boolean setSchedulingType(ScheduleType type) throws IllegalAccessException {
+    public static boolean setSchedulingType(ScheduleType type) {
        if (ParaTask.hasParaTaskStarted())
     		return false;
     	scheduleType = type;
@@ -274,7 +274,7 @@ public class ParaTask {
 				listener = new GuiEdtTaskListener();
 				lock = new ReentrantLock();
 				isInitialized = true;
-			}catch(IllegalAccessException e){
+			}catch(Exception e){
 				System.out.println(e.getMessage());
 				e.printStackTrace();
 			}
