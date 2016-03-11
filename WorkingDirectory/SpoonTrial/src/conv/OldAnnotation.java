@@ -12,7 +12,14 @@ import pt.runtime.TaskInfoNoArgs;
 import pt.runtime.TaskInfoOneArg;
 
 
+//Arguments that are sent to a lambda expression must be used as "x", "y", "z" etc. and then in the
+//.start() phrase the actual argument (e.g., TaskID) is sent!
 
+//methods that throw exceptions, their exceptions needs to be handled in the lambda expression
+
+//taskInfo<R, T1, ...> return type needs to be included for taskInfo as well
+
+//FunctorNoArgsNoReturn MUST not have a generic type in front of it!
 
 public class OldAnnotation {
     public static Void foo(int x) throws InterruptedException {
