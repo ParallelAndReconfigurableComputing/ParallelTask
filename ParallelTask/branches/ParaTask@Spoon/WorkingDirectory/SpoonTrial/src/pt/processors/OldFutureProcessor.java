@@ -22,9 +22,11 @@ import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtVariableAccess;
 import spoon.reflect.declaration.CtAnnotation;
 import spoon.reflect.declaration.CtVariable;
+import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.support.reflect.code.CtInvocationImpl;
 import spoon.support.reflect.code.CtLocalVariableImpl;
+import spoon.support.reflect.reference.CtExecutableReferenceImpl;
 
 public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVariable<?>>{
 
@@ -72,7 +74,7 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 		String regex = "\\b" + thisElementName + "\\b";
 		List<CtStatement> statements = SpoonUtils.findVarAccessOtherThanFutureDefinition
 				((CtBlock<?>)thisAnnotatedElement.getParent(), thisAnnotatedElement);
-		SpoonUtils.modifyStatements(statements, regex, (thisTaskIDName+".getResult()"));
+		SpoonUtils.modifyStatements(statements, regex, (thisTaskIDName+".getReturnResult()"));
 	}
 	
 	public void processDependencies(){
@@ -106,7 +108,6 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 				}
 			}
 		}
-		System.out.println("element " + thisElementName + " depends on " + dependencies.toString());
 	}
 	
 	public void processNotifications(){
@@ -147,8 +148,6 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 				listOfArguments.add(argument);
 			}
 		}
-		
-		System.out.println("map of arguments: " + argumentsAndTypes.toString());
 	}
 	
 	public String getNumArgs(){
@@ -223,22 +222,67 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 		return taskIDType;
 	}
 
+	public String getFunctorCast(){
+		String functorCast = getFunctorName();
+		Set<String> argTypes = argumentsAndTypes.keySet();
+		for(String argType : argTypes){
+			functorCast += (", " + argType);
+		}
+		functorCast += ">";
+		return functorCast;
+	}
+	
+	public String getLambdaArgs(){
+		String lambdaArgs = "(";
+		Set<String> argTypes = argumentsAndTypes.keySet();
+		int counter = 0;
+		for (String argType : argTypes){
+			lambdaArgs += argumentsAndTypes.get(argType);
+			counter++;
+			if(counter < argTypes.size())
+				lambdaArgs += ", ";
+		}
+		lambdaArgs += ")";
+		return lambdaArgs;
+	}
+	
 	public void modifyThisStatement(){
-		CtInvocation<?> invocation = (CtInvocation<?>) thisAnnotatedElement.getDefaultExpression();
-		CtTypeReference newType = getFactory().Core().createTypeReference();
-		newType.setSimpleName(getLambdaName());
-		thisAnnotatedElement.setType(newType);
-		List<CtTypeReference<?>> typeCasts = new ArrayList<>();
-		typeCasts.add(newType);
-		invocation.setTypeCasts(typeCasts);
+		
+		CtTypeReference thisElementNewType = getFactory().Core().createTypeReference();
+		thisElementNewType.setSimpleName(getLambdaName());
+		thisAnnotatedElement.setType(thisElementNewType);
 		thisAnnotatedElement.setSimpleName(SpoonUtils.getTaskName(thisElementName));
+		
+		CtInvocation<?> invocation = (CtInvocation<?>) thisAnnotatedElement.getDefaultExpression();
+		CtTypeReference functorType = getFactory().Core().createTypeReference();
+		functorType.setSimpleName(getFunctorCast());
+		System.out.println("functor type: " + functorType.toString());
+		
+		CtCodeSnippetExpression newArgument = getFactory().Core().createCodeSnippetExpression();
+		newArgument.setValue( "(" + getFunctorCast() + ")" + getLambdaArgs() + " -> " + invocation.toString());
+		CtExpression<?> newArgExp = (CtExpression<?>) newArgument;
+		
+		List<CtTypeReference<?>> argumentCast = new ArrayList<>();
+		argumentCast.add(functorType);
+		newArgExp.setTypeCasts(argumentCast);
+		
+		
+		List<CtExpression<?>> arguments = new ArrayList<>();
+		arguments.add(newArgExp);
+		invocation.setArguments(arguments);
+		
+		
+		List<CtTypeReference<?>> typeCasts = new ArrayList<>();
+		typeCasts.add(thisElementNewType);
+		invocation.setTypeCasts(typeCasts);
+		
+		CtExecutableReference executable = getFactory().Core().createExecutableReference();
+		executable.setSimpleName("ParaTask.asTask");
+		invocation.setExecutable(executable);
 		addNewStatements();
 	}
 	
 	public void addNewStatements(){
-		String statement1 = "";
-		String statement2 = "";
-		int argIndex = 0;
 		CtBlock<?> thisBlock = (CtBlock<?>) thisAnnotatedElement.getParent();
 		AnnotationProcessingFilter<CtStatement> filter = new AnnotationProcessingFilter<CtStatement>
 								(SpoonUtils.getDeclarationStatement(thisAnnotatedElement, thisElementName));
