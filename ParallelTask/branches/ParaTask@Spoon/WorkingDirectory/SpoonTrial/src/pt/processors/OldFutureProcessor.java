@@ -21,6 +21,7 @@ import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtVariableAccess;
 import spoon.reflect.declaration.CtAnnotation;
+import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtVariable;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
@@ -38,10 +39,10 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 	String thisElementReturnType = null;
 	Set<String> dependencies = null;
 	Set<String> notifiers = null;
-	Set<CtExpression<?>> listOfArguments = null;
 	Map<String, String> argumentsAndTypes = null;
 	Map<Class<? extends Throwable>, String> exceptions = null;
 	StringBuilder stringBuilder = null;
+	boolean hasExceptions = false;
 	
 	@Override
 	public void process(Future future, CtVariable<?> annotatedElement) {
@@ -56,8 +57,7 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 		thisTaskIDName = SpoonUtils.getTaskIDName(thisElementName);
 		thisArgName = SpoonUtils.getLambdaArgName(thisElementName);
 		argumentsAndTypes = new HashMap<>();
-		listOfArguments = new HashSet<>();
-		
+				
 		processInvocation();
 		processDependencies();
 		processNotifications();
@@ -73,10 +73,16 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 					+ "one and only one method invocation!");
 		}
 		
+		CtInvocation<?> invocation = (CtInvocation<?>) defaultExpression;
+		Set<CtTypeReference<? extends Throwable>> exceptions = null;
+		exceptions = invocation.getExecutable().getDeclaration().getThrownTypes();
+		if (!exceptions.isEmpty())
+			hasExceptions = true;
+		
 		String regex = "\\b" + thisElementName + "\\b";
 		List<CtStatement> statements = SpoonUtils.findVarAccessOtherThanFutureDefinition
 				((CtBlock<?>)thisAnnotatedElement.getParent(), thisAnnotatedElement);
-		SpoonUtils.modifyStatements(statements, regex, (thisArgName+".getReturnResult()"));
+		SpoonUtils.modifyStatements(statements, regex, (thisTaskIDName+".getReturnResult()"));
 	}
 	
 	public void processDependencies(){
@@ -88,7 +94,7 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 				String originalArgumentName = SpoonUtils.getOrigName(argument.toString());
 				dependencies.add(SpoonUtils.getTaskIDName(originalArgumentName));
 			}
-		}
+		}		
 		
 		Set<CtAnnotation<?>> annotations = thisAnnotatedElement.getAnnotations();
 		for(CtAnnotation<?> ctAnno : annotations){
@@ -127,6 +133,8 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 						notifiers.add(notifySlot);
 					}
 				}
+				//only the first future annotation
+				break;
 			}
 		}
 	}
@@ -139,24 +147,31 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 		
 		for (CtExpression<?> argument : arguments){
 			if (argument instanceof CtVariableAccess<?>){
-				String argName = argument.toString();
+				CtVariableAccess<?> varAccess = (CtVariableAccess<?>) argument;
+				String argName = varAccess.toString();
+				String origName = SpoonUtils.getOrigName(argName);
+				
 				if(SpoonUtils.isTaskIDReplacement(thisAnnotatedElement, argName)){
-					String origName = SpoonUtils.getOrigName(argName);
+					
 					CtLocalVariable<?> declaration = (CtLocalVariable<?>)SpoonUtils.getDeclarationStatement(thisAnnotatedElement, origName);
 					CtTypeReference taskIDType = getTaskIDType(declaration);
-					argument.setType(taskIDType);
-					argumentsAndTypes.put(argument.getType().toString(), SpoonUtils.getTaskIDName(origName));
+					
+					varAccess.getVariable().setSimpleName(SpoonUtils.getLambdaArgName(origName)+".getReturnResult()");
+					varAccess.setType(taskIDType);
+					
+					argumentsAndTypes.put(varAccess.getType().toString(), SpoonUtils.getLambdaArgName(origName));
 				}
 				else{
-					argumentsAndTypes.put(SpoonUtils.getType(argument.getType().toString()), argName);
-				}
-				listOfArguments.add(argument);
+					varAccess.getVariable().setSimpleName(SpoonUtils.getNonLambdaArgName(argName));
+					argumentsAndTypes.put(SpoonUtils.getType(varAccess.getType().toString()), SpoonUtils.getNonLambdaArgName(argName));
+				}				
 			}
 		}
 	}
 	
 	public String getNumArgs(){
-		int numOfArgs = listOfArguments.size();
+		Set<String> argTypes = argumentsAndTypes.keySet();
+		int numOfArgs = argTypes.size();
 		String args = null;
 		
 		switch(numOfArgs){
@@ -206,13 +221,19 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 	}
 
 	public String getLambdaName(){
-		return "TaskInfo" + getNumArgs() + "<" + SpoonUtils.getType(thisElementReturnType)+">";
+		String returnPhase = (thisElementReturnType.contains("Void")) ? "Void" : SpoonUtils.getType(thisElementReturnType);
+		String taskInfo = "TaskInfo" + getNumArgs() + "<" + returnPhase;
+		Set<String> argTypes = argumentsAndTypes.keySet();
+		for(String argType : argTypes){
+			taskInfo += ", " + argType;
+		}
+		taskInfo += ">";
+		return taskInfo;
 	}
 	
 	public String getFunctorName(){
-		String functorName = "Functor";
 		String returnPhrase = (thisElementReturnType.contains("Void")) ? "NoReturn<Void" : ("WithReturn<"+SpoonUtils.getType(thisElementReturnType));
-		functorName = functorName + getNumArgs() + returnPhrase;
+		String functorName = "Functor" + getNumArgs() + returnPhrase;
 		return functorName;
 	}
 	
@@ -229,6 +250,8 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 
 	public String getFunctorCast(){
 		String functorCast = getFunctorName();
+		if(functorCast.contains("FunctorNoArgsNoReturn"))
+			return "";
 		Set<String> argTypes = argumentsAndTypes.keySet();
 		for(String argType : argTypes){
 			functorCast += (", " + argType);
@@ -251,32 +274,63 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 		return lambdaArgs;
 	}
 	
-	public void modifyThisStatement(){
+	public String newLambdaPhrase(CtInvocation<?> invocation){
 		
+		String returnStatement = "";
+		String catchReturnStmt = "";
+		
+		if(!thisElementReturnType.contains("Void")){
+			returnStatement = "return ";
+			catchReturnStmt = "return null;";
+		}
+			
+		
+		String functorTypeCast = getFunctorCast();
+		if (!functorTypeCast.isEmpty())
+			functorTypeCast = "(" + functorTypeCast + ")";
+		
+		String invocationPhrase = invocation.toString();
+		if(hasExceptions){
+			invocationPhrase =  "{ try\n"+
+								" \t\t {  \n"+
+								"\t\t\t\t" + returnStatement + invocationPhrase + ";\n" +
+								"  \t\t}catch(Exception e){\n"+
+								"    \t\t\t\te.printStackTrace();\n"+
+								"    \t\t\t\t" + catchReturnStmt +
+								"  \t\t}\n"+
+								"\t}";
+			CtMethod<?> parentMethod = thisAnnotatedElement.getParent(CtMethod.class);
+			Set<CtTypeReference<? extends Throwable>> thrownTypes = new HashSet<>();
+			CtTypeReference<? extends Throwable> exceptionType = getFactory().Core().createTypeReference();
+			exceptionType.setSimpleName("Exception");
+			thrownTypes.add(exceptionType);
+			parentMethod.setThrownTypes(thrownTypes);
+		}
+		
+		String newArgumentPhrase = "\n\t\t\t" + functorTypeCast + getLambdaArgs() + " -> " +
+									invocationPhrase;
+		
+		return newArgumentPhrase;
+
+	}
+	
+	public void modifyThisStatement(){
+		CtInvocation<?> invocation = (CtInvocation<?>) thisAnnotatedElement.getDefaultExpression();
 		CtTypeReference thisElementNewType = getFactory().Core().createTypeReference();
 		thisElementNewType.setSimpleName(getLambdaName());
 		thisAnnotatedElement.setType(thisElementNewType);
 		thisAnnotatedElement.setSimpleName(SpoonUtils.getTaskName(thisElementName));
-		
-		CtInvocation<?> invocation = (CtInvocation<?>) thisAnnotatedElement.getDefaultExpression();
-		CtTypeReference functorType = getFactory().Core().createTypeReference();
-		functorType.setSimpleName(getFunctorCast());
-		System.out.println("functor type: " + functorType.toString());
-		
-		CtCodeSnippetExpression newArgument = getFactory().Core().createCodeSnippetExpression();
-		newArgument.setValue( "(" + getFunctorCast() + ")" + getLambdaArgs() + " -> " + invocation.toString());
+				
+				
+		CtCodeSnippetExpression<?> newArgument = getFactory().Core().createCodeSnippetExpression();
+			
+		newArgument.setValue(newLambdaPhrase(invocation));
 		CtExpression<?> newArgExp = (CtExpression<?>) newArgument;
-		
-		List<CtTypeReference<?>> argumentCast = new ArrayList<>();
-		argumentCast.add(functorType);
-		newArgExp.setTypeCasts(argumentCast);
-		
-		
+				
 		List<CtExpression<?>> arguments = new ArrayList<>();
 		arguments.add(newArgExp);
 		invocation.setArguments(arguments);
-		
-		
+				
 		List<CtTypeReference<?>> typeCasts = new ArrayList<>();
 		typeCasts.add(thisElementNewType);
 		invocation.setTypeCasts(typeCasts);
@@ -297,12 +351,20 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 	public CtStatement newStatements(){
 		CtLocalVariableImpl<?> localVar = (CtLocalVariableImpl<?>) getFactory().Core().createLocalVariable();
 		String startPhrase = ".start(";
-		Set<String> argsAndTypes = argumentsAndTypes.keySet();
+		Set<String> argTypes = argumentsAndTypes.keySet();	
 		int counter = 0;
-		for(String arg : argsAndTypes){
+		for(String argType : argTypes){
+			
+			String arg = argumentsAndTypes.get(argType);
+			
+			if (SpoonUtils.isNonLambdaArg(arg))				
+				startPhrase += SpoonUtils.getOrigName(arg);
+			
+			else if (SpoonUtils.isLambdaArg(arg))
+				startPhrase += SpoonUtils.getTaskIDName(SpoonUtils.getOrigName(arg));
+			 
 			counter++;
-			startPhrase += argumentsAndTypes.get(arg);
-			if(counter != argsAndTypes.size())
+			if(counter != argTypes.size())
 				startPhrase += ", ";
 		}
 		startPhrase += ")";
