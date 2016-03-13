@@ -34,6 +34,7 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 	CtVariable<?> thisAnnotatedElement = null;
 	String thisElementName = null;
 	String thisTaskIDName = null;
+	String thisArgName = null;
 	String thisElementReturnType = null;
 	Set<String> dependencies = null;
 	Set<String> notifiers = null;
@@ -53,6 +54,7 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 		thisElementName = annotatedElement.getSimpleName();
 		thisElementReturnType = annotatedElement.getType().toString();
 		thisTaskIDName = SpoonUtils.getTaskIDName(thisElementName);
+		thisArgName = SpoonUtils.getLambdaArgName(thisElementName);
 		argumentsAndTypes = new HashMap<>();
 		listOfArguments = new HashSet<>();
 		
@@ -74,7 +76,7 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 		String regex = "\\b" + thisElementName + "\\b";
 		List<CtStatement> statements = SpoonUtils.findVarAccessOtherThanFutureDefinition
 				((CtBlock<?>)thisAnnotatedElement.getParent(), thisAnnotatedElement);
-		SpoonUtils.modifyStatements(statements, regex, (thisTaskIDName+".getReturnResult()"));
+		SpoonUtils.modifyStatements(statements, regex, (thisArgName+".getReturnResult()"));
 	}
 	
 	public void processDependencies(){
@@ -100,7 +102,8 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 						//if not trimmed, duplicates with invisible white-space
 						//get added
 						depends = depends.trim(); 
-						dependencies.add(SpoonUtils.getTaskIDName(depends));
+						if(SpoonUtils.isFutureArgument(thisAnnotatedElement, depends))
+							dependencies.add(SpoonUtils.getTaskIDName(depends));
 					}
 					/*if more than one future annotation is assigned to a variable
 					 * (theoretically shouldn't be allowed), we only accept the first!*/
@@ -117,10 +120,12 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 			if (annotation instanceof Future){
 				Future future = (Future) annotation;
 				String notifies = future.notifies();
-				String[] notifyArray = notifies.split(";");
-				for (String notify : notifyArray){
-					String notifySlot = "()->" + notify;
-					notifiers.add(notifySlot);
+				if(!notifies.isEmpty()){
+					String[] notifyArray = notifies.split(";");
+					for (String notify : notifyArray){
+						String notifySlot = "()->" + notify;
+						notifiers.add(notifySlot);
+					}
 				}
 			}
 		}
@@ -214,8 +219,8 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 	public CtTypeReference getTaskIDType(CtVariable<?> declaration){
 		
 		String declarationType = declaration.getType().toString();
-		String taskType = SpoonUtils.getType(declarationType);
-		taskType = SpoonUtils.getOrigName(taskType);
+		declarationType = SpoonUtils.getOrigName(declarationType);
+		String taskType = SpoonUtils.getType(declarationType);		
 		taskType = "TaskID<" + taskType + ">";
 		CtTypeReference<?> taskIDType = getFactory().Core().createTypeReference();
 		taskIDType.setSimpleName(taskType);
