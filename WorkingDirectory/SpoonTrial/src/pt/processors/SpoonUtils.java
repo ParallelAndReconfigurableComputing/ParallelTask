@@ -449,20 +449,41 @@ public class SpoonUtils {
 		return "__" + name + "Task__";
 	}
 	
+	public static String getNonLambdaArgName(String name){
+		return "__" + name + "NonLambdaArg__";
+	}
+	
+	public static boolean isNonLambdaArg(String name){
+		return (name.startsWith("__") && name.endsWith("NonLambdaArg__")) ? true : false;
+	}
+	
+	public static boolean isLambdaArg(String name){
+		return (name.startsWith("__") && name.endsWith("LambdaArg__")) ? true : false;
+	}
 	
 	public static String getOrigName(String elementName) {
+		
 		if(elementName.startsWith("__") && elementName.endsWith("LambdaArg__.getReturnResult()"))
 			return elementName.substring("__".length(), (elementName.length() - "LambdaArg__.getReturnResult()".length()));
+		
 		else if (elementName.startsWith("__") && elementName.endsWith("TaskID__.getReturnResult()"))
 			return elementName.substring("__".length(), (elementName.length() - "TaskID__.getReturnResult()".length()));
+		
 		else if (elementName.startsWith("__") && elementName.endsWith("Task__"))
 			return elementName.substring("__".length(), (elementName.length() - "Task__".length()));
+		
 		else if (elementName.startsWith("__") && elementName.endsWith("TaskID__"))
 			return elementName.substring("__".length(), (elementName.length() - "TaskID__".length()));
+		
+		else if (elementName.startsWith("__") && elementName.endsWith("NonLambdaArg__"))
+			return elementName.substring("__".length(), (elementName.length() - "NonLambdaArg__".length()));					
+				
 		else if (elementName.startsWith("__") && elementName.endsWith("LambdaArg__"))
 			return elementName.substring("__".length(), (elementName.length() - "LambdaArg__".length()));
+				
 		else if (elementName.contains("<") && elementName.contains(">") && (elementName.lastIndexOf("<") < elementName.indexOf(">")))
 			return elementName.substring(elementName.lastIndexOf("<")+1, elementName.indexOf(">"));
+		
 		return elementName;
 	}
 	
