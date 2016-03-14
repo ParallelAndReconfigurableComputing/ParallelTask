@@ -42,7 +42,7 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 	Map<String, String> argumentsAndTypes = null;
 	Map<Class<? extends Throwable>, String> exceptions = null;
 	StringBuilder stringBuilder = null;
-	boolean hasExceptions = false;
+	boolean throwsExceptions = false;
 	
 	@Override
 	public void process(Future future, CtVariable<?> annotatedElement) {
@@ -63,6 +63,7 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 		processNotifications();
 		processInvocationArguments(thisAnnotatedElement.getDefaultExpression());
 		modifyThisStatement();
+		addNewStatements();
 	}
 
 	public void processInvocation(){
@@ -77,7 +78,7 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 		Set<CtTypeReference<? extends Throwable>> exceptions = null;
 		exceptions = invocation.getExecutable().getDeclaration().getThrownTypes();
 		if (!exceptions.isEmpty())
-			hasExceptions = true;
+			throwsExceptions = true;
 		
 		String regex = "\\b" + thisElementName + "\\b";
 		List<CtStatement> statements = SpoonUtils.findVarAccessOtherThanFutureDefinition
@@ -108,6 +109,9 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 						//if not trimmed, duplicates with invisible white-space
 						//get added
 						depends = depends.trim(); 
+						
+						//in case user feeds taskID name etc. Small possibility but...
+						depends = SpoonUtils.getOrigName(depends); 
 						if(SpoonUtils.isFutureArgument(thisAnnotatedElement, depends))
 							dependencies.add(SpoonUtils.getTaskIDName(depends));
 					}
@@ -129,6 +133,7 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 				if(!notifies.isEmpty()){
 					String[] notifyArray = notifies.split(";");
 					for (String notify : notifyArray){
+						notify = notify.trim();
 						String notifySlot = "()->" + notify;
 						notifiers.add(notifySlot);
 					}
@@ -157,8 +162,7 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 					CtTypeReference taskIDType = getTaskIDType(declaration);
 					
 					varAccess.getVariable().setSimpleName(SpoonUtils.getLambdaArgName(origName)+".getReturnResult()");
-					varAccess.setType(taskIDType);
-					
+					varAccess.setType(taskIDType);					
 					argumentsAndTypes.put(varAccess.getType().toString(), SpoonUtils.getLambdaArgName(origName));
 				}
 				else{
@@ -281,7 +285,7 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 		
 		if(!thisElementReturnType.contains("Void")){
 			returnStatement = "return ";
-			catchReturnStmt = "return null;";
+			catchReturnStmt = "    \t\t\t\treturn null; \n";
 		}
 			
 		
@@ -290,28 +294,29 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 			functorTypeCast = "(" + functorTypeCast + ")";
 		
 		String invocationPhrase = invocation.toString();
-		if(hasExceptions){
+		if(throwsExceptions){
 			invocationPhrase =  "{ try\n"+
-								" \t\t {  \n"+
-								"\t\t\t\t" + returnStatement + invocationPhrase + ";\n" +
-								"  \t\t}catch(Exception e){\n"+
+								" \t\t\t\t {  \n"+
+								"\t\t\t\t\t\t" + returnStatement + invocationPhrase + ";\n" +
+								" \t\t\t\t }catch(Exception e){\n"+
 								"    \t\t\t\te.printStackTrace();\n"+
-								"    \t\t\t\t" + catchReturnStmt +
-								"  \t\t}\n"+
-								"\t}";
+								catchReturnStmt + 
+								"  \t\t\t\t }\n"+
+								"\t\t\t}";
+			
 			CtMethod<?> parentMethod = thisAnnotatedElement.getParent(CtMethod.class);
 			Set<CtTypeReference<? extends Throwable>> thrownTypes = new HashSet<>();
+			//this is not a safe approach, as if the method is called from another class, adding throwable
+			//to the method can cause error in the subsequent classes that call the method. instead add a
+			//catch statement!
 			CtTypeReference<? extends Throwable> exceptionType = getFactory().Core().createTypeReference();
 			exceptionType.setSimpleName("Exception");
 			thrownTypes.add(exceptionType);
 			parentMethod.setThrownTypes(thrownTypes);
 		}
 		
-		String newArgumentPhrase = "\n\t\t\t" + functorTypeCast + getLambdaArgs() + " -> " +
-									invocationPhrase;
-		
+		String newArgumentPhrase = "\n\t\t\t" + functorTypeCast + getLambdaArgs() + " -> " + invocationPhrase;
 		return newArgumentPhrase;
-
 	}
 	
 	public void modifyThisStatement(){
@@ -338,7 +343,6 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 		CtExecutableReference executable = getFactory().Core().createExecutableReference();
 		executable.setSimpleName("ParaTask.asTask");
 		invocation.setExecutable(executable);
-		addNewStatements();
 	}
 	
 	public void addNewStatements(){
