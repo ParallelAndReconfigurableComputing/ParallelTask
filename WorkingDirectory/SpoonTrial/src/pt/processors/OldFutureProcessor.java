@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.sun.org.apache.bcel.internal.generic.NEWARRAY;
+
 import pt.annotations.AnnotationProcessingFilter;
 import pt.annotations.Future;
 import spoon.processing.AbstractAnnotationProcessor;
@@ -19,8 +21,10 @@ import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtLiteral;
 import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.code.CtStatement;
+import spoon.reflect.code.CtStatementList;
 import spoon.reflect.code.CtVariableAccess;
 import spoon.reflect.declaration.CtAnnotation;
+import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtVariable;
 import spoon.reflect.reference.CtExecutableReference;
@@ -28,6 +32,7 @@ import spoon.reflect.reference.CtTypeReference;
 import spoon.support.reflect.code.CtInvocationImpl;
 import spoon.support.reflect.code.CtLocalVariableImpl;
 import spoon.support.reflect.reference.CtExecutableReferenceImpl;
+import sun.security.action.GetLongAction;
 
 public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVariable<?>>{
 
@@ -285,7 +290,7 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 		
 		if(!thisElementReturnType.contains("Void")){
 			returnStatement = "return ";
-			catchReturnStmt = "    \t\t\t\treturn null; \n";
+			catchReturnStmt = "\t\t\t\t\t\treturn null; \n";
 		}
 			
 		
@@ -299,7 +304,7 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 								" \t\t\t\t {  \n"+
 								"\t\t\t\t\t\t" + returnStatement + invocationPhrase + ";\n" +
 								" \t\t\t\t }catch(Exception e){\n"+
-								"    \t\t\t\te.printStackTrace();\n"+
+								"\t\t\t\t\t\te.printStackTrace();\n"+
 								catchReturnStmt + 
 								"  \t\t\t\t }\n"+
 								"\t\t\t}";
@@ -349,12 +354,68 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 		CtBlock<?> thisBlock = (CtBlock<?>) thisAnnotatedElement.getParent();
 		AnnotationProcessingFilter<CtStatement> filter = new AnnotationProcessingFilter<CtStatement>
 								(SpoonUtils.getDeclarationStatement(thisAnnotatedElement, thisElementName));
+		//thisBlock.insertAfter(filter, newStatements());
 		thisBlock.insertAfter(filter, newStatements());
 	}
 	
-	public CtStatement newStatements(){
+	public CtStatementList<?> newStatements(){
+		CtStatementList<?> statements = getFactory().Core().createStatementList();
+		List<CtStatement> sts = new ArrayList<>();
+		
+		CtInvocationImpl<?> dependsOnStatement = getDependsOnStatement();
+		if (dependsOnStatement != null)
+			sts.add(dependsOnStatement);
+			
+		/*for the cases where notification handlers use TaskID, ParaTask must check if the task is 
+		 * already finished when registering the handler. Sometimes task finished before the 
+		 * notifier is registered!*/
+		List<CtInvocationImpl<?>> notifiers = getNotifyStatements();
+		if (notifiers != null){
+			sts.addAll(notifiers);
+		}
+		
+		sts.add(getStartStatement());	
+		
+		statements.setStatements(sts);
+		return statements;
+	}
+	
+	public CtInvocationImpl<?> getDependsOnStatement(){
+		/*create the dependsOn statement*/
+		if(dependencies.isEmpty())
+			return null;
+		
+		CtInvocationImpl<?> dependsOnInvoc = (CtInvocationImpl<?>) getFactory().Core().createInvocation();
+		//dependsOnInvoc.s
+		String dependsOnExecutable = SpoonUtils.getTaskName(thisElementName) + ".dependsOn";
+		String dependsOnArguments = "";
+		int counter = 0;
+		for (String dependency : dependencies){
+			dependsOnArguments += dependency;
+			counter++;
+			if (counter < dependencies.size())
+				dependsOnArguments += ", ";
+		}
+		
+		
+		CtExecutableReference dependsOnExec = getFactory().Core().createExecutableReference();
+		dependsOnExec.setSimpleName(dependsOnExecutable);
+		dependsOnInvoc.setExecutable(dependsOnExec);
+		
+		List<CtExpression<?>> dependsOnArgs = new ArrayList<>();
+		CtCodeSnippetExpression argsExp = getFactory().Core().createCodeSnippetExpression();
+		argsExp.setValue(dependsOnArguments);
+		dependsOnArgs.add(argsExp);
+		dependsOnInvoc.setArguments(dependsOnArgs);
+		
+		return dependsOnInvoc;
+	}
+	
+	public CtLocalVariableImpl<?> getStartStatement(){
+		/*create the start statement*/
 		CtLocalVariableImpl<?> localVar = (CtLocalVariableImpl<?>) getFactory().Core().createLocalVariable();
 		String startPhrase = ".start(";
+		
 		Set<String> argTypes = argumentsAndTypes.keySet();	
 		int counter = 0;
 		for(String argType : argTypes){
@@ -373,7 +434,7 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 		}
 		startPhrase += ")";
 		startPhrase = SpoonUtils.getTaskName(thisElementName) + startPhrase;
-		
+				
 		CtCodeSnippetExpression defaultExp = getFactory().Core().createCodeSnippetExpression();
 		defaultExp.setValue(startPhrase);
 		
@@ -381,6 +442,32 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 		localVar.setType(taskIDType);
 		localVar.setSimpleName(SpoonUtils.getTaskIDName(thisElementName));
 		localVar.setDefaultExpression((CtExpression)defaultExp);
+		
 		return localVar;
+	}
+	
+	public List<CtInvocationImpl<?>> getNotifyStatements(){
+		if (notifiers.isEmpty())
+			return null;
+		
+		List<CtInvocationImpl<?>> notifyStatements = new ArrayList<>();
+		
+		CtInvocationImpl<?> notifyStatement = (CtInvocationImpl<?>) getFactory().Core().createInvocation();
+		CtExecutableReferenceImpl executablePhrase = (CtExecutableReferenceImpl<?>) getFactory().Core().createExecutableReference();
+		executablePhrase.setSimpleName("ParaTask.registerSlotToNotify");
+		notifyStatement.setExecutable(executablePhrase);
+		
+				
+		for (String notifier : notifiers){
+			String execArgument = SpoonUtils.getTaskName(thisElementName) + ", " + notifier;
+			CtCodeSnippetExpression<?> notifierExp = getFactory().Core().createCodeSnippetExpression();
+			notifierExp.setValue(execArgument);
+			List<CtExpression<?>> notifyStatemtnArgument = new ArrayList<>();
+			notifyStatemtnArgument.add(notifierExp);
+			notifyStatement.setArguments(notifyStatemtnArgument);
+			notifyStatements.add(notifyStatement);
+		}
+		
+		return notifyStatements;
 	}
 }

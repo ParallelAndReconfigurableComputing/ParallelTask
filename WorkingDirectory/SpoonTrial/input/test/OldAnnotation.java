@@ -1,5 +1,11 @@
 import pt.annotations.Future;
 
+class SimpleAnnotation{
+	public void foo1(int x){
+		System.out.println((x * 5));
+	}
+}
+
 public class OldAnnotation {
 	
 	
@@ -27,12 +33,15 @@ public class OldAnnotation {
 		@Future
 		int Var = foo3(10);		
 		try{
+			SimpleAnnotation simp = new SimpleAnnotation();
+			simp.foo1(5);
+			
 			@Future
 			Void Var1 = foo(5);
 			
 			int VarX = foo1(8, 5);
 		
-			@Future(depends="Var1")
+			@Future(depends="Var1", notifies="simp.foo1(7)")
 			int Var2 = foo1(VarX, Var);
 		
 			@Future(depends="Var1, Var")
