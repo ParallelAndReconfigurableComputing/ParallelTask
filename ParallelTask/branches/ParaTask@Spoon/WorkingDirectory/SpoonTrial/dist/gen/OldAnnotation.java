@@ -1,6 +1,4 @@
-package conv;
-import pt.runtime.*;
-import pt.functionalInterfaces.*;
+
 
 
 public class OldAnnotation {
@@ -24,8 +22,7 @@ public class OldAnnotation {
         return x * 100;
     }
     
-    @SuppressWarnings("unchecked")
-	public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Exception {
         TaskInfoNoArgs<Integer> __VarTask__ = ((TaskInfoNoArgs<Integer>)(ParaTask.asTask(
 			(FunctorNoArgsWithReturn<Integer>)() -> OldAnnotation.foo3(10))));
         TaskID<Integer> __VarTaskID__ = __VarTask__.start();
@@ -40,7 +37,7 @@ public class OldAnnotation {
 			})));
             TaskID<Void> __Var1TaskID__ = __Var1Task__.start();
             int VarX = OldAnnotation.foo1(8 ,5);
-            TaskInfo<Integer> __Var2Task__ = ((ParaTask.asTask(
+            TaskInfoTwoArgs<Integer, Integer, TaskID<Integer>> __Var2Task__ = ((TaskInfoTwoArgs<Integer, Integer, TaskID<Integer>>)(ParaTask.asTask(
 			(FunctorTwoArgsWithReturn<Integer, Integer, TaskID<Integer>>)(__VarXNonLambdaArg__, __VarLambdaArg__) -> { try
  				 {  
 						return OldAnnotation.foo1(__VarXNonLambdaArg__ ,__VarLambdaArg__.getReturnResult());
@@ -49,10 +46,7 @@ public class OldAnnotation {
     				return null; 
   				}
 			})));
-            __Var2Task__.dependsOn(__Var1TaskID__, __VarTaskID__);
-            
-            //ParaTask.registerSlotToNotify((TaskInfo<Integer>)__Var2Task__, (FunctorOneArgNoReturn<Integer>)(__VarLambdaArg__)->foo(__VarLambdaArg__), __VarTaskID__);
-            TaskID<Integer> __Var2TaskID__ = ((TaskInfoTwoArgs<Integer, Integer, TaskID<Integer>>) __Var2Task__).start(VarX, __VarTaskID__);
+            TaskID<Integer> __Var2TaskID__ = __Var2Task__.start(VarX, __VarTaskID__);
             TaskInfoOneArg<Integer, TaskID<Integer>> __Var3Task__ = ((TaskInfoOneArg<Integer, TaskID<Integer>>)(ParaTask.asTask(
 			(FunctorOneArgWithReturn<Integer, TaskID<Integer>>)(__Var2LambdaArg__) -> { try
  				 {  

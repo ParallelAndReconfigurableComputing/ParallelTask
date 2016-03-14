@@ -29,9 +29,11 @@ public class OldAnnotation {
 		try{
 			@Future
 			Void Var1 = foo(5);
+			
+			int VarX = foo1(8, 5);
 		
 			@Future(depends="Var1")
-			int Var2 = foo1(6, Var);
+			int Var2 = foo1(VarX, Var);
 		
 			@Future(depends="Var1, Var")
 			int Var3 = foo2(Var2);
