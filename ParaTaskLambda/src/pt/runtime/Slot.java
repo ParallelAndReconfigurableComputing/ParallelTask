@@ -62,7 +62,11 @@ public class Slot<R>{
 		this.functorOneArg = functor;
 	}
 	
-	protected Slot(FunctorNoArgsNoReturn functor){
+	Slot(FunctorOneArgNoReturn<R> functor){
+		this.functorOneArg = functor;
+	}
+	
+	Slot(FunctorNoArgsNoReturn functor){
 		this.functorNoArg = functor;
 	}
 	
@@ -115,8 +119,10 @@ public class Slot<R>{
 	}
 
 	void execute(){
-		if (this.functorOneArg!=null)
+		if (this.functorOneArg!=null){
 			functorOneArg.exec(this.getTaskResult());
+			return;
+		}
 		functorNoArg.exec();
 	}
 }
