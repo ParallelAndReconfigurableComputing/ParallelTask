@@ -293,9 +293,10 @@ public class ParaTask {
 		taskInfo.notify(new Slot<R>(functor));
 	}
 	
-	public static <R> void registerSlotToNotify(TaskInfo<R> taskInfo, FunctorOneArgNoReturn<R> functor, TaskID<R> taskID){
-		taskInfo.notify(new Slot<R>(functor, taskID));
+	public static <R> void registerSlotToNotify(TaskInfo<R> taskInfo, FunctorOneArgNoReturn<R> functor){
+		taskInfo.notify(new Slot<R>(functor));
 	}
+		
 	//****************************************************************************************TASK GENERATORS******************************************************************
 	//****************************************************************************************ONE-OFF TASKS********************************************************************
 	public static TaskInfo<Void> asTask(FunctorNoArgsNoReturn functor){
