@@ -53,9 +53,15 @@
 			</classpath>
 		</javac>
 	</target>
+	
+	<target name="compressJar" depends="compile" description="compress compiled files into jar">
+		<jar basedir="${classes.dir}" destfile="${gen.dir}/annotation-processor-1.0.jar">
+			<zipgroupfileset dir="${lib.dir}" includes="**/*.jar"/>
+		</jar>
+	</target>
 
 	
-	<target name="process" depends="compile" description="Process the annotated code">
+	<target name="process" depends="compile, compressJar" description="Process the annotated code">
 		<exec executable="java">
 			<arg line="-cp ${spoon.jar}${Delim}dist/classes spoon.Launcher -o ${gen.dir} -i input/test/OldAnnotation.java -p pt.processors.OldFutureProcessor" />
 		</exec>
