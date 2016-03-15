@@ -309,15 +309,15 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 								"  \t\t\t\t }\n"+
 								"\t\t\t}";
 			
-			CtMethod<?> parentMethod = thisAnnotatedElement.getParent(CtMethod.class);
-			Set<CtTypeReference<? extends Throwable>> thrownTypes = new HashSet<>();
-			//this is not a safe approach, as if the method is called from another class, adding throwable
-			//to the method can cause error in the subsequent classes that call the method. instead add a
-			//catch statement!
-			CtTypeReference<? extends Throwable> exceptionType = getFactory().Core().createTypeReference();
-			exceptionType.setSimpleName("Exception");
-			thrownTypes.add(exceptionType);
-			parentMethod.setThrownTypes(thrownTypes);
+//			CtMethod<?> parentMethod = thisAnnotatedElement.getParent(CtMethod.class);
+//			Set<CtTypeReference<? extends Throwable>> thrownTypes = new HashSet<>();
+//			//this is not a safe approach, as if the method is called from another class, adding throwable
+//			//to the method can cause error in the subsequent classes that call the method. instead add a
+//			//catch statement!
+//			CtTypeReference<? extends Throwable> exceptionType = getFactory().Core().createTypeReference();
+//			exceptionType.setSimpleName("Exception");
+//			thrownTypes.add(exceptionType);
+//			parentMethod.setThrownTypes(thrownTypes);
 		}
 		
 		String newArgumentPhrase = "\n\t\t\t" + functorTypeCast + getLambdaArgs() + " -> " + invocationPhrase;
