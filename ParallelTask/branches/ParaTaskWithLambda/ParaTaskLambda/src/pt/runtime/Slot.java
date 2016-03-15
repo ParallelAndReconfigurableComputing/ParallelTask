@@ -110,12 +110,7 @@ public class Slot<R>{
 	}
 	
 	private R getTaskResult(){
-		try {
-			return taskID.getReturnResult();
-		} catch (ExecutionException | InterruptedException e) {
-			e.printStackTrace();
-			return null;
-		}
+		return taskID.getReturnResult();
 	}
 
 	void execute(){

@@ -37,14 +37,8 @@ public class InteractiveThread extends TaskThread {
 		
 		boolean success = executeTask(taskID);
 		if (success) {
-			try {
-				if (!taskID.hasBeenCancelled())
-					taskID.getReturnResult();
-			} catch (ExecutionException e) {
-				e.printStackTrace();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+			if (!taskID.hasBeenCancelled())
+				taskID.getReturnResult();
 		} else {
 //			if (task.hasUserError()) {
 //				System.err.print(" --- This failure is user-error ( " + task.getException().getMessage() + " )  --- " );
