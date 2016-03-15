@@ -492,11 +492,17 @@ public class TaskID<T> {
 	 * @throws ExecutionException
 	 * @throws InterruptedException
 	 */
-	public T getReturnResult() throws ExecutionException, InterruptedException {
-		waitTillFinished();
-		if (hasBeenCancelled())
-			throw new ParaTaskRuntimeException("Attempting to get the result of a cancelled Task!");
-		return returnResult;
+	public T getReturnResult() {
+		try{
+			waitTillFinished();
+			if (hasBeenCancelled())
+				return null;
+				//throw new ParaTaskRuntimeException("Attempting to get the result of a cancelled Task!");
+			return returnResult;
+		}catch(Exception e){
+			setException(e);
+			return null;
+		}
 	}
 	
 	/**

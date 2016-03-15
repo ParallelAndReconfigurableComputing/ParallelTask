@@ -182,8 +182,12 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	 * @param red	The reduction to perform
 	 * @return The result of performing the reduction on the set of <code>TaskID</code>s contained in this group.
 	 */
-	T reduce(Reduction<T> reduction) throws ExecutionException, InterruptedException {
-		waitTillFinished();
+	T reduce(Reduction<T> reduction) {
+		try {
+			waitTillFinished();
+		} catch (ExecutionException | InterruptedException e) {
+			setException(e);
+		}
 		
 		if (groupSize == 0)			
 			return null;
@@ -210,7 +214,7 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	 * @return The result for that task.
 	 */
 	@SuppressWarnings("unchecked")
-	T getInnerTaskResult(int relativeID) throws ExecutionException, InterruptedException {
+	T getInnerTaskResult(int relativeID) {
 		return (T) innerTasks.get(relativeID).getReturnResult();
 	}
 	
@@ -290,7 +294,7 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	 * @throws UnsupportedOperationException
 	 */
 	@Override
-	public T getReturnResult() throws ExecutionException, InterruptedException {
+	public T getReturnResult() {
 		if (this.reductionOperation == null)
 			throw new UnsupportedOperationException("This is a TaskIDGroup, you must either specify a Reduction or get individual results from the inner TaskID members.");
 		return reduce(this.reductionOperation);

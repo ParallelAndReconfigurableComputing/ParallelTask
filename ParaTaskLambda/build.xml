@@ -5,7 +5,7 @@
 	<property name="build.dir" value="bild" />
  	<property name="dist.dir"  value="release" />
 	<property name="productName" value="PTLambda"/>
- 	<property name="jarVersion" value="1.0.1"/>
+ 	<property name="jarVersion" value="1.0.2"/>
 	
 	<!-- Check the operating system -->
     <target name="checkOS">
