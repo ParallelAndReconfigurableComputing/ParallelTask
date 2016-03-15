@@ -4,9 +4,9 @@
 	<classpathentry kind="lib" path="libs/spoon-core-1.4-jar-with-dependencies.jar"/>
 	<classpathentry exported="true" kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jdk1.8.0_66"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
-	<classpathentry kind="lib" path="libs/PTLambda-Runtime-1.0.1.jar" sourcepath="libs/PTLambda-Src-1.0.1.jar">
+	<classpathentry kind="lib" path="libs/PTLambda-Runtime-1.0.2.jar" sourcepath="libs/PTLambda-Src-1.0.2.jar">
 		<attributes>
-			<attribute name="javadoc_location" value="jar:platform:/resource/SpoonTrial/libs/PTLambda-JavaDoc-1.0.1.jar!/"/>
+			<attribute name="javadoc_location" value="jar:platform:/resource/SpoonTrial/libs/PTLambda-JavaDoc-1.0.2.jar!/"/>
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="output" path="bin"/>

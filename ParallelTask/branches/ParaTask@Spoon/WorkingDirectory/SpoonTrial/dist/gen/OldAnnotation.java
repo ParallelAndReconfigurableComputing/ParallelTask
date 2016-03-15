@@ -29,7 +29,7 @@ public class OldAnnotation {
         return x * 100;
     }
     
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         TaskInfoNoArgs<Integer> __VarTask__ = ((TaskInfoNoArgs<Integer>)(ParaTask.asTask(
 			(FunctorNoArgsWithReturn<Integer>)() -> OldAnnotation.foo3(10))));
         TaskID<Integer> __VarTaskID__ = __VarTask__.start();
@@ -56,7 +56,7 @@ public class OldAnnotation {
   				 }
 			})));
             __Var2Task__.dependsOn(__VarTaskID__, __Var1TaskID__);
-            ParaTask.registerSlotToNotify(__Var2Task__, ()->simp.foo(7));
+            ParaTask.registerSlotToNotify(__Var2Task__, ()->simp.foo1(7));
             TaskID<Integer> __Var2TaskID__ = __Var2Task__.start(VarX, __VarTaskID__);
             TaskInfoOneArg<Integer, TaskID<Integer>> __Var3Task__ = ((TaskInfoOneArg<Integer, TaskID<Integer>>)(ParaTask.asTask(
 			(FunctorOneArgWithReturn<Integer, TaskID<Integer>>)(__Var2LambdaArg__) -> { try
