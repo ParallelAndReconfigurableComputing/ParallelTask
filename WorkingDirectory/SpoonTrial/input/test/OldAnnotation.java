@@ -41,9 +41,7 @@ public class OldAnnotation {
 			
 			int VarX = foo1(8, 5);
 
-			@Future(depends="Var1")
-			int Var2 = foo1(VarX, Var);						
-
+			
 			@Future(depends="Var1", notifies="simp.foo1(7)")
 			int Var2 = foo1(VarX, Var);
 
