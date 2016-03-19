@@ -60,7 +60,7 @@
 	
 	<!-- Compress the documentations into a jar file -->
 	<target name="docsJar" depends="documentation">
-		<jar destfile="${dist.dir}/${productName}-JavaDoc-${jarVersion}.jar" />
+		<jar destfile="${dist.dir}/${productName}-JavaDoc-${jarVersion}.jar" basedir="${doc.dir}"/>
 	</target>
 	
 	<!-- Compress the source files into a jar file -->
