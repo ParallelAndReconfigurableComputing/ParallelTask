@@ -117,8 +117,8 @@ public class ThreadPool {
 
 	static {
 		if (poolSize < 0) {
-			// Initially, the pool size is equal to the nuber of processors
-			poolSize = Runtime.getRuntime().availableProcessors();
+			// Initially, the pool size is double the number of processors
+			poolSize = 2 * Runtime.getRuntime().availableProcessors();
 		}
 	}
 
@@ -154,7 +154,7 @@ public class ThreadPool {
 		 * */
 		int multiTaskWorkerID = 0;
 		
-		int multiTaskThreadPoolSize = poolSize/2;
+		int multiTaskThreadPoolSize = Runtime.getRuntime().availableProcessors();
 		
 		for (int i = 0; i < poolSize; i++, globalID++) {
 			if (multiTaskWorkerID < multiTaskThreadPoolSize) {
