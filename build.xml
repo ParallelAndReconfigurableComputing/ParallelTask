@@ -4,8 +4,8 @@
  	<property name="doc.dir"   value="docs" />
 	<property name="build.dir" value="bild" />
  	<property name="dist.dir"  value="release" />
-	<property name="productName" value="PTLambda"/>
- 	<property name="jarVersion" value="1.0.2"/>
+	<property name="productName" value="ParaTask"/>
+ 	<property name="jarVersion" value="0.9.5"/>
 	
 	<!-- Check the operating system -->
     <target name="checkOS">
@@ -36,7 +36,7 @@
 	<target name="compile" depends="makeDir">
 		<javac includeantruntime="false" srcdir="${src.dir}" destdir="${build.dir}">
 			<classpath>
-				<pathelement location="./libs/ParaIterator-1.0.5.jar"/>
+				<pathelement location="./lib/ParaIterator-1.0.5.jar"/>
 			</classpath>
 		</javac>
 	</target>
@@ -51,16 +51,17 @@
 		<javadoc packagenames="${src.dir}" sourcepath="${src.dir}" destdir="${doc.dir}">
 			<fileset dir="${src.dir}">
 				<include name="**/**" />
+				<exclude name="pt/compiler/parser/java_1_5.jj"/>
 			</fileset>
 			<classpath>
-				<pathelement location="./libs/ParaIterator-1.0.5-src.jar"/>
+				<pathelement location="./lib/ParaIterator-1.0.5-src.jar"/>
 			</classpath>
 		</javadoc>
 	</target>
 	
 	<!-- Compress the documentations into a jar file -->
 	<target name="docsJar" depends="documentation">
-		<jar destfile="${dist.dir}/${productName}-JavaDoc-${jarVersion}.jar" />
+		<jar destfile="${dist.dir}/${productName}-JavaDoc-${jarVersion}.jar" basedir="${doc.dir}"/>
 	</target>
 	
 	<!-- Compress the source files into a jar file -->
