@@ -378,7 +378,7 @@ public class TaskIDGroup<T> extends TaskID<T> {
 					TaskIDGroup<?> taskIDGroup = (TaskIDGroup<?>) taskID;
 					//don't we need to force expanding here? We are just receiving boolean variable
 					while (!taskIDGroup.isExpanded()) {
-						Thread.sleep(1);
+						Thread.sleep(ParaTask.WORKER_SLEEP_DELAY);
 					}
 					taskIDGroup.waitTillFinished();
 				} else {

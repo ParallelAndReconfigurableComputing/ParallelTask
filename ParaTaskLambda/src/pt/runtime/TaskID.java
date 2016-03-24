@@ -569,6 +569,7 @@ public class TaskID<T> {
 				}
 			} else {
 				if (isCurrentThreadTheRegisteringThread()) {
+					//when SIMD, this part blocks!
 					completedLatchForRegisteringThread.await();
 				} else {
 					completedLatchForNonRegisteringThreads.await();
