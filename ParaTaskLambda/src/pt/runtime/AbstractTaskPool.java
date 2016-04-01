@@ -180,8 +180,10 @@ public abstract class AbstractTaskPool implements Taskpool {
 		if (allDependences == null)
 			if (group.isInteractive()) 
 				startInteractiveTask(group);
-			else
+			else{
+				System.out.println("Thread " + Thread.currentThread().getId() + " applying to enqueue tasks");
 				enqueueReadyTask(group);
+			}
 		else// addDependences != null
 			enqueueWaitingTask(group, allDependences);
 		

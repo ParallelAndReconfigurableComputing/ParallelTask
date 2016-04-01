@@ -570,8 +570,10 @@ public class TaskID<T> {
 			} else {
 				if (isCurrentThreadTheRegisteringThread()) {
 					//when SIMD, this part blocks!
+					System.out.println("Thread " + Thread.currentThread().getId() + " is waiting");
 					completedLatchForRegisteringThread.await();
 				} else {
+					System.out.println("Thread " + Thread.currentThread().getId() + " is waiting (not registerer)");
 					completedLatchForNonRegisteringThreads.await();
 				}
 			}

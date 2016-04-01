@@ -382,6 +382,7 @@ public class TaskIDGroup<T> extends TaskID<T> {
 					}
 					taskIDGroup.waitTillFinished();
 				} else {
+					System.out.println("a single task, must wait till finished");
 					taskID.waitTillFinished();
 				}
 			} catch (ExecutionException e) {
