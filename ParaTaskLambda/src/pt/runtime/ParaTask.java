@@ -21,7 +21,7 @@ package pt.runtime;
 
 import java.util.concurrent.locks.ReentrantLock;
 
-import pi.RedLib.Reduction;
+import pu.RedLib.Reduction;
 import pt.functionalInterfaces.FunctorEightArgsNoReturn;
 import pt.functionalInterfaces.FunctorEightArgsWithReturn;
 import pt.functionalInterfaces.FunctorElevenArgsNoReturn;

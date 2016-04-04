@@ -19,7 +19,7 @@
 
 package pt.runtime;
 
-import pi.RedLib.Reduction;
+import pu.RedLib.Reduction;
 
 import java.util.ArrayList;
 import java.util.Iterator;
