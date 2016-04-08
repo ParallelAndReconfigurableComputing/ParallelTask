@@ -115,7 +115,7 @@ public class TaskpoolFIFOWorkSharing extends AbstractTaskPool {
 			//Thread could not find a task from its private queue, now try the global multi task queue.
 			while ((nextTaskID = globalMultiTaskQueue.poll()) != null) {
 				// expand multi task
-				int count = ((TaskIDGroup<?>)nextTaskID).getCount();
+				int count = ((TaskIDGroup<?>)nextTaskID).getGroupSize();
 				int multiTaskThreadPoolSize = ThreadPool.getMultiTaskThreadPoolSize();
 				TaskInfo<?> taskInfo = nextTaskID.getTaskInfo();
 

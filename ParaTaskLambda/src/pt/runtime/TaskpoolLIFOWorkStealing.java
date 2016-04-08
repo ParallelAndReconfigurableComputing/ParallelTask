@@ -152,7 +152,7 @@ public class TaskpoolLIFOWorkStealing extends AbstractTaskPool {
 			// expand multi-tasks
 			while ((nextTaskID = globalMultiTaskQueue.poll()) != null) {
 				
-				count = ((TaskIDGroup<?>)nextTaskID).getCount();
+				count = ((TaskIDGroup<?>)nextTaskID).getGroupSize();
 				TaskInfo<?> taskinfo = nextTaskID.getTaskInfo();
 				
 				taskinfo.setSubTask(true);
@@ -195,7 +195,7 @@ public class TaskpoolLIFOWorkStealing extends AbstractTaskPool {
 				}
 				
 				while (nextTaskID != null) {
-				if (nextTaskID.executeAttempt()) {
+					if (nextTaskID.executeAttempt()) {
 						return nextTaskID;
 					} else {
 						nextTaskID.enqueueSlots(true);

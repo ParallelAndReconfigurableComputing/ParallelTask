@@ -53,7 +53,6 @@ public class TaskpoolMixedScheduling extends AbstractTaskPool {
 	protected void enqueueReadyTask(TaskID<?> taskID) {
 		//if the task cannot be executed on arbitrary threads, regardless of being
 		//a TaskIDGroup or a OneOff task, it will be enqueued to a private queue
-		System.out.println("Thread " + Thread.currentThread().getId() + " enqueue task");
 		if (taskID.getExecuteOnThread() != ParaTask.ANY_THREAD_TASK){
 			privateTaskQueues.get(taskID.getExecuteOnThread()).add(taskID);
 		}
@@ -122,7 +121,7 @@ public class TaskpoolMixedScheduling extends AbstractTaskPool {
 			while ((nextTaskID = mixedMultiTaskQueue.poll()) != null) {
 				
 				// expand multi task
-				count = ((TaskIDGroup<?>)nextTaskID).getCount();
+				count = ((TaskIDGroup<?>)nextTaskID).getGroupSize();
 				
 				TaskInfo<?> taskInfo = nextTaskID.getTaskInfo();
 

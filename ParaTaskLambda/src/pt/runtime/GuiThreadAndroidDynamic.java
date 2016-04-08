@@ -32,6 +32,13 @@ public class GuiThreadAndroidDynamic implements GuiThreadProxy {
 	private static Thread mainThread;
 
 	public void init() {
+		if (isEventDispatchThread()){
+			System.out.println("ERROR: PARATASK CANNOT BE INITIALIZED BY THE EVENT DISPATCH THREAD! \n"
+					+ "TRY USING \"ParaTask.init()\" AT THE BEGINNING OF THE \"main( )\" METHOD!");
+			System.out.println("------------------------------------- TERMINATING THE PROGRAM -------------------------------------");
+			System.exit(0);
+		}
+		
 		try {			
 				//gets a method object that reflects "android.os.Looper.getMainLooper()"
 				Class<?> looperClass = Class.forName("android.os.Looper");

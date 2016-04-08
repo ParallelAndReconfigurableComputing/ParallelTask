@@ -19,6 +19,7 @@
 
 package pt.runtime;
 
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.locks.ReentrantLock;
 
 import pu.RedLib.Reduction;
@@ -82,6 +83,7 @@ public class ParaTask {
 	static long WORKER_SLEEP_DELAY = 200;
 	static int ANY_THREAD_TASK = -1;
 	static int EXCEPTION_IN_SLOT = -1;
+	static int INTERACTIVE_SLEEP_DELAY = 60000;
 	
 		
 	/**
@@ -263,6 +265,7 @@ public class ParaTask {
 	public static boolean init(ScheduleType scheduleType){
 		if (isInitialized())
 			return false;
+				
 		while(!isInitialized){
 			try{
 				GuiThread.init();
