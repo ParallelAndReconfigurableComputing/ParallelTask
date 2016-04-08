@@ -19,11 +19,13 @@
 
 package pt.runtime;
 
+import java.lang.ref.WeakReference;
 import java.util.AbstractQueue;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -49,6 +51,10 @@ public abstract class AbstractTaskPool implements Taskpool {
 		}
 	};
 	
+	/**
+	 * 
+	 */
+	protected ConcurrentLinkedQueue<WeakReference<InteractiveThread>> cachedInteractiveThreadPool = new ConcurrentLinkedQueue<>();
 	
 	/** 
 	 * Tasks that are not ready to be executed yet, still waiting for dependences to be done! 
@@ -181,7 +187,6 @@ public abstract class AbstractTaskPool implements Taskpool {
 			if (group.isInteractive()) 
 				startInteractiveTask(group);
 			else{
-				System.out.println("Thread " + Thread.currentThread().getId() + " applying to enqueue tasks");
 				enqueueReadyTask(group);
 			}
 		else// addDependences != null
@@ -237,9 +242,34 @@ public abstract class AbstractTaskPool implements Taskpool {
 	protected void startInteractiveTask(TaskID<?> taskID) {
 		if (!taskID.isInteractive() || taskID == null)
 			return;
-		InteractiveThread it = new InteractiveThread(this, taskID);
-		interactiveTaskCount.incrementAndGet();
-		it.start();
+		
+		else if (taskID instanceof TaskIDGroup<?>){
+			TaskIDGroup<?> taskIDGroup = (TaskIDGroup<?>) taskID;
+			int taskCount = taskIDGroup.getGroupSize();
+			for (int taskIndex = 0; taskIndex < taskCount; taskIndex++){
+				TaskID<?> subTaskID = new TaskID(taskIDGroup.getTaskInfo());
+				subTaskID.setRelativeID(taskIndex);				
+				subTaskID.setSubTask(true);
+				subTaskID.setPartOfGroup(taskIDGroup);
+				taskIDGroup.addInnerTask(taskID);
+				startInteractiveTask(subTaskID);
+			}
+		}
+		
+		else{
+			interactiveTaskCount.incrementAndGet();
+			for (WeakReference<InteractiveThread> interactiveRef : cachedInteractiveThreadPool){
+				InteractiveThread interactiveThread = interactiveRef.get();
+				if(interactiveThread.isInactive()){
+					interactiveThread.setTaskID(taskID);
+					return;
+				}
+			}
+			
+			InteractiveThread newInteractiveThread = new InteractiveThread(this, taskID);
+			newInteractiveThread.start();
+			cachedInteractiveThreadPool.add(new WeakReference<InteractiveThread>(newInteractiveThread));
+		}
 	}
 	
 	/*

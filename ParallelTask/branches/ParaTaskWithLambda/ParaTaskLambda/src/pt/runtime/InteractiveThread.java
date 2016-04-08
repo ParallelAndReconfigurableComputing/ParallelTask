@@ -19,35 +19,59 @@
 
 package pt.runtime;
 
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 //Separate interactive threads are created for independent interactive tasks.
 public class InteractiveThread extends TaskThread {
 
 	private TaskID<?> taskID = null;
+	private AtomicBoolean alive;
+	private String interruptMessage;
 	
 	InteractiveThread(Taskpool taskpool, TaskID<?> taskID) {
-		/* interactive threads don't need access to the taskpool */
 		super(taskpool);
+		alive.set(true);;
+		interruptMessage = null;
 		this.taskID = taskID;
+	}
+	
+	boolean isInactive(){
+		return(taskID == null && alive.get());
+	}
+	
+	void setTaskID(TaskID<?> taskID){
+		this.taskID = taskID;
+		this.interruptMessage = "SetByParaTask";
+		interrupt();
+	}
+	
+	private void resetThread(){
+		this.taskID = null;
+		this.interruptMessage = null;
 	}
 
 	@Override
 	public void run() {	
-		
-		boolean success = executeTask(taskID);
-		if (success) {
-			if (!taskID.hasBeenCancelled())
-				taskID.getReturnResult();
-		} else {
-//			if (task.hasUserError()) {
-//				System.err.print(" --- This failure is user-error ( " + task.getException().getMessage() + " )  --- " );
-//			}
-//			System.err.println("FAILED!! InteractiveThread " + threadID + " ( " + Thread.currentThread().getId()+ ")"+ " wanted to execute task: " + task.getGlobalID() + " of method: " 
-//					+ task.getTaskInfo().getMethod().getName());
+		while(taskID != null){
+			boolean success = executeTask(taskID);
+			if (success) {
+				if (!taskID.hasBeenCancelled()){
+					taskID.getReturnResult();
+					taskpool.interactiveTaskCompleted(taskID);	
+				}
+			} 
+			
+			resetThread();
+			try{
+				Thread.sleep(ParaTask.INTERACTIVE_SLEEP_DELAY);
+			}catch(InterruptedException e){
+				if(!interruptMessage.equals("SetByParaTask"))
+					break;
+			}
 		}
-		taskpool.interactiveTaskCompleted(taskID);
 		
-		// TODO make this more efficient by recycling interactive threads
+		/*without this flag, sometimes a taskID is added exactly before
+		 * run() method ends, and therefore taskID won't be executed.*/
+		alive.set(false);;
 	}
 }

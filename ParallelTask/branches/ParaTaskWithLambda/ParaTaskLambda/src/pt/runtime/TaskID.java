@@ -537,16 +537,18 @@ public class TaskID<T> {
 	 * */
 	
 	public void waitTillFinished() throws ExecutionException, InterruptedException {		
+		System.out.println("wait by thread " + Thread.currentThread().getId());
 		if (!(hasCompleted() || hasBeenCancelled())) { 
+			
 			//get the thread which is trying to finish the task.
 			Thread thisThread = Thread.currentThread();
-			
 			// Only WorkerThreads can execute a new TaskID.. all other threads belong to the user, or 
 			// are InteractiveThreads (therefore it is OK for them to block) 
 			if (thisThread instanceof WorkerThread) {
 				WorkerThread thisWorkerThread = (WorkerThread) thisThread;
 				
 				while (!hasCompleted()) {
+					
 					//is worker thread poisoned? Required to be cancelled, but not cancelled yet?
 					if (thisWorkerThread.isCancelRequired() && !thisWorkerThread.isCancelled()) {
 						ThreadRedundancyHandler.informThreadPool();
@@ -565,15 +567,13 @@ public class TaskID<T> {
 							e.printStackTrace();
 						}
 					}
-					
 				}
+				
 			} else {
 				if (isCurrentThreadTheRegisteringThread()) {
 					//when SIMD, this part blocks!
-					System.out.println("Thread " + Thread.currentThread().getId() + " is waiting");
 					completedLatchForRegisteringThread.await();
 				} else {
-					System.out.println("Thread " + Thread.currentThread().getId() + " is waiting (not registerer)");
 					completedLatchForNonRegisteringThreads.await();
 				}
 			}
@@ -768,7 +768,7 @@ public class TaskID<T> {
 	int multiTaskSize() {
 		if (!isMultiTask())
 			return 1;
-		return group.groupSize();
+		return group.getGroupSize();
 	}
 	
 	int getExecuteOnThread() {

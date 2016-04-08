@@ -87,35 +87,35 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	 * group.
 	 * */
 	public TaskIDGroup(int groupSize) {
-		this.setCount(groupSize);
+		this.setGroupSize(groupSize);
 	}
 	
 	/**this is only used to create a multi-task (the size is known before adding the inner tasks)*/
 	TaskIDGroup(int groupSize, TaskInfo<T> taskInfo) {
 		super(taskInfo);
 		this.isMultiTask = taskInfo.isMultiTask();
-		this.setCount(groupSize);
+		this.setGroupSize(groupSize);
 		this.reductionOperation = null;
 	}
 	
 	TaskIDGroup(int groupSize, TaskInfo<T> taskInfo, boolean isMultiTask){
 		super(taskInfo);
 		this.isMultiTask = isMultiTask;
-		this.setCount(groupSize);
+		this.setGroupSize(groupSize);
 		this.reductionOperation = null;
 	}
 	
 	TaskIDGroup(int groupSize, TaskInfo<T> taskInfo, Reduction<T> reduction) {
 		super(taskInfo);
 		this.isMultiTask = taskInfo.isMultiTask();
-		this.setCount(groupSize);
+		this.setGroupSize(groupSize);
 		this.reductionOperation = reduction;
 	}
 	
 	TaskIDGroup(int groupSize, TaskInfo<T> taskInfo, boolean isMultiTask, Reduction<T> reduction) {
 		super(taskInfo);
 		this.isMultiTask = isMultiTask;
-		this.setCount(groupSize);
+		this.setGroupSize(groupSize);
 		this.reductionOperation = reduction;
 	}
 	
@@ -129,11 +129,11 @@ public class TaskIDGroup<T> extends TaskID<T> {
 		return isMultiTask;
 	}
 	
-	int getCount() {
+	int getGroupSize() {
 		return groupSize;
 	}
 
-	void setCount(int groupSize) {
+	void setGroupSize(int groupSize) {
 		this.groupSize = groupSize;
 	}
 	/**
@@ -159,16 +159,11 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	 * it is used for multi task group only but not user defined group.
 	 * */
 	public void addInnerTask(TaskID<?> id) {
+		/*What should be the policy for adding more than groupSize elements!*/
 		innerTasks.add(id);
 	}
 	
-	/**
-	 * Returns the group size.
-	 * @return	The group size.
-	 */
-	public int groupSize() {
-		return groupSize;
-	}
+	
 	
 	void setReduction(Reduction<T> reduction){
 		reductionLock.lock();
@@ -214,7 +209,7 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	 * @return The result for that task.
 	 */
 	@SuppressWarnings("unchecked")
-	T getInnerTaskResult(int relativeID) {
+	public T getInnerTaskResult(int relativeID) {
 		return (T) innerTasks.get(relativeID).getReturnResult();
 	}
 	
@@ -222,7 +217,7 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	 * Return an iterator for the set of <code>TaskID</code>s contained in this group.
 	 * @return	An iterator for this group of TaskIDs.
 	 */
-	public Iterator<TaskID<?>> getGroupIterator() {
+	Iterator<TaskID<?>> getGroupIterator() {
 		return innerTasks.iterator();
 	}
 	
@@ -239,14 +234,13 @@ public class TaskIDGroup<T> extends TaskID<T> {
 		int numCompleted = numTaskCompleted.incrementAndGet();
 		
 		if (numCompleted == groupSize) {
+			
 			//-- this is the last task in the multi-task group, therefore need to invoke slots/handlers
 			boolean nothingToQueue = true;
-			
-			
+						
 			if (hasUserError()) {
 				
 				// at the moment, the handler uses the group's TaskID rather than the one for the specific task.. needs to be fixed!!
-
 				for (TaskID<?> taskID : innerTasks ) {
 					Throwable exception = taskID.getException();
 					if (exception != null) {
@@ -369,10 +363,19 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	 * */
 	@Override
 	public void waitTillFinished() throws ExecutionException, InterruptedException {
-		int size = innerTasks.size();
+		System.out.println("Thread " + Thread.currentThread().getId() + " is going to wait for groupID");
+		int size = 0;
+		if(isMultiTask()){
+			while(!this.isExpanded()){
+				try{
+					Thread.sleep(ParaTask.WORKER_SLEEP_DELAY);
+				}catch(Exception e){e.printStackTrace();}
+			}
+		}
+		size = getGroupSize();
 		for (int i = size-1; i >= 0; i--) {// wait for them in reverse order (LIFO)
+			
 			try {
-				
 				TaskID<?> taskID = innerTasks.get(i);
 				if (taskID instanceof TaskIDGroup) {
 					TaskIDGroup<?> taskIDGroup = (TaskIDGroup<?>) taskID;
@@ -382,8 +385,8 @@ public class TaskIDGroup<T> extends TaskID<T> {
 					}
 					taskIDGroup.waitTillFinished();
 				} else {
-					System.out.println("a single task, must wait till finished");
-					taskID.waitTillFinished();
+					System.out.println("Thread " + Thread.currentThread().getId() + " waites for the " + i + "th time");
+					taskID.waitTillFinished();					
 				}
 			} catch (ExecutionException e) {
 				/* ignore the exception, all inner exceptions will be thrown below */
@@ -394,6 +397,7 @@ public class TaskIDGroup<T> extends TaskID<T> {
 			exceptionGroup = new ParaTaskExceptionGroup(reason, exceptionList.toArray(new Throwable[0]));
 			throw exceptionGroup;
 		}
+		System.out.println("Thread: " + Thread.currentThread().getId() + " is returning from wait");
 	}
 	
 	/**

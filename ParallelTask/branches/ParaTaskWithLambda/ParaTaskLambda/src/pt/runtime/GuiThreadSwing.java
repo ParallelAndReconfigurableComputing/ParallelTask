@@ -21,6 +21,13 @@ public class GuiThreadSwing implements GuiThreadProxy {
 	private Thread edt;
 	
 	public void init() {
+		if (isEventDispatchThread()){
+			System.out.println("ERROR: PARATASK CANNOT BE INITIALIZED BY THE EVENT DISPATCH THREAD! \n"
+					+ "TRY USING \"ParaTask.init()\" AT THE BEGINNING OF THE \"main( )\" METHOD!");
+			System.out.println("------------------------------------- TERMINATING THE PROGRAM -------------------------------------");
+			System.exit(0);
+		}
+		
 		try {
 			SwingUtilities.invokeAndWait(new Runnable() {
 				public void run() {
