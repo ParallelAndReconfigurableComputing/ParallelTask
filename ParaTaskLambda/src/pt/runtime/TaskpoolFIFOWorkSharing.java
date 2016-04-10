@@ -119,8 +119,8 @@ public class TaskpoolFIFOWorkSharing extends AbstractTaskPool {
 				int multiTaskThreadPoolSize = ThreadPool.getMultiTaskThreadPoolSize();
 				TaskInfo<?> taskInfo = nextTaskID.getTaskInfo();
 
-				// indicate this is a sub task
-				taskInfo.setSubTask(true);
+				// indicate this is a task info of multi-task
+				taskInfo.setTaskInfoOfMultiTask(true);
 				
 				for (int i = 0; i < count; i++) {
 					TaskID<?> taskID = new TaskID(taskInfo);

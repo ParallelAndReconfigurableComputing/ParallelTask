@@ -155,8 +155,8 @@ public class TaskpoolLIFOWorkStealing extends AbstractTaskPool {
 				count = ((TaskIDGroup<?>)nextTaskID).getGroupSize();
 				TaskInfo<?> taskinfo = nextTaskID.getTaskInfo();
 				
-				taskinfo.setSubTask(true);
-				//aren't we repetitively operating on the same taskInfo?
+				taskinfo.setTaskInfoOfMultiTask(true);
+				
 				for (int i = 0; i < count; i++) {
 					TaskID<?> taskID = new TaskID(taskinfo);
 					taskID.setRelativeID(i);

@@ -82,7 +82,7 @@ public abstract class TaskInfo<R> {
 	/* 
 	 * Used to identify if it is a sub task for a multi task
 	 */
-	protected boolean isSubTask = false;
+	protected boolean isTaskInfoOfMultiTask = false;
 	
 	static{
 		if (!ParaTask.isInitialized())
@@ -237,12 +237,12 @@ public abstract class TaskInfo<R> {
 		return !asyncExceptions.isEmpty();
 	}
 
-	protected boolean isSubTask() {
-		return isSubTask;
+	protected boolean isTaskInfoOfMultiTask() {
+		return isTaskInfoOfMultiTask;
 	}
 
-	protected void setSubTask(boolean isSubTask) {
-		this.isSubTask = isSubTask;
+	protected void setTaskInfoOfMultiTask(boolean isSubTask) {
+		this.isTaskInfoOfMultiTask = isSubTask;
 	}
 
 	//This method is used by child classes to setup their task attributes
