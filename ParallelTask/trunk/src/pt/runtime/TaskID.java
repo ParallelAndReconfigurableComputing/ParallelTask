@@ -808,7 +808,7 @@ public class TaskID<E> {
 		if (group != null && group.isMultiTask()) {
 			//-- part of a multi-task, will only enqueue the slots of the group when the last TaskID in the group completes
 			group.oneMoreInnerTaskCompleted();
-			//setComplete();	// TODO  this was never here before -- was deadlocking without it... 20/3/2010 
+			setComplete();	// TODO  this was never here before -- was deadlocking without it... 20/3/2010 
 			
 		} else {
 			//-- even if this TaskID is within a group, it is a separate entity since not a multi-task

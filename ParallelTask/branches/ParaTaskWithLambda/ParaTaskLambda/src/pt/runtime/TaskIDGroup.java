@@ -363,7 +363,6 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	 * */
 	@Override
 	public void waitTillFinished() throws ExecutionException, InterruptedException {
-		System.out.println("Thread " + Thread.currentThread().getId() + " is going to wait for groupID");
 		int size = 0;
 		if(isMultiTask()){
 			while(!this.isExpanded()){
@@ -385,7 +384,6 @@ public class TaskIDGroup<T> extends TaskID<T> {
 					}
 					taskIDGroup.waitTillFinished();
 				} else {
-					System.out.println("Thread " + Thread.currentThread().getId() + " waites for the " + i + "th time");
 					taskID.waitTillFinished();					
 				}
 			} catch (ExecutionException e) {
@@ -397,11 +395,11 @@ public class TaskIDGroup<T> extends TaskID<T> {
 			exceptionGroup = new ParaTaskExceptionGroup(reason, exceptionList.toArray(new Throwable[0]));
 			throw exceptionGroup;
 		}
-		System.out.println("Thread: " + Thread.currentThread().getId() + " is returning from wait");
 	}
 	
-	/**
-	 * This method sets a checkpoint at which threads that arrive earlier wait until all threads arrive. 
+	
+	
+	/* This method sets a checkpoint at which threads that arrive earlier wait until all threads arrive. 
 	 * This is mostly done in situations where we want to make sure that at a specific stage
 	 * all threads have reached a specific point in the program. 
 	 * <br>

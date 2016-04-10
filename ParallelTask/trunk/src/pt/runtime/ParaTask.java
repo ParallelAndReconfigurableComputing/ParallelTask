@@ -61,6 +61,8 @@ public class ParaTask {
 
 	private static Thread EDT = null;		// a reference to the EDT
 	private static AbstractTaskListener listener;	// the EDT task listener
+	
+	static long WORKER_SLEEP_DELAY = 200;
 		
 	ParaTask(){
 		

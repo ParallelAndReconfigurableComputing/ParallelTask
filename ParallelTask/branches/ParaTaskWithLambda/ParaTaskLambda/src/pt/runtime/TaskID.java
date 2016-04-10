@@ -74,16 +74,12 @@ import java.util.concurrent.locks.ReentrantLock;
 //a functor (i.e., R).
 public class TaskID<T> {
 	static {
-//		if (!ParaTask.isInitialized()){
-//			ParaTask.init();
-//		}
 		if (!ParaTask.hasParaTaskStarted()){
 			ParaTask.paraTaskStarted(true);
 		}
 	}
-	//private int count = 0;
-	
-	/**
+
+	/*
 	 * 
 	 * @author  Kingsley
 	 * @since 21/05/2013
@@ -91,7 +87,7 @@ public class TaskID<T> {
 	 * When a multi task is expanded, set this field to <u><b>true</u></b> for its every single sub tasks.
 	 * 
 	 * */
-	//isSubTask and isInteractive also exist in Task, which one to use?
+	
 	private boolean isSubTask = false;
 
 	
@@ -212,13 +208,16 @@ public class TaskID<T> {
 			globalID = nextGlobalID.incrementAndGet();
 			completedLatchForRegisteringThread = new CountDownLatch(0);
 			completedLatchForNonRegisteringThreads = new CountDownLatch(0);
-			//hasCompleted = new AtomicBoolean(true);
 			status = new AtomicInteger(COMPLETED);
 		} else {
 			throw new UnsupportedOperationException("Don't call this constructor if passing in 'false'!");
 		}
 	}
 	
+	/*
+	 * ONLY tasks that are part of a multi-task (i.e., SIMD) are 
+	 * called sub-tasks.
+	 * */
 	protected boolean isSubTask() {
 		return isSubTask;
 	}
@@ -258,7 +257,15 @@ public class TaskID<T> {
 	public int getProgress() {
 		return progress;
 	}
-		
+	
+	/*
+	 * Sets the TaskIDGroup of which this TaskID/TaskIDGroup
+	 * object is a part!
+	 * */
+	void setPartOfGroup(TaskIDGroup<?> group) {
+		this.group = group;
+	}
+			
 	/**
 	 * Returns the group that this task is part of (assuming it is a multi-task).  
 	 * @return	Returns the group associated with this task. If not part of a multi-task, then
@@ -362,10 +369,11 @@ public class TaskID<T> {
 	}
 	
 	
-	/**
-	 * Attempts to cancel the task. It first changes the state of the task to <code>CANCELLED</code>, and then
-	 * checks if the previous status of the task was <code>CREATED</code> or if the task is already cancelled. 
-	 * In that case the cancellation attempt will be successful, and the method will return <code>true</code>
+	/*
+	 * Attempts to cancel the task. It first checks if the previous status of the task was 
+	 * <code>CREATED</code>. That is, the task has not started, or has not finished and has not been canceled 
+	 * already! If the initial check is successful, the cancellation attempt will be successful, and the method
+	 * will return <code>true</code>
 	 * <br><br>
 	 * If cancelled successfully, the task will not be enqueued. A failed cancel 
 	 * will still allow the task to continue executing. To stop the task, the task should check
@@ -381,18 +389,15 @@ public class TaskID<T> {
 	 * @see #hasBeenCancelled()
 	 * 
 	 */
-	public boolean cancelAttempt() {
+	boolean cancelAttempt() {
 		synchronized (this) {
 			cancelRequested.set(true);
 			
 			if (status.get() != CREATED){
-				//should the status be set to CANCELLED?
-				//status.set(CANCELLED);
 				return false;
 			}
 			
 			status.set(CANCELLED);
-			//cancelled = true;
 			return true;
 		}		
 	}
@@ -497,7 +502,6 @@ public class TaskID<T> {
 			waitTillFinished();
 			if (hasBeenCancelled())
 				return null;
-				//throw new ParaTaskRuntimeException("Attempting to get the result of a cancelled Task!");
 			return returnResult;
 		}catch(Exception e){
 			setException(e);
@@ -537,7 +541,6 @@ public class TaskID<T> {
 	 * */
 	
 	public void waitTillFinished() throws ExecutionException, InterruptedException {		
-		System.out.println("wait by thread " + Thread.currentThread().getId());
 		if (!(hasCompleted() || hasBeenCancelled())) { 
 			
 			//get the thread which is trying to finish the task.
@@ -603,10 +606,6 @@ public class TaskID<T> {
 		Thread registeredThread = taskInfo.getRegisteringThread();
 		if (registeredThread == null)
 			return false;
-		/*This approach is still error prone, since the thread that was registered by ParaTask
-		 * initially, may not be the one registering the task, and yet, that registering thread
-		 * is killed and replaced by another GUI thread! Instead, it is better to use a boolean
-		 * flag for each task to indicate if it has been registered by GUI thread.*/
 		if (taskInfo.hasBeenRegisteredByGuiThread() && GuiThread.currentThreadIsEventDispatchThread())
 			return true;
 		else 
@@ -644,7 +643,7 @@ public class TaskID<T> {
 	
 	
 	
-	/**
+	/*
 	 * In order to make sure a task is completed, the possible handlers (slots) that are queued by the task need 
 	 * to be invoked. This method invokes slots and the exception handlers to be executed by the registered thread. 
 	 * <br><br>
@@ -654,11 +653,13 @@ public class TaskID<T> {
 	 */
 	void enqueueSlots(boolean onlyEnqueueFinishedSlot) {
 		
-		if (isMultiTask()) {
+		//Assuming that ONLY the tasks that are part of a multi-task are called sub-tasks
+		if (isSubTask()) {
 			//Part of a multi-task, will only enqueue the slots of the group when the last TaskID in the group completes
-			//already been called in the setComplete method
 			group.oneMoreInnerTaskCompleted();
-			//setComplete();	
+			
+			//Then, this sub-task needs to be set as complete, to let the waiting thread return.
+			setComplete();	
 			
 		} else {
 			//Even if this TaskID is within a group, it is a separate entity since not a multi-task
@@ -666,14 +667,16 @@ public class TaskID<T> {
 			//If it has been cancelled, then probably don't want to execute the handlers... (except the setCompleteMethod())
 			if (hasUserError() || hasSlots) {
 				
-				completedLatchForRegisteringThread.countDown(); //-- so that registering thread will not block in slots 
-				completedLatchForNonRegisteringThreads.countDown();  // ADDED THIS?? -- I think this should be added after the slots and handlers are executed.
+				//The waiting thread will not block in slots (in case it is EDT and needs to execute slots) 
+				completedLatchForRegisteringThread.countDown(); 
+				completedLatchForNonRegisteringThreads.countDown();  
 				
 				if (hasUserError.get())
 					executeExceptionHandler();
 				if (hasSlots){
 					executeAllTaskSlots();
 				}
+				
 				//Since slots are executed in the order they are enqueued, then this will be the last slot!
 				//We want to ensure that 'setComplete' is called after all slots are executed, so we enqueue
 				//the method as another slot at the end.
@@ -747,17 +750,13 @@ public class TaskID<T> {
 		return taskInfo.getSlotsToNotify().size();
 	}
 	
-	void setPartOfGroup(TaskIDGroup<?> group) {
-		this.group = group;
-	}
 	
-	/**
+	/*
 	 * Checks to see if this task is part of a multi-task group.
 	 * @return <code>true</code> if this task is part of a multi-task, <code>false</code> otherwise 
 	 */
-    //	shouldn't this be changed to isSubtask?
-	public boolean isMultiTask() {
-		return (group != null && group.isMultiTask());
+	boolean isPartOfMultiTask(){
+		return (this.group != null && group.isMultiTask());
 	}
 	
 	/**
@@ -766,7 +765,7 @@ public class TaskID<T> {
 	 * @return	The multi-task size, otherwise returns 1 if this task is not part of a multi-task.
 	 */
 	int multiTaskSize() {
-		if (!isMultiTask())
+		if (!isPartOfMultiTask())
 			return 1;
 		return group.getGroupSize();
 	}
