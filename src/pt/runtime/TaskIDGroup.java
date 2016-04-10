@@ -357,6 +357,10 @@ public class TaskIDGroup<E> extends TaskID<E> {
 	 * */
 	@Override
 	public void waitTillFinished() throws ExecutionException, InterruptedException {
+		if(isMultiTask()){
+			while(!isExpanded)
+				Thread.sleep(ParaTask.WORKER_SLEEP_DELAY);
+		}
 		int size = innerTasks.size();
 		for (int i = size-1; i >= 0; i--) {// wait for them in reverse order (LIFO)
 			try {
@@ -364,7 +368,7 @@ public class TaskIDGroup<E> extends TaskID<E> {
 				if (taskID instanceof TaskIDGroup) {
 					TaskIDGroup taskIDGroup = (TaskIDGroup) taskID;
 					while (!taskIDGroup.getExpanded()) {
-						Thread.sleep(1);
+						Thread.sleep(ParaTask.WORKER_SLEEP_DELAY);
 					}
 					taskIDGroup.waitTillFinished();
 				} else {
