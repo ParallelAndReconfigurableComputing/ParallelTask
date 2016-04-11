@@ -2,6 +2,7 @@ package pt.runtime;
 
 import pt.functionalInterfaces.FunctorSixArgsNoReturn;
 import pt.functionalInterfaces.FunctorSixArgsWithReturn;
+import pt.runtime.ParaTask.TaskType;
 
 public class TaskInfoSixArgs<R, T1, T2, T3, T4, T5, T6> extends TaskInfo<R> {
 

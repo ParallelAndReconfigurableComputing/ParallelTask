@@ -172,7 +172,7 @@ public abstract class AbstractTaskPool implements Taskpool {
 			count = ThreadPool.getMultiTaskThreadPoolSize();
 		
 		//currently there is no mechanism for TaskIDGroups where different tasks are scheduled within a group!
-		TaskIDGroup<T> group = new TaskIDGroup<T>(count, taskInfo, taskInfo.isMultiTask());
+		TaskIDGroup<T> group = new TaskIDGroup<T>(count, taskInfo);
 		
 		List<TaskID<?>> allDependences = taskInfo.getDependences();
 		Thread registeringThread = taskInfo.setRegisteringThread();
@@ -184,8 +184,10 @@ public abstract class AbstractTaskPool implements Taskpool {
 			taskInfo.setTaskIDForSlotsAndHandlers(group);
 		
 		if (allDependences == null)
-			if (group.isInteractive()) 
+			if (group.isInteractive()){ 
 				startInteractiveTask(group);
+				//group.setExpanded(true);
+			}
 			else{
 				enqueueReadyTask(group);
 			}
@@ -246,14 +248,17 @@ public abstract class AbstractTaskPool implements Taskpool {
 		else if (taskID instanceof TaskIDGroup<?>){
 			TaskIDGroup<?> taskIDGroup = (TaskIDGroup<?>) taskID;
 			int taskCount = taskIDGroup.getGroupSize();
+			TaskInfo<?> taskInfo = taskIDGroup.getTaskInfo();
+			taskInfo.setTaskInfoOfMultiTask(true);
 			for (int taskIndex = 0; taskIndex < taskCount; taskIndex++){
-				TaskID<?> subTaskID = new TaskID(taskIDGroup.getTaskInfo());
+				TaskID<?> subTaskID = new TaskID<>(taskInfo);
 				subTaskID.setRelativeID(taskIndex);				
 				subTaskID.setSubTask(true);
 				subTaskID.setPartOfGroup(taskIDGroup);
-				taskIDGroup.addInnerTask(taskID);
+				taskIDGroup.addInnerTask(subTaskID);
 				startInteractiveTask(subTaskID);
 			}
+			taskIDGroup.setExpanded(true);
 		}
 		
 		else{

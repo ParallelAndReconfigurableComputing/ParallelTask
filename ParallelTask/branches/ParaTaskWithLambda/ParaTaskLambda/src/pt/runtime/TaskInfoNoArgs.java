@@ -2,6 +2,7 @@ package pt.runtime;
 
 import pt.functionalInterfaces.FunctorNoArgsNoReturn;
 import pt.functionalInterfaces.FunctorNoArgsWithReturn;
+import pt.runtime.ParaTask.TaskType;
 
 public class TaskInfoNoArgs<R> extends TaskInfo<R> {
 	

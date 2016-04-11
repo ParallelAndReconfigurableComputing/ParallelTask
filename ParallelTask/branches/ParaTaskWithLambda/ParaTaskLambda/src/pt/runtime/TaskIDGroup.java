@@ -160,6 +160,8 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	 * */
 	public void addInnerTask(TaskID<?> id) {
 		/*What should be the policy for adding more than groupSize elements!*/
+		if(id instanceof TaskIDGroup<?>)
+			System.out.println("adding a taskidgroup");
 		innerTasks.add(id);
 	}
 	
@@ -373,12 +375,10 @@ public class TaskIDGroup<T> extends TaskID<T> {
 		}
 		size = getGroupSize();
 		for (int i = size-1; i >= 0; i--) {// wait for them in reverse order (LIFO)
-			
 			try {
 				TaskID<?> taskID = innerTasks.get(i);
-				if (taskID instanceof TaskIDGroup) {
+				if (taskID instanceof TaskIDGroup<?>) {
 					TaskIDGroup<?> taskIDGroup = (TaskIDGroup<?>) taskID;
-					//don't we need to force expanding here? We are just receiving boolean variable
 					while (!taskIDGroup.isExpanded()) {
 						Thread.sleep(ParaTask.WORKER_SLEEP_DELAY);
 					}
