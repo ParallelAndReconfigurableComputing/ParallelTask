@@ -106,7 +106,7 @@ public class TaskpoolLIFOWorkFirstGlobal extends TaskpoolLIFOWorkStealing {
 			/**
 			 * 	Tasks will be enqueued as normal if the conditions for Work-First have not been met.
 			 */
-			ArrayList<TaskID> allDependences = null;
+			ArrayList<TaskID<?>> allDependences = null;
 			if (taskinfo.getDependences() != null)
 				allDependences = ParaTask.allTasksInList(taskinfo.getDependences());
 			
@@ -153,26 +153,6 @@ public class TaskpoolLIFOWorkFirstGlobal extends TaskpoolLIFOWorkStealing {
 	protected void enqueueReadyTask(TaskID<?> taskID) {
 		
 		if (taskID.getExecuteOnThread() != ParaTaskHelper.ANY_THREAD_TASK || taskID instanceof TaskIDGroup) {
-			//-- this is a multi-task, so place it on that thread's local queue (if it is wrongly stolen, it then gets placed on private queue)
-			
-			/**
-			 * 
-			 * @Author : Kingsley
-			 * @since : 25/04/2013
-			 * The data structure is changed from array to list, therefore the corresponding way to
-			 * get the data has to be changed.
-			 * 
-			 * This is a multi task, so insert it into local Multi Task queue.
-			 * 
-			 * @since 04/05/2013
-			 * There are no local queues for multi task any more.
-			 * 
-			 * 
-			 * */
-			//localQueues[taskID.getExecuteOnThread()].add(taskID);
-			//localQueues.get(taskID.getExecuteOnThread()).add(taskID);
-			
-			//localMultiTaskQueues.get(taskID.getExecuteOnThread()).add(taskID);
 			if (taskID.getExecuteOnThread() == ParaTaskHelper.ANY_THREAD_TASK) {
 				globalMultiTaskqueue.add(taskID);
 			} else {
@@ -180,115 +160,24 @@ public class TaskpoolLIFOWorkFirstGlobal extends TaskpoolLIFOWorkStealing {
 			}
 	
 		} else {
-			//-- this is a normal task. 
-			
-			//Get current queuing thread(Could be worker thread or non-worker thread)
 			Thread regThread = taskID.getTaskInfo().getRegisteringThread();
-			
-			/**
-			 * 
-			 * @Author : Kingsley
-			 * @since : 25/04/2013
-			 * The data structure is changed from array to list, therefore the corresponding way to
-			 * get the data has to be changed.
-			 * 
-			 * This is a one-off task, so insert it into local One-off Task queue if current
-			 * worker thread is dedicated for One-off task.
-			 * 
-			 * */
-			
 			if (regThread instanceof WorkerThread) {
-				//-- Add task to this thread's worker queue, at the beginning since it is the "hottest" task.
-				
 				WorkerThread workerThread = (WorkerThread) regThread;
-				
 				if (!workerThread.isMultiTaskWorker()) {
-					
-					/**
-					 * 
-					 * @Author : Kingsley
-					 * @since : 26/04/2013
-					 * 
-					 * The worker thread here is not multi task worker, should use 
-					 * getOneoffTaskThreadID() instead.
-					 * 
-					 * @since : 02/05/2013
-					 * One-off task threads do not need local thread ID. Still use
-					 * global id here.
-					 * 
-					 * */
-					//int tid = workerThread.getThreadID();
-					//int tid = workerThread.getOneoffTaskThreadID();
 					int tid = workerThread.getThreadID();
-
-					//localQueues[tid].addFirst(taskID);
-					//localQueues.get(tid).addFirst(taskID);
 					workFirstCounter.incrementAndGet();
 					localOneoffTaskQueues.get(tid).addFirst(taskID);
 				}else {
-					//-- just add it to a random worker thread's queue.. (Add it at the end, since it's not hot in that thread's queue)
-					
-					/**
-					 * 
-					 * @Author : Kingsley
-					 * @since : 25/04/2013
-					 * 
-					 * Get a real worker ID array
-					 * Get a real worker ID as well
-					 * 
-					 * @since 18/05/2013
-					 * The variable of "numOneoffTaskThreads" is cancelled, whenever want the size
-					 * of how many one-off task worker threads, call thread pool directly.
-					 * 
-					 * When queuing tasks, access thread pool, get the number of alive worker thread first,
-					 * only give these threads tasks
-					 * 
-					 * @since 23/05/2013
-					 * Re-structure the code
-					 * */
 					int oneoffTaskThreadPoolSize = ThreadPool.getOneoffTaskThreadPoolSize();
 					Integer[] workIDs = localOneoffTaskQueues.keySet().toArray(new Integer[oneoffTaskThreadPoolSize]);
-
-					//int randThread = (int)(Math.random()*numOneoffTaskThreads);
 					int randThread = workIDs[(int)(Math.random()*oneoffTaskThreadPoolSize)];
-
-					//localQueues[randThread].addLast(taskID);
-					//localQueues.get(randThread).addLast(taskID);
 					workFirstCounter.incrementAndGet();
 					localOneoffTaskQueues.get(randThread).addLast(taskID);
 				}
 			} else {
-				//-- just add it to a random worker thread's queue.. (Add it at the end, since it's not hot in that thread's queue)
-				/**
-				 * 
-				 * @Author Kingsley
-				 * @since 25/04/2013
-				 * 
-				 * Get a real worker ID array
-				 * Get a real worker ID as well
-				 * 
-				 * @since 18/05/2013
-				 * The variable of "numOneoffTaskThreads" is cancelled, whenever want the size
-				 * of how many one-off task worker threads, call thread pool directly.
-				 * 
-				 * When queuing tasks, access thread pool, get the number of alive worker thread first,
-				 * only give these threads tasks
-				 * 
-				 * @since 23/05/2013
-				 * Re-structure the code
-				 * 
-				 * */
 				int oneoffTaskThreadPoolSize = ThreadPool.getOneoffTaskThreadPoolSize();
-				
 				Integer[] workIDs = localOneoffTaskQueues.keySet().toArray(new Integer[oneoffTaskThreadPoolSize]);
-				
-				//int randThread = (int)(Math.random()*numOneoffTaskThreads);
 				int randThread = workIDs[(int)(Math.random()*oneoffTaskThreadPoolSize)];
-				
-				//System.out.println("oneoffTaskThreadPoolSize is " + oneoffTaskThreadPoolSize + " randThread is " + randThread);
-				
-				//localQueues[randThread].addLast(taskID);
-				//localQueues.get(randThread).addLast(taskID);
 				workFirstCounter.incrementAndGet();
 				localOneoffTaskQueues.get(randThread).addLast(taskID);
 			}
@@ -328,10 +217,10 @@ public class TaskpoolLIFOWorkFirstGlobal extends TaskpoolLIFOWorkStealing {
 	 *  @since  14/9/2014
 	 * */
 	@Override
-	public TaskID workerPollNextTask() {
+	public TaskID<?> workerPollNextTask() {
 		
 		WorkerThread wt = (WorkerThread) Thread.currentThread();
-		TaskID next = null;
+		TaskID<?> next = null;
 		
 		if (wt.isMultiTaskWorker()) {
 			int workerID = wt.getThreadLocalID();
@@ -356,425 +245,83 @@ public class TaskpoolLIFOWorkFirstGlobal extends TaskpoolLIFOWorkStealing {
 				int count = next.getCount();
 				int currentMultiTaskThreadPool = ThreadPool.getMultiTaskThreadPoolSize();
 				TaskInfo taskinfo = next.getTaskInfo();
-				
 				taskinfo.setSubTask(true);
 				
 				for (int i = 0; i < count; i++) {
-					TaskID taskID = new TaskID(taskinfo);
-					
+					TaskID<?> taskID = new TaskID<>(taskinfo);
 					taskID.setRelativeID(i);
 					taskID.setExecuteOnThread(i%currentMultiTaskThreadPool);
-					
-					//Change since 23/05/2013, see the constructor of TaskID.
-					//taskID.setGlobalID(next.globalID());
-					
 					taskID.setSubTask(true);
-					/**
-					 * 
-					 * @author Kingsley
-					 * @since 08/05/2013
-					 * 
-					 * Add newly created taskID(sub task) back into the original group 
-					 * 
-					 * @since 10/05/2013
-					 * Set part of group before add a task id into a group.
-					 */
-					taskID.setPartOfGroup(((TaskIDGroup)next));
-					((TaskIDGroup)next).add(taskID);
+					taskID.setPartOfGroup(((TaskIDGroup<?>)next));
+					((TaskIDGroup<?>)next).add(taskID);
 					enqueueReadyTask(taskID);
 				}
-				/**
-				 * 
-				 * @author Kingsley
-				 * @since 08/05/2013
-				 * 
-				 * After a multi task worker thread expand a mult task, set the expansion flag.
-				 */
-				((TaskIDGroup)next).setExpanded(true);
-				
-				//Another option on how to implement Later Expansion
-				/*TaskIDGroup group = (TaskIDGroup) next;
-				int size = group.groupSize();
-				int currentMultiTaskThreadPool = ThreadPool.getMultiTaskThreadPoolSize();
-				int i = -1;
-				for (Iterator iterator = group.groupMembers(); iterator.hasNext();) {
-					TaskID taskID = (TaskID) iterator.next();
-					taskID.setRelativeID(++i);
-					taskID.setExecuteOnThread(i%currentMultiTaskThreadPool);
-					enqueueReadyTask(taskID);
-				}*/
-				
-				
+				((TaskIDGroup<?>)next).setExpanded(true);
 			}
-			
-			
-			
-			/*
-			*//**
-			 * 
-			 * @Author : Kingsley
-			 * @since : 26/04/2013
-			 * 
-			 * Get workthread for multi task worker
-			 * 
-			 * *//*
-			int workerID = wt.getMultiTaskThreadID();
-			
-			//next = localQueues[workerID].pollFirst();
-			next = localMultiTaskQueues.get(workerID).pollFirst();
-			
-			
-			while (next != null) {
-				
-				//-- attempt to have permission to execute this task
-				if (next.executeAttempt()) {
-					return next;
-				} else {
-					next.enqueueSlots(true);
-					
-					*//**
-					 * 
-					 * @Author : Kingsley
-					 * @since : 25/04/2013
-					 * The data structure is changed from array to list, therefore the corresponding way to
-					 * get the data has to be changed.
-					 * 
-					 * *//*
-					//next = localQueues[workerID].pollFirst();
-					next = localMultiTaskQueues.get(workerID).pollFirst();
-				}
-			}
-			
-			//-- prefer to steal from the same victim last stolen from (if any)
-			int prevVictim = lastStolenFrom.get();
-			if (prevVictim != NOT_STOLEN) {
-				
-				*//**
-				 * 
-				 * @Author : Kingsley
-				 * @since : 25/04/2013
-				 * The data structure is changed from array to list, therefore the corresponding way to
-				 * get the data has to be changed.
-				 * 
-				 * *//*
-				//Deque<TaskID<?>> victimQueue = localQueues[prevVictim];
-				Deque<TaskID<?>> victimQueue = localMultiTaskQueues.get(prevVictim);
-				
-				next = victimQueue.pollLast();
-				while (next != null) {
-					int reservedFor = next.getExecuteOnThread();
-					if (reservedFor != ParaTaskHelper.ANY_THREAD_TASK && reservedFor != workerID) {
-						//-- this is a multi-task that belongs to another thread, place it on that thread's private queue
-						
-						*//**
-						 * 
-						 * @Author : Kingsley
-						 * @since : 25/04/2013
-						 * The data structure is changed from array to list, therefore the corresponding way to
-						 * get the data has to be changed.
-						 * 
-						 * *//*
-						//privateQueues[reservedFor].add(next);
-						privateQueues.get(reservedFor).add(next);
-						
-					} else if (next.executeAttempt()) {
-						//-- otherwise, it is safe to attempt to execute this task
-						return next;
-					} else {
-						//-- task has been canceled
-						next.enqueueSlots(true);
-					}
-					next = victimQueue.pollLast();	
-				}
-			}
-			
-			//-- try to steal from a random thread.. if unsuccessful, try the next thread (until all threads were tried).
-			int startVictim = (int) (Math.random()*numMultiTaskThreads); 
-			
-			for (int v = 0; v < numMultiTaskThreads; v++) {
-				int nextVictim = (startVictim+v)%numMultiTaskThreads;
-				
-				//-- No point in trying to steal from self..
-				if (nextVictim != workerID) {
-					
-					*//**
-					 * 
-					 * @Author : Kingsley
-					 * @since : 25/04/2013
-					 * The data structure is changed from array to list, therefore the corresponding way to
-					 * get the data has to be changed.
-					 * 
-					 * *//*
-					//Deque<TaskID<?>> victimQueue = localQueues[nextVictim];
-					Deque<TaskID<?>> victimQueue = localMultiTaskQueues.get(nextVictim);
-					
-					next = victimQueue.pollLast();
-					while (next != null) {
-						
-						int reservedFor = next.getExecuteOnThread();
-						
-						if (reservedFor != ParaTaskHelper.ANY_THREAD_TASK && reservedFor != workerID) {
-							//-- this is a multi-task that belongs to another thread, place it on that thread's private queue
-							
-							*//**
-							 * 
-							 * @Author : Kingsley
-							 * @since : 25/04/2013
-							 * The data structure is changed from array to list, therefore the corresponding way to
-							 * get the data has to be changed.
-							 * 
-							 * *//*
-							//privateQueues[reservedFor].add(next);
-							privateQueues.get(reservedFor).add(next);
-							
-						} else if (next.executeAttempt()) {
-							//-- otherwise, it is safe to attempt to execute this task
-							lastStolenFrom.set(nextVictim);
-							return next;
-						} else {
-							//-- task has been canceled
-							next.enqueueSlots(true);
-						}
-						next = victimQueue.pollLast();	
-					}
-				}
-			}
-			lastStolenFrom.set(NOT_STOLEN);
-		*/}else {
-			/**
-			 * 
-			 * @Author : Kingsley
-			 * @since : 26/04/2013
-			 * 
-			 * Get worker thread id for one-off task worker
-			 * 
-			 * @since : 02/05/2013
-			 * One-off task threads do not need local thread ID. Still use
-			 * global id here.
-			 * */
-			//int workerID = wt.getOneoffTaskThreadID();
+		}
+		//the worker thread is not a multi-task thread, then try to take from their
+		//local one-off task queue (because the thread is a one-off task thread). 
+		else {
 			int workerID = wt.getThreadID();
-			
-			//next = localQueues[workerID].pollFirst();
 			next = localOneoffTaskQueues.get(workerID).pollFirst();
-			
-			
 			while (next != null) {
-				//System.out.println(((WorkerThread) Thread.currentThread()).getThreadID() + " get from it self");
-
-				//-- attempt to have permission to execute this task
 				if (next.executeAttempt()) {
 					workFirstCounter.decrementAndGet();
 					return next;
 				} else {
 					next.enqueueSlots(true);
-					
-					/**
-					 * 
-					 * @Author : Kingsley
-					 * @since : 25/04/2013
-					 * The data structure is changed from array to list, therefore the corresponding way to
-					 * get the data has to be changed.
-					 * 
-					 * */
-					//next = localQueues[workerID].pollFirst();
 					next = localOneoffTaskQueues.get(workerID).pollFirst();
 				}
 			}
 			
-			//-- prefer to steal from the same victim last stolen from (if any)
+			//if no task was found from the local one-off task queue
+			//prefer to steal from the same victim last stolen from (if any)
 			int prevVictim = lastStolenFrom.get();
 			if (prevVictim != NOT_STOLEN) {
-				
-				/**
-				 * 
-				 * @Author : Kingsley
-				 * @since : 25/04/2013
-				 * The data structure is changed from array to list, therefore the corresponding way to
-				 * get the data has to be changed.
-				 * 
-				 * 
-				 * @since 18/05/2013
-				 * When trying to steal from a victim, check if the victim is null first.
-				 * */
-				//Deque<TaskID<?>> victimQueue = localQueues[prevVictim];
 				Deque<TaskID<?>> victimQueue = localOneoffTaskQueues.get(prevVictim);
-				
 				if (null != victimQueue) {
 					next = victimQueue.pollLast();
 				}
-				
 				while (next != null) {
-					//System.out.println(((WorkerThread) Thread.currentThread()).getThreadID() + " steal from " + prevVictim);
-
-					/**
-					 * 
-					 * @Author : Kingsley
-					 * @since : 04/05/2013
-					 * 
-					 * This is the situation that one-off task worker thread is stealing tasks 
-					 * from local one-off task queue, could simply try to execute the task.
-					 * 
-					 * 
-					 * */
-					
 					if (next.executeAttempt()) {
-						//-- otherwise, it is safe to attempt to execute this task
 						workFirstCounter.decrementAndGet();
 						return next;
 					} else {
 						//-- task has been canceled
 						next.enqueueSlots(true);
 					}
-					
-					/*int reservedFor = next.getExecuteOnThread();
-					if (reservedFor != ParaTaskHelper.ANY_THREAD_TASK && reservedFor != workerID) {
-						//-- this is a multi-task that belongs to another thread, place it on that thread's private queue
-						
-						*//**
-						 * 
-						 * @Author : Kingsley
-						 * @since : 25/04/2013
-						 * The data structure is changed from array to list, therefore the corresponding way to
-						 * get the data has to be changed.
-						 * 
-						 * *//*
-						//privateQueues[reservedFor].add(next);
-						privateQueues.get(reservedFor).add(next);
-						
-					} else if (next.executeAttempt()) {
-						//-- otherwise, it is safe to attempt to execute this task
-						return next;
-					} else {
-						//-- task has been canceled
-						next.enqueueSlots(true);
-					}*/
 					next = victimQueue.pollLast();	
 				}
 			}
-
-			/**
-			 * 
-			 * @Author : Kingsley
-			 * @since : 25/04/2013
-			 * 
-			 * Get a real worker ID array
-			 * 
-			 * @since : 18/05/2013
-			 * The variable of "numOneoffTaskThreads" is cancelled, whenever want the size
-			 * of how many one-off task worker threads, call thread pool directly.
-			 * 
-			 * @since 23/05/2013
-			 * Re-structure the code
-			 * When trying to steal from other workers, instead of getting the size of One-off Task Thread Pool,
-			 * Using One-off Task Queues size. 
-			 * */
 			
-			//-- try to steal from a random thread.. if unsuccessful, try the next thread (until all threads were tried).
-			//int oneoffTaskThreadPoolSize = ThreadPool.getOneoffTaskThreadPoolSize();
+			//no task could be stolen from the previous victim, so pick a new victim
 			int oneoffTaskQueuesSize = localOneoffTaskQueues.size();
-			
-			//int startVictim = (int) (Math.random()*oneoffTaskThreadPoolSize); 
 			int startVictim = (int) (Math.random()*oneoffTaskQueuesSize); 
-			
-			//Integer[] workIDs = localOneoffTaskQueues.keySet().toArray(new Integer[oneoffTaskThreadPoolSize]);
 			Integer[] workIDs = localOneoffTaskQueues.keySet().toArray(new Integer[oneoffTaskQueuesSize]);
-			
-			//for (int v = 0; v < oneoffTaskThreadPoolSize; v++) {
+		
 			for (int v = 0; v < oneoffTaskQueuesSize; v++) {
-				/**
-				 * 
-				 * @Author : Kingsley
-				 * @since : 25/04/2013
-				 * 
-				 * Get a real worker ID
-				 * 
-				 * @since : 18/05/2013
-				 * The variable of "numOneoffTaskThreads" is cancelled, whenever want the size
-				 * of how many one-off task worker threads, call thread pool directly.
-				 * 
-				 * */
-				//int nextVictim = (startVictim+v)%numOneoffTaskThreads;
-				
-				//int nextVictim = workIDs[(startVictim+v)%oneoffTaskThreadPoolSize];
 				int nextVictim = workIDs[(startVictim+v)%oneoffTaskQueuesSize];
-				
 				//-- No point in trying to steal from self..
 				if (nextVictim != workerID) {
-					
-					/**
-					 * 
-					 * @Author : Kingsley
-					 * @since : 25/04/2013
-					 * The data structure is changed from array to list, therefore the corresponding way to
-					 * get the data has to be changed.
-					 * 
-					 * @since 18/05/2013
-					 * When trying to steal from a victim, check if the victim is null first.
-					 * */
-					//Deque<TaskID<?>> victimQueue = localQueues[nextVictim];
 					Deque<TaskID<?>> victimQueue = localOneoffTaskQueues.get(nextVictim);
-				
 					if (null != victimQueue) {
 						next = victimQueue.pollLast();
 					}
 
 					while (next != null) {
-						//System.out.println(((WorkerThread) Thread.currentThread()).getThreadID() + " steal from " + nextVictim);
-
-						/**
-						 * 
-						 * @Author : Kingsley
-						 * @since : 04/05/2013
-						 * 
-						 * This is the situation that one-off task worker thread is stealing tasks 
-						 * from local one-off task queue, could simply try to execute the task.
-						 * 
-						 * 
-						 * */
 						if (next.executeAttempt()) {
-							//-- otherwise, it is safe to attempt to execute this task
 							lastStolenFrom.set(nextVictim);
 							workFirstCounter.decrementAndGet();
 							return next;
 						} else {
-							//-- task has been canceled
 							next.enqueueSlots(true);
 						}
-						
-						/*int reservedFor = next.getExecuteOnThread();
-						
-						if (reservedFor != ParaTaskHelper.ANY_THREAD_TASK && reservedFor != workerID) {
-							//-- this is a multi-task that belongs to another thread, place it on that thread's private queue
-							
-							*//**
-							 * 
-							 * @Author : Kingsley
-							 * @since : 25/04/2013
-							 * The data structure is changed from array to list, therefore the corresponding way to
-							 * get the data has to be changed.
-							 * 
-							 * *//*
-							//privateQueues[reservedFor].add(next);
-							privateQueues.get(reservedFor).add(next);
-							
-						} else if (next.executeAttempt()) {
-							//-- otherwise, it is safe to attempt to execute this task
-							lastStolenFrom.set(nextVictim);
-							return next;
-						} else {
-							//-- task has been canceled
-							next.enqueueSlots(true);
-						}*/
 						next = victimQueue.pollLast();	
 					}
 				}
 			}
 			lastStolenFrom.set(NOT_STOLEN);
 		}
-		
-		
-		//-- nothing found
 		return null;
 	}
 	

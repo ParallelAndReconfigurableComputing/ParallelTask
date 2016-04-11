@@ -20,39 +20,61 @@
 package pt.runtime;
 
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class InteractiveThread extends TaskThread {
 
-	private TaskID task = null;
+	private TaskID<?> taskID = null;
+	private AtomicBoolean alive = new AtomicBoolean();
+	private String interruptMessage;
 	
-	public InteractiveThread(Taskpool taskpool, TaskID task) {
-		/* interactive threads don't need access to the taskpool */
+	InteractiveThread(Taskpool taskpool, TaskID<?> taskID) {
 		super(taskpool);
-		this.task = task;
+		alive.set(true);;
+		interruptMessage = null;
+		this.taskID = taskID;
+	}
+	
+	boolean isInactive(){
+		return(taskID == null && alive.get());
+	}
+	
+	void setTaskID(TaskID<?> taskID){
+		this.taskID = taskID;
+		this.interruptMessage = "SetByParaTask";
+		interrupt();
+	}
+	
+	private void resetThread(){
+		taskpool.interactiveTaskCompleted(taskID);
+		this.taskID = null;
+		this.interruptMessage = null;
 	}
 
 	@Override
 	public void run() {	
-		
-		boolean success = executeTask(task);
-		if (success) {
-			try {
-				if (!task.cancelledSuccessfully())
-					task.getReturnResult();
-			} catch (ExecutionException e) {
-				e.printStackTrace();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+		while(taskID != null){
+			boolean success = executeTask(taskID);
+			if (success) {
+				try {
+					if (!taskID.cancelledSuccessfully())
+						taskID.getReturnResult();
+				} catch (ExecutionException e) {
+					e.printStackTrace();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 			}
-		} else {
-//			if (task.hasUserError()) {
-//				System.err.print(" --- This failure is user-error ( " + task.getException().getMessage() + " )  --- " );
-//			}
-//			System.err.println("FAILED!! InteractiveThread " + threadID + " ( " + Thread.currentThread().getId()+ ")"+ " wanted to execute task: " + task.getGlobalID() + " of method: " 
-//					+ task.getTaskInfo().getMethod().getName());
+			
+			resetThread();
+			try{
+				Thread.sleep(ParaTask.INTERACTIVE_SLEEP_DELAY);
+			}catch(InterruptedException e){
+				if(!interruptMessage.equals("SetByParaTask"))
+					break;
+			}
 		}
-		taskpool.interactiveTaskCompleted(task);
-		
-		// TODO make this more efficient by recycling interactive threads
+		alive.set(false);
 	}
 }
+
