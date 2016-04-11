@@ -80,12 +80,7 @@ public class TaskID<T> {
 	}
 
 	/*
-	 * 
-	 * @author  Kingsley
-	 * @since 21/05/2013
-	 * 
 	 * When a multi task is expanded, set this field to <u><b>true</u></b> for its every single sub tasks.
-	 * 
 	 * */
 	
 	private boolean isSubTask = false;
@@ -123,7 +118,8 @@ public class TaskID<T> {
 	private Throwable exception = null;
 	
 	private boolean isInteractive = false;
-	/**
+	
+	/*
 	 * TaskIDs waiting for this task to finish.
 	 * 
 	 * @author Mostafa Mehrabi
@@ -131,16 +127,15 @@ public class TaskID<T> {
 	 * */
 	private ConcurrentLinkedQueue<TaskID<?>> waitingTasks = new ConcurrentLinkedQueue<>();
 	
-	/**
+	/*
 	 * TaskIDs that this task is waiting for to finish.
 	 * 
 	 * @author Mostafa Mehrabi
 	 * @since  4/8/2015
 	 * */
 	private ConcurrentLinkedQueue<TaskID<?>> remainingDependences = new ConcurrentLinkedQueue<>();
-	//private ConcurrentHashMap<TaskID<?>, Object> remainingDependences = new ConcurrentHashMap<>();	//-- TaskIDs this task is waiting for
 	
-	/**
+	/*
 	 * The group of tasks that this task belongs to, if it is a <code>subtask</code> of 
 	 * a <code>multi-task</code>. Otherwise, this attribute remains null for a <code>one-off</code>
 	 * or an <code>I/O task</code>.
@@ -159,7 +154,6 @@ public class TaskID<T> {
 	protected AtomicInteger status = null; 
 	
 	/*
-	 * 
 	 * @author Kingsley
 	 * @since 10/05/2013
 	 * 
@@ -168,19 +162,10 @@ public class TaskID<T> {
 	 * 
 	 * The idea is all subtasks of a multi task should share a global id,
 	 * rather than give them a new one when they are created.
-	 * 
-	 * 
-	 * @since 23/05/2013
-	 * All subtasks of a multi task share a global id, this idea is good for understanding
-	 * All subtasks have different global id, this idea is good for software engineering.
-	 * If we treat each subtask the same as one-off task, which means we should give each
-	 * subtask a unique global id.
-	 * 
-	 * */
+	 */
 	
 	TaskID() {
 		completedLatchForNonRegisteringThreads = new CountDownLatch(1);
-		//hasCompleted = new AtomicBoolean(false);
 		status = new AtomicInteger(CREATED);
 		changeStatusLock = new ReentrantLock();
 	}

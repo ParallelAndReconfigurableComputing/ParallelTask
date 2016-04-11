@@ -186,7 +186,6 @@ public abstract class AbstractTaskPool implements Taskpool {
 		if (allDependences == null)
 			if (group.isInteractive()){ 
 				startInteractiveTask(group);
-				//group.setExpanded(true);
 			}
 			else{
 				enqueueReadyTask(group);
@@ -287,7 +286,6 @@ public abstract class AbstractTaskPool implements Taskpool {
 
 		if (allDependences.size() > 0) {
 			waitingTasks.put(taskID, "");
-			//taskID.getTaskInfo().getDependences();
 			taskID.setRemainingDependences(allDependences);
 			
 			for (int dependentIndex = 0; dependentIndex < allDependences.size(); dependentIndex++) {
