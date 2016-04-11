@@ -2,6 +2,7 @@ package pt.runtime;
 
 import pt.functionalInterfaces.FunctorNineArgsNoReturn;
 import pt.functionalInterfaces.FunctorNineArgsWithReturn;
+import pt.runtime.ParaTask.TaskType;
 
 public class TaskInfoNineArgs<R, T1, T2, T3, T4, T5, T6, T7, T8, T9> extends TaskInfo<R>{
 	

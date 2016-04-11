@@ -2,6 +2,7 @@ package pt.runtime;
 
 import pt.functionalInterfaces.FunctorTwelveArgsNoReturn;
 import pt.functionalInterfaces.FunctorTwelveArgsWithReturn;
+import pt.runtime.ParaTask.TaskType;
 
 public class TaskInfoTwelveArgs<R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> extends TaskInfo<R>{
 

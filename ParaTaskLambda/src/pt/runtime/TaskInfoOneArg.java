@@ -3,6 +3,7 @@ package pt.runtime;
 
 import pt.functionalInterfaces.FunctorOneArgNoReturn;
 import pt.functionalInterfaces.FunctorOneArgWithReturn;
+import pt.runtime.ParaTask.TaskType;
 import pt.runtime.TaskInfo;
 
 public class TaskInfoOneArg<R, T1> extends TaskInfo<R> {

@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class InteractiveThread extends TaskThread {
 
 	private TaskID<?> taskID = null;
-	private AtomicBoolean alive;
+	private AtomicBoolean alive = new AtomicBoolean();
 	private String interruptMessage;
 	
 	InteractiveThread(Taskpool taskpool, TaskID<?> taskID) {

@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import pt.runtime.ParaTask.TaskType;
+
 
 
 /**
@@ -75,7 +77,7 @@ public abstract class TaskInfo<R> {
 	protected boolean isMultiTask = false;
 	protected boolean isInteractive = false;
 	protected boolean registeredByGuiThread = false;
-	public static enum TaskType{MULTI, INTERACTIVE, ONEOFF};
+	
 
 	protected Map<Class<?>, Slot<R>> asyncExceptions = new HashMap<Class<?>, Slot<R>>();
 	
@@ -251,6 +253,11 @@ public abstract class TaskInfo<R> {
 		switch(taskType){
 		case MULTI:
 			setMultiTask(true);
+			setCount(taskCount);
+			break;
+		case MULTI_IO:
+			setMultiTask(true);
+			setInteractive(true);
 			setCount(taskCount);
 			break;
 		case INTERACTIVE:
