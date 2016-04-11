@@ -36,18 +36,18 @@ public class TaskpoolLIFOWorkFirstTaskDepth extends TaskpoolLIFOWorkStealing {
 	 * 	directly instead. 
 	 * 	This method is generic and schedule-specific to Work-First. 
 	 */
-	public TaskID enqueue(TaskInfo taskinfo) {
+	public TaskID<?> enqueue(TaskInfo taskinfo) {
 		
 		TaskID taskID = new TaskID(taskinfo);
 		
-		ArrayList<TaskID> allDependences = null;
+		ArrayList<TaskID<?>> allDependences = null;
 		
 		//-- determine if this task is being enqueued from within another task.. if so, set the enclosing task (needed to 
 		//--		propogate exceptions to outer tasks (in case they have a suitable handler))
 		Thread rt = taskinfo.setRegisteringThread();
 		
 		if (rt instanceof TaskThread) {
-			TaskID parentTask = ((TaskThread)rt).currentExecutingTask();
+			TaskID<?> parentTask = ((TaskThread)rt).currentExecutingTask();
 			taskID.setEnclosingTask(parentTask);
 			taskID.setTaskDepth(parentTask.getTaskDepth()+1);
 		}

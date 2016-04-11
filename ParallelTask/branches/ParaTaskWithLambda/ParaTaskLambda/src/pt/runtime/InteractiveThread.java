@@ -46,6 +46,7 @@ public class InteractiveThread extends TaskThread {
 	}
 	
 	private void resetThread(){
+		taskpool.interactiveTaskCompleted(taskID);
 		this.taskID = null;
 		this.interruptMessage = null;
 	}

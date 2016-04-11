@@ -278,29 +278,10 @@ public abstract class TaskInfo<R> {
 	}
 
 	
-	//with interim handlers could be pointless and unnecessary	
-//	public TaskInfo<T> withInterimHandler(FunctorTwoArgsNoReturn<TaskID<?>, Object> handler) {
-//		if (interSlotsToNotify == null)
-//			interSlotsToNotify = new ArrayList<Slot>();
-//		interSlotsToNotify.add(new Slot(handler));
-//		return this;
-//	}
-
 	public void dependsOn(TaskID<?>... taskIDs) {
 		this.dependences = Arrays.asList(taskIDs);
 	}
 
-	//This is where a Task returns its corresponding TaskID
-//	public TaskID<R> start() {
-//		if(this.taskCount == 1)
-//			return TaskpoolFactory.getTaskpool().enqueue(this);
-//		else{
-//			TaskIDGroup<R> taskGroup = TaskpoolFactory.getTaskpool().enqueueMulti(this, this.taskCount);
-//			taskGroup.i
-//		}
-//	}
-	
 	abstract R execute();
 
-	//The execute function must be implemented by each child class. 
 }

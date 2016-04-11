@@ -335,25 +335,10 @@ public class TaskID<E> {
 		}
 	}
 	
-	/**
-	 * Sets the progress of the task.
-	 * @param progress	The progress to set for the task
-	 * @see CurrentTask#getProgress()
-	 * @see CurrentTask#setProgress(int)
-	 * @see #getProgress()
-	 */
 	void setProgress(int progress) {
 		this.progress = progress;
 	}
 
-	/**
-	 * Returns the current progress of this task
-	 * @return	The task's current progress.
-	 * @see CurrentTask#getProgress()
-	 * @see CurrentTask#setProgress(int)
-	 * @see #setProgress(int)
-	 * 
-	 */
 	public int getProgress() {
 		return progress;
 	}
@@ -381,7 +366,7 @@ public class TaskID<E> {
 		}
 	}
 	
-	/**
+	/*
 	 * 
 	 * @author Kingsley
 	 * @since 10/05/2013
@@ -391,14 +376,6 @@ public class TaskID<E> {
 	 * 
 	 * The idea is all subtasks of a multi task should share a global id,
 	 * rather than give them a new one when they are created.
-	 * 
-	 * 
-	 * @since 23/05/2013
-	 * All subtasks of a multi task share a global id, this idea is good for understanding
-	 * All subtasks have different global id, this idea is good for software engineering.
-	 * If we treat each subtask the same as one-off task, which means we should give each
-	 * subtask a unique global id.
-	 * 
 	 * */
 	
 	TaskID() {
@@ -409,21 +386,18 @@ public class TaskID<E> {
 		changeStatusLock = new ReentrantLock();
 	}
 	
-	/**
+	/*
 	 * This constructor receives information about, whether a task is interactive
 	 * as well as it sets the count down latch to one. 
 	 * */
 	TaskID(TaskInfo taskInfo) {
 		this();
-		
 		globalID = nextGlobalID.incrementAndGet();
-		
 		completedLatchForRegisteringThread = new CountDownLatch(1);
 		this.taskInfo = taskInfo;
 		isInteractive = taskInfo.isInteractive();
 		if (taskInfo != null) {
 			hasSlots = taskInfo.getSlotsToNotify() != null;
-//			hasHandlers = taskInfo.hasRegisteredHandlers();
 		}
 	}
 	
@@ -482,8 +456,6 @@ public class TaskID<E> {
 	 * */
 	boolean executeAttempt() {
 		int prevStatus = status.getAndSet(STARTED);
-		
-		//-- TODO if the status was not CREATED before this, then should probably set status to CANCELLED 
 		return prevStatus == CREATED;
 	}
 	
@@ -638,27 +610,16 @@ public class TaskID<E> {
 			 * are InteractiveThreads (therefore it is OK for them to block) */
 			if (t instanceof WorkerThread) {
 				WorkerThread currentWorker = (WorkerThread) t;
-				
-				// if still not completed then start a substitute thread
-				
-				/**
-				 * 
-				 * @author Kingsley
-				 * Add a new check condition here in order to check if it is poisoned
-				 * 
-				 * */
-				
 				while (!hasCompleted.get()) {
 					if (currentWorker.isCancelRequired() && !currentWorker.isCancelled()) {
 						LottoBox.tryLuck();
 					}
 					
 					if (!currentWorker.isCancelled()) {
-						// causes the worker to either execute a task or sleep
 						currentWorker.executeAnotherTaskOrSleep();
 					} else {
 						try {
-							Thread.sleep(1);
+							Thread.sleep(ParaTask.WORKER_SLEEP_DELAY);
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 						}
@@ -667,9 +628,7 @@ public class TaskID<E> {
 				}
 			} else {
 				if (currentThreadIsTheRegisteredThread()) {
-//					System.out.println("current thread is the registering thread.. will await");
 					completedLatchForRegisteringThread.await();
-//					System.out.println("finished await");
 				} else {
 					completedLatch.await();
 				}
@@ -763,33 +722,9 @@ public class TaskID<E> {
 		hasCompleted.set(true);
 		changeStatusLock.unlock();
 		
-//		if (group != null) {
-//			group.oneMoreInnerTaskCompleted();
-			
-			//presumably the following lines of code are redundant!
-//			TaskID<?> groupWaiter = null;
-//			
-//			if (((TaskID)group).waitingTasks != null) {
-//				ConcurrentLinkedQueue<TaskID> groupWaitingTaskIDs = ((TaskID)group).waitingTasks;
-//				
-//				while ((groupWaiter = groupWaitingTaskIDs.poll()) != null) {
-//					// removes the waiter from the queue
-//					//groupWaiter.dependenceFinished(group);
-//					
-//					ConcurrentHashMap groupRemainingDependences = groupWaiter.remainingDependences;
-//									
-//					groupRemainingDependences.remove(group);
-//					if (groupRemainingDependences.isEmpty()) {
-//						TaskpoolFactory.getTaskpool().nowReady(groupWaiter);
-//					}
-//					
-//				}
-//			}
-//			
-//			group.setComplete();
-//		}
 	}
 	
+
 	/**
 	 * In order to make sure a task is completed, the possible handlers (slots) that are queued by the task need 
 	 * to be invoked. This method invokes slots and the exception handlers to be executed by the registered thread. 
@@ -803,22 +738,16 @@ public class TaskID<E> {
 	 **/
 	void enqueueSlots(boolean onlyEnqueueFinishedSlot) {
 		
-		// TODO make use of the boolean passed in (and for multi-tasks) - i.e. don't execute slots of cancelled tasks?
-		
 		if (group != null && group.isMultiTask()) {
-			//-- part of a multi-task, will only enqueue the slots of the group when the last TaskID in the group completes
+			//part of a multi-task, will only enqueue the slots of the group when the last TaskID in the group completes
+			//however, this specific sub-task should be set as complete to release the threads that are waiting on it. 
 			group.oneMoreInnerTaskCompleted();
-			setComplete();	// TODO  this was never here before -- was deadlocking without it... 20/3/2010 
-			
+			setComplete();	
 		} else {
-			//-- even if this TaskID is within a group, it is a separate entity since not a multi-task
-			
-			// TODO   if it has been cancelled, then probably don't want to execute the handlers... (except the setCompleteMethod())
 			if (hasUserError() || hasSlots) {
-				
-//				System.out.println("HAS SLOTS..");
-				completedLatchForRegisteringThread.countDown(); //-- so that registering thread will not block in slots 
-				completedLatch.countDown();  // ADDED THIS??
+				//so that registering thread will not block in slots
+				completedLatchForRegisteringThread.countDown();  
+				completedLatch.countDown();
 				
 				if (hasUserError.get())
 					executeHandlers();
@@ -846,7 +775,7 @@ public class TaskID<E> {
 		//-- first, try to get handler defined immediately for this task
 		Slot handler = taskInfo.getExceptionHandler(occurredException);
 		
-		TaskID curTask = this;
+		TaskID<?> curTask = this;
 		//-- while we have not found a handler, and while there are other enclosing tasks
 		while (handler == null && curTask.getEnclosingTask() != null) {
 			curTask = curTask.getEnclosingTask();
@@ -887,9 +816,7 @@ public class TaskID<E> {
 	}
 	
 	void callTaskListener(Slot slot) {
-//		System.out.println("want to execute slot: "+slot.getMethod().getName());
 		ParaTask.getEDTTaskListener().executeSlot(slot);
-//		System.out.println("executed slot: "+slot.getMethod().getName());
 	}
 	
 	protected int executeIntermediateSlots() {

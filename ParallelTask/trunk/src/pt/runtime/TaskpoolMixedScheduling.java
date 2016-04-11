@@ -21,9 +21,6 @@ package pt.runtime;
 
 import java.util.AbstractQueue;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.concurrent.PriorityBlockingQueue;
-
 import pt.queues.FifoLifoQueue;
 
 /**
@@ -92,168 +89,57 @@ public class TaskpoolMixedScheduling extends AbstractTaskPool {
 	 *@since  14/9/2014
 	 * */
 	@Override
-	public TaskID workerPollNextTask() {
+	public TaskID<?> workerPollNextTask() {
 		
 		WorkerThread wt = (WorkerThread) Thread.currentThread();
 		int workerID = wt.getThreadID();
-		
-		// first check current worker's private queue and find a task that has not been cancelled
-		/**
-		 * 
-		 * @Author : Kingsley
-		 * @since : 25/04/2013 
-		 * The data structure is changed from array to list, therefore the 
-		 * corresponding way to initialize the data has to be changed.
-		 * 
-		 * One-off Task Worker will never examine its private queue.
-		 * 
-		 * */
-		//TaskID next = privateQueues[workerID].poll();
-		TaskID next = null;
+		TaskID<?> next = null;
 		
 		if (wt.isMultiTaskWorker()) {
 			next = privateQueues.get(workerID).poll();
-			
 			while (next != null) {
-				
-				//-- attempt to execute this task
 				if (next.executeAttempt()) {
-					//-- no cancel attempt was successful so far, therefore may execute this task
 					return next;
 				} else {
-					//-- task was successfully cancelled beforehand, therefore grab another task
 					next.enqueueSlots(true);	//-- task is considered complete, so execute slots
-					//-- TODO maybe should not execute slots for cancelled tasks, just the completedSlot() ?? 
 				}
-				
-				/**
-				 * 
-				 * @Author : Kingsley
-				 * @since : 25/04/2013 
-				 * The data structure is changed from array to list, therefore the 
-				 * corresponding way to initialize the data has to be changed.
-				 * 
-				 * */
-				
-				//next = privateQueues[workerID].poll();
 				next = privateQueues.get(workerID).poll();
 			}
 		}
 		
-		/**
-		 * 
-		 * @Author Kingsley
-		 * @since 25/04/2013
-		 * 
-		 * check global queue according to the worker thread type.
-		 * If no suitable task found, return null
-		 * 
-		 * @since 15/05/2013
-		 * Multi task expansion.
-		 * 
-		 * @since 21/05/2013
-		 * When expand a multi task, set the field of "isSubTask" to true for its every single sub tasks.
-		 * 
-		 * */
-		
 		if (wt.isMultiTaskWorker()) {
-			// get task from mixed-schedule queue.. if no suitable task found, return null
 			while ((next = mixedMultiTaskqueue.poll()) != null) {
-				
 				// expand multi task
 				int count = next.getCount();
 				int currentMultiTaskThreadPool = ThreadPool.getMultiTaskThreadPoolSize();
 				TaskInfo taskinfo = next.getTaskInfo();
-
-				// indicate this is a sub task
 				taskinfo.setSubTask(true);
 				
 				for (int i = 0; i < count; i++) {
-					TaskID taskID = new TaskID(taskinfo);
+					TaskID<?> taskID = new TaskID<>(taskinfo);
 					
 					taskID.setRelativeID(i);
 					taskID.setExecuteOnThread(i%currentMultiTaskThreadPool);
 					
-					//Change since 23/05/2013, see the constructor of TaskID.
-					//taskID.setGlobalID(next.globalID());
-					
 					taskID.setSubTask(true);
 					
-					taskID.setPartOfGroup(((TaskIDGroup)next));
-					((TaskIDGroup)next).add(taskID);
+					taskID.setPartOfGroup(((TaskIDGroup<?>)next));
+					((TaskIDGroup<?>)next).add(taskID);
 					enqueueReadyTask(taskID);
 					
 				}
-				((TaskIDGroup)next).setExpanded(true);
-				
-				/*int savedFor = next.getExecuteOnThread();
-				
-				// check if this task is saved for another worker thread
-				if (savedFor == ParaTaskHelper.ANY_THREAD_TASK || savedFor == workerID) {
-					
-					//-- attempt to execute this task
-					if (next.executeAttempt()) {
-						//-- no cancel attempt was successful so far, therefore may execute this task
-						
-						//numTasksExecuted[workerID]++;	// for testing...
-						
-						return next;
-					} else {
-						//-- task was successfully cancelled beforehand, therefore grab another task
-						next.enqueueSlots(true);	//-- task is considered complete, so execute slots
-						//-- TODO maybe should not execute slots for cancelled tasks, just the completedSlot() ?? 
-					}
-				} else {
-					
-					*//**
-					 * 
-					 * @Author : Kingsley
-					 * @since : 25/04/2013 
-					 * The data structure is changed from array to list, therefore the 
-					 * corresponding way to initialize the data has to be changed.
-					 * 
-					 * *//*
-					
-		  			//privateQueues[savedFor].add(next);
-					privateQueues.get(savedFor).add(next);
-				}*/
+				((TaskIDGroup<?>)next).setExpanded(true);
 			}
 		}else {
-			// get task from mixed-schedule queue.. if no suitable task found, return null
 			while ((next = mixedOneoffTaskqueue.poll()) != null) {
 				int savedFor = next.getExecuteOnThread();
-				
-				// check if this task is saved for another worker thread
 				if (savedFor == ParaTaskHelper.ANY_THREAD_TASK || savedFor == workerID) {
-					
-					//-- attempt to execute this task
 					if (next.executeAttempt()) {
-						//-- no cancel attempt was successful so far, therefore may execute this task
-						
-//						numTasksExecuted[workerID]++;	// for testing...
-						
 						return next;
 					} else {
-						//-- task was successfully cancelled beforehand, therefore grab another task
 						next.enqueueSlots(true);	//-- task is considered complete, so execute slots
-						//-- TODO maybe should not execute slots for cancelled tasks, just the completedSlot() ?? 
 					}
 				} else {
-					
-					/**
-					 * 
-					 * @Author : Kingsley
-					 * @since : 25/04/2013 
-					 * The data structure is changed from array to list, therefore the 
-					 * corresponding way to initialize the data has to be changed.
-					 * 
-					 * Actually this branch will never be executed since the task is picked from
-					 * mixed one-off task queue, such that every one-off task dedicated worker
-					 * thread can execute it.
-					 * 
-					 * */
-					
-		  			//privateQueues[savedFor].add(next);
 					privateQueues.get(savedFor).add(next);
 				}
 			}
@@ -266,56 +152,9 @@ public class TaskpoolMixedScheduling extends AbstractTaskPool {
 	
 	@Override
 	protected void initialise() {
-		/**
-		 * 
-		 * @Author : Kingsley
-		 * @since : 25/04/2013 
-		 * The data structure is changed from array to list, therefore the 
-		 * corresponding way to initialize the data has to be changed.
-		 * 
-		 * Initialize private queue for only multi task worker threads.
-		 * 
-		 * Initialize both mixed multi task queue and mixed one-off task queue.
-		 * 
-		 * 
-		 * @since : 15/05/2013
-		 * For multi task, just like worksharing and working stealing, there is 
-		 * no stealing here as well. Thus, multi task mixed queue and private queues
-		 * should be initialized here.
-		 * 
-		 * For one-off task, one-off task mixed queue should be initialized here.
-		 * 
-		 * 
-		 * @since : 18/05/2013
-		 * Thread pool should not take responsibility of creating local queues or private queues
-		 * for individual working thread, even before those threads are created.
-		 * Keep creating all shared queues, such as global queue and mixed queue here, create
-		 * only the collection for unshared queues here, after worker threads are created later 
-		 * along with their individual queues, those queues could be added into the collection. 
-		 * */
-		
-		/*mixedQueue = new FifoLifoQueue<TaskID<?>>();
-		privateQueues = new PriorityBlockingQueue[numThreads];	
-		
-		for (int i = 0; i < numThreads; i++) {
-			privateQueues[i] = new PriorityBlockingQueue<TaskID<?>>(INITIAL_QUEUE_CAPACITY, FIFO_TaskID_Comparator);
-		}*/
-		
-		//For multi task
 		mixedMultiTaskqueue = new FifoLifoQueue<TaskID<?>>();
-		
 		privateQueues = new ArrayList<AbstractQueue<TaskID<?>>>();
-		
-		//Put this create procedure into thread pool 
-		/*for (int i = 0; i < numMultiTaskThreads; i++) {
-			privateQueues.add(new PriorityBlockingQueue<TaskID<?>>(
-					AbstractTaskPool.INITIAL_QUEUE_CAPACITY,
-					AbstractTaskPool.FIFO_TaskID_Comparator));
-		}*/
-		
-		//For one-off task
 		mixedOneoffTaskqueue = new FifoLifoQueue<TaskID<?>>();
-		
 		initialiseWorkerThreads();
 	}
 }

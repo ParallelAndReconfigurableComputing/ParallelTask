@@ -63,6 +63,8 @@ public class ParaTask {
 	private static AbstractTaskListener listener;	// the EDT task listener
 	
 	static long WORKER_SLEEP_DELAY = 200;
+	static long INTERACTIVE_SLEEP_DELAY = 60000;
+	
 		
 	ParaTask(){
 		
@@ -332,8 +334,8 @@ public class ParaTask {
 	 * then all its sub-tasks have not been created yet. 
 	 * 
 	 */
-	public static ArrayList<TaskID> allTasksInList(ArrayList<TaskID> list) {
-		ArrayList<TaskID> result = new ArrayList<TaskID>();
+	public static ArrayList<TaskID<?>> allTasksInList(ArrayList<TaskID> list) {
+		ArrayList<TaskID<?>> result = new ArrayList<TaskID<?>>();
 		
 		Iterator<TaskID> it = list.iterator();
 		while (it.hasNext()) {
