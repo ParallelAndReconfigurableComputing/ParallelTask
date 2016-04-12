@@ -4,8 +4,8 @@
  	<property name="doc.dir"   value="docs" />
 	<property name="build.dir" value="bild" />
  	<property name="dist.dir"  value="release" />
-	<property name="productName" value="ParaTask"/>
- 	<property name="jarVersion" value="0.9.5"/>
+	<property name="productName" value="PT"/>
+ 	<property name="jarVersion" value="1.0.0"/>
 	
 	<!-- Check the operating system -->
     <target name="checkOS">
@@ -36,14 +36,14 @@
 	<target name="compile" depends="makeDir">
 		<javac includeantruntime="false" srcdir="${src.dir}" destdir="${build.dir}">
 			<classpath>
-				<pathelement location="./lib/ParaIterator-1.0.5.jar"/>
+				<pathelement location="./lib/PARCutils-1.1.0.jar"/>
 			</classpath>
 		</javac>
 	</target>
 	
 	<!-- Compress the classes into a jar file -->
 	<target name="classesJar" depends="compile">
-		<jar  basedir="${build.dir}" destfile="${dist.dir}/${productName}-Runtime-${jarVersion}.jar"/>
+		<jar  basedir="${build.dir}" destfile="${dist.dir}/${productName}Runtime-${jarVersion}.jar"/>
 	</target>
 	
 	<!-- Document the source codes, export the documentations to the docs directory -->
@@ -54,19 +54,19 @@
 				<exclude name="pt/compiler/parser/java_1_5.jj"/>
 			</fileset>
 			<classpath>
-				<pathelement location="./lib/ParaIterator-1.0.5-src.jar"/>
+				<pathelement location="./lib/PARCutils-1.1.0-src.jar"/>
 			</classpath>
 		</javadoc>
 	</target>
 	
 	<!-- Compress the documentations into a jar file -->
 	<target name="docsJar" depends="documentation">
-		<jar destfile="${dist.dir}/${productName}-JavaDoc-${jarVersion}.jar" basedir="${doc.dir}"/>
+		<jar destfile="${dist.dir}/${productName}JavaDoc-${jarVersion}.jar" basedir="${doc.dir}"/>
 	</target>
 	
 	<!-- Compress the source files into a jar file -->
 	<target name="sourcesJar">
-		<jar destfile="${dist.dir}/${productName}-Src-${jarVersion}.jar" basedir="${src.dir}" />
+		<jar destfile="${dist.dir}/${productName}Src-${jarVersion}.jar" basedir="${src.dir}" />
 	</target>
 	
 	<target name="main" depends="classesJar, docsJar, sourcesJar">
