@@ -69,10 +69,7 @@ public class SubstituteThread extends TaskThread {
 						e.printStackTrace();
 					}
 					continue;
-				} else {
-					// it must be executing now, so we will retire
-					// taskIDWaitingFor.substituteThreadRetiring(substituteForThreadID);
-				}
+				} 
 			} else {
 				// substitute thread got a task, so execute it
 				
