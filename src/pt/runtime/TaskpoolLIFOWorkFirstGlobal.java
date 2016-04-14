@@ -248,7 +248,7 @@ public class TaskpoolLIFOWorkFirstGlobal extends TaskpoolLIFOWorkStealing {
 				taskinfo.setSubTask(true);
 				
 				for (int i = 0; i < count; i++) {
-					TaskID<?> taskID = new TaskID<>(taskinfo);
+					TaskID<?> taskID = new TaskID(taskinfo);
 					taskID.setRelativeID(i);
 					taskID.setExecuteOnThread(i%currentMultiTaskThreadPool);
 					taskID.setSubTask(true);

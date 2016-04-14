@@ -67,7 +67,7 @@ public abstract class AbstractTaskPool implements Taskpool {
 		initialise();
 	}
 	
-	protected ConcurrentLinkedQueue<WeakReference<InteractiveThread>> cachedInteractiveThreadPool = new ConcurrentLinkedQueue<>();
+	protected ConcurrentLinkedQueue<WeakReference<InteractiveThread>> cachedInteractiveThreadPool = new ConcurrentLinkedQueue<WeakReference<InteractiveThread>>();
 	
 	/*
 	 * (schedule-specific) 
@@ -208,7 +208,7 @@ public abstract class AbstractTaskPool implements Taskpool {
 			TaskInfo taskInfo = taskIDGroup.getTaskInfo();
 			taskInfo.setSubTask(true);
 			for (int taskIndex = 0; taskIndex < taskCount; taskIndex++){
-				TaskID<?> subTaskID = new TaskID<>(taskInfo);
+				TaskID<?> subTaskID = new TaskID(taskInfo);
 				subTaskID.setRelativeID(taskIndex);				
 				subTaskID.setSubTask(true);
 				subTaskID.setPartOfGroup(taskIDGroup);
