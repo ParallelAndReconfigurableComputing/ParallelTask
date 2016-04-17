@@ -46,8 +46,8 @@ public abstract class AbstractTaskListener implements Runnable {
 				// first check if this slot can be accessed from here...
 				if (Modifier.isPublic(method.getModifiers())) {
 					if (slot.isASetCompleteSlot()) {
-						//--invoke ParaTaskHelper.setComplete(instance).. where 'instance' is 
-						//--the actual TaskID whose (non-public) setComplete() we want to execute  
+						//-- invoke ParaTaskHelper.setComplete(instance).. where 'instance' is 
+						//--   the actual TaskID whose (non-public) setComplete() we want to execute  
 						method.invoke(null, instance);
 					} else {
 						// the only argument a slot can have (if any) is a single TaskID that represents the task that completed
@@ -62,16 +62,10 @@ public abstract class AbstractTaskListener implements Runnable {
 					try {
 						Method opener = method.getDeclaringClass().getMethod("__pt__accessPrivateSlot", new Class[] { 
 								Method.class, Object.class, TaskID.class, Object.class });
+
 						if (instance == null && Modifier.isStatic(method.getModifiers()))
 							throw new RuntimeException("Cannot use private static methods in clause: "+method);
 						
-						/* invoke as static or on the instance??   invoking static opener 
-						 * invoking as static, in case of private static methods..
-						 * 
-						 * currently cannot use static opener (for nested classes)
-						 * cannot use private static slots too (since it still requires an instance of the 
-						 * enclosing class to call that static method)
-						 * */
 						opener.invoke( instance, method, instance, taskID, interResult);
 	
 					} catch (SecurityException e) {
