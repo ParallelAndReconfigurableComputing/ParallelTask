@@ -94,7 +94,6 @@ public class WorkerThread extends TaskThread {
 					break;
 				}else {
 					ThreadRedundancyHandler.informThreadPool();
-					
 					if (isCancelled) {
 						break;
 					}

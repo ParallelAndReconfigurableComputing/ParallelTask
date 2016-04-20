@@ -136,10 +136,6 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	void setGroupSize(int groupSize) {
 		this.groupSize = groupSize;
 	}
-	/**
-	 * Add a task to this group. 
-	 * @param id	The <code>TaskID</code> to add
-	 */
 	
 	/**
 	 * @author Kingsley
@@ -314,10 +310,6 @@ public class TaskIDGroup<T> extends TaskID<T> {
 		return taskInfo;
 	}
 
-//  this method can be inherited from the parent class (TaskID)
-//	@Override
-//	public void enqueueSlots(boolean onlyEnqueueFinishedSlot) {
-//	}
 
 	/**
 	 * This method is called by one of the inner tasks when it incurs an
