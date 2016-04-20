@@ -44,7 +44,7 @@ public class ParaTaskHelper {
 	/**
 	 * [This is only intended for internal use of the ParaTask compiler and runtime]
 	 */
-	public static long WORKER_SLEEP_DELAY = 10;
+	public static long WORKER_SLEEP_DELAY = 200;
 
 	/**
 	 * [This is only intended for internal use of the ParaTask compiler and runtime]

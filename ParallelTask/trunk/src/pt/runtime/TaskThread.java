@@ -89,7 +89,6 @@ public abstract class TaskThread extends Thread {
 	 * */
 	
 	public TaskThread(Taskpool taskpool) {
-		//this.threadID = nextThreadID.incrementAndGet();
 		this.taskpool = taskpool;
 	}
 	
@@ -107,10 +106,7 @@ public abstract class TaskThread extends Thread {
 		this.threadID = nextThreadID.incrementAndGet();
 		if (isMultiTaskWorker) {
 			this.threadLocalID = nextThreadLocalID.incrementAndGet();
-		} /*else {
-			this.oneoffTaskThreadID = nextOneoffTaskThreadID.incrementAndGet();
-		}*/
-		
+		} 		
 		this.taskpool = taskpool;
 	}
 	
@@ -177,32 +173,6 @@ public abstract class TaskThread extends Thread {
 		return threadID;
 	}
 
-	
-
-	/**
-	 * 
-	 * @Author : Kingsley
-	 * @since : 26/04/2013
-	 * 
-	 * Call to find the local threadID. This is specially used for identify the
-	 * position of local queue in the local queue list. 
-	 * 
-	 * @since : 02/05/2013
-	 * One-off task threads do not need local thread ID.
-	 * 
-	 * @since : 10/05/2013
-	 * Change the function of getMultiTaskThreadID() to getThreadLocalID
-	 * 
-	 * */
-	
-	/*public int getMultiTaskThreadID() {
-		return multiTaskThreadID;
-	}
-
-	public int getOneoffTaskThreadID() {
-		return oneoffTaskThreadID;
-	}*/
-	
 	protected int getThreadLocalID() {
 		return threadLocalID;
 	}

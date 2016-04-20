@@ -206,11 +206,6 @@ public class TaskIDGroup<E> extends TaskID<E> {
 	}
 
 	@Override
-	void dependenceFinished(TaskID<?> otherTask) {
-		throw new UnsupportedOperationException("TODO: Not implemented!");
-	}
-
-	@Override
 	public Throwable getException() {
 		return exceptionGroup;
 	}
