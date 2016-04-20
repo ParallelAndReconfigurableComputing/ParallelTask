@@ -250,7 +250,8 @@ public class ThreadPool {
 			reentrantLock.lock();
 			
 			//but in the "waitTillFinished" method in TaskID, if a thread is poisoned, it cannot
-			//execute any tasks!
+			//execute any tasks! So, the "informThreadPool" method sets cancelRequest back to "false"
+			//if enough threads have been killed. 
 			for (WorkerThread workerThread : oneOffTaskWorkers.values()){
 				workerThread.requestCancel(true);
 			}

@@ -125,7 +125,7 @@ public class TaskID<T> {
 	 * @author Mostafa Mehrabi
 	 * @since  4/8/2015
 	 * */
-	private ConcurrentLinkedQueue<TaskID<?>> waitingTasks = new ConcurrentLinkedQueue<>();
+	protected ConcurrentLinkedQueue<TaskID<?>> waitingTasks = new ConcurrentLinkedQueue<>();
 	
 	/*
 	 * TaskIDs that this task is waiting for to finish.
@@ -133,7 +133,7 @@ public class TaskID<T> {
 	 * @author Mostafa Mehrabi
 	 * @since  4/8/2015
 	 * */
-	private ConcurrentLinkedQueue<TaskID<?>> remainingDependences = new ConcurrentLinkedQueue<>();
+	protected ConcurrentLinkedQueue<TaskID<?>> remainingDependences = new ConcurrentLinkedQueue<>();
 	
 	/*
 	 * The group of tasks that this task belongs to, if it is a <code>subtask</code> of 

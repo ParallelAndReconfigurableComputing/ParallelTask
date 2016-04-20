@@ -29,6 +29,11 @@ public abstract class AbstractTaskListener implements Runnable {
 	 * 
 	 */
 	protected void doExecuteSlot(Slot<?> slot) {
-		slot.execute();
+		try{
+			slot.execute();
+		}catch(Exception e){
+			System.out.println("PARATASK RUNTIME: EXCEPTION OCCURRED WHEN EXECUTING A HANDLER TASK-SLOT!");
+			e.printStackTrace();
+		}
 	}
 }

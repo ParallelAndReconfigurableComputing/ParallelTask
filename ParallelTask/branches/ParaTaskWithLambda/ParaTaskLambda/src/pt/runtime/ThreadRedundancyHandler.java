@@ -61,13 +61,13 @@ public class ThreadRedundancyHandler {
 	/*
 	 * This method is normally called by a <code>Thread Pool</code> (especially <code>OneOff-task</code> thread pools), as
 	 * a result of the size of that <code>Thread Pool</code> shrinking, which will consequently cause some of the redundant
-	 * threads to be <u>poisoned</u>. This method adds the number of redundant threads to <code>lottoNum</code>
+	 * threads to be <u>poisoned</u>. This method adds the number of redundant threads to <code>delta</code>
 	 * 
 	 * @see #numberOfRedundantThreads
 	 * @author Mostafa Mehrabi
 	 * @since  16/9/2014
 	 * */
 	protected static void setNumberOfRedundantThreads(int delta){
-		numberOfRedundantThreads.set(delta);
+		numberOfRedundantThreads.addAndGet(delta);
 	}
 }
