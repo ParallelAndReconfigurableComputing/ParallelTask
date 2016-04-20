@@ -150,22 +150,7 @@ public class ParaTask {
     public static void setThreadPoolSize(ThreadPoolType threadPoolType, int size) {
     	if (size < 1)
 			throw new IllegalArgumentException("Trying to create a Taskpool with " + size + " threads");
-		
-		
-		/**
-		 * 
-		 * @Author Kingsley
-		 * @since 29/04/2013
-		 * 
-		 * Set thread pool size through accessing the class of thread pool
-		 * 
-		 * @since 27/05/2013
-		 * Add another argument to indicate the thread pool type
-		 * */
-		
-    	//threadPoolSize = size;
-		//ThreadPool.setPoolSize(size);
-		ThreadPool.setPoolSize(threadPoolType,size);
+			ThreadPool.setPoolSize(threadPoolType,size);
     }
     
     /**
@@ -230,17 +215,6 @@ public class ParaTask {
      * @return	The thread pool size.
      */
     public static int getThreadPoolSize(ThreadPoolType threadPoolType) {
-    	
-    	/**
-		 * 
-		 * @Author : Kingsley
-		 * @since : 29/04/2013
-		 * 
-		 * Get thread pool size through accessing the class of thread pool
-		 * 
-		 * */
-    	
-    	//return threadPoolSize;
     	return ThreadPool.getPoolSize(threadPoolType);
     }
     
@@ -282,32 +256,7 @@ public class ParaTask {
 			//-- initialize the EDT
 			EDT = GuiThread.getEventDispatchThread();
 			listener = new GuiEdtTaskListener();
-			/*
-			 * The ParaTask keywords notifyGUI and notifyInterimGUI has been removed.
-			 * All slots will be handled by the GUI EDT thread, and this feature has been
-			 * tested on both Java SE platform and Android platform, for both with GUI
-			 * and without GUI situations.
-			 * 
-			 * The SlotHandlingThread.java and SlotHandlingThreadTaskListener.java are 
-			 * also removed.
-			 * 
-			 * If there are other situations where we cannot depend on the GUI EDT thread
-			 * to handle slots, or you do want to have a separate thread act as the slot 
-			 * handling thread instead of the GUI EDT thread, please add these two Java 
-			 * files back, and initialize ParaTask.EDT and ParaTask.listener with their 
-			 * instances.
-			 * 
-			 * Here are the svn revision and URLs of these two Java files before
-			 * they are deleted:
-			 * 
-			 * revision 3717
-			 * 
-			 * https://svn.ece.auckland.ac.nz/svn/taschto/ParallelTask/branches/PTNotify/src/pt/runtime/SlotHandlingThread.java
-			 * https://svn.ece.auckland.ac.nz/svn/taschto/ParallelTask/branches/PTNotify/src/pt/runtime/SlotHandlingThreadTaskListener.java
-			 */
-			
 			isInitialized = true;
-			
 			System.out.println("ParaTask.init EDT id: " + EDT.getId() + " EDT name: " + EDT.getName());
 		}
 	}
@@ -339,16 +288,6 @@ public class ParaTask {
 		
 		Iterator<TaskID> it = list.iterator();
 		while (it.hasNext()) {
-			
-			/*
-			TaskID id = it.next();
-			if (id instanceof TaskIDGroup) {
-				result.addAll(allTasksInGroup((TaskIDGroup)id));
-			} else {
-				result.add(id);
-			}
-			*/
-			
 			result.add(it.next());
 		}
 		return result;

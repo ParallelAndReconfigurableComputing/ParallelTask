@@ -110,8 +110,8 @@ public class TaskID<E> {
 	
 	private boolean isInteractive = false;
 	
-	private ConcurrentLinkedQueue<TaskID<?>> waitingTasks = null;	// TaskIDs waiting for this task 
-	private ConcurrentHashMap<TaskID<?>, Object> remainingDependences = null;	// TaskIDs this task is waiting for
+	protected ConcurrentLinkedQueue<TaskID<?>> waitingTasks = null;	// TaskIDs waiting for this task 
+	protected ConcurrentHashMap<TaskID<?>, Object> remainingDependences = null;	// TaskIDs this task is waiting for
 	
 	protected TaskIDGroup<E> group = null;
 	
