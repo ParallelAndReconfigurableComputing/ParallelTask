@@ -26,12 +26,12 @@ public class InteractiveThread extends TaskThread {
 
 	private TaskID<?> taskID = null;
 	private AtomicBoolean alive = new AtomicBoolean();
-	private String interruptMessage;
+	private AtomicBoolean setByThisThread = new AtomicBoolean();
 	
 	InteractiveThread(Taskpool taskpool, TaskID<?> taskID) {
 		super(taskpool);
-		alive.set(true);;
-		interruptMessage = null;
+		alive.set(true);
+		setByThisThread.set(false);
 		this.taskID = taskID;
 	}
 	
@@ -41,14 +41,14 @@ public class InteractiveThread extends TaskThread {
 	
 	void setTaskID(TaskID<?> taskID){
 		this.taskID = taskID;
-		this.interruptMessage = "SetByParaTask";
+		this.setByThisThread.set(true);
 		interrupt();
 	}
 	
 	private void resetThread(){
 		taskpool.interactiveTaskCompleted(taskID);
 		this.taskID = null;
-		this.interruptMessage = null;
+		this.setByThisThread.set(false);
 	}
 
 	@Override
@@ -66,7 +66,7 @@ public class InteractiveThread extends TaskThread {
 			try{
 				Thread.sleep(ParaTask.INTERACTIVE_SLEEP_DELAY);
 			}catch(InterruptedException e){
-				if(!interruptMessage.equals("SetByParaTask"))
+				if(!setByThisThread.get())
 					break;
 			}
 		}
