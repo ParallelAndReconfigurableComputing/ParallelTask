@@ -177,64 +177,15 @@ public class TaskpoolFIFOWorkSharing extends AbstractTaskPool {
 	@Override
 	protected void initialise() {
 		
-		//-- The private queues and the global queue all have FIFO ordering, since tasks are executed in the same order as the enqueue.
-		
-		/**
-		 * 
-		 * @Author : Kingsley
-		 * @since : 25/04/2013
-		 * The data structure is changed from array to list, therefore the corresponding way to
-		 * initialize the data has to be changed.
-		 * 
-		 * Initialize private queue for only multi task worker threads.
-		 * 
-		 * Initialize both global multi task queue and global one-off task queue.
-		 * 
-		 * @since : 04/05/2013
-		 * For multi task, global multi task queue and private queues should be initialized here
-		 * 
-		 * For one-off task, global one-off task queue and local one-off task queues should be 
-		 * initialized here
-		 * 
-		 * @since : 15/05/2013
-		 * For one-off task, only global multi task queue is required.
-		 * 
-		 * @since : 18/05/2013
-		 * Thread pool should not take responsibility of creating local queues or private queues
-		 * for individual working thread, even before those threads are created.
-		 * Keep creating all shared queues, such as global queue and mixed queue here, create
-		 * only the collection for unshared queues here, after worker threads are created later 
-		 * along with their individual queues, those queues could be added into the collection.    
-		 * 
-		 * */
-		
-		
-		/*privateQueues = new PriorityBlockingQueue[numThreads];
-		for (int i = 0; i < numThreads; i++) {
-			privateQueues[i] = new PriorityBlockingQueue<TaskID<?>>(INITIAL_QUEUE_CAPACITY, FIFO_TaskID_Comparator);
-		}
-		globalTaskqueue = new PriorityBlockingQueue<TaskID<?>>(INITIAL_QUEUE_CAPACITY, FIFO_TaskID_Comparator);*/
-		
-		//For multi task used
 		globalMultiTaskqueue = new PriorityBlockingQueue<TaskID<?>>(
 				AbstractTaskPool.INITIAL_QUEUE_CAPACITY,
 				AbstractTaskPool.FIFO_TaskID_Comparator);
 		
 		privateQueues = new ArrayList<AbstractQueue<TaskID<?>>>();
 		
-		//Put this create procedure into thread pool 
-		/*for (int i = 0; i < numMultiTaskThreads; i++) {
-			privateQueues.add(new PriorityBlockingQueue<TaskID<?>>(
-					AbstractTaskPool.INITIAL_QUEUE_CAPACITY,
-					AbstractTaskPool.FIFO_TaskID_Comparator));
-		}*/
-		
-		//For one-off task used
 		globalOne0ffTaskqueue = new PriorityBlockingQueue<TaskID<?>>(
 				AbstractTaskPool.INITIAL_QUEUE_CAPACITY,
 				AbstractTaskPool.FIFO_TaskID_Comparator);
-		
-		//localOneoffTaskQueues = new HashMap<Integer, LinkedBlockingDeque<TaskID<?>>>();
 		
 		initialiseWorkerThreads();
 	}
