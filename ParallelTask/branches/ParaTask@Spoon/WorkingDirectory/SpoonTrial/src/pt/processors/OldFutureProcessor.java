@@ -8,31 +8,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.sun.org.apache.bcel.internal.generic.NEWARRAY;
-
 import pt.annotations.AnnotationProcessingFilter;
 import pt.annotations.Future;
 import spoon.processing.AbstractAnnotationProcessor;
 import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtCodeSnippetExpression;
-import spoon.reflect.code.CtCodeSnippetStatement;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
-import spoon.reflect.code.CtLiteral;
 import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtStatementList;
 import spoon.reflect.code.CtVariableAccess;
 import spoon.reflect.declaration.CtAnnotation;
-import spoon.reflect.declaration.CtExecutable;
-import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtVariable;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.support.reflect.code.CtInvocationImpl;
 import spoon.support.reflect.code.CtLocalVariableImpl;
 import spoon.support.reflect.reference.CtExecutableReferenceImpl;
-import sun.security.action.GetLongAction;
 
 public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVariable<?>>{
 
@@ -335,7 +328,7 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 		CtCodeSnippetExpression<?> newArgument = getFactory().Core().createCodeSnippetExpression();
 			
 		newArgument.setValue(newLambdaPhrase(invocation));
-		CtExpression<?> newArgExp = (CtExpression<?>) newArgument;
+		CtExpression<?> newArgExp = newArgument;
 				
 		List<CtExpression<?>> arguments = new ArrayList<>();
 		arguments.add(newArgExp);
@@ -441,7 +434,7 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 		CtTypeReference taskIDType = getTaskIDType(thisAnnotatedElement);
 		localVar.setType(taskIDType);
 		localVar.setSimpleName(SpoonUtils.getTaskIDName(thisElementName));
-		localVar.setDefaultExpression((CtExpression)defaultExp);
+		localVar.setDefaultExpression(defaultExp);
 		
 		return localVar;
 	}
