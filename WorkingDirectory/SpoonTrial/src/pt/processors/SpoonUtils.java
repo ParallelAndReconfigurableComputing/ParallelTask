@@ -15,6 +15,7 @@ import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.declaration.CtAnnotation;
+import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtVariable;
 import spoon.reflect.reference.CtVariableReference;
 import spoon.support.reflect.code.CtArrayAccessImpl;
@@ -49,6 +50,7 @@ import spoon.support.reflect.code.CtWhileImpl;
 public class SpoonUtils {
 
 	private static Map<String, String> primitiveMap = new HashMap<String, String>();
+	private static List<CtExpression<?>> listOfExpressions = new ArrayList<>();
 
 	static {
 		primitiveMap.put("int", "Integer");
@@ -307,6 +309,157 @@ public class SpoonUtils {
 		}
 	}
 	
+	
+//	public static List<CtExpression<?>> listAllExpressions(List<CtStatement> statements, String regex, String replacement){
+//		List<CtStatement> statementsToInspect = null;
+//		
+//		for (CtStatement statement : statements){
+//			
+//			statementsToInspect = new ArrayList<>();
+//			
+//			if (statement instanceof CtBlockImpl<?>){
+//				CtBlockImpl<?> blockStatement = (CtBlockImpl<?>) statement;
+//				statementsToInspect = blockStatement.getStatements();
+//				modifyStatements(statementsToInspect, regex, replacement);
+//			}
+//			
+//			else if (statement instanceof CtAssignmentImpl<?, ?>){
+//				
+//					CtAssignmentImpl<?, ?> assignmentImpl = null;
+//					
+//				if (statement instanceof CtOperatorAssignmentImpl<?, ?>){
+//					assignmentImpl = (CtOperatorAssignmentImpl<?, ?>) statement;
+//				}
+//				else{
+//					assignmentImpl = (CtAssignmentImpl<?, ?>) statement;
+//				}
+//				expressionsToModify.add(assignmentImpl.getAssignment());
+//				modifyExpressions(expressionsToModify, regex, replacement);
+//			}
+//			
+//			else if (statement instanceof CtThrowImpl){
+//				CtThrowImpl throwImpl = (CtThrowImpl) statement;
+//				expressionsToModify.add(throwImpl.getThrownExpression());
+//				modifyExpressions(expressionsToModify, regex, replacement);
+//			}
+//			
+//			else if (statement instanceof CtReturnImpl<?>){
+//				CtReturnImpl<?> returnImp = (CtReturnImpl<?>) statement;
+//				expressionsToModify.add(returnImp.getReturnedExpression());
+//				modifyExpressions(expressionsToModify, regex, replacement);
+//			}
+//			
+//			else if (statement instanceof CtLoopImpl){
+//			
+//				if (statement instanceof CtWhileImpl){
+//					CtWhileImpl whileImpl = (CtWhileImpl) statement;
+//					expressionsToModify.add(whileImpl.getLoopingExpression());
+//					modifyExpressions(expressionsToModify, regex, replacement);
+//					statementsToInspect.add(whileImpl.getBody());
+//					modifyStatements(statementsToInspect, regex, replacement);
+//				}
+//				
+//				else if (statement instanceof CtDoImpl){
+//					CtDoImpl doImpl = (CtDoImpl) statement;
+//					expressionsToModify.add(doImpl.getLoopingExpression());
+//					modifyExpressions(expressionsToModify, regex, replacement);
+//					statementsToInspect.add(doImpl.getBody());
+//					modifyStatements(statementsToInspect, regex, replacement);
+//				}
+//				
+//				else if (statement instanceof CtForImpl){
+//					CtForImpl forImpl = (CtForImpl) statement;
+//					expressionsToModify.add(forImpl.getExpression());
+//					modifyExpressions(expressionsToModify, regex, replacement);
+//					statementsToInspect.add(forImpl.getBody());
+//					statementsToInspect.addAll(forImpl.getForInit());
+//					statementsToInspect.addAll(forImpl.getForUpdate());
+//					modifyStatements(statementsToInspect, regex, replacement);
+//				}
+//				
+//				else if (statement instanceof CtForEachImpl){
+//					CtForEachImpl forEachImpl = (CtForEachImpl) statement;
+//					expressionsToModify.add(forEachImpl.getExpression());
+//					modifyExpressions(expressionsToModify, regex, replacement);
+//					statementsToInspect.add(forEachImpl.getBody());
+//					modifyStatements(statementsToInspect, regex, replacement);
+//				}
+//			}
+//			
+//			else if (statement instanceof CtIfImpl){
+//				CtIfImpl ifImpl = (CtIfImpl) statement;
+//				expressionsToModify.add(ifImpl.getCondition());
+//				modifyExpressions(expressionsToModify, regex, replacement);
+//				statementsToInspect.add(ifImpl.getThenStatement());
+//				statementsToInspect.add(ifImpl.getElseStatement());
+//				modifyStatements(statementsToInspect, regex, replacement);
+//			}
+//			
+//			else if (statement instanceof CtAssertImpl<?>){
+//				CtAssertImpl<?> assertImpl = (CtAssertImpl<?>) statement;
+//				expressionsToModify.add(assertImpl.getAssertExpression());
+//				expressionsToModify.add(assertImpl.getExpression());
+//				modifyExpressions(expressionsToModify, regex, replacement);
+//			}
+//			
+//			else if (statement instanceof CtCaseImpl<?>){
+//				CtCaseImpl<?> caseImpl = (CtCaseImpl<?>) statement;
+//				expressionsToModify.add(caseImpl.getCaseExpression());
+//				modifyExpressions(expressionsToModify, regex, replacement);
+//				statementsToInspect.addAll(caseImpl.getStatements());
+//				modifyStatements(statementsToInspect, regex, replacement);
+//			}
+//			
+//			else if (statement instanceof CtContinueImpl){
+//				//AT THIS STAGE DO NOTHING FOR A CONTINUE STATEMENT
+//			}
+//			
+//			else if (statement instanceof CtLocalVariableImpl<?>){
+//				CtLocalVariableImpl<?> varImpl = (CtLocalVariableImpl<?>) statement;
+//				expressionsToModify.add(varImpl.getDefaultExpression());
+//				modifyExpressions(expressionsToModify, regex, replacement);
+//			}
+//			
+//			else if (statement instanceof CtSynchronizedImpl){
+//				CtSynchronizedImpl syncImpl = (CtSynchronizedImpl) statement;
+//				/*because the expressions in synchronized statements specify the monitoring
+//				  object, there is no need to change the object!*/
+//				statementsToInspect.add(syncImpl.getBlock());
+//				modifyStatements(statementsToInspect, regex, replacement);
+//			}
+//			
+//			else if (statement instanceof CtTryImpl){
+//				//if (statement instanceof CtTryWithResource){} for new version of spoon!
+//				CtTryImpl tryImpl = (CtTryImpl) statement;
+//				statementsToInspect.add(tryImpl.getBody());
+//				statementsToInspect.add(tryImpl.getFinalizer());
+//				List<CtCatch> catchers = tryImpl.getCatchers();
+//				for (CtCatch catcher : catchers){
+//					statementsToInspect.add(catcher.getBody());
+//				}
+//				modifyStatements(statementsToInspect, regex, replacement);
+//			}
+//			else if (statement instanceof CtBreakImpl){
+//				//AT THIS STAGE DO NOTHING FOR A BREAK STATEMENT
+//			}
+//			
+//			else if (statement instanceof CtSwitchImpl<?>){
+//				CtSwitchImpl<?> switchImpl = (CtSwitchImpl<?>) statement;
+//				expressionsToModify.add(switchImpl.getSelector());
+//				modifyExpressions(expressionsToModify, regex, replacement);
+//				statementsToInspect.addAll(switchImpl.getCases());
+//				modifyStatements(statementsToInspect, regex, replacement);
+//			}
+//			
+//			else if (statement instanceof CtInvocationImpl<?>){
+//				CtInvocationImpl<?> invocImpl = (CtInvocationImpl<?>) statement;
+//				expressionsToModify.addAll(invocImpl.getArguments());
+//				modifyExpressions(expressionsToModify, regex, replacement);
+//			}
+//		}
+//	}
+
+	
 	public static String replacePatternInSource(String source, String patternRegex, String replacement){
 		Pattern pattern = Pattern.compile(patternRegex);
 		Matcher matcher = pattern.matcher(source);
@@ -435,6 +588,16 @@ public class SpoonUtils {
 		if(declaration == null)
 			return false;
 		return true;
+	}
+	
+	public static List<CtElement> getParents(CtElement element){
+		List<CtElement> parents = new ArrayList<CtElement>();
+		CtElement parent = element.getParent();
+		while(parent != null){
+			parents.add(parent);
+			parent = parent.getParent();
+		}
+		return parents;
 	}
 	
 	public static String getTaskIDName(String name) {

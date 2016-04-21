@@ -1,9 +1,6 @@
 package pt.annotations;
 
-import org.eclipse.jdt.core.dom.ThisExpression;
-
 import spoon.reflect.code.CtStatement;
-import spoon.reflect.declaration.CtElement;
 import spoon.reflect.visitor.Filter;
 
 public class AnnotationProcessingFilter<T extends CtStatement> implements Filter<T> {
