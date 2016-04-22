@@ -1,11 +1,10 @@
 package pt.annotations;
 
+import java.util.*;
 
 public class FutureGroupTest {
 	
-	private void myMethod(){
-		
-		class TestFuture{
+	class TestFuture{
 			
 			int numb = 6;
 			private void myMethod(){
@@ -29,17 +28,13 @@ public class FutureGroupTest {
 			}
 		}
 		
-		TestFuture tf = new TestFuture();
-		tf.myMethod();		
-	}
-	
 	
 	
 	
 	public static void main(String[] args) {
 		
-		FutureGroupTest fgt = new FutureGroupTest();
-		fgt.myMethod();
+		TestFuture tf = new TestFuture();
+		tf.myMethod();
 		
 	}
 
