@@ -96,10 +96,10 @@ public class FutureGroupProcessor extends
 			if((parent instanceof CtClassImpl<?>)){
 				outerClass = (CtClassImpl<?>) parent;
 			}
-			System.out.println("Element parent: \n" + parent);
-			System.out.println("-------------------------------------------");
-			System.out.println("Parent type: " + parent.getClass());
-			System.out.println("+++++++++++++++++++++++++++++++++++++++++++");
+//			System.out.println("Element parent: \n" + parent);
+//			System.out.println("-------------------------------------------");
+//			System.out.println("Parent type: " + parent.getClass());
+//			System.out.println("+++++++++++++++++++++++++++++++++++++++++++");
 		}
 		System.out.println("outerclass: \n" + outerClass);
 	}
