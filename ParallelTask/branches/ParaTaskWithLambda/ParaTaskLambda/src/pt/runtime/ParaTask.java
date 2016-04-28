@@ -19,10 +19,8 @@
 
 package pt.runtime;
 
-import java.util.concurrent.ExecutionException;
+import java.util.Collection;
 import java.util.concurrent.locks.ReentrantLock;
-
-import javax.naming.ldap.StartTlsRequest;
 
 import pu.RedLib.Reduction;
 import pt.functionalInterfaces.FunctorEightArgsNoReturn;
@@ -75,6 +73,7 @@ public class ParaTask {
 	private static ScheduleType scheduleType = null;
 	private static boolean isInitialized = false;
 	private static boolean hasStartedWorking = false;
+	private static boolean processInParallel = false;
 
 	private static Thread EDT = null;		// a reference to the EDT
 	private static AbstractTaskListener listener;	// the EDT task listener
@@ -287,6 +286,10 @@ public class ParaTask {
 			}
 		}
 		return true;
+	}
+	
+	public static <T> Collection<T> collectionFactory(Collection<T> collection){
+		return null;
 	}
 	
 	static AbstractTaskListener getEDTTaskListener() {
