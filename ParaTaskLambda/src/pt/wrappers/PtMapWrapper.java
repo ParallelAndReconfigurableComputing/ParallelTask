@@ -7,41 +7,55 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class PtMapWrapper<K, V> implements Map<K, V> {
 	
-	ConcurrentHashMap<K, V> thisMap = null;
+	ConcurrentHashMap<K, PtCollectionObject<V>> thisMap = null;
 	Map<K, V> thisOriginalMap = null;
 	
 	public PtMapWrapper(Map<K, V> originalMap){
+		thisMap = new ConcurrentHashMap<>();
 		thisOriginalMap = originalMap;
+		if(!thisOriginalMap.isEmpty()){
+			Set<K> keys = thisOriginalMap.keySet();
+			for(K key : keys){
+				thisMap.put(key, new PtCollectionObject<>(thisOriginalMap.get(key)));
+			}
+		}
 	}
 
 	@Override
 	public int size() {
-		// TODO Auto-generated method stub
-		return 0;
+		return thisMap.size();
 	}
 
 	@Override
 	public boolean isEmpty() {
-		// TODO Auto-generated method stub
-		return false;
+		return thisMap.isEmpty();
 	}
 
 	@Override
 	public boolean containsKey(Object key) {
-		// TODO Auto-generated method stub
-		return false;
+		return thisMap.containsKey(key);
 	}
 
 	@Override
 	public boolean containsValue(Object value) {
-		// TODO Auto-generated method stub
+		Set<K> keys = thisMap.keySet();
+		
+		for(K key : keys){
+			PtCollectionObject<V> obj = thisMap.get(key);
+			if(obj.contains(value))
+				return true;
+		}
+		
 		return false;
+	}
+	
+	public boolean contains(Object value){
+		return containsValue(value);
 	}
 
 	@Override
 	public V get(Object key) {
-		// TODO Auto-generated method stub
-		return null;
+		return thisMap.get(key).getObject();
 	}
 
 	@Override
