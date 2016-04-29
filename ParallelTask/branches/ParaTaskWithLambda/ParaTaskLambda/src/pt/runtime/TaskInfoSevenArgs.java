@@ -18,7 +18,7 @@ public class TaskInfoSevenArgs<R, T1, T2, T3, T4, T5, T6, T7> extends TaskInfo<R
 	}
 	
 	TaskInfoSevenArgs(FunctorSevenArgsNoReturn<T1, T2, T3, T4, T5, T6, T7> functorNoReturn, TaskType taskType){
-		this(functorNoReturn, taskType, STAR);
+		this(functorNoReturn, taskType, ParaTask.STAR);
 	}
 	
 	TaskInfoSevenArgs(FunctorSevenArgsWithReturn<R, T1, T2, T3, T4, T5, T6, T7> functorWithReturn, TaskType taskType, int taskCount){
@@ -27,7 +27,7 @@ public class TaskInfoSevenArgs<R, T1, T2, T3, T4, T5, T6, T7> extends TaskInfo<R
 	}
 	
 	TaskInfoSevenArgs(FunctorSevenArgsWithReturn<R, T1, T2, T3, T4, T5, T6, T7> functorWithReturn, TaskType taskType){
-		this(functorWithReturn, taskType, STAR);
+		this(functorWithReturn, taskType, ParaTask.STAR);
 	}
 	
 	public TaskID<R> start(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7) {

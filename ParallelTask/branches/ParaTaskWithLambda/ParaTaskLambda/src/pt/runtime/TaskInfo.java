@@ -57,7 +57,7 @@ import pt.runtime.ParaTask.TaskType;
  * @since  7/9/2014
  */
 public abstract class TaskInfo<R> {
-	static final int STAR = 0;
+	
 
 	// for ParaTask in Java 8
 	//private Functor<?> lambda;

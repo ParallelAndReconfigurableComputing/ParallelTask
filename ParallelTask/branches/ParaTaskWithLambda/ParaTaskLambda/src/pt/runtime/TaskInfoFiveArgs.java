@@ -17,7 +17,7 @@ public class TaskInfoFiveArgs<R, T1, T2, T3, T4, T5> extends TaskInfo<R> {
 	}
 	
 	TaskInfoFiveArgs(FunctorFiveArgsNoReturn<T1, T2, T3, T4, T5> functorNoReturn, TaskType taskType) {
-		this(functorNoReturn, taskType, STAR);
+		this(functorNoReturn, taskType, ParaTask.STAR);
 	}
 	
 	TaskInfoFiveArgs(FunctorFiveArgsWithReturn<R, T1, T2, T3, T4, T5> functorWithReturn, TaskType taskType, int taskCount) {
@@ -26,7 +26,7 @@ public class TaskInfoFiveArgs<R, T1, T2, T3, T4, T5> extends TaskInfo<R> {
 	}
 	
 	TaskInfoFiveArgs(FunctorFiveArgsWithReturn<R, T1, T2, T3, T4, T5> functorWithReturn, TaskType taskType) {
-		this(functorWithReturn, taskType, STAR);
+		this(functorWithReturn, taskType, ParaTask.STAR);
 	}
 	
 	public TaskID<R> start(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5) {

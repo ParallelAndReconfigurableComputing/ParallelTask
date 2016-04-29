@@ -168,7 +168,7 @@ public abstract class AbstractTaskPool implements Taskpool {
 	@Override
 	public <T> TaskIDGroup<T> enqueueMulti(TaskInfo<T> taskInfo){
 		int count = taskInfo.taskCount;
-		if (count == TaskInfo.STAR)
+		if (count == ParaTask.STAR)
 			count = ThreadPool.getMultiTaskThreadPoolSize();
 		
 		//currently there is no mechanism for TaskIDGroups where different tasks are scheduled within a group!
