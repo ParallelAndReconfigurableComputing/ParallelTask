@@ -17,7 +17,7 @@ public class TaskInfoTwoArgs<R, T1, T2> extends TaskInfo<R> {
 	}
 	
 	TaskInfoTwoArgs(FunctorTwoArgsNoReturn<T1, T2> functorNoReturn, TaskType taskType){
-		this(functorNoReturn, taskType, STAR);
+		this(functorNoReturn, taskType, ParaTask.STAR);
 	}
 	
 	TaskInfoTwoArgs(FunctorTwoArgsWithReturn<R, T1, T2> functorWithReturn, TaskType taskType, int taskCount){
@@ -26,7 +26,7 @@ public class TaskInfoTwoArgs<R, T1, T2> extends TaskInfo<R> {
 	}
 	
 	TaskInfoTwoArgs(FunctorTwoArgsWithReturn<R, T1, T2> functorWithReturn, TaskType taskType){
-		this(functorWithReturn, taskType, STAR);
+		this(functorWithReturn, taskType, ParaTask.STAR);
 	}
 	
 	public TaskID<R> start(T1 arg1, T2 arg2) {

@@ -19,7 +19,7 @@ public class TaskInfoOneArg<R, T1> extends TaskInfo<R> {
 	}
 	
 	TaskInfoOneArg(FunctorOneArgNoReturn<T1> functorNoReturn, TaskType taskType){
-		this(functorNoReturn, taskType, STAR);
+		this(functorNoReturn, taskType, ParaTask.STAR);
 	}
 	
 	TaskInfoOneArg(FunctorOneArgWithReturn<R, T1> functorWithReturn, TaskType taskType, int taskCount){
@@ -28,7 +28,7 @@ public class TaskInfoOneArg<R, T1> extends TaskInfo<R> {
 	}
 	
 	TaskInfoOneArg(FunctorOneArgWithReturn<R, T1> functorWithReturn, TaskType taskType){
-		this(functorWithReturn, taskType, STAR);
+		this(functorWithReturn, taskType, ParaTask.STAR);
 	}
 	
 	public TaskID<R> start(T1 arg1) {

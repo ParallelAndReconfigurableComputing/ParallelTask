@@ -85,6 +85,7 @@ public class ParaTask {
 	static int ANY_THREAD_TASK = -1;
 	static int EXCEPTION_IN_SLOT = -1;
 	static int INTERACTIVE_SLEEP_DELAY = 60000;
+	static final int STAR = 0;
 	
 		
 	/**

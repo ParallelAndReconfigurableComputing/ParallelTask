@@ -17,7 +17,7 @@ public class TaskInfoNoArgs<R> extends TaskInfo<R> {
 	/*taskCount is only considered when a task is Multi, otherwise it is always 1.
 	However, if this rule changes, then this implementation needs to change as well.*/			
 	TaskInfoNoArgs(FunctorNoArgsNoReturn functorNoReturn, TaskType taskType){
-		this(functorNoReturn, taskType, STAR);
+		this(functorNoReturn, taskType, ParaTask.STAR);
 	}
 	
 	TaskInfoNoArgs(FunctorNoArgsWithReturn<R> functorWithReturn, TaskType taskType, int taskCount){
@@ -26,7 +26,7 @@ public class TaskInfoNoArgs<R> extends TaskInfo<R> {
 	}
 	
 	TaskInfoNoArgs(FunctorNoArgsWithReturn<R> functorWithReturn, TaskType taskType){
-		this(functorWithReturn, taskType, STAR);
+		this(functorWithReturn, taskType, ParaTask.STAR);
 	}
 	
 	public TaskID<R> start(){
