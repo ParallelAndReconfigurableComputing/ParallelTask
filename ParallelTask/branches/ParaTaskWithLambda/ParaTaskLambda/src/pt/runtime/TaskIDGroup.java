@@ -371,7 +371,6 @@ public class TaskIDGroup<T> extends TaskID<T> {
 			}
 		}
 		size = getGroupSize();
-		System.out.println("group size: " + size);
 		for (int i = size-1; i >= 0; i--) {// wait for them in reverse order (LIFO)
 			try {
 				TaskID<?> taskID = innerTasks.get(i);
