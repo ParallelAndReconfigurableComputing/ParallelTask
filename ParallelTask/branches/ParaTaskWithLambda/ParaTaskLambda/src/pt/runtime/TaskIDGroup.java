@@ -58,6 +58,8 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	/*Indicates how many sub tasks should be expanded, and its value can
 	only be set from {@link AbstractTaskPool#enqueueMulti()}*/
 	private int groupSize = 0;
+	private boolean dynamicTaskGroup = false;
+	
 	private Reduction<T> reductionOperation = null; 
 	
 	//Only a multi-task if the group was created by ParaTask, this attribute 
@@ -76,10 +78,9 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	 */
 	private boolean isExpanded = false;
 	
-	/**
-	 * Construct a new group that will contain <code>groupSize</code> tasks.
-	 * @param groupSize		The number of tasks that will be added to the group
-	 */
+	public TaskIDGroup(){
+		dynamicTaskGroup = true;
+	}
 	
 	/**
 	 * This public constructor is actually used to group a bunch of tasks, which
@@ -125,7 +126,7 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	 * be part of a multi-task.
 	 * @return	<code>true</code> if this <code>TaskIDGroup</code> represents an actual multi-task, <code>false</code> otherwise
 	 */
-	public boolean isMultiTask() {
+	boolean isMultiTask() {
 		return isMultiTask;
 	}
 	
@@ -155,10 +156,14 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	 * it is used for multi task group only but not user defined group.
 	 * */
 	public void addInnerTask(TaskID<?> id) {
-		/*What should be the policy for adding more than groupSize elements!*/
-		if(id instanceof TaskIDGroup<?>)
-			System.out.println("adding a taskidgroup");
 		innerTasks.add(id);
+		
+		if(dynamicTaskGroup)
+			groupSize = innerTasks.size();
+		
+		else if(innerTasks.size() > groupSize)
+			throw new RuntimeException("\nTHE NUMBER OF INNER TASKS THAT ARE ADDED IS LARGER THAN THE SIZE THAT WAS SET FOR THIS GROUP!\n"
+					+ "FOR DYNAMIC GROUP SIZE USE DEAFULT CONSTRUCTOR OF TaskIDGroup!\n");
 	}
 	
 	
@@ -366,6 +371,7 @@ public class TaskIDGroup<T> extends TaskID<T> {
 			}
 		}
 		size = getGroupSize();
+		System.out.println("group size: " + size);
 		for (int i = size-1; i >= 0; i--) {// wait for them in reverse order (LIFO)
 			try {
 				TaskID<?> taskID = innerTasks.get(i);
