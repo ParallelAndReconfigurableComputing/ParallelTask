@@ -20,6 +20,7 @@
 package pt.runtime;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
 import pu.RedLib.Reduction;
@@ -49,6 +50,8 @@ import pt.functionalInterfaces.FunctorTwelveArgsNoReturn;
 import pt.functionalInterfaces.FunctorTwelveArgsWithReturn;
 import pt.functionalInterfaces.FunctorTwoArgsNoReturn;
 import pt.functionalInterfaces.FunctorTwoArgsWithReturn;
+import pt.wrappers.PtCollectionWrapper;
+import pt.wrappers.PtMapWrapper;
 
 
 /**
@@ -254,7 +257,7 @@ public class ParaTask {
 		lock.unlock();
 	}
 	
-	public static <T> void setReductionOperation(TaskIDGroup<T> taskGroup, Reduction<T> reduction){
+	public static <T> void setReductionOperationForTaskIDGroup(TaskIDGroup<T> taskGroup, Reduction<T> reduction){
 		taskGroup.setReduction(reduction);
 	}
 	
@@ -292,9 +295,6 @@ public class ParaTask {
 		return true;
 	}
 	
-	public static <T> Collection<T> collectionFactory(Collection<T> collection){
-		return null;
-	}
 	
 	static AbstractTaskListener getEDTTaskListener() {
 		if (EDT == null) {
@@ -310,7 +310,19 @@ public class ParaTask {
 	public static <R> void registerSlotToNotify(TaskInfo<R> taskInfo, FunctorOneArgNoReturn<R> functor){
 		taskInfo.notify(new Slot<R>(functor));
 	}
-		
+	
+	public static <T> Collection<T> collectionFactory(Collection<T> collection){
+		if(!processInParallel)
+			return collection;
+		return new PtCollectionWrapper<>(collection);
+	}
+	
+	public static <K, V> Map<K, V> collectionFactory(Map<K, V> map){
+		if(!processInParallel)
+			return map;
+		return new PtMapWrapper<>(map);
+	}
+			
 	//****************************************************************************************TASK GENERATORS******************************************************************
 	public static TaskInfo<Void> asTask(TaskType taskType, int taskCount, FunctorNoArgsNoReturn functor){
 		return new TaskInfoNoArgs<>(functor, taskType, taskCount);

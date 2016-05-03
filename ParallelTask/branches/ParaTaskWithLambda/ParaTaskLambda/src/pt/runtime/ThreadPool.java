@@ -35,9 +35,9 @@ public class ThreadPool {
 	 * Use the field of "multiTaskThreadPoolSize" to trace how many one-off task
 	 * worker threads should EXACTLY exist in the one-off task thread pool
 	 */
-	private static int multiTaskThreadPoolSize;
+	private static int multiTaskThreadPoolSize = 0;
 	
-	private static int oneOffTaskThreadPoolSize;
+	private static int oneOffTaskThreadPoolSize = 0;
 
 	private final static ReentrantLock reentrantLock = new ReentrantLock();
 
@@ -95,11 +95,12 @@ public class ThreadPool {
 	 */
 	private static void initializeWorkerThreads(Taskpool taskpool) {
 		
+		if(multiTaskThreadPoolSize == 0)
+			multiTaskThreadPoolSize = Runtime.getRuntime().availableProcessors();
+		if(oneOffTaskThreadPoolSize == 0)
+			oneOffTaskThreadPoolSize = Runtime.getRuntime().availableProcessors();
 		
-		if (totalNumberOfThreads < 1)
-			totalNumberOfThreads = 2 * Runtime.getRuntime().availableProcessors();
-		
-		int multiTaskThreadPoolSize = Runtime.getRuntime().availableProcessors();
+		totalNumberOfThreads = oneOffTaskThreadPoolSize + multiTaskThreadPoolSize;
 		
 		int multiTaskWorkerID = 0;
 		List<AbstractQueue<TaskID<?>>> privateTaskQueues = taskpool.getPrivateTaskQueues();
@@ -137,8 +138,6 @@ public class ThreadPool {
 				workerThread.start();
 			}
 		}
-		multiTaskThreadPoolSize = multiTaskWorkers.size();
-		oneOffTaskThreadPoolSize = oneOffTaskWorkers.size();
 	}
 	
 	
@@ -151,7 +150,7 @@ public class ThreadPool {
 		case MULTI:
 			return multiTaskThreadPoolSize;
 		default:
-			return multiTaskThreadPoolSize + oneOffTaskThreadPoolSize;
+			return totalNumberOfThreads;
 		}
 	}
 
@@ -166,7 +165,6 @@ public class ThreadPool {
 	 * */
 	
 	protected static void setPoolSize(ThreadPoolType threadPoolType, int poolSize) {
-		ThreadPool.totalNumberOfThreads = poolSize;
 		adjustThreadPoolCapacity(threadPoolType, poolSize);
 	}
 	
@@ -206,6 +204,8 @@ public class ThreadPool {
 		default:
 			break;
 		}
+		
+		totalNumberOfThreads = oneOffTaskThreadPoolSize + multiTaskThreadPoolSize;
 	}
 	
 	/**
@@ -219,7 +219,7 @@ public class ThreadPool {
 	 * Work on this part later.
 	 * */
 	private static void adjustMultiTaskThreadPool(int newSize){
-		
+		multiTaskThreadPoolSize = newSize;
 	}
 	
 	/**
@@ -249,7 +249,7 @@ public class ThreadPool {
 			
 			reentrantLock.lock();
 			
-			//but in the "waitTillFinished" method in TaskID, if a thread is poisoned, it cannot
+			//in the "waitTillFinished" method in TaskID, if a thread is poisoned, it cannot
 			//execute any tasks! So, the "informThreadPool" method sets cancelRequest back to "false"
 			//if enough threads have been killed. 
 			for (WorkerThread workerThread : oneOffTaskWorkers.values()){
@@ -258,7 +258,6 @@ public class ThreadPool {
 			
 			reentrantLock.unlock();
 			
-			oneOffTaskThreadPoolSize = oneOffTaskThreadPoolSize - diff;
 		}else {
 			int diff = newSize - oneOffTaskThreadPoolSize;
 			
@@ -275,8 +274,9 @@ public class ThreadPool {
 				workerThread.start();
 			}
 			
-			oneOffTaskThreadPoolSize = oneOffTaskWorkers.size();
 		}
+		
+		oneOffTaskThreadPoolSize = newSize;
 	}
 	
 	/*
