@@ -95,10 +95,14 @@ public class ThreadPool {
 	 */
 	private static void initializeWorkerThreads(Taskpool taskpool) {
 		
-		if(multiTaskThreadPoolSize == 0)
+		if(multiTaskThreadPoolSize == 0){
+			System.out.println("No. of cpu");
 			multiTaskThreadPoolSize = Runtime.getRuntime().availableProcessors();
-		if(oneOffTaskThreadPoolSize == 0)
+		}
+		if(oneOffTaskThreadPoolSize == 0){
+			System.out.println("No. of CPU for MULTI");
 			oneOffTaskThreadPoolSize = Runtime.getRuntime().availableProcessors();
+		}
 		
 		totalNumberOfThreads = oneOffTaskThreadPoolSize + multiTaskThreadPoolSize;
 		
@@ -219,7 +223,17 @@ public class ThreadPool {
 	 * Work on this part later.
 	 * */
 	private static void adjustMultiTaskThreadPool(int newSize){
-		multiTaskThreadPoolSize = newSize;
+		if(ParaTask.isInitialized())
+			dynamicAdjustMultiTaskThreadPool(newSize);
+		else
+			multiTaskThreadPoolSize = newSize;
+	}
+	
+	private static void adjustOneOffThreadPool(int newSize){
+		if(ParaTask.isInitialized())
+			dynamicAdjustOneOffThreadPool(newSize);
+		else 
+			oneOffTaskThreadPoolSize = newSize;
 	}
 	
 	/**
@@ -239,7 +253,7 @@ public class ThreadPool {
 	 *@since 16/9/2014
 	 * 
 	 * */
-	private static void adjustOneOffThreadPool(int newSize){
+	private static void dynamicAdjustOneOffThreadPool(int newSize){
 		if (oneOffTaskThreadPoolSize == newSize) {
 			return;
 		}else if (oneOffTaskThreadPoolSize > newSize) {
@@ -278,6 +292,12 @@ public class ThreadPool {
 		
 		oneOffTaskThreadPoolSize = newSize;
 	}
+	
+	private static void dynamicAdjustMultiTaskThreadPool(int newSize){
+		//Dynamic resizing of thread-pools, especially the multi-thread pool is not a good idea!
+		return;
+	}
+	
 	
 	/*
 	 * Before worker thread really stop working, give it a chance to tell the threadpool

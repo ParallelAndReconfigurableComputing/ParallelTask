@@ -174,8 +174,8 @@ public class ParaTask {
 			throw new IllegalArgumentException("Trying to create a Taskpool with " + size + " threads");
     	if (hasParaTaskStarted())
     		return false;
-    	if (!isInitialized())
-    		ParaTask.init();
+//    	if (!isInitialized())
+//    		ParaTask.init();
 		ThreadPool.setPoolSize(threadPoolType,size);
 		return true;
     }
