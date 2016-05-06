@@ -72,6 +72,7 @@ public class InteractiveThread extends TaskThread {
 			}catch(InterruptedException e){
 				if(!setByThisThread.get())
 					break;
+				Thread.interrupted();//for clearing the flag!
 			}
 		}
 		alive.set(false);
