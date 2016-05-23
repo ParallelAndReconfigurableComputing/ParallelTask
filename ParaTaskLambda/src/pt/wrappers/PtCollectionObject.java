@@ -2,38 +2,38 @@ package pt.wrappers;
 
 import pt.runtime.TaskID;
 
-public class PtCollectionObject<T> {
+public class PtCollectionObject<E> {
 
 	private enum ElementType {OBJECT, TASKID};
-	private T thisObject;
-	private TaskID<T> thisTaskID;
+	private E thisObject;
+	private TaskID<E> thisTaskID;
 	private ElementType elementType;
 	
-	public PtCollectionObject(T object){
+	public PtCollectionObject(E object){
 		elementType = ElementType.OBJECT;
 		thisObject = object;
 		thisTaskID = null;		
 	}
 	
-	public PtCollectionObject(TaskID<T> taskID){
+	public PtCollectionObject(TaskID<E> taskID){
 		elementType = ElementType.TASKID;
 		thisTaskID = taskID;
 		thisObject = null;
 	}
 	
-	public void setObject(T object){
+	public void setObject(E object){
 		elementType = ElementType.OBJECT;
 		thisObject = object;
 		thisTaskID = null;
 	}
 	
-	public void setObject(TaskID<T> taskID){
+	public void setObject(TaskID<E> taskID){
 		elementType = ElementType.TASKID;
 		thisTaskID = taskID;
 		thisObject = null;
 	}
 	
-	public T  getObject(){
+	public E  getObject(){
 		switch (elementType){
 			case OBJECT:
 				return thisObject;
@@ -65,6 +65,6 @@ public class PtCollectionObject<T> {
 	public boolean equals(Object obj){
 		if (!(obj instanceof PtCollectionObject))
 			return false;
-		return this.getObject().equals(((PtCollectionObject<T>)obj).getObject());
+		return this.getObject().equals(((PtCollectionObject<E>)obj).getObject());
 	}
 }
