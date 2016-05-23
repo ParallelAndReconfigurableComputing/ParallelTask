@@ -17,7 +17,7 @@ public class PtCollectionWrapper<T> implements Collection<T>, Iterable<T> {
 	
 	ConcurrentLinkedDeque<PtCollectionObject<T>> thisCollection;
 	Collection<T> thisOriginalCollection;
-	AtomicBoolean setSubClass = new AtomicBoolean(false);
+	AtomicBoolean isSubclassOfSet = new AtomicBoolean(false);
 	
 	public PtCollectionWrapper(){
 		thisCollection = new ConcurrentLinkedDeque<>();
@@ -29,7 +29,7 @@ public class PtCollectionWrapper<T> implements Collection<T>, Iterable<T> {
 		thisOriginalCollection = originalCollection;
 		
 		if(thisOriginalCollection instanceof Set)
-			setSubClass.set(true);
+			isSubclassOfSet.set(true);
 		
 		if(!thisOriginalCollection.isEmpty()){
 			for (T element : thisOriginalCollection){
@@ -40,7 +40,7 @@ public class PtCollectionWrapper<T> implements Collection<T>, Iterable<T> {
 	
 	@Override
 	public Iterator<T> iterator() {
-		return new PtWrapperIterator<>(thisCollection);
+		return new PtIterator<>(thisCollection);
 	}
 
 	@Override
@@ -101,21 +101,21 @@ public class PtCollectionWrapper<T> implements Collection<T>, Iterable<T> {
 
 	@Override
 	public boolean add(T e) {
-		if(setSubClass.get() && contains(e))
+		if(isSubclassOfSet.get() && contains(e))
 			return false;
 		
 		return thisCollection.add(new PtCollectionObject<T>(e));
 	}
 	
 	public boolean add(TaskID<T> taskID){
-		if(setSubClass.get() && contains(taskID))
+		if(isSubclassOfSet.get() && contains(taskID))
 			return false;
 	
 		return thisCollection.add(new PtCollectionObject<T>(taskID));
 	}
 	
 	public boolean add(PtCollectionObject<T> collectionObject){
-		if(setSubClass.get() && contains(collectionObject))
+		if(isSubclassOfSet.get() && contains(collectionObject))
 			return false;
 		return thisCollection.add(collectionObject);
 	}
@@ -267,16 +267,63 @@ public class PtCollectionWrapper<T> implements Collection<T>, Iterable<T> {
 	}
 	
 	public void add(int index, T element){
-		if(index < 0 || index >= size())
-			throw new IndexOutOfBoundsException();
+		if(index < 0 || index > size())
+			throw new ArrayIndexOutOfBoundsException();
 		
-		T temp = element;
-		while(index < size()){
-			temp = set(index, temp);
-			index++;
+		if(index == 0){
+			thisCollection.addFirst(new PtCollectionObject<>(element));
+			return;
 		}
 		
-		add(temp);
+		if (index == thisCollection.size()){
+			thisCollection.addLast(new PtCollectionObject<>(element));
+			return;
+		}
+			
+		ConcurrentLinkedDeque<PtCollectionObject<T>> newCollection = new ConcurrentLinkedDeque<>();
+		
+		for(int i = 0; i < index; i++)
+			newCollection.add(thisCollection.poll());
+		
+		newCollection.add(new PtCollectionObject<>(element));
+		
+		for(PtCollectionObject<T> obj : thisCollection){
+			newCollection.add(obj);
+			thisCollection.poll();
+		}
+		
+		thisCollection.clear();
+		thisCollection = newCollection;
+	}
+	
+	public void add(int index, TaskID<T> element){
+		if(index < 0 || index > size())
+			throw new ArrayIndexOutOfBoundsException();
+		
+		if(index == 0){
+			thisCollection.addFirst(new PtCollectionObject<>(element));
+			return;
+		}
+		
+		if (index == thisCollection.size()){
+			thisCollection.addLast(new PtCollectionObject<>(element));
+			return;
+		}
+			
+		ConcurrentLinkedDeque<PtCollectionObject<T>> newCollection = new ConcurrentLinkedDeque<>();
+				
+		for(int i = 0; i < index; i++)
+			newCollection.add(thisCollection.poll());
+		
+		newCollection.add(new PtCollectionObject<>(element));
+		
+		for(PtCollectionObject<T> obj : thisCollection){
+			newCollection.add(obj);
+			thisCollection.poll();
+		}
+		
+		thisCollection.clear();
+		thisCollection = newCollection;
 	}
 	
 	public void removeRange(int fromIndex, int toIndex){
