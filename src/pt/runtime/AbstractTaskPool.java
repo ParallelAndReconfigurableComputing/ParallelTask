@@ -98,6 +98,10 @@ public abstract class AbstractTaskPool implements Taskpool {
 	 * the task has been queued. This method is generic and not schedule-specific. 
 	 */
 	public TaskID<?> enqueue(TaskInfo taskinfo) {
+		//before the first task is enqueued, scheduling types and thread sizes can change
+		if(!ParaTask.paraTaskStarted())
+			ParaTask.paraTaskStarted(true);
+		
 		ArrayList<TaskID<?>> allDependences = null;
 		if (taskinfo.getDependences() != null)
 			allDependences = ParaTask.allTasksInList(taskinfo.getDependences());
@@ -130,6 +134,9 @@ public abstract class AbstractTaskPool implements Taskpool {
 	}
 	
 	public TaskIDGroup<?> enqueueMulti(TaskInfo taskinfo, int count){
+		//before the first task is enqueued, scheduling types and thread sizes can change
+		if(!ParaTask.paraTaskStarted())
+			ParaTask.paraTaskStarted(true);
 		
 		if (count <= 0)
 			count = ThreadPool.getMultiTaskThreadPoolSize();
@@ -191,11 +198,15 @@ public abstract class AbstractTaskPool implements Taskpool {
 		return interactiveTaskCount.get();
 	}
 	
-	/*
+	/**
 	 * Used to decrement the count of interactive tasks
 	 */
-	public void interactiveTaskCompleted(TaskID<?> taskID) {
-		interactiveTaskCount.decrementAndGet();
+	public boolean interactiveTaskCompleted(TaskID<?> taskID) {
+		if (taskID != null && taskID.isInteractive()){
+			interactiveTaskCount.decrementAndGet();
+			return true;
+		}
+		return false;
 	}
 	
 	protected void startInteractiveTask(TaskID<?> taskID) {

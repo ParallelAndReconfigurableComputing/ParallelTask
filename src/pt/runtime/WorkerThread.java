@@ -41,17 +41,18 @@ public class WorkerThread extends TaskThread {
 		super(taskpool, isMultiTaskWorker);
 		
 		if (threadID != globalID)
-			throw new IllegalArgumentException("WorkerID does not match - should create WorkerThreads first");
-	
+			throw new IllegalArgumentException("WorkerID does not match its globalID -- WorkerID:(" + threadID + "), globalID:(" + globalID + ")\n"
+					+ " - should create WorkerThreads first");	
 		
 		if (isMultiTaskWorker) {
 			if (threadLocalID != localID)
-				throw new IllegalArgumentException("WorkerID does not match - should create WorkerThreads first");
+				throw new IllegalArgumentException("Multi-task worker LocalID does not match the localID -- WorkerID:(" + threadLocalID + "), localID:(" + localID +")\n"
+						+ " - should create WorkerThreads first");
 		}
 		this.isMultiTaskWorker = isMultiTaskWorker;
 	}
 	
-	/** 
+	/* 
 	 * This method is called to tell the worker to execute ONE other task from the taskpool (if it finds one), 
 	 * otherwise it will sleep for the specified time delay
 	 * 
@@ -76,7 +77,7 @@ public class WorkerThread extends TaskThread {
 		}
 	}
 	
-	/**
+	/*
 	 * @author Kingsley
 	 * @since 23/05/2013
 	 * 
@@ -93,13 +94,6 @@ public class WorkerThread extends TaskThread {
 			TaskID task = taskpool.workerTakeNextTask();
 			boolean success = executeTask(task);
 			
-			/*
-			 * If "isCancelRequired" = true, which means current thread has a chance to take a 
-			 * poison pill but, before that, it may have been poisoned.
-			 * Do not need to access the "PoisonPillBox" to get a "pill"
-			 * Instead, using the class of "LottoBox"
-			 * 
-			 * */
 			if (isCancelRequired) {
 				if (isCancelled) {
 					break;
@@ -129,9 +123,6 @@ public class WorkerThread extends TaskThread {
 		return isCancelled;
 	}
 
-	/*
-	 * Used by thread pool to tell worker threads that some threads need to be killed.
-	 * */
 	protected void requireCancel(boolean cancelRequired){
 		this.isCancelRequired = cancelRequired;
 	}

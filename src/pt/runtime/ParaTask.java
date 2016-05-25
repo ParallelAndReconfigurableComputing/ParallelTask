@@ -58,6 +58,8 @@ public class ParaTask {
 	//private static int threadPoolSize = Runtime.getRuntime().availableProcessors();
 	private static ScheduleType scheduleType = ScheduleType.MixedSchedule;
 	private static boolean isInitialized = false;
+	private static boolean paraTaskStartedWorking = false;
+
 
 	private static Thread EDT = null;		// a reference to the EDT
 	private static AbstractTaskListener listener;	// the EDT task listener
@@ -140,65 +142,50 @@ public class ParaTask {
 	 }	
 		
 		
-
+	static void paraTaskStarted(boolean started){
+		ParaTask.paraTaskStartedWorking = started;
+	}
+	
+	static boolean paraTaskStarted(){
+		return ParaTask.paraTaskStartedWorking;
+	}
+	
+	static boolean isInitialized() {
+		return isInitialized;
+	}
 
     /**
      * Set the size of the thread pool. To have any effect, this must be executed very early before 
      * ParaTask creates the runtime. 
      * @param size
      */
-    public static void setThreadPoolSize(ThreadPoolType threadPoolType, int size) {
+    public static boolean setThreadPoolSize(ThreadPoolType threadPoolType, int size) {
     	if (size < 1)
 			throw new IllegalArgumentException("Trying to create a Taskpool with " + size + " threads");
-			ThreadPool.setPoolSize(threadPoolType,size);
+		
+    	if(paraTaskStarted())
+    		return false;
+    	
+    	ThreadPool.setPoolSize(threadPoolType,size);
+    	return true;
     }
     
-    /**
-     * @Author Kingsley
-     * @since 02/05/2013
-     * @param size
-     * 
-     * Set the size of the multi task thread pool. 
-     * To have any effect, this must be executed very early before ParaTask creates the runtime. 
-     * 
-     * @since 27/05/2013
-     * No need any more
-     * 
-     */
-    /*public static void setMultiTaskThreadPoolSize(int size) {
-		if (size < 1)
-			throw new IllegalArgumentException("Trying to create a Taskpool with " + size + " threads");
-		
-		ThreadPool.setMultiTaskThreadPoolSize(size);
-    }*/
-    
-    /**
-     * @Author : Kingsley
-     * @since : 02/05/2013
-     * @param size
-     * 
-     * Set the size of the one-off task thread pool. 
-     * To have any effect, this must be executed very early before ParaTask creates the runtime. 
-     * 
-	 * @since 27/05/2013
-     * No need any more
-     */
-    /*public static void setOneoffThreadPoolSize(int size) {
-		if (size < 1)
-			throw new IllegalArgumentException("Trying to create a Taskpool with " + size + " threads");
-		
-		ThreadPool.setOneoffTaskThreadPoolSize(size);
-    }*/
-    
+  
     /**
      * Set the scheduling scheme. This only has an effect if no tasks have been executed yet 
-     * (i.e. must be called before the taskpool is created).
+     * (i.e. must be called before ParaTask is initialized). 
+     * This method returns <code>false</code> if it fails to adjust thread pool. This
+     * happens when ParaTask has already started working (i.e., TaskInfos are enqueued and TaskIDs are
+     * created), otherwise it returns <code>true</code>
      * 
      * @param type The schedule to use.
+     * @return boolean <code>true</code> if scheduling type is changed successfully, otherwise <code>false</code>.
      */
-    public static void setScheduling(ScheduleType type) {
-        // TODO modify so that it throws an exception if taskpool has already been created (i.e. too late to change schedule)
+    public static boolean setScheduling(ScheduleType type) {
+    	if (ParaTask.paraTaskStarted())
+    		return false;
     	scheduleType = type;
+    	return init(scheduleType);
     }
     
     /**
@@ -215,6 +202,8 @@ public class ParaTask {
      * @return	The thread pool size.
      */
     public static int getThreadPoolSize(ThreadPoolType threadPoolType) {
+    	if(!isInitialized())
+    		init();
     	return ThreadPool.getPoolSize(threadPoolType);
     }
     
@@ -231,14 +220,23 @@ public class ParaTask {
 		return TaskpoolFactory.getTaskpool().getActiveInteractiveTaskCount();
 	}
 	
-	/**
+	
+	public static boolean init(){
+		if(scheduleType == null)
+			scheduleType = ScheduleType.MixedSchedule;
+		return init(scheduleType);
+	}
+	
+	/*
 	 * To be executed by the main thread (i.e. inside the <code>main</code> method). Registers the main thread and event 
 	 * dispatch thread with ParaTask, as well as other ParaTask runtime settings.
 	 */
-	public static void init() {
+	private static boolean init(ScheduleType scheduleType) {
+		if(paraTaskStarted())
+			return false;
 		
+		isInitialized = false;
 		while(!isInitialized){
-			
 			GuiThread.init();
 		
 			try {
@@ -250,6 +248,9 @@ public class ParaTask {
 				e.printStackTrace();
 			}
 
+			ThreadPool.resetThreadPool();
+			TaskpoolFactory.resetTaskPool();
+			
 			//-- Create the task pool
 			TaskpoolFactory.getTaskpool();
 			
@@ -259,6 +260,7 @@ public class ParaTask {
 			isInitialized = true;
 			System.out.println("ParaTask.init EDT id: " + EDT.getId() + " EDT name: " + EDT.getName());
 		}
+		return true;
 	}
 	
 	static AbstractTaskListener getEDTTaskListener() {
@@ -314,11 +316,7 @@ public class ParaTask {
 	}
 
 	
-	
-	/*
-	 * 	Getters and setters for adjusting threshold values for Work-First.
-	 */
-	
+
 	/**
 	 * 	Sets the threshold value for Work-First. When the threshold value has been exceeded,
 	 * 	tasks will no longer be enqueued and will be processed directly by the workers
@@ -397,4 +395,5 @@ public class ParaTask {
 		}
 		return 0;
 	}
+	
 }

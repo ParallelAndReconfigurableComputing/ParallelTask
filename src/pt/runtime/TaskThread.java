@@ -44,7 +44,7 @@ public abstract class TaskThread extends Thread {
 	protected Stack<TaskID> currentTaskStack = new Stack<TaskID>();
 	
 	
-	/**
+	/*
 	 * 
 	 * ThreadID is used to identify the position of a worker thread
 	 * in the entire system.
@@ -55,33 +55,26 @@ public abstract class TaskThread extends Thread {
 	 * Moreover, for <i>multi task</i> threads the <code><b>nextThreadLocalID</b></code> is increased,
 	 * and then associated to that thread's <code>threadLocalID</code>.
 	 * 
-	 * @author Kingsley
-	 * @since  26/04/2013
-	 *
-	 * @author Mostafa Mehrabi
-	 * @since  15/9/2014
+	
 	 * 
 	 * */
 	protected int threadID = -1;
 	
-	//protected int multiTaskThreadID = -1;
-	//protected int oneoffTaskThreadID = -1;
 	protected int threadLocalID = -1;
-	
-	
+
 	protected Taskpool taskpool = null;
 	
 	// thread-safe in case interactive threads need to be created from multiple threads
 	private static AtomicInteger nextThreadID = new AtomicInteger(-1); 	
-	
-	//private static AtomicInteger nextMultiTaskThreadID = new AtomicInteger(-1); 	
-	//private static AtomicInteger nextOneoffTaskThreadID = new AtomicInteger(-1); 
+
 	private static AtomicInteger nextThreadLocalID = new AtomicInteger(-1); 
 	
-	/**
-	 * 
-	 * @author Kingsley
-	 * @since 18/05/2013
+	public static void resetTaskThreads(){
+		nextThreadID.set(-1);
+		nextThreadLocalID.set(-1);
+	}
+	
+	/*
 	 * 
 	 * This constructor is used for "Interactive Thread", "Pipeline Thread" and "Slot Handling Thread"
 	 * Give no thread ID to these thread type
@@ -92,11 +85,7 @@ public abstract class TaskThread extends Thread {
 		this.taskpool = taskpool;
 	}
 	
-	/**
-	 * 
-	 * @Author : Kingsley
-	 * @since : 26/04/2013
-	 * 
+	/*
 	 * A new constructor. If modify the original constructor, the creation of other threads
 	 * maybe impacted.
 	 * 
@@ -110,15 +99,11 @@ public abstract class TaskThread extends Thread {
 		this.taskpool = taskpool;
 	}
 	
-	/**
+	/*
 	 * Executes the task given to this thread, and stores the result in the TaskID. This method
 	 * pushes the task being executed in the <code>currentTaskStack</code> while the task is being
 	 * executed, and pops the task out when the execution has either finished, or failed. 
 	 * @return <code>true</code> if task executed successfully, <code>false</code> otherwise
-	 * @throws PoisonPillException 
-	 * 
-	 * @author Mostafa Mehrabi
-	 * @since  15/9/2014
 	 */
 	protected boolean executeTask(TaskID task){
 		currentTaskStack.push(task);
