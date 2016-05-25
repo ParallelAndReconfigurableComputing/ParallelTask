@@ -51,7 +51,7 @@ public class WorkerThread extends TaskThread {
 		this.isMultiTaskWorker = isMultiTaskWorker;
 	}
 	
-	/** 
+	/* 
 	 * This method is called to tell the worker to execute ONE other task from the taskpool (if it finds one),
 	 * otherwise, the thread goes to sleep
 	 * 
@@ -74,7 +74,7 @@ public class WorkerThread extends TaskThread {
 	}
 	
 	
-	/**
+	/*
 	 * @author Kingsley
 	 * @since 23/05/2013
 	 * 

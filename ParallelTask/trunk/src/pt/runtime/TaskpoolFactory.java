@@ -32,7 +32,14 @@ public class TaskpoolFactory {
 	private static Taskpool taskpool = null;
 	private static ReentrantLock lock = new ReentrantLock();
 	
+	static void resetTaskPool(){
+		taskpool = null;
+	}
+	
 	public static Taskpool getTaskpool() {
+		if (ParaTask.getScheduleType() == null)
+			throw new IllegalStateException("ParaTask scheduling type is not specified yet!\nEither initialize ParaTask, or specify the scheduling type!");
+	
 		if (taskpool == null) {
 			lock.lock();
 			if (taskpool == null) {

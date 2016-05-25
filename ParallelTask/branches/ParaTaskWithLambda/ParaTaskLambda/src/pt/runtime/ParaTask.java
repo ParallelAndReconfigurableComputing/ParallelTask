@@ -186,14 +186,12 @@ public class ParaTask {
         
     /**
      * Set the scheduling scheme. This only has an effect if no tasks have been executed yet 
-     * (i.e. must be called before ParaTask is initialized). This method throws
-     * {@link IllegalAccessExecption} if ParaTask is initialized earlier.
+     * (i.e. must be called before ParaTask is initialized). 
      * This method returns <code>false</code> if it fails to adjust thread pool. This
      * happens when ParaTask has already started working (i.e., TaskInfos are enqueued and TaskIDs are
      * created), otherwise it returns <code>true</code>
      * 
      * @param type The schedule to use.
-     * @throws IllegalAccessException 
      * @return boolean <code>true</code> if scheduling type is changed successfully, otherwise <code>false</code>.
      */
     public static boolean setSchedulingType(ScheduleType type) {
@@ -282,9 +280,10 @@ public class ParaTask {
 		while(!isInitialized){
 			try{
 				GuiThread.init();
-				//Create the task pool
 				ThreadPool.resetThreadPool();
 				TaskpoolFactory.resetTaskPool();
+				
+				//Create the task pool
 				TaskpoolFactory.getTaskpool();
 				//Initialize the EDT
 				EDT = GuiThread.getEventDispatchThread();

@@ -54,7 +54,7 @@ public interface Taskpool {
 	* Used to decrement the count of interactive tasks
 	* @param taskID	The task that has just completed
 	*/
-	public void interactiveTaskCompleted(TaskID<?> taskID);
+	public boolean interactiveTaskCompleted(TaskID<?> taskID);
 	
 	/**
 	* Enqueues the specified task, whose information is contained in the TaskInfo. It then returns a TaskID

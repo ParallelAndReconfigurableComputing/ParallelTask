@@ -75,6 +75,9 @@ public class InteractiveThread extends TaskThread {
 				Thread.interrupted();//for clearing the flag!
 			}
 		}
+		
+		/*without this flag, sometimes a taskID is added exactly before
+		 * run() method ends, and therefore taskID won't be executed.*/
 		alive.set(false);
 	}
 }

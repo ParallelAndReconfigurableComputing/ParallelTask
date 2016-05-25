@@ -82,8 +82,7 @@ public interface Taskpool {
 	public TaskID<?> workerPollNextTask();	
 	
 	/**
-	*	The worker thread blocks until it gets a task to execute.  
-	* @return
+	* The worker thread blocks until it gets a task to execute.  
 	*/
 	public TaskID<?> workerTakeNextTask();
 	
@@ -91,21 +90,11 @@ public interface Taskpool {
 	
 	/**
 	 * Used to access local one-off task queues by thread pool at the initialization stage.
-	 * 
-	 * @author : Kingsley
-	 *  
-	 * @since : 18/05/2013 
-	 *
 	 * */
 	public Map<Integer, LinkedBlockingDeque<TaskID<?>>> getLocalOneoffTaskQueues();
 	
 	/**
 	 * Used to access private task queues by thread pool at the initialization stage.
-	 * 
-	 * @author : Kingsley
-	 *  
-	 * @since : 18/05/2013 
-	 *
 	 * */
 	public List<AbstractQueue<TaskID<?>>> getPrivateTaskQueues();
 }
