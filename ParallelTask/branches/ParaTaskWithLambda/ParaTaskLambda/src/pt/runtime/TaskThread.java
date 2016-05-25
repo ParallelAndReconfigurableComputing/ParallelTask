@@ -66,12 +66,16 @@ public abstract class TaskThread extends Thread {
 	
 	private static AtomicInteger nextThreadLocalID = new AtomicInteger(-1); 
 	
+	public static void resetTaskThreads(){
+		nextThreadID.set(-1);
+		nextThreadLocalID.set(-1);
+	}
+	
 	/*
 	 * This constructor is used for "Interactive Thread", "Pipeline Thread" and "Slot Handling Thread"
 	 * Give no thread ID to these thread types
 	 * 
 	 * */
-	
 	public TaskThread(Taskpool taskpool) {
 		//this.threadID = nextThreadID.incrementAndGet();
 		this.taskpool = taskpool;

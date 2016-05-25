@@ -20,7 +20,9 @@
 package pt.runtime;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 
 import pu.RedLib.Reduction;
@@ -51,7 +53,9 @@ import pt.functionalInterfaces.FunctorTwelveArgsWithReturn;
 import pt.functionalInterfaces.FunctorTwoArgsNoReturn;
 import pt.functionalInterfaces.FunctorTwoArgsWithReturn;
 import pt.wrappers.PtCollectionWrapper;
+import pt.wrappers.PtListWrapper;
 import pt.wrappers.PtMapWrapper;
+import pt.wrappers.PtSetWrapper;
 
 
 /**
@@ -75,7 +79,7 @@ public class ParaTask {
 	//private static int threadPoolSize = Runtime.getRuntime().availableProcessors();
 	private static ScheduleType scheduleType = null;
 	private static boolean isInitialized = false;
-	private static boolean hasStartedWorking = false;
+	private static boolean paraTaskStartedWorking = false;
 	private static boolean processInParallel = false;
 
 	private static Thread EDT = null;		// a reference to the EDT
@@ -151,11 +155,11 @@ public class ParaTask {
 	}
 	
 	static void paraTaskStarted(boolean started){
-		ParaTask.hasStartedWorking = started;
+		ParaTask.paraTaskStartedWorking = started;
 	}
 	
-	static boolean hasParaTaskStarted(){
-		return ParaTask.hasStartedWorking;
+	static boolean paraTaskStarted(){
+		return ParaTask.paraTaskStartedWorking;
 	}
 		
 
@@ -172,10 +176,9 @@ public class ParaTask {
     public static boolean setThreadPoolSize(ThreadPoolType threadPoolType, int size) {
     	if (size < 1)
 			throw new IllegalArgumentException("Trying to create a Taskpool with " + size + " threads");
-    	if (hasParaTaskStarted())
+    	if (paraTaskStarted())
     		return false;
-//    	if (!isInitialized())
-//    		ParaTask.init();
+
 		ThreadPool.setPoolSize(threadPoolType,size);
 		return true;
     }
@@ -194,10 +197,10 @@ public class ParaTask {
      * @return boolean <code>true</code> if scheduling type is changed successfully, otherwise <code>false</code>.
      */
     public static boolean setSchedulingType(ScheduleType type) {
-       if (ParaTask.hasParaTaskStarted())
+       if (ParaTask.paraTaskStarted())
     		return false;
     	scheduleType = type;
-    	return true;
+    	return init(scheduleType);
     }
     
     /**
@@ -246,9 +249,8 @@ public class ParaTask {
 	 */
 	public static boolean init(){
 		if (scheduleType == null)
-			return init(ScheduleType.MixedSchedule);
-		else
-			return init(scheduleType);
+			scheduleType = ScheduleType.MixedSchedule;
+		return init(scheduleType);
 	}
 	
 	public static <R> void executeInterimHandler(Slot<R> slot){
@@ -272,15 +274,17 @@ public class ParaTask {
 	 * @throws IllegalAccessException 
 	 * @since  2015
 	 */
-	public static boolean init(ScheduleType scheduleType){
-		if (isInitialized())
+	private static boolean init(ScheduleType scheduleType){
+		if (paraTaskStarted())
 			return false;
-				
+			
+		isInitialized = false;
 		while(!isInitialized){
 			try{
 				GuiThread.init();
-				setSchedulingType(scheduleType);
 				//Create the task pool
+				ThreadPool.resetThreadPool();
+				TaskpoolFactory.resetTaskPool();
 				TaskpoolFactory.getTaskpool();
 				//Initialize the EDT
 				EDT = GuiThread.getEventDispatchThread();
@@ -307,20 +311,36 @@ public class ParaTask {
 		taskInfo.notify(new Slot<R>(functor));
 	}
 	
+	public static void processingInParallel(boolean bool){
+		processInParallel = bool;
+	}
+	
 	public static <R> void registerSlotToNotify(TaskInfo<R> taskInfo, FunctorOneArgNoReturn<R> functor){
 		taskInfo.notify(new Slot<R>(functor));
 	}
 	
-	public static <T> Collection<T> collectionFactory(Collection<T> collection){
+	public static <T> Collection<T> getPtWrapper(Collection<T> collection){
 		if(!processInParallel)
 			return collection;
 		return new PtCollectionWrapper<>(collection);
 	}
 	
-	public static <K, V> Map<K, V> collectionFactory(Map<K, V> map){
+	public static <K, V> Map<K, V> getPtWrapper(Map<K, V> map){
 		if(!processInParallel)
 			return map;
 		return new PtMapWrapper<>(map);
+	}
+	
+	public static <T> List<T> getPtWrapper(List<T> list){
+		if(!processInParallel)
+			return list;
+		return new PtListWrapper<>(list);
+	}
+	
+	public static <T> Set<T> getPtWrapper(Set<T> set){
+		if(!processInParallel)
+			return set;
+		return new PtSetWrapper<>(set);
 	}
 			
 	//****************************************************************************************TASK GENERATORS******************************************************************
