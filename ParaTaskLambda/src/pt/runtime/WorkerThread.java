@@ -38,12 +38,14 @@ public class WorkerThread extends TaskThread {
 		
 		//One-off task threads do not need local thread ID.
 		if (threadID != globalID)
-			throw new IllegalArgumentException("WorkerID does not match - should create WorkerThreads first");
+			throw new IllegalArgumentException("WorkerID does not match its globalID -- WorkerID:(" + threadID + "), globalID:(" + globalID + ")\n"
+					+ " - should create WorkerThreads first");
 	
 		
 		if (isMultiTaskWorker) {
 			if (threadLocalID != localID)
-				throw new IllegalArgumentException("WorkerID does not match - should create WorkerThreads first");
+				throw new IllegalArgumentException("Multi-task worker LocalID does not match the localID -- WorkerID:(" + threadLocalID + "), localID:(" + localID +")\n"
+						+ " - should create WorkerThreads first");
 		}
 
 		this.isMultiTaskWorker = isMultiTaskWorker;

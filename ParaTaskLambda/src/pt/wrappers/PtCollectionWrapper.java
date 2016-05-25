@@ -153,9 +153,11 @@ public class PtCollectionWrapper<T> implements Collection<T>, Iterable<T> {
 	@Override
 	public boolean removeAll(Collection<?> c) {
 		boolean collectionChanged = false;
-		Iterator<?> iterator = c.iterator();
-		while(iterator.hasNext()){
-			collectionChanged = thisCollection.remove(iterator.next());
+		Iterator<?> it = c.iterator();
+		while(it.hasNext()){
+			Object element = it.next();
+			if(remove(element))
+				collectionChanged = true;
 		}
 		return collectionChanged;
 	}
@@ -163,22 +165,35 @@ public class PtCollectionWrapper<T> implements Collection<T>, Iterable<T> {
 	@Override
 	public boolean retainAll(Collection<?> c) {
 		boolean collectionChanged = false;
-		for(PtCollectionObject<T> obj : thisCollection){
-			if(!c.contains(obj.getObject())){
-				collectionChanged = thisCollection.remove(obj);
+		ConcurrentLinkedDeque<PtCollectionObject<T>> newCollection = new ConcurrentLinkedDeque<>();
+		Iterator<?> it = c.iterator();
+		
+		while(it.hasNext()){
+			Object element = it.next();
+			PtCollectionObject<T> wrapper = getWrapper(element);
+			if(wrapper != null){
+				if(newCollection.add(wrapper))
+					collectionChanged = true;
 			}
 		}
+		
+		thisCollection.clear();
+		thisCollection = newCollection;
 		return collectionChanged;
+	}
+	
+	private PtCollectionObject<T> getWrapper(Object o){
+		for(PtCollectionObject<T> obj : thisCollection){
+			if(obj.contains(o))
+				return obj;
+		}
+		return null;
 	}
 
 	@Override
 	public void clear() {
 		thisCollection.clear();		
 	}
-	
-//	public Spliterator<T> spliterator(){
-//		return thisCollection.spliterator();
-//	}
 	
 	public int indexOf(Object o){
 		if (o == null)
@@ -268,7 +283,7 @@ public class PtCollectionWrapper<T> implements Collection<T>, Iterable<T> {
 	
 	public void add(int index, T element){
 		if(index < 0 || index > size())
-			throw new ArrayIndexOutOfBoundsException();
+			throw new IndexOutOfBoundsException();
 		
 		if(index == 0){
 			thisCollection.addFirst(new PtCollectionObject<>(element));
@@ -298,7 +313,7 @@ public class PtCollectionWrapper<T> implements Collection<T>, Iterable<T> {
 	
 	public void add(int index, TaskID<T> element){
 		if(index < 0 || index > size())
-			throw new ArrayIndexOutOfBoundsException();
+			throw new IndexOutOfBoundsException();
 		
 		if(index == 0){
 			thisCollection.addFirst(new PtCollectionObject<>(element));

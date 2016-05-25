@@ -1,9 +1,13 @@
 package pt.wrappers;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
+import pt.runtime.TaskID;
 
 public class PtMapWrapper<K, V> implements Map<K, V> {
 	
@@ -60,38 +64,58 @@ public class PtMapWrapper<K, V> implements Map<K, V> {
 
 	@Override
 	public V put(K key, V value) {
-		// TODO Auto-generated method stub
-		return null;
+		V preValue = null;
+		if(thisMap.containsKey(key))
+			preValue = thisMap.get(key).getObject();
+		thisMap.put(key, new PtCollectionObject<>(value));
+		return preValue;
 	}
 
+	public V put(K key, TaskID<V> value){
+		V preValue = null;
+		if(thisMap.containsKey(key))
+			preValue = thisMap.get(key).getObject();
+		thisMap.put(key, new PtCollectionObject<>(value));
+		return preValue;
+	}
+	
 	@Override
 	public V remove(Object key) {
-		// TODO Auto-generated method stub
+		PtCollectionObject<V> preValue = null;
+		if(key == null)
+			throw new NullPointerException();
+		
+		preValue = thisMap.remove(key);
+		if(preValue != null)
+			return preValue.getObject();
 		return null;
 	}
 
 	@Override
 	public void putAll(Map<? extends K, ? extends V> m) {
-		// TODO Auto-generated method stub
-		
+		Set<? extends K>  keys = m.keySet();
+		for(K key : keys){
+			thisMap.put(key, new PtCollectionObject<>(m.get(key)));
+		}
 	}
 
 	@Override
 	public void clear() {
-		// TODO Auto-generated method stub
-		
+		thisMap.clear();
 	}
 
 	@Override
 	public Set<K> keySet() {
-		// TODO Auto-generated method stub
-		return null;
+		return thisMap.keySet();
 	}
 
 	@Override
 	public Collection<V> values() {
-		// TODO Auto-generated method stub
-		return null;
+		List<V> values = new ArrayList<>();
+		Set<K> keys = thisMap.keySet();
+		for (K key : keys)
+			values.add(thisMap.get(key).getObject());
+		return values;
 	}
 
 	@Override
@@ -103,5 +127,4 @@ public class PtMapWrapper<K, V> implements Map<K, V> {
 	/*
 	 * public Object clone()
 	 */
-
 }

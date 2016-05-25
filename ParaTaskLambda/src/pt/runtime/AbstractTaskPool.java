@@ -140,6 +140,10 @@ public abstract class AbstractTaskPool implements Taskpool {
 	 * thread is a task-thread, then its corresponding task is recorded as the enclosing task. 
 	 */
 	public <T> TaskID<T> enqueue(TaskInfo<T> taskInfo) {
+		//before the first task is enqueued, scheduling types and thread sizes can change
+		if(!ParaTask.paraTaskStarted())
+			ParaTask.paraTaskStarted(true);
+		
 		List<TaskID<?>> allDependences = taskInfo.getDependences();
 		TaskID<T> taskID = new TaskID<T>(taskInfo);
 		
@@ -167,6 +171,10 @@ public abstract class AbstractTaskPool implements Taskpool {
 	
 	@Override
 	public <T> TaskIDGroup<T> enqueueMulti(TaskInfo<T> taskInfo){
+		//before the first task is enqueued, scheduling types and thread sizes can change
+		if(!ParaTask.paraTaskStarted())
+			ParaTask.paraTaskStarted(true);
+		
 		int count = taskInfo.taskCount;
 		if (count == ParaTask.STAR)
 			count = ThreadPool.getMultiTaskThreadPoolSize();

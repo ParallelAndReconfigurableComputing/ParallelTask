@@ -73,12 +73,6 @@ import java.util.concurrent.locks.ReentrantLock;
 //a TaskID's return type (i.e., T) is possibly equivalent to the return type of 
 //a functor (i.e., R).
 public class TaskID<T> {
-	static {
-		if (!ParaTask.hasParaTaskStarted()){
-			ParaTask.paraTaskStarted(true);
-		}
-	}
-
 	/*
 	 * When a multi task is expanded, set this field to <u><b>true</u></b> for its every single sub tasks.
 	 * */

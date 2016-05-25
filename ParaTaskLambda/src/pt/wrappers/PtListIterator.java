@@ -1,83 +1,72 @@
 package pt.wrappers;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.ListIterator;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class PtListIterator<E> implements ListIterator<E> {
-	Iterator<PtCollectionObject<E>> thisIterator = null;
-	Collection<PtCollectionObject<E>> thisCollection = null;
-	PtCollectionObject<E> currentElement = null;
+	ListIterator<PtCollectionObject<E>> thisListIterator = null;
+	//The ListIterator wrapper copies elements into a CopyOnWriteArrayList since it 
+	//is more efficient when it comes to traversing the elements, plus it provides 
+	//its own ListIterator. 
+	CopyOnWriteArrayList<PtCollectionObject<E>> thisCollection = null;
 	
 	
 	public PtListIterator(Collection<PtCollectionObject<E>> collection) {
-		thisCollection = collection;
-		thisIterator = thisCollection.iterator();
+		thisCollection = new CopyOnWriteArrayList<>();
+		thisCollection.addAll(collection);
+		thisListIterator = thisCollection.listIterator();
 	}
 	
 	public PtListIterator(int index, Collection<PtCollectionObject<E>> collection){
-		this(collection);
-		for(int i = 0; i < index; i++){
-			if(thisIterator.hasNext())
-				thisIterator.next();
-		}
+		thisCollection = new CopyOnWriteArrayList<>();
+		thisCollection.addAll(collection);
+		thisListIterator = thisCollection.listIterator(index);
 	}
 	
 	@Override
 	public boolean hasNext() {
-		return thisIterator.hasNext();
+		return thisListIterator.hasNext();
 	}
 
 	@Override
 	public E next() {
-		currentElement = thisIterator.next();
-		return currentElement.getObject();
+		return thisListIterator.next().getObject();
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public boolean hasPrevious() {
-		PtCollectionObject<E>[] elements = (PtCollectionObject<E>[]) thisCollection.toArray();
-		if (currentElement.equals(elements[0]))
-			return false;
-		return true;
+		return thisListIterator.hasPrevious();
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public E previous() {
-		if(!hasPrevious())
-			return null;
-		PtCollectionObject<E>[] elements = (PtCollectionObject<E>[]) thisCollection.toArray();
-		PtCollectionObject<E> temp = null;
-		return null;
+		return thisListIterator.previous().getObject();
 	}
 
 	@Override
 	public int nextIndex() {
-		//return thisIterator.nextIndex();
-		return 0;
+		return thisListIterator.nextIndex();
 	}
 
 	@Override
 	public int previousIndex() {
-		//return thisIterator.previousIndex();
-		return 0;
+		return thisListIterator.previousIndex();
 	}
 
 	@Override
 	public void remove() {
-		thisIterator.remove();
+		thisListIterator.remove();
 	}
 
 	@Override
 	public void set(E e) {
-		//thisIterator.set(new PtCollectionObject<E>(e));
+		thisListIterator.set(new PtCollectionObject<E>(e));
 	}
 
 	@Override
 	public void add(E e) {
-		//thisIterator.add(new PtCollectionObject<E>(e));
+		thisListIterator.add(new PtCollectionObject<E>(e));
 	}
 
 }

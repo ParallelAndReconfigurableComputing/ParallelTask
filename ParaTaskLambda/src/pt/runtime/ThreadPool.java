@@ -63,7 +63,12 @@ public class ThreadPool {
 
 	protected static void initialize(Taskpool taskpool) {
 		ThreadPool.taskPool = taskpool;
+		TaskThread.resetTaskThreads();
 		initializeWorkerThreads(taskpool);
+	}
+	
+	public static void resetThreadPool(){
+		globalID = 0;
 	}
 	
 	/*
@@ -96,11 +101,9 @@ public class ThreadPool {
 	private static void initializeWorkerThreads(Taskpool taskpool) {
 		
 		if(multiTaskThreadPoolSize == 0){
-			System.out.println("No. of cpu");
 			multiTaskThreadPoolSize = Runtime.getRuntime().availableProcessors();
 		}
 		if(oneOffTaskThreadPoolSize == 0){
-			System.out.println("No. of CPU for MULTI");
 			oneOffTaskThreadPoolSize = Runtime.getRuntime().availableProcessors();
 		}
 		

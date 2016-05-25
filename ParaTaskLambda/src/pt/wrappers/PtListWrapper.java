@@ -1,6 +1,7 @@
 package pt.wrappers;
 
 import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -12,7 +13,8 @@ import pt.wrappers.PtIterator;
 import pt.runtime.TaskID;
 
 public class PtListWrapper<E> implements List<E> {
-
+	//this class uses concurrent linked dequeue for a thread safe collection as it is more
+	//efficient that CopyOnWriteArrayList for mutations and write operations. 
 	ConcurrentLinkedDeque<PtCollectionObject<E>> thisCollection = null;
 	List<E> thisOrignialCollection = null;
 	
@@ -167,7 +169,8 @@ public class PtListWrapper<E> implements List<E> {
 		boolean collectionChanged = false;
 		Iterator<?> it = c.iterator();
 		while(it.hasNext()){
-			if(remove(c))
+			Object element = it.next();
+			if(remove(element))
 				collectionChanged = true;
 		}
 		return collectionChanged;
@@ -176,11 +179,29 @@ public class PtListWrapper<E> implements List<E> {
 	@Override
 	public boolean retainAll(Collection<?> c) {
 		boolean collectionChanged = false;
-		for(PtCollectionObject<E> obj : thisCollection){
-			if(!c.contains(obj.getObject()))
-				collectionChanged = thisCollection.remove(obj);
+		ConcurrentLinkedDeque<PtCollectionObject<E>> newCollection = new ConcurrentLinkedDeque<>();
+		Iterator<?> it = c.iterator();
+		
+		while(it.hasNext()){
+			Object element = it.next();
+			PtCollectionObject<E> wrapper = getWrapper(element);
+			if(wrapper != null){
+				if(newCollection.add(wrapper))
+					collectionChanged = true;
+			}
 		}
+		
+		thisCollection.clear();
+		thisCollection = newCollection;
 		return collectionChanged;
+	}
+	
+	private PtCollectionObject<E> getWrapper(Object o){
+		for(PtCollectionObject<E> obj : thisCollection){
+			if(contains(o))
+				return obj;
+		}
+		return null;
 	}
 
 	@Override
@@ -191,7 +212,7 @@ public class PtListWrapper<E> implements List<E> {
 	@Override
 	public E get(int index) {
 		if (index < 0 || index >= size())
-			throw new ArrayIndexOutOfBoundsException();
+			throw new IndexOutOfBoundsException();
 		
 		int i = 0;
 		for(PtCollectionObject<E> obj : thisCollection){
@@ -206,7 +227,7 @@ public class PtListWrapper<E> implements List<E> {
 	@Override
 	public E set(int index, E element) {
 		if (index < 0 || index >= thisCollection.size())
-			throw new ArrayIndexOutOfBoundsException();
+			throw new IndexOutOfBoundsException();
 		int i = 0;
 		for(PtCollectionObject<E> obj : thisCollection){
 			if (i == index){
@@ -221,7 +242,7 @@ public class PtListWrapper<E> implements List<E> {
 	
 	public E set(int index, TaskID<E> element){
 		if(index < 0 || index >= thisCollection.size())
-			throw new ArrayIndexOutOfBoundsException();
+			throw new IndexOutOfBoundsException();
 		
 		int i = 0;
 		for (PtCollectionObject<E> obj : thisCollection){
@@ -238,7 +259,7 @@ public class PtListWrapper<E> implements List<E> {
 	@Override
 	public void add(int index, E element) {
 		if(index < 0 || index > thisCollection.size())
-			throw new ArrayIndexOutOfBoundsException();
+			throw new IndexOutOfBoundsException();
 		
 		if(index == 0){
 			thisCollection.addFirst(new PtCollectionObject<>(element));
@@ -268,7 +289,7 @@ public class PtListWrapper<E> implements List<E> {
 	
 	public void add(int index, TaskID<E> element) {
 		if(index < 0 || index > thisCollection.size())
-			throw new ArrayIndexOutOfBoundsException();
+			throw new IndexOutOfBoundsException();
 		
 		if(index == 0){
 			thisCollection.addFirst(new PtCollectionObject<>(element));
@@ -299,7 +320,7 @@ public class PtListWrapper<E> implements List<E> {
 	@Override
 	public E remove(int index) {
 		if (index < 0 || index >= thisCollection.size())
-			throw new ArrayIndexOutOfBoundsException();
+			throw new IndexOutOfBoundsException();
 		
 		int i = 0;
 		for(PtCollectionObject<E> obj : thisCollection){
@@ -338,20 +359,31 @@ public class PtListWrapper<E> implements List<E> {
 
 	@Override
 	public ListIterator<E> listIterator() {
-		//return thisCollection.l
-		return null;
+		return new PtListIterator<>(thisCollection);
 	}
 
 	@Override
 	public ListIterator<E> listIterator(int index) {
-		// TODO Auto-generated method stub
-		return null;
+		return new PtListIterator<>(index, thisCollection);
 	}
 
 	@Override
 	public List<E> subList(int fromIndex, int toIndex) {
-		// TODO Auto-generated method stub
-		return null;
+		if(fromIndex > toIndex)
+			throw new IllegalArgumentException(" fromIndex(" + fromIndex + ") > toIndex(" + toIndex + ")");
+		if(fromIndex < 0)
+			throw new IndexOutOfBoundsException(" fromIndex = " + fromIndex);
+		if(toIndex > thisCollection.size())
+			throw new IndexOutOfBoundsException(" toIndex = " + toIndex);
+		
+		List<E> tempList = new ArrayList<>();
+		int index = 0;
+		for (PtCollectionObject<E> obj : thisCollection){
+			if(index >= fromIndex && index < toIndex)
+				tempList.add(obj.getObject());
+			index++;
+		}		
+		return tempList;
 	}
 
 	@Override
