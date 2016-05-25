@@ -67,7 +67,7 @@ public class ThreadPool {
 		initializeWorkerThreads(taskpool);
 	}
 	
-	public static void resetThreadPool(){
+	static void resetThreadPool(){
 		globalID = 0;
 	}
 	
@@ -175,14 +175,6 @@ public class ThreadPool {
 		adjustThreadPoolCapacity(threadPoolType, poolSize);
 	}
 	
-	/**
-	 * 
-	 * @author Kingsley
-	 * @since 18/05/2013
-	 * 
-	 * Change the getter methods, get the pool size directly from returning the collection size. 
-	 * */
-	
 	protected static int getMultiTaskThreadPoolSize() {
 		return multiTaskWorkers.size();
 	}
@@ -210,8 +202,7 @@ public class ThreadPool {
 			break;
 		default:
 			break;
-		}
-		
+		}		
 		totalNumberOfThreads = oneOffTaskThreadPoolSize + multiTaskThreadPoolSize;
 	}
 	
@@ -318,11 +309,6 @@ public class ThreadPool {
 	}
 
 	/**
-	 * 
-	 * @author Kingsley
-	 * @since 18/06/2013
-	 * @return int
-	 * 
 	 * Returns the approximate number of threads that are actively executing tasks.
 	 * 
 	 * */
@@ -339,13 +325,6 @@ public class ThreadPool {
 	
 	/*
 	 * Returns the worker thread corresponding to the ID that is sent to the method. Returns null if there
-	 * are no threads registered for that ID in the pool. 
-	 * 
-	 * @param ID The integer parameter that stands of the ID of the thread that is to be retrieved from the pool.
-	 * @return WorkerThread 
-	 * 
-	 * @author Mostafa Mehrabi
-	 * @since  7/9/2015
 	 */
 	WorkerThread getWorkerThreadForID(int ID){
 		if (multiTaskWorkers.containsKey(ID))

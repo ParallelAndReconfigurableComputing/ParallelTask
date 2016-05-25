@@ -31,7 +31,7 @@ public class TaskpoolFactory {
 	private static Taskpool taskpool = null;
 	private static ReentrantLock lock = new ReentrantLock();
 	
-	public static void resetTaskPool(){
+	static void resetTaskPool(){
 		taskpool = null;
 	}
 	
