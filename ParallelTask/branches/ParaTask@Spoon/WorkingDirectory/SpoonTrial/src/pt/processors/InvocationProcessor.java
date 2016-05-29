@@ -67,7 +67,7 @@ public class InvocationProcessor {
 		replaceWithTaskIDName();
 		extractDependencies();
 		extractHandlers();
-		processInvocationArguments(thisAnnotatedElement.getDefaultExpression());
+		processInvocationArguments();
 		modifyThisStatement();
 		addNewStatements();
 	}
@@ -89,6 +89,10 @@ public class InvocationProcessor {
 		List<CtStatement> statements = SpoonUtils.findVarAccessOtherThanFutureDefinition
 				((CtBlockImpl<?>)thisAnnotatedElement.getParent(), thisAnnotatedElement);
 		SpoonUtils.modifyStatements(statements, regex, (thisTaskIDName+".getReturnResult()"));
+	}
+	
+	private void inspectAnnotation(){
+		
 	}
 	
 	private void extractDependencies(){
@@ -148,11 +152,11 @@ public class InvocationProcessor {
 		}
 	}
 	
-	private void processInvocationArguments(CtExpression<?> expression){
-		if (!(expression instanceof CtInvocation<?>))
-			return;
-		CtInvocation<?> invocation = (CtInvocation<?>) expression;
-		List<CtExpression<?>> arguments = invocation.getArguments();
+	//private void extractAsyncExceptions(){}	
+	
+	private void processInvocationArguments(){
+		
+		List<CtExpression<?>> arguments = thisInvocation.getArguments();
 		
 		for (CtExpression<?> argument : arguments){
 			if (argument instanceof CtVariableAccess<?>){
@@ -178,7 +182,6 @@ public class InvocationProcessor {
 	}
 	
 	private void modifyThisStatement(){
-		thisInvocation = (CtInvocation<?>) thisAnnotatedElement.getDefaultExpression();
 		CtTypeReference thisElementNewType = thisFactory.Core().createTypeReference();
 		thisElementNewType.setSimpleName(getLambdaName());
 		thisAnnotatedElement.setType(thisElementNewType);
@@ -207,7 +210,6 @@ public class InvocationProcessor {
 		CtBlock<?> thisBlock = (CtBlock<?>) thisAnnotatedElement.getParent();
 		AnnotationProcessingFilter<CtStatement> filter = new AnnotationProcessingFilter<CtStatement>
 								(SpoonUtils.getDeclarationStatement(thisAnnotatedElement, thisElementName));
-		//thisBlock.insertAfter(filter, newStatements());
 		thisBlock.insertAfter(filter, newStatements());
 	}
 	
