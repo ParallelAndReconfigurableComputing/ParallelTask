@@ -3,10 +3,10 @@ package pt.annotations;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.visitor.Filter;
 
-public class AnnotationProcessingFilter<T extends CtStatement> implements Filter<T> {
+public class StatementMatcherFilter<T extends CtStatement> implements Filter<T> {
 
 	CtStatement targetElement = null;
-	public AnnotationProcessingFilter(T element) {
+	public StatementMatcherFilter(T element) {
 		this.targetElement = element;
 	}
 	@Override

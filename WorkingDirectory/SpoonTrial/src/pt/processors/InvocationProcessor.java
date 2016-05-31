@@ -8,8 +8,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.List;
 
-import pt.annotations.AnnotationProcessingFilter;
+import pt.annotations.StatementMatcherFilter;
+import pt.annotations.AsyncCatch;
 import pt.annotations.Future;
+import pt.functionalInterfaces.FunctorNoArgsNoReturn;
 import spoon.processing.AbstractProcessor;
 import spoon.processing.AbstractAnnotationProcessor;
 import spoon.reflect.Factory;
@@ -19,6 +21,7 @@ import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.code.CtStatement;
+import spoon.reflect.code.CtStatementList;
 import spoon.reflect.code.CtVariableAccess;
 import spoon.reflect.declaration.CtAnnotation;
 import spoon.reflect.declaration.CtVariable;
@@ -26,38 +29,42 @@ import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.support.reflect.code.CtBlockImpl;
 import spoon.support.reflect.code.CtInvocationImpl;
+import spoon.support.reflect.code.CtLocalVariableImpl;
 import spoon.support.reflect.code.CtStatementImpl;
+import spoon.support.reflect.declaration.CtAnnotationImpl;
+import spoon.support.reflect.reference.CtExecutableReferenceImpl;
 import spoon.support.reflect.reference.CtTypeReferenceImpl;
 
 public class InvocationProcessor {
 	
-	private Future thisFuture = null;
+	private Future thisFutureAnnotation = null;
 	private CtInvocation<?> thisInvocation = null;
 	private CtVariable<?> thisAnnotatedElement = null;
 	private String thisElementName = null;
 	private String thisTaskIDName = null;
 	private String thisArgName = null;
-	private String thisElementReturnType = null;
+	private CtTypeReference<?> thisElementReturnType = null;
 	private Set<String> dependencies = null;
 	private Set<String> handlers = null;
 	private Map<String, String> argumentsAndTypes = null;
-	private Map<Class<? extends Throwable>, String> exceptions = null;
 	private StringBuilder stringBuilder = null;
 	private boolean throwsExceptions = false;
 	private Factory thisFactory = null;
+	private Map<Class<? extends Exception>, String> asyncExceptions = null;
 	
 	public InvocationProcessor(Factory factory, Future future, CtVariable<?> annotatedElement){
 		dependencies = new HashSet<>();
 		handlers = new HashSet<>();
-		exceptions = new HashMap<>();
+		asyncExceptions = new HashMap<>();
+		argumentsAndTypes = new HashMap<>();
+		
 		stringBuilder = new StringBuilder();
-		thisFuture = future;
+		thisFutureAnnotation = future;
 		thisAnnotatedElement = annotatedElement;
 		thisElementName = annotatedElement.getSimpleName();
-		thisElementReturnType = annotatedElement.getType().toString();
+		thisElementReturnType = annotatedElement.getType();
 		thisTaskIDName = SpoonUtils.getTaskIDName(thisElementName);
 		thisArgName = SpoonUtils.getLambdaArgName(thisElementName);
-		argumentsAndTypes = new HashMap<>();
 		thisFactory = factory;
 	}
 	
@@ -65,16 +72,18 @@ public class InvocationProcessor {
 		getInvocations();
 		checkIfThrowsException();
 		replaceWithTaskIDName();
-		extractDependencies();
-		extractHandlers();
+		inspectAnnotation();
 		processInvocationArguments();
 		modifyThisStatement();
 		addNewStatements();
 	}
 	
 	private void getInvocations(){
-		CtExpression<?> invocation = thisAnnotatedElement.getDefaultExpression();
-		thisInvocation = (CtInvocationImpl<?>) invocation;
+		CtExpression<?> expression = thisAnnotatedElement.getDefaultExpression();
+		if(!(expression instanceof CtInvocationImpl<?>))
+			throw new IllegalArgumentException("ANNOTATED ELEMENT: ->" + thisAnnotatedElement.toString()
+					+ "<- IS EXPECTED TO BE AN INVOCATION STATEMENT!");
+		thisInvocation = (CtInvocationImpl<?>) expression;
 	}
 	
 	private void checkIfThrowsException(){
@@ -86,73 +95,74 @@ public class InvocationProcessor {
 	
 	private void replaceWithTaskIDName(){
 		String regex = "\\b" + thisElementName + "\\b";
-		List<CtStatement> statements = SpoonUtils.findVarAccessOtherThanFutureDefinition
+		List<CtStatement> statementsAccessingThisVar = SpoonUtils.findVarAccessOtherThanFutureDefinition
 				((CtBlockImpl<?>)thisAnnotatedElement.getParent(), thisAnnotatedElement);
-		SpoonUtils.modifyStatements(statements, regex, (thisTaskIDName+".getReturnResult()"));
+		SpoonUtils.modifyStatements(statementsAccessingThisVar, regex, (thisTaskIDName+".getReturnResult()"));
 	}
 	
 	private void inspectAnnotation(){
-		
+		extractDependenciesFromStatement();
+		extractDependenciesFromAnnotation();
+		extractHandlersFromAnnotation();
+		extractAsyncExceptionsFromAnnotations();
 	}
 	
-	private void extractDependencies(){
+	private void extractDependenciesFromStatement(){
+		//this method could be subject to changes to extract from multiple invocations
 		List<CtExpression<?>> arguments = thisInvocation.getArguments();
-		
 		for (CtExpression<?> argument : arguments){
 			if(SpoonUtils.isTaskIDReplacement(thisAnnotatedElement, argument.toString())){
 				String originalArgumentName = SpoonUtils.getOrigName(argument.toString());
 				dependencies.add(SpoonUtils.getTaskIDName(originalArgumentName));
 			}
-		}		
-		
-		Set<CtAnnotation<?>> annotations = thisAnnotatedElement.getAnnotations();
-		for(CtAnnotation<?> ctAnno : annotations){
-			Annotation annotation = ctAnno.getActualAnnotation();
-			if (annotation instanceof Future){
-				Future future = (Future) annotation;
-				String dependsOn = future.depends();
-				if (!dependsOn.isEmpty()){
-					String[] dependsArray = dependsOn.split(",");
-					for (String depends : dependsArray){
-						//if not trimmed, duplicates with invisible white-space
-						//get added
-						depends = depends.trim(); 
+		}				
+	}	
+	
+	private void extractDependenciesFromAnnotation(){
+		String dependsOn = thisFutureAnnotation.depends();
+		if (!dependsOn.isEmpty()){
+			String[] dependsArray = dependsOn.split(",");
+			for (String dependencyName : dependsArray){
+				//if not trimmed, duplicates with invisible white-space
+				//get added
+				dependencyName = dependencyName.trim(); 
 						
-						//in case user feeds taskID name etc. Small possibility but...
-						depends = SpoonUtils.getOrigName(depends); 
-						if(SpoonUtils.isFutureArgument(thisAnnotatedElement, depends))
-							dependencies.add(SpoonUtils.getTaskIDName(depends));
-					}					
+				if(!dependencyName.isEmpty()){
+					//in case user feeds taskID name etc. Small possibility but...
+					dependencyName = SpoonUtils.getOrigName(dependencyName); 
+					if(SpoonUtils.isFutureVariable(thisAnnotatedElement, dependencyName))
+						dependencies.add(SpoonUtils.getTaskIDName(dependencyName));
 				}
-				/*if more than one future annotation is assigned to a variable
-				 * (theoretically shouldn't be allowed), we only accept the first!*/
-				break;
+			}					
+		}		
+	}
+	
+	private void extractHandlersFromAnnotation(){
+		String notifyHandlers = thisFutureAnnotation.notifies();
+		if(!notifyHandlers.isEmpty()){
+			String[] handlersArray = notifyHandlers.split(";");
+			for (String handler : handlersArray){
+				handler = handler.trim();
+				if(!handler.isEmpty()){
+					String notifySlot = "()->" + handler;
+					handlers.add(notifySlot);
+				}
+			}
+		}		
+	}
+	
+	private void extractAsyncExceptionsFromAnnotations(){
+		Set<CtAnnotation<? extends Annotation>> annotations = thisAnnotatedElement.getAnnotations();
+		for(CtAnnotation<? extends Annotation> annotation : annotations){
+			Annotation actualAnnotation = annotation.getActualAnnotation();
+			if(actualAnnotation instanceof AsyncCatch){
+				AsyncCatch asynCatch = (AsyncCatch) actualAnnotation;
+				Class<? extends Exception> exceptionClass = asynCatch.throwable();
+				String handler = "()->" + asynCatch.handler();
+				asyncExceptions.put(exceptionClass, handler);
 			}
 		}
 	}	
-	
-	private void extractHandlers(){
-		Set<CtAnnotation<?>> annotations = thisAnnotatedElement.getAnnotations();
-		for(CtAnnotation<?> ctAnno : annotations){
-			Annotation annotation = ctAnno.getActualAnnotation();
-			if (annotation instanceof Future){
-				Future future = (Future) annotation;
-				String notifies = future.notifies();
-				if(!notifies.isEmpty()){
-					String[] notifyArray = notifies.split(";");
-					for (String notify : notifyArray){
-						notify = notify.trim();
-						String notifySlot = "()->" + notify;
-						handlers.add(notifySlot);
-					}
-				}
-				//only the first future annotation
-				break;
-			}
-		}
-	}
-	
-	//private void extractAsyncExceptions(){}	
 	
 	private void processInvocationArguments(){
 		
@@ -183,7 +193,7 @@ public class InvocationProcessor {
 	
 	private void modifyThisStatement(){
 		CtTypeReference thisElementNewType = thisFactory.Core().createTypeReference();
-		thisElementNewType.setSimpleName(getLambdaName());
+		thisElementNewType.setSimpleName(getTaskInfoType());
 		thisAnnotatedElement.setType(thisElementNewType);
 		thisAnnotatedElement.setSimpleName(SpoonUtils.getTaskName(thisElementName));
 				
@@ -208,9 +218,122 @@ public class InvocationProcessor {
 	
 	private void addNewStatements(){
 		CtBlock<?> thisBlock = (CtBlock<?>) thisAnnotatedElement.getParent();
-		AnnotationProcessingFilter<CtStatement> filter = new AnnotationProcessingFilter<CtStatement>
+		StatementMatcherFilter<CtStatement> filter = new StatementMatcherFilter<CtStatement>
 								(SpoonUtils.getDeclarationStatement(thisAnnotatedElement, thisElementName));
 		thisBlock.insertAfter(filter, newStatements());
+	}
+	
+	public CtStatementList<?> newStatements(){
+		CtStatementList<?> statements = thisFactory.Core().createStatementList();
+		List<CtStatement> sts = new ArrayList<>();
+		
+		CtInvocationImpl<?> dependsOnStatement = getDependsOnStatement();
+		if (dependsOnStatement != null)
+			sts.add(dependsOnStatement);
+			
+		/*for the cases where notification handlers use TaskID, ParaTask must check if the task is 
+		 * already finished when registering the handler. Sometimes task finished before the 
+		 * notifier is registered!*/
+		List<CtInvocationImpl<?>> handlers = getNotifyStatements();
+		if (handlers != null){
+			sts.addAll(handlers);
+		}
+		
+		sts.add(getStartStatement());	
+		
+		statements.setStatements(sts);
+		return statements;
+	}
+	
+	public CtInvocationImpl<?> getDependsOnStatement(){
+		/*create the dependsOn statement*/
+		if(dependencies.isEmpty())
+			return null;
+		
+		CtInvocationImpl<?> dependsOnInvoc = (CtInvocationImpl<?>) thisFactory.Core().createInvocation();
+		//dependsOnInvoc.s
+		String dependsOnExecutable = SpoonUtils.getTaskName(thisElementName) + ".dependsOn";
+		String dependsOnArguments = "";
+		int counter = 0;
+		for (String dependency : dependencies){
+			dependsOnArguments += dependency;
+			counter++;
+			if (counter < dependencies.size())
+				dependsOnArguments += ", ";
+		}
+		
+		
+		CtExecutableReference dependsOnExec = thisFactory.Core().createExecutableReference();
+		dependsOnExec.setSimpleName(dependsOnExecutable);
+		dependsOnInvoc.setExecutable(dependsOnExec);
+		
+		List<CtExpression<?>> dependsOnArgs = new ArrayList<>();
+		CtCodeSnippetExpression argsExp = thisFactory.Core().createCodeSnippetExpression();
+		argsExp.setValue(dependsOnArguments);
+		dependsOnArgs.add(argsExp);
+		dependsOnInvoc.setArguments(dependsOnArgs);
+		
+		return dependsOnInvoc;
+	}
+	
+	public CtLocalVariableImpl<?> getStartStatement(){
+		/*create the start statement*/
+		CtLocalVariableImpl<?> localVar = (CtLocalVariableImpl<?>) thisFactory.Core().createLocalVariable();
+		String startPhrase = ".start(";
+		
+		Set<String> argTypes = argumentsAndTypes.keySet();	
+		int counter = 0;
+		for(String argType : argTypes){
+			
+			String arg = argumentsAndTypes.get(argType);
+			
+			if (SpoonUtils.isNonLambdaArg(arg))				
+				startPhrase += SpoonUtils.getOrigName(arg);
+			
+			else if (SpoonUtils.isLambdaArg(arg))
+				startPhrase += SpoonUtils.getTaskIDName(SpoonUtils.getOrigName(arg));
+			 
+			counter++;
+			if(counter != argTypes.size())
+				startPhrase += ", ";
+		}
+		startPhrase += ")";
+		startPhrase = SpoonUtils.getTaskName(thisElementName) + startPhrase;
+				
+		CtCodeSnippetExpression defaultExp = thisFactory.Core().createCodeSnippetExpression();
+		defaultExp.setValue(startPhrase);
+		
+		CtTypeReference taskIDType = getTaskIDType(thisAnnotatedElement);
+		localVar.setType(taskIDType);
+		localVar.setSimpleName(SpoonUtils.getTaskIDName(thisElementName));
+		localVar.setDefaultExpression(defaultExp);
+		
+		return localVar;
+	}
+	
+	public List<CtInvocationImpl<?>> getNotifyStatements(){
+		if (handlers.isEmpty())
+			return null;
+		
+		List<CtInvocationImpl<?>> notifyStatements = new ArrayList<>();
+		
+		CtInvocationImpl<?> notifyStatement = (CtInvocationImpl<?>) thisFactory.Core().createInvocation();
+		CtExecutableReferenceImpl executablePhrase = (CtExecutableReferenceImpl<?>) thisFactory.Core().createExecutableReference();
+		executablePhrase.setSimpleName("ParaTask.registerSlotToNotify");
+		notifyStatement.setExecutable(executablePhrase);
+		
+				
+		for (String handler : handlers){
+			String execArgument = SpoonUtils.getTaskName(thisElementName) + ", " + handler;
+			CtCodeSnippetExpression<?> notifierExp = thisFactory.Core().createCodeSnippetExpression();
+			notifierExp.setValue(execArgument);
+			List<CtExpression<?>> notifyStatemtnArgument = new ArrayList<>();
+			notifyStatemtnArgument.add(notifierExp);
+			notifyStatement.setArguments(notifyStatemtnArgument);
+			notifyStatements.add(notifyStatement);
+		}
+		
+		return notifyStatements;
 	}
 	
 	//---------------------------------------HELPER METHODS-----------------------------------------
@@ -266,20 +389,20 @@ public class InvocationProcessor {
 		return args;
 	}
 
-	public String getLambdaName(){
-		String returnPhase = (thisElementReturnType.contains("Void")) ? "Void" : SpoonUtils.getType(thisElementReturnType);
-		String taskInfo = "TaskInfo" + getNumArgs() + "<" + returnPhase;
+	public String getTaskInfoType(){
+		String returnPhase = (thisElementReturnType.toString().contains("Void")) ? "Void" : SpoonUtils.getType(thisElementReturnType.toString());
+		String taskInfoType = "TaskInfo" + getNumArgs() + "<" + returnPhase;
 		Set<String> argTypes = argumentsAndTypes.keySet();
 		for(String argType : argTypes){
-			taskInfo += ", " + argType;
+			taskInfoType += ", " + argType;
 		}
-		taskInfo += ">";
-		return taskInfo;
+		taskInfoType += ">";
+		return taskInfoType;
 	}
 	
-	public String getFunctorName(){
-		String returnPhrase = (thisElementReturnType.contains("Void")) ? "NoReturn<Void" : ("WithReturn<"+SpoonUtils.getType(thisElementReturnType));
-		String functorName = "Functor" + getNumArgs() + returnPhrase;
+	public String getFunctorType(){
+		String functorReturnPhrase = (thisElementReturnType.toString().contains("Void")) ? "NoReturn<Void" : ("WithReturn<"+SpoonUtils.getType(thisElementReturnType.toString()));
+		String functorName = "Functor" + getNumArgs() + functorReturnPhrase;
 		return functorName;
 	}
 	
@@ -295,7 +418,7 @@ public class InvocationProcessor {
 	}
 
 	public String getFunctorCast(){
-		String functorCast = getFunctorName();
+		String functorCast = getFunctorType();
 		if(functorCast.contains("FunctorNoArgsNoReturn"))
 			return "";
 		Set<String> argTypes = argumentsAndTypes.keySet();
@@ -325,7 +448,7 @@ public class InvocationProcessor {
 		String returnStatement = "";
 		String catchReturnStmt = "";
 		
-		if(!thisElementReturnType.contains("Void")){
+		if(!thisElementReturnType.toString().contains("Void")){
 			returnStatement = "return ";
 			catchReturnStmt = "\t\t\t\t\t\treturn null; \n";
 		}

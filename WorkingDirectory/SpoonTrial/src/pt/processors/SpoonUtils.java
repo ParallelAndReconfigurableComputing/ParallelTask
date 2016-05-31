@@ -557,18 +557,22 @@ public class SpoonUtils {
 	}
 	
 	/**
-	 * Finds out whether an argument used within an invocation is itself a
-	 * future variable. 
+	 * Finds and returns the declaration statement of an argument that has
+	 * been used within another variable declaration. 
 	 * 
 	 * @param element
 	 * @param argName
-	 * @return
+	 * @return CtStatement declaring statement
 	 */
 	public static CtStatement getDeclarationStatement(CtVariable<?> element, String argName) {
 		if (!argName.matches("[a-zA-Z0-9_]+")) {
 			return null;
 		}
 		
+		/*
+		 * If the argument does not have the same name as the current declared element, which is being
+		 * inspected, then its names is changed into a TaskName format iff it is a future variable. 
+		 * */
 		if(!element.getSimpleName().equals(argName))
 			argName = getTaskName(argName);
 		CtBlock<?> block = (CtBlock<?>)element.getParent();
@@ -599,7 +603,15 @@ public class SpoonUtils {
 		return null;
 	}
 	
-	public static boolean isFutureArgument(CtVariable<?> element, String argName){
+	/**
+	 * Indicates if an argument that is used at the time of the declaration of another element
+	 * is itself a future variable or not. 
+	 * 
+	 * @param element
+	 * @param argName
+	 * @return <code>true</code>, if the argument is a future variable, <code>false</code> otherwise. 
+	 */
+	public static boolean isFutureVariable(CtVariable<?> element, String argName){
 		CtLocalVariable<?> declaration = (CtLocalVariable<?>)getDeclarationStatement(element, argName);
 		if(declaration == null)
 			return false;
@@ -617,19 +629,19 @@ public class SpoonUtils {
 	}
 	
 	public static String getTaskIDName(String name) {
-		return "__" + name + "TaskID__";
+		return "__" + name + "PtTaskID__";
 	}
 	
 	public static String getLambdaArgName(String name) {
-		return "__" + name + "LambdaArg__";
+		return "__" + name + "PtLambdaArg__";
 	}
 	
 	public static String getTaskName(String name){
-		return "__" + name + "Task__";
+		return "__" + name + "PtTask__";
 	}
 	
 	public static String getNonLambdaArgName(String name){
-		return "__" + name + "NonLambdaArg__";
+		return "__" + name + "PtNonLambdaArg__";
 	}
 	
 	public static boolean isNonLambdaArg(String name){
@@ -642,23 +654,23 @@ public class SpoonUtils {
 	
 	public static String getOrigName(String elementName) {
 		
-		if(elementName.startsWith("__") && elementName.endsWith("LambdaArg__.getReturnResult()"))
-			return elementName.substring("__".length(), (elementName.length() - "LambdaArg__.getReturnResult()".length()));
+		if(elementName.startsWith("__") && elementName.endsWith("PtLambdaArg__.getReturnResult()"))
+			return elementName.substring("__".length(), (elementName.length() - "PtLambdaArg__.getReturnResult()".length()));
 		
-		else if (elementName.startsWith("__") && elementName.endsWith("TaskID__.getReturnResult()"))
-			return elementName.substring("__".length(), (elementName.length() - "TaskID__.getReturnResult()".length()));
+		else if (elementName.startsWith("__") && elementName.endsWith("PtTaskID__.getReturnResult()"))
+			return elementName.substring("__".length(), (elementName.length() - "PtTaskID__.getReturnResult()".length()));
 		
-		else if (elementName.startsWith("__") && elementName.endsWith("Task__"))
-			return elementName.substring("__".length(), (elementName.length() - "Task__".length()));
+		else if (elementName.startsWith("__") && elementName.endsWith("PtTask__"))
+			return elementName.substring("__".length(), (elementName.length() - "PtTask__".length()));
 		
-		else if (elementName.startsWith("__") && elementName.endsWith("TaskID__"))
-			return elementName.substring("__".length(), (elementName.length() - "TaskID__".length()));
+		else if (elementName.startsWith("__") && elementName.endsWith("PtTaskID__"))
+			return elementName.substring("__".length(), (elementName.length() - "PtTaskID__".length()));
 		
-		else if (elementName.startsWith("__") && elementName.endsWith("NonLambdaArg__"))
-			return elementName.substring("__".length(), (elementName.length() - "NonLambdaArg__".length()));					
+		else if (elementName.startsWith("__") && elementName.endsWith("PtNonLambdaArg__"))
+			return elementName.substring("__".length(), (elementName.length() - "PtNonLambdaArg__".length()));					
 				
-		else if (elementName.startsWith("__") && elementName.endsWith("LambdaArg__"))
-			return elementName.substring("__".length(), (elementName.length() - "LambdaArg__".length()));
+		else if (elementName.startsWith("__") && elementName.endsWith("PtLambdaArg__"))
+			return elementName.substring("__".length(), (elementName.length() - "PtLambdaArg__".length()));
 				
 		else if (elementName.contains("<") && elementName.contains(">") && (elementName.lastIndexOf("<") < elementName.indexOf(">")))
 			return elementName.substring(elementName.lastIndexOf("<")+1, elementName.indexOf(">"));
@@ -669,7 +681,7 @@ public class SpoonUtils {
 	public static boolean isTaskIDReplacement(CtVariable<?> element, String name){
 		if(name.startsWith("__") && name.endsWith("__.getReturnResult()")){
 			String originalName = getOrigName(name);
-			if(isFutureArgument(element, originalName)){
+			if(isFutureVariable(element, originalName)){
 				return true;
 			}
 		}
