@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import pt.annotations.AnnotationProcessingFilter;
+import pt.annotations.StatementMatcherFilter;
 import pt.annotations.Future;
 import spoon.processing.AbstractAnnotationProcessor;
 import spoon.reflect.code.CtBlock;
@@ -44,6 +44,14 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 	
 	@Override
 	public void process(Future future, CtVariable<?> annotatedElement) {
+		/*
+		 * A common step for every annotated element with @Future is to look into
+		 * its parent loop statement and change the name of the loop variable (the one
+		 * inside the loop) to _PTLoop<Name>_ and assign that to 
+		 * int <Name> = _PTLoop<Name>_  as the first statement of the loop! This is
+		 * because Lambda expressions do not accept loop index as argument.
+		 * This operation is done within this main processor! 
+		 * */
 		dependencies = new HashSet<>();
 		notifiers = new HashSet<>();
 		exceptions = new HashMap<>();
@@ -110,7 +118,7 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 						
 						//in case user feeds taskID name etc. Small possibility but...
 						depends = SpoonUtils.getOrigName(depends); 
-						if(SpoonUtils.isFutureArgument(thisAnnotatedElement, depends))
+						if(SpoonUtils.isFutureVariable(thisAnnotatedElement, depends))
 							dependencies.add(SpoonUtils.getTaskIDName(depends));
 					}
 				}
@@ -345,7 +353,7 @@ public class OldFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 	
 	public void addNewStatements(){
 		CtBlock<?> thisBlock = (CtBlock<?>) thisAnnotatedElement.getParent();
-		AnnotationProcessingFilter<CtStatement> filter = new AnnotationProcessingFilter<CtStatement>
+		StatementMatcherFilter<CtStatement> filter = new StatementMatcherFilter<CtStatement>
 								(SpoonUtils.getDeclarationStatement(thisAnnotatedElement, thisElementName));
 		//thisBlock.insertAfter(filter, newStatements());
 		thisBlock.insertAfter(filter, newStatements());
