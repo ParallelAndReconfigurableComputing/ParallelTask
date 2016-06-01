@@ -12,6 +12,8 @@ import pt.annotations.StatementMatcherFilter;
 import pt.annotations.AsyncCatch;
 import pt.annotations.Future;
 import pt.functionalInterfaces.FunctorNoArgsNoReturn;
+import pt.functionalInterfaces.FunctorOneArgNoReturn;
+import pt.runtime.TaskInfo;
 import spoon.processing.AbstractProcessor;
 import spoon.processing.AbstractAnnotationProcessor;
 import spoon.reflect.Factory;
@@ -97,7 +99,7 @@ public class InvocationProcessor {
 		String regex = "\\b" + thisElementName + "\\b";
 		List<CtStatement> statementsAccessingThisVar = SpoonUtils.findVarAccessOtherThanFutureDefinition
 				((CtBlockImpl<?>)thisAnnotatedElement.getParent(), thisAnnotatedElement);
-		SpoonUtils.modifyStatements(statementsAccessingThisVar, regex, (thisTaskIDName+".getReturnResult()"));
+		SpoonUtils.modifyStatements(statementsAccessingThisVar, regex, (thisTaskIDName+SpoonUtils.getResultPhrase()));
 	}
 	
 	private void inspectAnnotation(){
@@ -179,7 +181,7 @@ public class InvocationProcessor {
 					CtLocalVariable<?> declaration = (CtLocalVariable<?>)SpoonUtils.getDeclarationStatement(thisAnnotatedElement, origName);
 					CtTypeReference taskIDType = getTaskIDType(declaration);
 					
-					varAccess.getVariable().setSimpleName(SpoonUtils.getLambdaArgName(origName)+".getReturnResult()");
+					varAccess.getVariable().setSimpleName(SpoonUtils.getLambdaArgName(origName)+SpoonUtils.getResultPhrase());
 					varAccess.setType(taskIDType);					
 					argumentsAndTypes.put(varAccess.getType().toString(), SpoonUtils.getLambdaArgName(origName));
 				}
@@ -200,7 +202,7 @@ public class InvocationProcessor {
 				
 		CtCodeSnippetExpression<?> newArgument = thisFactory.Core().createCodeSnippetExpression();
 			
-		newArgument.setValue(newLambdaPhrase(thisInvocation));
+		newArgument.setValue(newFunctorPhrase(thisInvocation));
 		CtExpression<?> newArgExp = newArgument;
 				
 		List<CtExpression<?>> arguments = new ArrayList<>();
@@ -220,10 +222,11 @@ public class InvocationProcessor {
 		CtBlock<?> thisBlock = (CtBlock<?>) thisAnnotatedElement.getParent();
 		StatementMatcherFilter<CtStatement> filter = new StatementMatcherFilter<CtStatement>
 								(SpoonUtils.getDeclarationStatement(thisAnnotatedElement, thisElementName));
+		//insert the new statements after the current invocation statement. 
 		thisBlock.insertAfter(filter, newStatements());
 	}
 	
-	public CtStatementList<?> newStatements(){
+	private CtStatementList<?> newStatements(){
 		CtStatementList<?> statements = thisFactory.Core().createStatementList();
 		List<CtStatement> sts = new ArrayList<>();
 		
@@ -239,13 +242,15 @@ public class InvocationProcessor {
 			sts.addAll(handlers);
 		}
 		
+		//List<CtInvocationImpl<?>> asyncCatch = getAsyncExceptionStatements();
+		
 		sts.add(getStartStatement());	
 		
 		statements.setStatements(sts);
 		return statements;
 	}
 	
-	public CtInvocationImpl<?> getDependsOnStatement(){
+	private CtInvocationImpl<?> getDependsOnStatement(){
 		/*create the dependsOn statement*/
 		if(dependencies.isEmpty())
 			return null;
@@ -276,9 +281,40 @@ public class InvocationProcessor {
 		return dependsOnInvoc;
 	}
 	
-	public CtLocalVariableImpl<?> getStartStatement(){
+	private List<CtInvocationImpl<?>> getNotifyStatements(){
+		if (handlers.isEmpty())
+			return null;
+		
+		List<CtInvocationImpl<?>> notifyStatements = new ArrayList<>();
+		
+		CtInvocationImpl<?> notifyStatement = (CtInvocationImpl<?>) thisFactory.Core().createInvocation();
+		CtExecutableReferenceImpl executablePhrase = (CtExecutableReferenceImpl<?>) thisFactory.Core().createExecutableReference();
+		executablePhrase.setSimpleName("ParaTask.registerSlotToNotify");
+		notifyStatement.setExecutable(executablePhrase);
+		
+				
+		for (String handler : handlers){
+			String execArgument = SpoonUtils.getTaskName(thisElementName) + ", " + handler;
+			CtCodeSnippetExpression<?> notiesExpression = thisFactory.Core().createCodeSnippetExpression();
+			notiesExpression.setValue(execArgument);
+			List<CtExpression<?>> notifyStatemtnArgument = new ArrayList<>();
+			notifyStatemtnArgument.add(notiesExpression);
+			notifyStatement.setArguments(notifyStatemtnArgument);
+			notifyStatements.add(notifyStatement);
+		}
+		
+		return notifyStatements;
+	}
+	
+	private List<CtInvocationImpl<?>> getAsyncExceptionStatements(){
+	  
+	 // registerAsyncCatch(taskInfo, exceptionClass, functor)
+	  return null;
+	}
+	
+	private CtLocalVariableImpl<?> getStartStatement(){
 		/*create the start statement*/
-		CtLocalVariableImpl<?> localVar = (CtLocalVariableImpl<?>) thisFactory.Core().createLocalVariable();
+		CtLocalVariableImpl<?> taskIdDeclaration = (CtLocalVariableImpl<?>) thisFactory.Core().createLocalVariable();
 		String startPhrase = ".start(";
 		
 		Set<String> argTypes = argumentsAndTypes.keySet();	
@@ -304,37 +340,13 @@ public class InvocationProcessor {
 		defaultExp.setValue(startPhrase);
 		
 		CtTypeReference taskIDType = getTaskIDType(thisAnnotatedElement);
-		localVar.setType(taskIDType);
-		localVar.setSimpleName(SpoonUtils.getTaskIDName(thisElementName));
-		localVar.setDefaultExpression(defaultExp);
+		taskIdDeclaration.setType(taskIDType);
+		taskIdDeclaration.setSimpleName(SpoonUtils.getTaskIDName(thisElementName));
+		taskIdDeclaration.setDefaultExpression(defaultExp);
 		
-		return localVar;
+		return taskIdDeclaration;
 	}
 	
-	public List<CtInvocationImpl<?>> getNotifyStatements(){
-		if (handlers.isEmpty())
-			return null;
-		
-		List<CtInvocationImpl<?>> notifyStatements = new ArrayList<>();
-		
-		CtInvocationImpl<?> notifyStatement = (CtInvocationImpl<?>) thisFactory.Core().createInvocation();
-		CtExecutableReferenceImpl executablePhrase = (CtExecutableReferenceImpl<?>) thisFactory.Core().createExecutableReference();
-		executablePhrase.setSimpleName("ParaTask.registerSlotToNotify");
-		notifyStatement.setExecutable(executablePhrase);
-		
-				
-		for (String handler : handlers){
-			String execArgument = SpoonUtils.getTaskName(thisElementName) + ", " + handler;
-			CtCodeSnippetExpression<?> notifierExp = thisFactory.Core().createCodeSnippetExpression();
-			notifierExp.setValue(execArgument);
-			List<CtExpression<?>> notifyStatemtnArgument = new ArrayList<>();
-			notifyStatemtnArgument.add(notifierExp);
-			notifyStatement.setArguments(notifyStatemtnArgument);
-			notifyStatements.add(notifyStatement);
-		}
-		
-		return notifyStatements;
-	}
 	
 	//---------------------------------------HELPER METHODS-----------------------------------------
 	
@@ -443,7 +455,7 @@ public class InvocationProcessor {
 		return lambdaArgs;
 	}
 	
-	public String newLambdaPhrase(CtInvocation<?> invocation){
+	public String newFunctorPhrase(CtInvocation<?> invocation){
 		
 		String returnStatement = "";
 		String catchReturnStmt = "";
