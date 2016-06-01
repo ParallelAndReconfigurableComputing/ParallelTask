@@ -603,6 +603,14 @@ public class SpoonUtils {
 		return null;
 	}
 	
+	public static String getResultPhrase(){
+		return ".getReturnResult()";
+	}
+	
+	public static String getResultPhrase(int index){
+		return ".getReturnResult(" + index + ")";
+	}
+	
 	/**
 	 * Indicates if an argument that is used at the time of the declaration of another element
 	 * is itself a future variable or not. 
@@ -654,11 +662,11 @@ public class SpoonUtils {
 	
 	public static String getOrigName(String elementName) {
 		
-		if(elementName.startsWith("__") && elementName.endsWith("PtLambdaArg__.getReturnResult()"))
-			return elementName.substring("__".length(), (elementName.length() - "PtLambdaArg__.getReturnResult()".length()));
+		if(elementName.startsWith("__") && elementName.endsWith("PtLambdaArg__"+getResultPhrase()))
+			return elementName.substring("__".length(), (elementName.length() - ("PtLambdaArg__"+getResultPhrase()).length()));
 		
-		else if (elementName.startsWith("__") && elementName.endsWith("PtTaskID__.getReturnResult()"))
-			return elementName.substring("__".length(), (elementName.length() - "PtTaskID__.getReturnResult()".length()));
+		else if (elementName.startsWith("__") && elementName.endsWith("PtTaskID__"+getResultPhrase()))
+			return elementName.substring("__".length(), (elementName.length() - ("PtTaskID__"+getResultPhrase()).length()));
 		
 		else if (elementName.startsWith("__") && elementName.endsWith("PtTask__"))
 			return elementName.substring("__".length(), (elementName.length() - "PtTask__".length()));
@@ -679,7 +687,7 @@ public class SpoonUtils {
 	}
 	
 	public static boolean isTaskIDReplacement(CtVariable<?> element, String name){
-		if(name.startsWith("__") && name.endsWith("__.getReturnResult()")){
+		if(name.startsWith("__") && name.endsWith("__"+getResultPhrase())){
 			String originalName = getOrigName(name);
 			if(isFutureVariable(element, originalName)){
 				return true;
