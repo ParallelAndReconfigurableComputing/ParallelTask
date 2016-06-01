@@ -157,7 +157,7 @@ public abstract class TaskInfo<R> {
 	}
 
 	//make sure these steps are automated.. Should it be automated?
-	public void setTaskIDForSlotsAndHandlers(TaskID<R> taskID) {
+	void setTaskIDForSlotsAndHandlers(TaskID<R> taskID) {
 		if (slotsToNotify != null) {
 			for (Slot<R> slot : slotsToNotify) {
 				slot.setTaskID(taskID);
@@ -178,7 +178,7 @@ public abstract class TaskInfo<R> {
 		}
 	}
 
-	void asyncCatch(Class<?> exceptionClass, Slot<R> handler) {
+	void setAsyncCatch(Class<?> exceptionClass, Slot<R> handler) {
 		
 		if (exceptionClass == null)
 			throw new IllegalArgumentException("There is no exception class specified!");
@@ -192,7 +192,7 @@ public abstract class TaskInfo<R> {
 	/**
 	 * Returns the handler associated to the specified exception. 
 	 */
-	public Slot<?> getExceptionHandler(Class<?> occuredException) {
+	Slot<?> getExceptionHandler(Class<?> occuredException) {
 		
 		if (asyncExceptions.isEmpty())
 			return null;

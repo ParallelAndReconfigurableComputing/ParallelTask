@@ -20,8 +20,6 @@
 package pt.runtime;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutionException;
-
 import pt.functionalInterfaces.FunctorNoArgsNoReturn;
 import pt.functionalInterfaces.FunctorOneArgNoReturn;
 
@@ -50,7 +48,6 @@ public class Slot<R>{
 	
 	private FunctorNoArgsNoReturn functorNoArg = null;
 	private FunctorOneArgNoReturn<R> functorOneArg = null;
-	private R taskResult = null;
 	// this is the task for which this slot is attached (who should assign it?)
 	// cannot be assigned at the time the slot is created (since the TaskID wasn't created just yet)
 	protected TaskID<R> taskID = null; 		
