@@ -318,11 +318,11 @@ public class ParaTask {
 		taskInfo.notify(new Slot<R>(functor));
 	}
 	
-	public static <R> void registerAsyncCatch(TaskInfo<R> taskInfo, Class<Exception> exceptionClass, FunctorNoArgsNoReturn functor){
+	public static <R> void registerAsyncCatch(TaskInfo<R> taskInfo, Class<? extends Exception> exceptionClass, FunctorNoArgsNoReturn functor){
 		taskInfo.setAsyncCatch(exceptionClass, new Slot<R>(functor));
 	}
 	
-	public static <R> void registerAsyncCatch(TaskInfo<R> taskInfo, Class<Exception> exceptionClass, FunctorOneArgNoReturn<R> functor){
+	public static <R> void registerAsyncCatch(TaskInfo<R> taskInfo, Class<? extends Exception> exceptionClass, FunctorOneArgNoReturn<R> functor){
 		taskInfo.setAsyncCatch(exceptionClass, new Slot<R>(functor));
 	}
 	
