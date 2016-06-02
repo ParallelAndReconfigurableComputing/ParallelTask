@@ -44,6 +44,7 @@ public class InvocationProcessor {
 	private CtVariable<?> thisAnnotatedElement = null;
 	private String thisElementName = null;
 	private String thisTaskIDName = null;
+	private String thisTaskInfoName = null;
 	private String thisArgName = null;
 	private CtTypeReference<?> thisElementReturnType = null;
 	private Set<String> dependencies = null;
@@ -66,6 +67,7 @@ public class InvocationProcessor {
 		thisElementName = annotatedElement.getSimpleName();
 		thisElementReturnType = annotatedElement.getType();
 		thisTaskIDName = SpoonUtils.getTaskIDName(thisElementName);
+		thisTaskInfoName = SpoonUtils.getTaskName(thisElementName);
 		thisArgName = SpoonUtils.getLambdaArgName(thisElementName);
 		thisFactory = factory;
 	}
@@ -242,7 +244,8 @@ public class InvocationProcessor {
 			sts.addAll(handlers);
 		}
 		
-		//List<CtInvocationImpl<?>> asyncCatch = getAsyncExceptionStatements();
+		List<CtInvocationImpl<?>> asyncCatchStatements = getAsyncExceptionStatements();
+		sts.addAll(asyncCatchStatements);
 		
 		sts.add(getStartStatement());	
 		
@@ -307,9 +310,28 @@ public class InvocationProcessor {
 	}
 	
 	private List<CtInvocationImpl<?>> getAsyncExceptionStatements(){
+	  List<CtInvocationImpl<?>> invocations = new ArrayList<>();
+	  Set<Class<? extends Exception>> exceptions = asyncExceptions.keySet();
 	  
+	  for(Class<? extends Exception> exception : exceptions){
+		  
+		  CtInvocationImpl<?> invocation = new CtInvocationImpl<>();
+		  
+		  CtCodeSnippetExpression<?> argument = thisFactory.Core().createCodeSnippetExpression();
+		  argument.setValue(thisTaskInfoName + ", " + exception.toString() + ", " + asyncExceptions.get(exception));
+		 
+		  List<CtExpression<?>> arguments = new ArrayList<>();
+		  arguments.add(argument);
+		  
+		  CtExecutableReference executable = thisFactory.Core().createExecutableReference();
+		  executable.setSimpleName(SpoonUtils.getParaTaskSyntax()+".registerAsyncCatch");
+		  
+		  invocation.setExecutable(executable);
+		  invocation.setArguments(arguments);
+		  invocations.add(invocation);
+	  }
 	 // registerAsyncCatch(taskInfo, exceptionClass, functor)
-	  return null;
+	  return invocations;
 	}
 	
 	private CtLocalVariableImpl<?> getStartStatement(){
@@ -334,14 +356,14 @@ public class InvocationProcessor {
 				startPhrase += ", ";
 		}
 		startPhrase += ")";
-		startPhrase = SpoonUtils.getTaskName(thisElementName) + startPhrase;
+		startPhrase = thisTaskInfoName + startPhrase;
 				
 		CtCodeSnippetExpression defaultExp = thisFactory.Core().createCodeSnippetExpression();
 		defaultExp.setValue(startPhrase);
 		
 		CtTypeReference taskIDType = getTaskIDType(thisAnnotatedElement);
 		taskIdDeclaration.setType(taskIDType);
-		taskIdDeclaration.setSimpleName(SpoonUtils.getTaskIDName(thisElementName));
+		taskIdDeclaration.setSimpleName(thisTaskIDName);
 		taskIdDeclaration.setDefaultExpression(defaultExp);
 		
 		return taskIdDeclaration;

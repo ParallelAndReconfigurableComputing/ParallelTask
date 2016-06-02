@@ -1,3 +1,4 @@
+import sp.annotations.AsyncCatch;
 import sp.annotations.Future;
 
 class SimpleAnnotation{
@@ -31,6 +32,7 @@ public class OldAnnotation {
 	
 	public static void main(String[] args) {
 		@Future
+		@AsyncCatch(throwable=InterruptedException.class, handler="foo(1)")
 		int Var = foo3(10);		
 		try{
 			SimpleAnnotation simp = new SimpleAnnotation();
