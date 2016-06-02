@@ -9,4 +9,6 @@ import static java.lang.annotation.ElementType.LOCAL_VARIABLE;
 public @interface Future {
     String depends() default "";
     String notifies() default "";
+    String taskType() default "OneOff";
+    int    taskCount() default 0;
 }
