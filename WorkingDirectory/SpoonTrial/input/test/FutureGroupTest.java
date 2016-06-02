@@ -1,4 +1,4 @@
-package pt.annotations;
+package sp.annotations;
 
 import java.util.*;
 

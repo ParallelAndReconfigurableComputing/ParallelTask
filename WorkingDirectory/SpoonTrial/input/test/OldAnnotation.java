@@ -1,4 +1,4 @@
-import pt.annotations.Future;
+import sp.annotations.Future;
 
 class SimpleAnnotation{
 	public void foo1(int x){
@@ -36,8 +36,12 @@ public class OldAnnotation {
 			SimpleAnnotation simp = new SimpleAnnotation();
 			simp.foo1(5);
 			
-			@Future
-			Void Var1 = foo(5);
+			int[] array = new int[5];
+			for (int i = 0; i < 5; i++){
+				@Future
+				int Var1 = foo2(i);
+				array[i] = Var1;
+			}
 			
 			int VarX = foo1(8, 5);
 
