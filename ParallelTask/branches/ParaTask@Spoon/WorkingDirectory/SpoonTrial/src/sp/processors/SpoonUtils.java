@@ -1,4 +1,4 @@
-package pt.processors;
+package sp.processors;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -69,8 +69,19 @@ public class SpoonUtils {
 		String newType = primitiveMap.get(type);
 		if (newType != null)
 			return newType;
+		return type;
+	}
+	
+	public static String getReturnType(String type){
+		if (type.contains(",")){
+			//this is a series of generic types from
+			//TaskInfo or TaskID. The first one is return type.
+			String[] types = type.split(",");
+			type = types[0].trim();
+		}
 		else
-			return type;
+			type = getType(type);
+		return type;
 	}
 	
 	public static void modifyStatements(List<CtStatement> statements, String regex, String replacement){
@@ -603,13 +614,6 @@ public class SpoonUtils {
 		return null;
 	}
 	
-	public static String getResultPhrase(){
-		return ".getReturnResult()";
-	}
-	
-	public static String getResultPhrase(int index){
-		return ".getReturnResult(" + index + ")";
-	}
 	
 	/**
 	 * Indicates if an argument that is used at the time of the declaration of another element
@@ -680,8 +684,8 @@ public class SpoonUtils {
 		else if (elementName.startsWith("__") && elementName.endsWith("PtLambdaArg__"))
 			return elementName.substring("__".length(), (elementName.length() - "PtLambdaArg__".length()));
 				
-		else if (elementName.contains("<") && elementName.contains(">") && (elementName.lastIndexOf("<") < elementName.indexOf(">")))
-			return elementName.substring(elementName.lastIndexOf("<")+1, elementName.indexOf(">"));
+		else if (elementName.contains("<") && elementName.contains(">") && (elementName.indexOf("<") < elementName.lastIndexOf(">")))
+			return elementName.substring(elementName.indexOf("<")+1, elementName.lastIndexOf(">"));
 		
 		return elementName;
 	}
@@ -696,5 +700,39 @@ public class SpoonUtils {
 		return false;
 	}
 	
+	public static String getResultPhrase(){
+		return ".getReturnResult()";
+	}
 	
+	public static String getResultPhrase(int index){
+		return ".getReturnResult(" + index + ")";
+	}
+	
+	public static String getParaTaskSyntax(){
+		return "pt.runtime.ParaTask";
+	}
+	
+	public static String getFunctorSyntax(){
+		return "pt.functionalInterfaces.Functor";
+	}
+	
+	public static String getTaskInfoSyntax(){
+		return "pt.runtime.TaskInfo";
+	}
+	
+	public static String getTaskIdSyntax(){
+		return "pt.runtime.TaskID";
+	}
+	
+	public static String getAsTaskSyntax(){
+		return "pt.runtime.ParaTask.asTask";
+	}
+	
+	public static String getDependsOnDelimiter(){
+		return ",";
+	}
+	
+	public static String getNotifyDelimiter(){
+		return ";";
+	}
 }

@@ -1,4 +1,4 @@
-package pt.processors;
+package sp.processors;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -8,8 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import pt.annotations.StatementMatcherFilter;
-import pt.annotations.Future;
+import sp.annotations.Future;
+import sp.annotations.StatementMatcherFilter;
 import spoon.processing.AbstractAnnotationProcessor;
 import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtCodeSnippetExpression;

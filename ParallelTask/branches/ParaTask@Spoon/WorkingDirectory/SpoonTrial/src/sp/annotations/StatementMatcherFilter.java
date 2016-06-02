@@ -1,4 +1,4 @@
-package pt.annotations;
+package sp.annotations;
 
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.visitor.Filter;

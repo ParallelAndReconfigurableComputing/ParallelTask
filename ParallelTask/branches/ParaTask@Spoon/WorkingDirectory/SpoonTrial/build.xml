@@ -8,7 +8,7 @@
 	<property name="classes.dir"  value="${dist.dir}/classes" />
 	<property name="lib.dir"      value="libs" />
 	<property name="spoon.jar"    value="${lib.dir}/spoon-core-1.4-jar-with-dependencies.jar"/>
-	<property name="PT.jar"		  value="${lib.dir}/PTLambda-Runtime-1.0.1.jar"/>
+	<property name="PT.jar"		  value="${lib.dir}/PTLambda-Runtime-1.0.2.jar"/>
 
 	<!-- Check the operating system -->
 	<target name="CheckOS">
@@ -63,7 +63,7 @@
 	
 	<target name="process" depends="compile, compressJar" description="Process the annotated code">
 		<exec executable="java">
-			<arg line="-cp ${spoon.jar}${Delim}dist/classes spoon.Launcher -o ${gen.dir} -i input/test/FutureGroupTest.java -p pt.processors.FutureGroupProcessor" />
+			<arg line="-cp ${spoon.jar}${Delim}dist/classes spoon.Launcher -o ${gen.dir} -i input/test/OldAnnotation.java -p sp.processors.PtFutureProcessor" />
 		</exec>
 	</target>
 	

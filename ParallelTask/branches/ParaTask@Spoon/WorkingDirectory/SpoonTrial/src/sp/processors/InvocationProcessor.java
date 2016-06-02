@@ -1,4 +1,4 @@
-package pt.processors;
+package sp.processors;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -8,12 +8,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.List;
 
-import pt.annotations.StatementMatcherFilter;
-import pt.annotations.AsyncCatch;
-import pt.annotations.Future;
 import pt.functionalInterfaces.FunctorNoArgsNoReturn;
 import pt.functionalInterfaces.FunctorOneArgNoReturn;
 import pt.runtime.TaskInfo;
+import sp.annotations.AsyncCatch;
+import sp.annotations.Future;
+import sp.annotations.StatementMatcherFilter;
 import spoon.processing.AbstractProcessor;
 import spoon.processing.AbstractAnnotationProcessor;
 import spoon.reflect.Factory;
@@ -73,7 +73,7 @@ public class InvocationProcessor {
 	public void process(){
 		getInvocations();
 		checkIfThrowsException();
-		replaceWithTaskIDName();
+		replaceOccurrencesWithTaskIDName();
 		inspectAnnotation();
 		processInvocationArguments();
 		modifyThisStatement();
@@ -95,7 +95,7 @@ public class InvocationProcessor {
 			throwsExceptions = true;
 	}
 	
-	private void replaceWithTaskIDName(){
+	private void replaceOccurrencesWithTaskIDName(){
 		String regex = "\\b" + thisElementName + "\\b";
 		List<CtStatement> statementsAccessingThisVar = SpoonUtils.findVarAccessOtherThanFutureDefinition
 				((CtBlockImpl<?>)thisAnnotatedElement.getParent(), thisAnnotatedElement);
@@ -123,7 +123,7 @@ public class InvocationProcessor {
 	private void extractDependenciesFromAnnotation(){
 		String dependsOn = thisFutureAnnotation.depends();
 		if (!dependsOn.isEmpty()){
-			String[] dependsArray = dependsOn.split(",");
+			String[] dependsArray = dependsOn.split(SpoonUtils.getDependsOnDelimiter());
 			for (String dependencyName : dependsArray){
 				//if not trimmed, duplicates with invisible white-space
 				//get added
@@ -142,7 +142,7 @@ public class InvocationProcessor {
 	private void extractHandlersFromAnnotation(){
 		String notifyHandlers = thisFutureAnnotation.notifies();
 		if(!notifyHandlers.isEmpty()){
-			String[] handlersArray = notifyHandlers.split(";");
+			String[] handlersArray = notifyHandlers.split(SpoonUtils.getNotifyDelimiter());
 			for (String handler : handlersArray){
 				handler = handler.trim();
 				if(!handler.isEmpty()){
@@ -214,7 +214,7 @@ public class InvocationProcessor {
 		thisInvocation.setTypeCasts(typeCasts);
 		
 		CtExecutableReference executable = thisFactory.Core().createExecutableReference();
-		executable.setSimpleName("ParaTask.asTask");
+		executable.setSimpleName(SpoonUtils.getAsTaskSyntax());
 		thisInvocation.setExecutable(executable);
 	}
 	
@@ -289,7 +289,7 @@ public class InvocationProcessor {
 		
 		CtInvocationImpl<?> notifyStatement = (CtInvocationImpl<?>) thisFactory.Core().createInvocation();
 		CtExecutableReferenceImpl executablePhrase = (CtExecutableReferenceImpl<?>) thisFactory.Core().createExecutableReference();
-		executablePhrase.setSimpleName("ParaTask.registerSlotToNotify");
+		executablePhrase.setSimpleName(SpoonUtils.getParaTaskSyntax() + ".registerSlotToNotify");
 		notifyStatement.setExecutable(executablePhrase);
 		
 				
@@ -402,8 +402,8 @@ public class InvocationProcessor {
 	}
 
 	public String getTaskInfoType(){
-		String returnPhase = (thisElementReturnType.toString().contains("Void")) ? "Void" : SpoonUtils.getType(thisElementReturnType.toString());
-		String taskInfoType = "TaskInfo" + getNumArgs() + "<" + returnPhase;
+		String returnPhase = (thisElementReturnType.toString().contains("Void")) ? "Void" : SpoonUtils.getReturnType(thisElementReturnType.toString());
+		String taskInfoType = SpoonUtils.getTaskInfoSyntax() + getNumArgs() + "<" + returnPhase;
 		Set<String> argTypes = argumentsAndTypes.keySet();
 		for(String argType : argTypes){
 			taskInfoType += ", " + argType;
@@ -413,17 +413,21 @@ public class InvocationProcessor {
 	}
 	
 	public String getFunctorType(){
-		String functorReturnPhrase = (thisElementReturnType.toString().contains("Void")) ? "NoReturn<Void" : ("WithReturn<"+SpoonUtils.getType(thisElementReturnType.toString()));
-		String functorName = "Functor" + getNumArgs() + functorReturnPhrase;
+		String functorReturnPhrase = (thisElementReturnType.toString().contains("Void")) ? "NoReturn<Void" : ("WithReturn<"+SpoonUtils.getReturnType(thisElementReturnType.toString()));
+		String functorName = SpoonUtils.getFunctorSyntax() + getNumArgs() + functorReturnPhrase;
 		return functorName;
 	}
 	
 	public CtTypeReference getTaskIDType(CtVariable<?> declaration){
-		
+		System.out.println("declaration: " + declaration.toString());
 		String declarationType = declaration.getType().toString();
+		System.out.println("declaration type: " + declarationType);
+		
 		declarationType = SpoonUtils.getOrigName(declarationType);
-		String taskType = SpoonUtils.getType(declarationType);		
-		taskType = "TaskID<" + taskType + ">";
+		String taskType = SpoonUtils.getReturnType(declarationType);		
+		
+		System.out.println("taskType: " + taskType);
+		taskType = SpoonUtils.getTaskIdSyntax() + "<" + taskType + ">";
 		CtTypeReference<?> taskIDType = thisFactory.Core().createTypeReference();
 		taskIDType.setSimpleName(taskType);
 		return taskIDType;

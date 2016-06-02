@@ -1,6 +1,6 @@
-package pt.processors;
+package sp.processors;
 
-import pt.annotations.Future;
+import sp.annotations.Future;
 import spoon.reflect.declaration.CtVariable;
 
 public class CollectionWrapperProcessor {

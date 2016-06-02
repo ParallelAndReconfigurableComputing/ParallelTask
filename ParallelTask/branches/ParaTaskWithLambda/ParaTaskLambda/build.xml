@@ -7,7 +7,7 @@
 	<property name="productName" value="PTLambda"/>
 	<property name="reductionJar" value="PARCutils-1.1.1.jar"/>
 	<property name="libsDir" value="./libs"/>
- 	<property name="jarVersion" value="1.0.3"/>
+ 	<property name="jarVersion" value="1.0.4"/>
 	
 	<!-- Check the operating system -->
     <target name="checkOS">
