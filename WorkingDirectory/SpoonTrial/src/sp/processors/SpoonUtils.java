@@ -645,6 +645,10 @@ public class SpoonUtils {
 		return "__" + name + "PtTaskID__";
 	}
 	
+	public static String getTaskIDGroupName(String name){
+		return "__" + name + "PtTaskIDGroup__";
+	}
+	
 	public static String getLambdaArgName(String name) {
 		return "__" + name + "PtLambdaArg__";
 	}
