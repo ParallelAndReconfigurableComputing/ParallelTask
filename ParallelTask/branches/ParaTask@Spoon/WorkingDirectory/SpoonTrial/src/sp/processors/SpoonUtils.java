@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import sp.annotations.TaskInfoType;
 import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtCatch;
 import spoon.reflect.code.CtExpression;
@@ -726,6 +727,14 @@ public class SpoonUtils {
 	
 	public static String getAsTaskSyntax(){
 		return "pt.runtime.ParaTask.asTask";
+	}
+	
+	public static String getPtTaskTypeSyntax(){
+		return getParaTaskSyntax() + ".TaskType";
+	}
+	
+	public static String getTaskType(TaskInfoType taskType){
+		return getPtTaskTypeSyntax()+"."+taskType.toString();
 	}
 	
 	public static String getDependsOnDelimiter(){

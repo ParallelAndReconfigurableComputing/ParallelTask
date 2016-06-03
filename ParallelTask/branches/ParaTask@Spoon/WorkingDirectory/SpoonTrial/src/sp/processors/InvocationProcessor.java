@@ -8,14 +8,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.List;
 
-import pt.functionalInterfaces.FunctorNoArgsNoReturn;
-import pt.functionalInterfaces.FunctorOneArgNoReturn;
-import pt.runtime.TaskInfo;
 import sp.annotations.AsyncCatch;
 import sp.annotations.Future;
 import sp.annotations.StatementMatcherFilter;
-import spoon.processing.AbstractProcessor;
-import spoon.processing.AbstractAnnotationProcessor;
 import spoon.reflect.Factory;
 import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtCodeSnippetExpression;
@@ -32,10 +27,7 @@ import spoon.reflect.reference.CtTypeReference;
 import spoon.support.reflect.code.CtBlockImpl;
 import spoon.support.reflect.code.CtInvocationImpl;
 import spoon.support.reflect.code.CtLocalVariableImpl;
-import spoon.support.reflect.code.CtStatementImpl;
-import spoon.support.reflect.declaration.CtAnnotationImpl;
 import spoon.support.reflect.reference.CtExecutableReferenceImpl;
-import spoon.support.reflect.reference.CtTypeReferenceImpl;
 
 public class InvocationProcessor {
 	
@@ -45,12 +37,12 @@ public class InvocationProcessor {
 	private String thisElementName = null;
 	private String thisTaskIDName = null;
 	private String thisTaskInfoName = null;
-	private String thisArgName = null;
+	private String thisTaskType = null;
+	private int thisTaskCount = 0;
 	private CtTypeReference<?> thisElementReturnType = null;
 	private Set<String> dependencies = null;
 	private Set<String> handlers = null;
 	private Map<String, String> argumentsAndTypes = null;
-	private StringBuilder stringBuilder = null;
 	private boolean throwsExceptions = false;
 	private Factory thisFactory = null;
 	private Map<Class<? extends Exception>, String> asyncExceptions = null;
@@ -61,14 +53,12 @@ public class InvocationProcessor {
 		asyncExceptions = new HashMap<>();
 		argumentsAndTypes = new HashMap<>();
 		
-		stringBuilder = new StringBuilder();
 		thisFutureAnnotation = future;
 		thisAnnotatedElement = annotatedElement;
 		thisElementName = annotatedElement.getSimpleName();
 		thisElementReturnType = annotatedElement.getType();
 		thisTaskIDName = SpoonUtils.getTaskIDName(thisElementName);
 		thisTaskInfoName = SpoonUtils.getTaskName(thisElementName);
-		thisArgName = SpoonUtils.getLambdaArgName(thisElementName);
 		thisFactory = factory;
 	}
 	
@@ -106,6 +96,7 @@ public class InvocationProcessor {
 	
 	private void inspectAnnotation(){
 		extractDependenciesFromStatement();
+		extractTaskInfoFromAnnotation();
 		extractDependenciesFromAnnotation();
 		extractHandlersFromAnnotation();
 		extractAsyncExceptionsFromAnnotations();
@@ -121,6 +112,13 @@ public class InvocationProcessor {
 			}
 		}				
 	}	
+	
+	private void extractTaskInfoFromAnnotation(){
+		thisTaskType = SpoonUtils.getTaskType(thisFutureAnnotation.taskType()).trim();
+		thisTaskCount = thisFutureAnnotation.taskCount();
+		if(thisTaskCount < 0)
+			thisTaskCount = 0;
+	}
 	
 	private void extractDependenciesFromAnnotation(){
 		String dependsOn = thisFutureAnnotation.depends();
@@ -161,9 +159,14 @@ public class InvocationProcessor {
 			Annotation actualAnnotation = annotation.getActualAnnotation();
 			if(actualAnnotation instanceof AsyncCatch){
 				AsyncCatch asynCatch = (AsyncCatch) actualAnnotation;
-				Class<? extends Exception> exceptionClass = asynCatch.throwable();
-				String handler = "()->" + asynCatch.handler();
-				asyncExceptions.put(exceptionClass, handler);
+				Class<? extends Exception>[] exceptions = asynCatch.throwables();
+				String[] handlers = asynCatch.handlers();
+				if (exceptions.length != handlers.length)
+					throw new IllegalArgumentException("THE NUMBER OF EXCEPTION CLASSES SPECIFIED FOR " + thisAnnotatedElement + 
+							" IS NOT COMPLIANT WITH THE NUMBER OF HANDLERS SPECIFIED FOR THOSE EXCEPTIONS!");
+				for(int i = 0; i < handlers.length; i++){
+					asyncExceptions.put(exceptions[i], ("()->{try{" + handlers[i]) +";}catch(Exception e){e.printStackTrace();}}");
+				}
 			}
 		}
 	}	
@@ -200,15 +203,25 @@ public class InvocationProcessor {
 		thisElementNewType.setSimpleName(getTaskInfoType());
 		thisAnnotatedElement.setType(thisElementNewType);
 		thisAnnotatedElement.setSimpleName(SpoonUtils.getTaskName(thisElementName));
-				
-				
-		CtCodeSnippetExpression<?> newArgument = thisFactory.Core().createCodeSnippetExpression();
-			
-		newArgument.setValue(newFunctorPhrase(thisInvocation));
-		CtExpression<?> newArgExp = newArgument;
-				
 		List<CtExpression<?>> arguments = new ArrayList<>();
-		arguments.add(newArgExp);
+			
+		CtCodeSnippetExpression<?> newArg1 = thisFactory.Core().createCodeSnippetExpression();
+		newArg1.setValue(thisTaskType);
+		CtExpression<?> firstArg = newArg1;
+		arguments.add(firstArg);
+		
+		if(thisTaskCount != 0){
+			CtCodeSnippetExpression<?> newArg2 = thisFactory.Core().createCodeSnippetExpression();
+			newArg2.setValue(Integer.toString(thisTaskCount));
+			CtExpression<?> secondArg = newArg2;
+			arguments.add(secondArg); 
+		}
+		
+		CtCodeSnippetExpression<?> newArg3 = thisFactory.Core().createCodeSnippetExpression();
+		newArg3.setValue(newFunctorPhrase(thisInvocation));
+		CtExpression<?> thirdArg = newArg3;
+		arguments.add(thirdArg);		
+		 
 		thisInvocation.setArguments(arguments);
 				
 		List<CtTypeReference<?>> typeCasts = new ArrayList<>();
@@ -314,11 +327,10 @@ public class InvocationProcessor {
 	  Set<Class<? extends Exception>> exceptions = asyncExceptions.keySet();
 	  
 	  for(Class<? extends Exception> exception : exceptions){
-		  
 		  CtInvocationImpl<?> invocation = new CtInvocationImpl<>();
 		  
 		  CtCodeSnippetExpression<?> argument = thisFactory.Core().createCodeSnippetExpression();
-		  argument.setValue(thisTaskInfoName + ", " + exception.toString() + ", " + asyncExceptions.get(exception));
+		  argument.setValue(thisTaskInfoName + ", " + exception.getSimpleName() + ".class, " + asyncExceptions.get(exception));
 		 
 		  List<CtExpression<?>> arguments = new ArrayList<>();
 		  arguments.add(argument);
@@ -441,14 +453,10 @@ public class InvocationProcessor {
 	}
 	
 	public CtTypeReference getTaskIDType(CtVariable<?> declaration){
-		System.out.println("declaration: " + declaration.toString());
 		String declarationType = declaration.getType().toString();
-		System.out.println("declaration type: " + declarationType);
-		
 		declarationType = SpoonUtils.getOrigName(declarationType);
 		String taskType = SpoonUtils.getReturnType(declarationType);		
 		
-		System.out.println("taskType: " + taskType);
 		taskType = SpoonUtils.getTaskIdSyntax() + "<" + taskType + ">";
 		CtTypeReference<?> taskIDType = thisFactory.Core().createTypeReference();
 		taskIDType.setSimpleName(taskType);

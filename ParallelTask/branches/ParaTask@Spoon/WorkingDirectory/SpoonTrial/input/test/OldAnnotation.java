@@ -1,5 +1,6 @@
 import sp.annotations.AsyncCatch;
 import sp.annotations.Future;
+import sp.annotations.TaskInfoType;
 
 class SimpleAnnotation{
 	public void foo1(int x){
@@ -31,8 +32,8 @@ public class OldAnnotation {
 	}
 	
 	public static void main(String[] args) {
-		@Future
-		@AsyncCatch(throwable=InterruptedException.class, handler="foo(1)")
+		@Future(taskType=TaskInfoType.MULTI)
+		@AsyncCatch(throwables={InterruptedException.class, IllegalArgumentException.class}, handlers={"foo(1)", "foo1(1, 2)"})
 		int Var = foo3(10);		
 		try{
 			SimpleAnnotation simp = new SimpleAnnotation();

@@ -156,18 +156,24 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	 * it is used for multi task group only but not user defined group.
 	 * */
 	public void addInnerTask(TaskID<?> id) {
+		if(!dynamicTaskGroup && innerTasks.size() == groupSize)
+			throw new RuntimeException("\nTHE NUMBER OF INNER TASKS IS NOW THE SAME AS THE SIZE THAT WAS SET FOR THIS GROUP! NO MORE TASKS CAN BE ADDED\n"
+					+ "FOR DYNAMIC GROUP SIZE USE DEAFULT CONSTRUCTOR OF TaskIDGroup!\n");
+		
 		innerTasks.add(id);
 		
 		if(dynamicTaskGroup)
-			groupSize = innerTasks.size();
-		
-		else if(innerTasks.size() > groupSize)
-			throw new RuntimeException("\nTHE NUMBER OF INNER TASKS THAT ARE ADDED IS LARGER THAN THE SIZE THAT WAS SET FOR THIS GROUP!\n"
-					+ "FOR DYNAMIC GROUP SIZE USE DEAFULT CONSTRUCTOR OF TaskIDGroup!\n");
+			groupSize = innerTasks.size();		
 	}
 	
+	public void setInnerTask(int relativeID, TaskID<?> id){
+		if(relativeID < innerTasks.size())
+			innerTasks.set(relativeID, id);
+		else
+			addInnerTask(id);
+	}
 	
-	
+		
 	void setReduction(Reduction<T> reduction){
 		reductionLock.lock();
 		this.reductionOperation = reduction;
@@ -213,6 +219,8 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	 */
 	@SuppressWarnings("unchecked")
 	public T getInnerTaskResult(int relativeID) {
+		if(relativeID < 0 || relativeID >= innerTasks.size())
+			throw new IndexOutOfBoundsException("INVALID INDEX REQUEST: " + relativeID + "! VALID RANGE: [" + 0 + "," + innerTasks.size() + ")");
 		return (T) innerTasks.get(relativeID).getReturnResult();
 	}
 	
