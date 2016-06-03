@@ -14,17 +14,20 @@ public class TaskIDGroupProcessor {
 	private CtVariable<?> thisAnnotatedElement = null;
 	private Future thisFutureAnnotation = null;
 	private CtTypeReference<?> thisElementType = null;
-	private CtTypeReference<?> thisArrayType = null;
+	private CtTypeReference<?> thisGroupType = null;
 	private Factory thisFactory = null;
 	private int thisArrayDimension = 0;
 	private String thisTaskIDGroupName = null;
+	private String thisElementName = null;
 	
 	public TaskIDGroupProcessor(Factory factory, Future future, CtVariable<?> annotatedElement){
 		thisAnnotatedElement = annotatedElement;
 		thisFutureAnnotation = future;
 		thisFactory = factory;
 		thisElementType = thisAnnotatedElement.getType();	
-		thisArrayType = thisFactory.Core().createTypeReference();
+		thisGroupType = thisFactory.Core().createTypeReference();
+		thisElementName = thisAnnotatedElement.getSimpleName();
+		thisTaskIDGroupName = SpoonUtils.getTaskIDGroupName(thisElementName);
 	}
 	
 	public void process(){
@@ -54,7 +57,7 @@ public class TaskIDGroupProcessor {
 		String elementType = thisElementType.toString();
 		String type = elementType.substring(0, elementType.indexOf('['));
 		type = SpoonUtils.getType(type.trim());
-		thisArrayType.setSimpleName(type);
+		thisGroupType.setSimpleName(type);
 		while(elementType.indexOf(']') != -1){
 			elementType = elementType.substring(elementType.indexOf(']')+1);
 			counter++;
