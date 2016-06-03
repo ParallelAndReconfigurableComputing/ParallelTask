@@ -17,6 +17,7 @@ public class TaskIDGroupProcessor {
 	private CtTypeReference<?> thisArrayType = null;
 	private Factory thisFactory = null;
 	private int thisArrayDimension = 0;
+	private String thisTaskIDGroupName = null;
 	
 	public TaskIDGroupProcessor(Factory factory, Future future, CtVariable<?> annotatedElement){
 		thisAnnotatedElement = annotatedElement;

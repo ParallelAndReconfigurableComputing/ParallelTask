@@ -4,6 +4,9 @@ import sp.annotations.Future;
 
 public class FutureArrayTest {
 	
+	public static void foo(int i){
+		System.out.println("number is: " + i);
+	}
 	
 	public static void main(String[] args) {
 		int n = 10;
@@ -24,7 +27,8 @@ public class FutureArrayTest {
 				System.out.print(", ");
 		}	
 		
-		@Future
-		int[] array2 = new int[3];
+		for (int i = 0; i < array.length; i++){
+			foo(array[i]);
+		}
 	}
 }
