@@ -3,6 +3,7 @@ package sp.processors;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -50,16 +51,18 @@ import spoon.support.reflect.code.CtWhileImpl;
 
 public class SpoonUtils {
 
-	public static enum ExpressionRole{Assigned, Assignment, ThrowExpression, ReturnExpression, 
+	public static enum ExpressionRole{Assigned, Assignment, ThrownExpression, ReturnExpression, 
 		WhileLoopExpression, DoLoopExpression, ForLoopExpression, ForEachExpression, IfConditionExpression,
 		AssertEvaluationExpression, AssertActualExpression, CaseExpression, LocalVarDefaultExpression,
-		SwitchSelectorExpression, InvocationArgumentExpression, InvocationTargetExpression};
+		SwitchSelectorExpression, InvocationArgumentExpression, InvocationTargetExpression, SynchronizedMonitoringExpression};
 		
 	private static Map<String, String> primitiveMap = new HashMap<String, String>();
 	private static Map<CtStatement, Map<CtExpression<?>, ExpressionRole>> mapOfExpressions = null;
 
 	static {
 		primitiveMap.put("int", "Integer");
+		primitiveMap.put("short", "Short");
+		primitiveMap.put("long", "Long");
 		primitiveMap.put("double", "Double");
 		primitiveMap.put("boolean", "Boolean");
 		primitiveMap.put("float", "Float");
@@ -102,7 +105,7 @@ public class SpoonUtils {
 			
 			else if (statement instanceof CtAssignmentImpl<?, ?>){
 				
-					CtAssignmentImpl<?, ?> assignmentImpl = null;
+				CtAssignmentImpl<?, ?> assignmentImpl = null;
 					
 				if (statement instanceof CtOperatorAssignmentImpl<?, ?>){
 					assignmentImpl = (CtOperatorAssignmentImpl<?, ?>) statement;
@@ -235,10 +238,10 @@ public class SpoonUtils {
 			}
 		}
 	}
-
+	
 	public static void modifyExpressions(List<CtExpression<?>> expressions, String regex, String replacement){
-		String statement = null;
-		Pattern pattern = Pattern.compile(regex);
+//		String statement = null;
+//		Pattern pattern = Pattern.compile(regex);
 		List<CtExpression<?>> expressionsToModify = null;
 		
 		for (CtExpression<?> expression : expressions){
@@ -327,7 +330,7 @@ public class SpoonUtils {
 	}
 	
 	public static Map<CtStatement, Map<CtExpression<?>, ExpressionRole>> listAllExpressionsOfStatements(List<CtStatement> statements){
-		mapOfExpressions = new HashMap<>();
+		mapOfExpressions = new LinkedHashMap<>();
 		listAllExpressions(statements);
 		return mapOfExpressions;
 	}
@@ -344,7 +347,8 @@ public class SpoonUtils {
 			if (statement instanceof CtBlockImpl<?>){
 				CtBlockImpl<?> blockStatement = (CtBlockImpl<?>) statement;
 				statementsToInspect = blockStatement.getStatements();
-				listAllExpressions(statementsToInspect);
+				if(statementsToInspect != null)			
+					listAllExpressions(statementsToInspect);
 			}
 			
 			else if (statement instanceof CtAssignmentImpl<?, ?>){
@@ -357,82 +361,147 @@ public class SpoonUtils {
 				else{
 					assignmentImpl = (CtAssignmentImpl<?, ?>) statement;
 				}
-				statementExpressions.put(assignmentImpl.getAssigned(), ExpressionRole.Assigned);
-				statementExpressions.put(assignmentImpl.getAssignment(), ExpressionRole.Assignment);
-				mapOfExpressions.put(assignmentImpl, statementExpressions);
+				
+				boolean fetched = false;
+				if(assignmentImpl.getAssigned() != null){
+					statementExpressions.put(assignmentImpl.getAssigned(), ExpressionRole.Assigned);
+					fetched = true;
+				}
+				if(assignmentImpl.getAssignment() != null){
+					statementExpressions.put(assignmentImpl.getAssignment(), ExpressionRole.Assignment);
+					fetched = true;
+				}
+				if(fetched)
+					mapOfExpressions.put(assignmentImpl, statementExpressions);
 			}
 			
 			else if (statement instanceof CtThrowImpl){
 				CtThrowImpl throwImpl = (CtThrowImpl) statement;
-				statementExpressions.put(throwImpl.getThrownExpression(), ExpressionRole.ThrowExpression);
-				mapOfExpressions.put(throwImpl, statementExpressions);
+				if(throwImpl.getThrownExpression() != null){
+					statementExpressions.put(throwImpl.getThrownExpression(), ExpressionRole.ThrownExpression);
+					mapOfExpressions.put(throwImpl, statementExpressions);
+				}
 			}
 			
 			else if (statement instanceof CtReturnImpl<?>){
 				CtReturnImpl<?> returnImp = (CtReturnImpl<?>) statement;
-				statementExpressions.put(returnImp.getReturnedExpression(), ExpressionRole.ReturnExpression);
-				mapOfExpressions.put(returnImp, statementExpressions);
+				if(returnImp.getReturnedExpression() != null){
+					statementExpressions.put(returnImp.getReturnedExpression(), ExpressionRole.ReturnExpression);
+					mapOfExpressions.put(returnImp, statementExpressions);
+				}
 			}
 			
 			else if (statement instanceof CtLoopImpl){
 			
 				if (statement instanceof CtWhileImpl){
+					
 					CtWhileImpl whileImpl = (CtWhileImpl) statement;
-					statementExpressions.put(whileImpl.getLoopingExpression(), ExpressionRole.WhileLoopExpression);
-					mapOfExpressions.put(whileImpl, statementExpressions);
-					statementsToInspect.add(whileImpl.getBody());
-					listAllExpressions(statementsToInspect);
+					
+					if(whileImpl.getLoopingExpression() != null){
+						statementExpressions.put(whileImpl.getLoopingExpression(), ExpressionRole.WhileLoopExpression);
+						mapOfExpressions.put(whileImpl, statementExpressions);
+					}
+					
+					if(whileImpl.getBody() != null){
+						statementsToInspect.add(whileImpl.getBody());
+						listAllExpressions(statementsToInspect);
+					}
 				}
 				
 				else if (statement instanceof CtDoImpl){
 					CtDoImpl doImpl = (CtDoImpl) statement;
-					statementExpressions.put(doImpl.getLoopingExpression(), ExpressionRole.DoLoopExpression);
-					mapOfExpressions.put(doImpl, statementExpressions);
-					statementsToInspect.add(doImpl.getBody());
-					listAllExpressions(statementsToInspect);
+					if(doImpl.getLoopingExpression() != null){
+						statementExpressions.put(doImpl.getLoopingExpression(), ExpressionRole.DoLoopExpression);
+						mapOfExpressions.put(doImpl, statementExpressions);
+					}
+					
+					if(doImpl.getBody() != null){
+						statementsToInspect.add(doImpl.getBody());
+						listAllExpressions(statementsToInspect);
+					}
 				}
 				
 				else if (statement instanceof CtForImpl){
 					CtForImpl forImpl = (CtForImpl) statement;
-					statementExpressions.put(forImpl.getExpression(), ExpressionRole.ForLoopExpression);
-					mapOfExpressions.put(forImpl, statementExpressions);
-					statementsToInspect.add(forImpl.getBody());
-					statementsToInspect.addAll(forImpl.getForInit());
-					statementsToInspect.addAll(forImpl.getForUpdate());
-					listAllExpressions(statementsToInspect);
+					if(forImpl.getExpression() != null){
+						statementExpressions.put(forImpl.getExpression(), ExpressionRole.ForLoopExpression);
+						mapOfExpressions.put(forImpl, statementExpressions);
+					}
+					boolean fetched = false;
+					if(forImpl.getBody() != null){
+						statementsToInspect.add(forImpl.getBody());
+						fetched = true;
+					}
+					if(forImpl.getForInit() != null){
+						statementsToInspect.addAll(forImpl.getForInit());
+						fetched = true;
+					}
+					if(forImpl.getForUpdate() != null){
+						statementsToInspect.addAll(forImpl.getForUpdate());
+						fetched = true;
+					}
+					
+					if (fetched)
+						listAllExpressions(statementsToInspect);
 				}
 				
 				else if (statement instanceof CtForEachImpl){
 					CtForEachImpl forEachImpl = (CtForEachImpl) statement;
-					statementExpressions.put(forEachImpl.getExpression(), ExpressionRole.ForEachExpression);
-					mapOfExpressions.put(forEachImpl, statementExpressions);
-					statementsToInspect.add(forEachImpl.getBody());
-					listAllExpressions(statementsToInspect);
+					if(forEachImpl.getExpression() != null){
+						statementExpressions.put(forEachImpl.getExpression(), ExpressionRole.ForEachExpression);
+						mapOfExpressions.put(forEachImpl, statementExpressions);
+					}
+					if(forEachImpl.getBody() != null){
+						statementsToInspect.add(forEachImpl.getBody());
+						listAllExpressions(statementsToInspect);
+					}
 				}
 			}
 			
 			else if (statement instanceof CtIfImpl){
 				CtIfImpl ifImpl = (CtIfImpl) statement;
-				statementExpressions.put(ifImpl.getCondition(), ExpressionRole.IfConditionExpression);
-				mapOfExpressions.put(ifImpl, statementExpressions);
-				statementsToInspect.add(ifImpl.getThenStatement());
-				statementsToInspect.add(ifImpl.getElseStatement());
-				listAllExpressions(statementsToInspect);
+				if(ifImpl.getCondition() != null){
+					statementExpressions.put(ifImpl.getCondition(), ExpressionRole.IfConditionExpression);
+					mapOfExpressions.put(ifImpl, statementExpressions);
+				}
+				boolean fetched = false;
+				if(ifImpl.getThenStatement() != null){
+					statementsToInspect.add(ifImpl.getThenStatement());
+					fetched = true;
+				}
+				if(ifImpl.getElseStatement() != null){
+					statementsToInspect.add(ifImpl.getElseStatement());
+					fetched = true;
+				}
+				if(fetched)
+					listAllExpressions(statementsToInspect);
 			}
 			
 			else if (statement instanceof CtAssertImpl<?>){
 				CtAssertImpl<?> assertImpl = (CtAssertImpl<?>) statement;
-				statementExpressions.put(assertImpl.getAssertExpression(), ExpressionRole.AssertEvaluationExpression);
-				statementExpressions.put(assertImpl.getExpression(), ExpressionRole.AssertActualExpression);
-				mapOfExpressions.put(assertImpl, statementExpressions);
+				boolean fetched = false;
+				if(assertImpl.getAssertExpression() != null){
+					statementExpressions.put(assertImpl.getAssertExpression(), ExpressionRole.AssertEvaluationExpression);
+					fetched = true;
+				}
+				if(assertImpl.getExpression() != null){
+					statementExpressions.put(assertImpl.getExpression(), ExpressionRole.AssertActualExpression);
+					fetched = true;
+				}
+				if(fetched)
+					mapOfExpressions.put(assertImpl, statementExpressions);
 			}
 			
 			else if (statement instanceof CtCaseImpl<?>){
 				CtCaseImpl<?> caseImpl = (CtCaseImpl<?>) statement;
-				statementExpressions.put(caseImpl.getCaseExpression(), ExpressionRole.CaseExpression);
-				mapOfExpressions.put(caseImpl, statementExpressions);
-				statementsToInspect.addAll(caseImpl.getStatements());
-				listAllExpressions(statementsToInspect);
+				if(caseImpl.getCaseExpression() != null){
+					statementExpressions.put(caseImpl.getCaseExpression(), ExpressionRole.CaseExpression);
+					mapOfExpressions.put(caseImpl, statementExpressions);
+				}
+				if(caseImpl.getStatements() != null){
+					statementsToInspect.addAll(caseImpl.getStatements());
+					listAllExpressions(statementsToInspect);
+				}
 			}
 			
 			else if (statement instanceof CtContinueImpl){
@@ -441,28 +510,46 @@ public class SpoonUtils {
 			
 			else if (statement instanceof CtLocalVariableImpl<?>){
 				CtLocalVariableImpl<?> varImpl = (CtLocalVariableImpl<?>) statement;
-				statementExpressions.put(varImpl.getDefaultExpression(), ExpressionRole.LocalVarDefaultExpression);
-				mapOfExpressions.put(varImpl, statementExpressions);
+				if(varImpl.getDefaultExpression() != null){
+					statementExpressions.put(varImpl.getDefaultExpression(), ExpressionRole.LocalVarDefaultExpression);
+					mapOfExpressions.put(varImpl, statementExpressions);
+				}
 			}
 			
 			else if (statement instanceof CtSynchronizedImpl){
 				CtSynchronizedImpl syncImpl = (CtSynchronizedImpl) statement;
-				/*because the expressions in synchronized statements specify the monitoring
-				  object, there is no need to change the object!*/
-				statementsToInspect.add(syncImpl.getBlock());
-				listAllExpressions(statementsToInspect);
+				if(syncImpl.getExpression() != null){
+					statementExpressions.put(syncImpl.getExpression(), ExpressionRole.SynchronizedMonitoringExpression);
+					mapOfExpressions.put(syncImpl, statementExpressions);
+				}
+				
+				if(syncImpl.getBlock() != null){
+					statementsToInspect.add(syncImpl.getBlock());
+					listAllExpressions(statementsToInspect);
+				}
 			}
 			
 			else if (statement instanceof CtTryImpl){
 				//if (statement instanceof CtTryWithResource){} for new version of spoon!
 				CtTryImpl tryImpl = (CtTryImpl) statement;
-				statementsToInspect.add(tryImpl.getBody());
-				statementsToInspect.add(tryImpl.getFinalizer());
-				List<CtCatch> catchers = tryImpl.getCatchers();
-				for (CtCatch catcher : catchers){
-					statementsToInspect.add(catcher.getBody());
+				boolean fetched = false;
+				if(tryImpl.getBody() != null){
+					statementsToInspect.add(tryImpl.getBody());
+					fetched = true;
 				}
-				listAllExpressions(statementsToInspect);
+				if(tryImpl.getFinalizer() != null){
+					statementsToInspect.add(tryImpl.getFinalizer());
+					fetched = true;
+				}
+				if(tryImpl.getCatchers() != null){
+					List<CtCatch> catchers = tryImpl.getCatchers();
+					for (CtCatch catcher : catchers){
+						statementsToInspect.add(catcher.getBody());
+					}
+					fetched = true;
+				}
+				if(fetched)
+					listAllExpressions(statementsToInspect);
 			}
 			else if (statement instanceof CtBreakImpl){
 				//AT THIS STAGE DO NOTHING FOR A BREAK STATEMENT
@@ -470,18 +557,31 @@ public class SpoonUtils {
 			
 			else if (statement instanceof CtSwitchImpl<?>){
 				CtSwitchImpl<?> switchImpl = (CtSwitchImpl<?>) statement;
-				statementExpressions.put(switchImpl.getSelector(), ExpressionRole.SwitchSelectorExpression);
-				statementsToInspect.addAll(switchImpl.getCases());
-				listAllExpressions(statementsToInspect);
+				if(switchImpl.getSelector() != null){
+					statementExpressions.put(switchImpl.getSelector(), ExpressionRole.SwitchSelectorExpression);
+					mapOfExpressions.put(switchImpl, statementExpressions);
+				}
+				if(switchImpl.getCases() != null){
+					statementsToInspect.addAll(switchImpl.getCases());
+					listAllExpressions(statementsToInspect);
+				}
 			}
 			
 			else if (statement instanceof CtInvocationImpl<?>){
 				CtInvocationImpl<?> invocImpl = (CtInvocationImpl<?>) statement;
-				List<CtExpression<?>> arguments = invocImpl.getArguments();
-				for(CtExpression<?> argument : arguments){
-					statementExpressions.put(argument, ExpressionRole.InvocationArgumentExpression);
+				boolean fetched = false;
+				if(invocImpl.getArguments() != null){
+					List<CtExpression<?>> arguments = invocImpl.getArguments();
+					for(CtExpression<?> argument : arguments){
+						statementExpressions.put(argument, ExpressionRole.InvocationArgumentExpression);
+					}
+					fetched = true;
 				}
-				statementExpressions.put(invocImpl.getTarget(), ExpressionRole.InvocationTargetExpression);
+				if(invocImpl.getTarget() != null){
+					statementExpressions.put(invocImpl.getTarget(), ExpressionRole.InvocationTargetExpression);
+					fetched = true;
+				}
+				if(fetched)
 				mapOfExpressions.put(invocImpl, statementExpressions);
 			}
 		}
@@ -729,6 +829,9 @@ public class SpoonUtils {
 		return "pt.runtime.TaskID";
 	}
 	
+	public static String getTaskIDGroupSyntax()	{
+		return "pt.runtime.TaskIDGroup";
+	}
 	public static String getAsTaskSyntax(){
 		return "pt.runtime.ParaTask.asTask";
 	}
