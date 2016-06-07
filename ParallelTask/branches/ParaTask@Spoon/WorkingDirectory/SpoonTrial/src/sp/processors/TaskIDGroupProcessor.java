@@ -211,7 +211,16 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	}
 		
 	private void modifyWithTaskIDReplacement(CtAssignmentImpl<?, ?> accessStatement){
-				
+		String assignedString   = accessStatement.getAssigned().toString();
+		String assignmentString = accessStatement.getAssignment().toString();
+		String taskIDName = SpoonUtils.getTaskIDName(SpoonUtils.getOrigName(assignmentString));
+		
+		String index = assignedString.substring(assignedString.indexOf('[')+1, assignedString.indexOf(']'));
+		
+		CtCodeSnippetStatement newStatement = thisFactory.Core().createCodeSnippetStatement();
+		String newStatementString = thisTaskIDGroupName + ".setInnerTask(" + index + ", " + taskIDName + ")";
+		newStatement.setValue(newStatementString);
+		accessStatement.replace(newStatement);		
 	}	
 	
 	private void modifyWithInvocation(CtAssignmentImpl<?, ?> accessStatement){
@@ -232,18 +241,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 				annotations.add(annotation);
 		}
 		futureObjDeclaration.setAnnotations(annotations);
-		
-		String assignedString   = accessStatement.getAssigned().toString();
-		String assignmentString = accessStatement.getAssignment().toString();
-		String taskIDName = SpoonUtils.getTaskIDName(SpoonUtils.getOrigName(assignmentString));
-		
-		String index = assignedString.substring(assignedString.indexOf('[')+1, assignedString.indexOf(']'));
-		System.out.println("index: " + index);
-		
-		CtCodeSnippetStatement newStatement = thisFactory.Core().createCodeSnippetStatement();
-		String newStatementString = thisTaskIDGroupName + ".setInnerTask(" + index + ", " + taskIDName + ")";
-		newStatement.setValue(newStatementString);
-		accessStatement.replace(newStatement);	
+		modifyWithTaskIDReplacement(accessStatement);
 	}
 	
 	//-------------------------------------------------------HELPER METHODS------------------------------------------------------
