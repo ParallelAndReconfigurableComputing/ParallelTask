@@ -19,7 +19,7 @@ public class FutureArrayTest {
 		for (int i = 0; i < 5; i++){
 			@Future(taskCount=2)
 			int a = foo(i); 
-			array [i] = a;
+			array [i] = bb;
 		}
 		array[5] = 12;
 		array[6] = 3;
