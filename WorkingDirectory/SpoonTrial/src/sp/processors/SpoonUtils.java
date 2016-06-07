@@ -672,11 +672,11 @@ public class SpoonUtils {
 	 * Finds and returns the declaration statement of an argument that has
 	 * been used within another variable declaration. 
 	 * 
-	 * @param element
+	 * @param currentStatement
 	 * @param argName
 	 * @return CtStatement declaring statement
 	 */
-	public static CtStatement getDeclarationStatement(CtVariable<?> element, String argName) {
+	public static CtStatement getDeclarationStatement(CtStatement currentStatement, String argName) {
 		if (!argName.matches("[a-zA-Z0-9_]+")) {
 			return null;
 		}
@@ -684,18 +684,21 @@ public class SpoonUtils {
 		/*
 		 * If the argument does not have the same name as the current declared element, which is being
 		 * inspected, then its names is changed into a TaskName format iff it is a future variable. 
-		 * */
-		if(!element.getSimpleName().equals(argName))
-			argName = getTaskName(argName);
-		CtBlock<?> block = (CtBlock<?>)element.getParent();
+		 */		
+		String argTaskName = getTaskName(argName);
+		
+		CtBlock<?> block = currentStatement.getParent(CtBlock.class);
 		while(block != null){
 			List<CtStatement> blockStatements = block.getStatements();
 			
 			for(CtStatement statement : blockStatements) {
 				
-				if(statement == element){
-					if(element.getSimpleName().equals(argName))
-						return statement;
+				if(statement == currentStatement){
+					if(currentStatement instanceof CtLocalVariableImpl<?>){
+						CtLocalVariableImpl<?> currentDeclaration = (CtLocalVariableImpl<?>) currentStatement;
+						if(currentDeclaration.getSimpleName().equals(argTaskName) || currentDeclaration.getSimpleName().equals(argName))
+							return statement;
+					}
 					else
 						break;
 				}
@@ -703,7 +706,7 @@ public class SpoonUtils {
 				if (statement instanceof CtLocalVariable<?>){
 					if(statement instanceof CtVariable<?>){
 						CtVariable<?> variableDeclaration = (CtVariable<?>) statement;
-						if(variableDeclaration.getSimpleName().equals(argName)){
+						if(variableDeclaration.getSimpleName().equals(argTaskName) || variableDeclaration.getSimpleName().equals(argName)){
 							return statement;
 						}
 					}
@@ -720,12 +723,23 @@ public class SpoonUtils {
 	 * Indicates if an argument that is used at the time of the declaration of another element
 	 * is itself a future variable or not. 
 	 * 
-	 * @param element
+	 * @param currentDeclaredElement
 	 * @param argName
 	 * @return <code>true</code>, if the argument is a future variable, <code>false</code> otherwise. 
 	 */
-	public static boolean isFutureVariable(CtVariable<?> element, String argName){
-		CtLocalVariable<?> declaration = (CtLocalVariable<?>)getDeclarationStatement(element, argName);
+	public static boolean isFutureVariable(CtLocalVariable<?> currentDeclaredElement, String argName){
+		/*
+		 * If an object is a future variable, then its name at its declaration statement has definitely
+		 * changed to the TaskInfo format. When we transfer the name into its TaskInfo format here,
+		 * the 'getDeclarationStatement()' method will search for two String literals. 
+		 * First, the TaskInfo format created here. Second, the TaskInfo format of the TaskInfo format. 
+		 * (i.e., TaskInfo(TaskInfo)). Considering that the second String literal will not be found, a
+		 * statement is returned if and only if the statement name is in TaskInfo format (i.e., first
+		 * string literal). 
+		 */
+		argName = getTaskName(argName);
+		
+		CtLocalVariable<?> declaration = (CtLocalVariable<?>)getDeclarationStatement(currentDeclaredElement, argName);
 		if(declaration == null)
 			return false;
 		return true;
@@ -795,8 +809,8 @@ public class SpoonUtils {
 		return elementName;
 	}
 	
-	public static boolean isTaskIDReplacement(CtVariable<?> element, String name){
-		if(name.startsWith("__") && name.endsWith("__"+getResultPhrase())){
+	public static boolean isTaskIDReplacement(CtLocalVariable<?> element, String name){
+		if(name.startsWith("__") && name.endsWith("PtTaskID__"+getResultPhrase())){
 			String originalName = getOrigName(name);
 			if(isFutureVariable(element, originalName)){
 				return true;
