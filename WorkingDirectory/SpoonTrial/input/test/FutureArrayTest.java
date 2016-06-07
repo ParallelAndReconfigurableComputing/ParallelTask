@@ -1,5 +1,6 @@
 
 
+import sp.annotations.AsyncCatch;
 import sp.annotations.Future;
 
 public class FutureArrayTest {
@@ -18,13 +19,14 @@ public class FutureArrayTest {
 		int[] array = new int[n];
 		for (int i = 0; i < 5; i++){
 			@Future(taskCount=2)
+			@AsyncCatch(throwables={InterruptedException.class, IllegalArgumentException.class}, handlers={"foo(1)", "foo1(1, 2)"})
 			int a = foo(i); 
-			array [i] = bb;
+			array [i] = a;
 		}
-		array[5] = 12;
-		array[6] = 3;
+		array[5] = foo(300);
+		array[6] = foo(125);
 		for(int i = 7; i < 10; i++){
-			array[i] = i * 15;
+			array[i] = foo(i * 15);
 		}
 		
 		int[] myarray = new int[2];
