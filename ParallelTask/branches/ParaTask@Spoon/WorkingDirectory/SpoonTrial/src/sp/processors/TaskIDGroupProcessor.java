@@ -1,6 +1,8 @@
 package sp.processors;
 
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -21,16 +23,19 @@ import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtTry;
+import spoon.reflect.declaration.CtAnnotation;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtVariable;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.support.reflect.code.CtArrayAccessImpl;
 import spoon.support.reflect.code.CtAssignmentImpl;
+import spoon.support.reflect.code.CtInvocationImpl;
+import spoon.support.reflect.code.CtLocalVariableImpl;
 import spoon.support.reflect.code.CtTryImpl;
 
 public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	
-	private CtVariable<?> thisAnnotatedElement = null;
+	private CtLocalVariable<?> thisAnnotatedElement = null;
 	private Future thisFutureAnnotation = null;
 	private CtTypeReference<?> thisElementType = null;
 	private CtTypeReference<?> thisGroupType = null;
@@ -39,7 +44,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	private String thisTaskIDGroupName = null;
 	private String thisGroupSize = null;
 	
-	public TaskIDGroupProcessor(Factory factory, Future future, CtVariable<?> annotatedElement){
+	public TaskIDGroupProcessor(Factory factory, Future future, CtLocalVariable<?> annotatedElement){
 		thisAnnotatedElement = annotatedElement;
 		thisFutureAnnotation = future;
 		thisFactory = factory;
@@ -126,8 +131,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		taskIDGroupDeclartion.setDefaultExpression(defaultExpression);
 		
 		CtBlock<?> parentBlock = thisAnnotatedElement.getParent(CtBlock.class);
-		StatementMatcherFilter<CtStatement> filter = new StatementMatcherFilter<CtStatement>(
-				SpoonUtils.getDeclarationStatement(thisAnnotatedElement, thisElementName));
+		StatementMatcherFilter<CtStatement> filter = new StatementMatcherFilter<CtStatement>(thisAnnotatedElement);
 		
 		parentBlock.insertAfter(filter, taskIDGroupDeclartion);
 	}
@@ -152,27 +156,48 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	 *                          //separately 
 	 */
 	private void modifyAssignmentStatement(CtAssignmentImpl<?, ?> accessStatement){
+		CtExpression<?> assigned = accessStatement.getAssigned();
+		CtExpression<?> assignment = accessStatement.getAssignment();
+		String assignedString = assigned.toString();
+		String assignmentString = assignment.toString();
+		boolean statementModified = false;
 		
+		
+		
+		if(SpoonUtils.isTaskIDReplacement(thisAnnotatedElement, assignmentString)){
+			modifyWithTaskIDReplacement(accessStatement);
+			statementModified = true;
+		}
+		
+		else if(assignment instanceof CtInvocationImpl<?>){
+			modifyWithInvocation(accessStatement);
+			statementModified = true;
+		}
+		
+		else{
+			CtStatement declarationStatement = SpoonUtils.getDeclarationStatement(accessStatement, assignmentString);
+			if(declarationStatement != null){
+				Future future = hasFutureAnnotation(declarationStatement);
+				if(future != null){
+					modifyWithFutuerObject(future, declarationStatement, accessStatement);
+					statementModified = true;
+				}
+			}
+		}
+		
+		if(!statementModified)
+			throw new UnsupportedOperationException("\nTHE EXPRESSION " + assignmentString + " IN STATEMENT: " + accessStatement 
+					+ " IS NOT SUPPORTED BY PARATASK FUTURE ARRAYS YET!\nPARATASK FUTURE ARRAYS ARE MEANT TO GROUP ASYNCHRONOUS TASKS!");
 	}
 	
 	private void insertWaitForTaskGroupBlock(CtStatement statement){
-		System.out.println("statement: " + statement.toString());
 		CtElement containingBlock = thisAnnotatedElement.getParent(CtBlock.class);
 		CtElement parent = statement.getParent(CtBlock.class);
-		
-		
-		System.out.println("containing Block: \n" + containingBlock.toString());
-		System.out.println("--------------------------------------------------");
-		System.out.println("Parent Block: \n" + parent.toString()); 
-		if(containingBlock.equals(parent))
-			System.out.println("blocks are identical");
 		
 		while(!containingBlock.equals(parent.getParent())){
 			parent = parent.getParent();
 		}
 		
-		System.out.println("statement changed: " + parent.toString());
-
 		CtTry tryBlock = createTryBlock();
 		CtCatch catchBlock = createCatchBlock();
 		
@@ -185,10 +210,56 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		((CtBlock<?>)containingBlock).insertBefore(filter, tryBlock);
 	}
 		
+	private void modifyWithTaskIDReplacement(CtAssignmentImpl<?, ?> accessStatement){
+				
+	}	
 	
+	private void modifyWithInvocation(CtAssignmentImpl<?, ?> accessStatement){
+		
+	}
 	
+	private void modifyWithFutuerObject(Future future, CtStatement ObjDeclaration, CtAssignmentImpl<?, ?> accessStatement){
+		CtLocalVariable<?> futureObjDeclaration = (CtLocalVariable<?>) ObjDeclaration;
+		InvocationProcessor processor = new InvocationProcessor(thisFactory, future, futureObjDeclaration);
+		processor.process();
+		
+		//Annotation processed, so remove it!
+		Set<CtAnnotation<? extends Annotation>> annotations = new HashSet<>();
+		Set<CtAnnotation<? extends Annotation>> actualAnnotations = futureObjDeclaration.getAnnotations();
+		for(CtAnnotation<? extends Annotation> annotation : actualAnnotations){
+			Annotation actualAnnotation = annotation.getActualAnnotation();
+			if(!(actualAnnotation instanceof Future))
+				annotations.add(annotation);
+		}
+		futureObjDeclaration.setAnnotations(annotations);
+		
+		String assignedString   = accessStatement.getAssigned().toString();
+		String assignmentString = accessStatement.getAssignment().toString();
+		String taskIDName = SpoonUtils.getTaskIDName(SpoonUtils.getOrigName(assignmentString));
+		
+		String index = assignedString.substring(assignedString.indexOf('[')+1, assignedString.indexOf(']'));
+		System.out.println("index: " + index);
+		
+		CtCodeSnippetStatement newStatement = thisFactory.Core().createCodeSnippetStatement();
+		String newStatementString = thisTaskIDGroupName + ".setInnerTask(" + index + ", " + taskIDName + ")";
+		newStatement.setValue(newStatementString);
+		accessStatement.replace(newStatement);	
+	}
 	
 	//-------------------------------------------------------HELPER METHODS------------------------------------------------------
+	
+	private Future hasFutureAnnotation(CtStatement statement){
+		CtLocalVariable<?> declarationStatement = (CtLocalVariable<?>) statement;
+		Set<CtAnnotation<? extends Annotation>> annotations = declarationStatement.getAnnotations();
+		for(CtAnnotation<? extends Annotation> annotation : annotations){
+			Annotation actualAnnotation = annotation.getActualAnnotation();
+			if(actualAnnotation instanceof Future){
+				Future future = (Future) actualAnnotation;
+				return future;
+			}
+		}
+		return null;
+	}
 	
 	private CtTry createTryBlock(){
 		CtTry tryBlock = thisFactory.Core().createTry();
@@ -207,19 +278,25 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		return tryBlock;
 	}
 	
-	private CtCatch createCatchBlock(String exceptionType){
-		return null;
-	}
-	
-	private CtCatch createCatchBlock(String exceptionType, String message){
-		return null;
-	}
-	
 	private CtCatch createCatchBlock(){
+		return createCatchBlock("Exception");
+	}	
+		
+	private CtCatch createCatchBlock(String exceptionClass){
+		return createCatchBlock(exceptionClass, "");
+	}
+	
+	private CtCatch createCatchBlock(String exceptionClass, String message){
 		CtCatch catchBlock = thisFactory.Core().createCatch();
 		
 		CtTypeReference exceptionType = thisFactory.Core().createTypeReference();
-		exceptionType.setSimpleName("Exception");
+		exceptionType.setSimpleName(exceptionClass);
+		
+		String exceptionMessage = "";
+		if(message.isEmpty())
+			exceptionMessage = "e.printStackTrace()";
+		else
+			exceptionMessage = "e.printStackTrace(\"" + message +"\")";
 		
 		CtLocalVariable<? extends Throwable> catchParameter = thisFactory.Core().createLocalVariable();
 		catchParameter.setType(exceptionType);
@@ -228,7 +305,8 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		
 		List<CtStatement> catchStatements = new ArrayList<>();
 		CtCodeSnippetStatement catchStatement = thisFactory.Core().createCodeSnippetStatement();
-		catchStatement.setValue("e.printStackTrace()");
+		
+		catchStatement.setValue(exceptionMessage);
 		catchStatements.add(catchStatement);
 		
 		
@@ -237,7 +315,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		catchBlock.setBody(catchBody);
 		
 		return catchBlock;
-	}	
+	}
 	
 	private boolean containsArrayElementSyntax(String component){
 		String regex = "\\b" + thisElementName + "\\b" + "\\[";

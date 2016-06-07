@@ -4,16 +4,22 @@ import sp.annotations.Future;
 
 public class FutureArrayTest {
 	
-	public static void foo(int i){
-		System.out.println("number is: " + i);
+	public static int foo(int i){
+		return i * 10;
 	}
 	
 	public static void main(String[] args) {
+		
+		@Future(taskCount = 4)
+		int bb = foo(34);
+		
 		int n = 10;
 		@Future
 		int[] array = new int[n];
 		for (int i = 0; i < 5; i++){
-			array [i] = i * 10;
+			@Future(taskCount=2)
+			int a = foo(i); 
+			array [i] = a;
 		}
 		array[5] = 12;
 		array[6] = 3;

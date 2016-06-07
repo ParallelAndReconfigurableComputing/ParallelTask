@@ -9,5 +9,6 @@
 			<attribute name="javadoc_location" value="jar:platform:/resource/SpoonTrial/libs/PTLambda-JavaDoc-1.0.4.jar!/"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="libs/PARCutils-1.1.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -29,11 +29,11 @@ import spoon.support.reflect.code.CtInvocationImpl;
 import spoon.support.reflect.code.CtLocalVariableImpl;
 import spoon.support.reflect.reference.CtExecutableReferenceImpl;
 
-public class InvocationProcessor {
+public class InvocationProcessor extends PtAnnotationProcessor {
 	
 	private Future thisFutureAnnotation = null;
 	private CtInvocation<?> thisInvocation = null;
-	private CtVariable<?> thisAnnotatedElement = null;
+	private CtLocalVariable<?> thisAnnotatedElement = null;
 	private String thisElementName = null;
 	private String thisTaskIDName = null;
 	private String thisTaskInfoName = null;
@@ -47,7 +47,7 @@ public class InvocationProcessor {
 	private Factory thisFactory = null;
 	private Map<Class<? extends Exception>, String> asyncExceptions = null;
 	
-	public InvocationProcessor(Factory factory, Future future, CtVariable<?> annotatedElement){
+	public InvocationProcessor(Factory factory, Future future, CtLocalVariable<?> annotatedElement){
 		dependencies = new HashSet<>();
 		handlers = new HashSet<>();
 		asyncExceptions = new HashMap<>();
@@ -68,9 +68,12 @@ public class InvocationProcessor {
 		replaceOccurrencesWithTaskIDName();
 		inspectAnnotation();
 		processInvocationArguments();
-		modifyThisStatement();
-		addNewStatements();
+		modifySourceCode();
+		
 	}
+	
+
+		
 	
 	private void getInvocations(){
 		CtExpression<?> expression = thisAnnotatedElement.getDefaultExpression();
@@ -198,7 +201,8 @@ public class InvocationProcessor {
 		}
 	}
 	
-	private void modifyThisStatement(){
+	@Override
+	protected void modifySourceCode() {
 		CtTypeReference thisElementNewType = thisFactory.Core().createTypeReference();
 		thisElementNewType.setSimpleName(getTaskInfoType());
 		thisAnnotatedElement.setType(thisElementNewType);
@@ -231,12 +235,13 @@ public class InvocationProcessor {
 		CtExecutableReference executable = thisFactory.Core().createExecutableReference();
 		executable.setSimpleName(SpoonUtils.getAsTaskSyntax());
 		thisInvocation.setExecutable(executable);
+		
+		addNewStatements();		
 	}
-	
+
 	private void addNewStatements(){
 		CtBlock<?> thisBlock = (CtBlock<?>) thisAnnotatedElement.getParent();
-		StatementMatcherFilter<CtStatement> filter = new StatementMatcherFilter<CtStatement>
-								(SpoonUtils.getDeclarationStatement(thisAnnotatedElement, thisElementName));
+		StatementMatcherFilter<CtStatement> filter = new StatementMatcherFilter<CtStatement>(thisAnnotatedElement);
 		//insert the new statements after the current invocation statement. 
 		thisBlock.insertAfter(filter, newStatements());
 	}
@@ -519,6 +524,12 @@ public class InvocationProcessor {
 		String newArgumentPhrase = "\n\t\t\t" + functorTypeCast + getLambdaArgs() + " -> " + invocationPhrase;
 		return newArgumentPhrase;
 	}
-	
+
+	@Override
+	protected void printComponents() {
+		// TODO Auto-generated method stub
+		
+	}
+
 	//---------------------------------------HELPER METHODS-----------------------------------------
 }
