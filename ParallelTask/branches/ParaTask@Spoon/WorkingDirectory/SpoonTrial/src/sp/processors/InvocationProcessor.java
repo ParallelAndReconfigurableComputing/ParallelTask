@@ -4,6 +4,7 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.List;
@@ -347,7 +348,19 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 		  invocation.setArguments(arguments);
 		  invocations.add(invocation);
 	  }
-	 // registerAsyncCatch(taskInfo, exceptionClass, functor)
+	  
+	  /*
+	   * AsynCatch has been processed, so remove it from the annotations. 
+	   */
+	  Set<CtAnnotation<? extends Annotation>> newAnnotations = new LinkedHashSet<>();
+	  Set<CtAnnotation<? extends Annotation>> annotations = thisAnnotatedElement.getAnnotations();
+	  for(CtAnnotation<? extends Annotation> annotation : annotations){
+		  Annotation actualAnnotation = annotation.getActualAnnotation();
+		  if(!(actualAnnotation instanceof AsyncCatch))	
+			  newAnnotations.add(annotation);
+	  }
+	  
+	  thisAnnotatedElement.setAnnotations(newAnnotations);
 	  return invocations;
 	}
 	
