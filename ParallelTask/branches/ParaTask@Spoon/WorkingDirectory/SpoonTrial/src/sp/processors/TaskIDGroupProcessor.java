@@ -2,6 +2,7 @@ package sp.processors;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -10,9 +11,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javafx.scene.ParentBuilder;
+import pt.runtime.TaskIDGroup;
 import pt.wrappers.PtMapWrapper;
 import sp.annotations.Future;
 import sp.annotations.StatementMatcherFilter;
+import sp.annotations.TaskInfoType;
 import sp.processors.SpoonUtils.ExpressionRole;
 import spoon.reflect.Factory;
 import spoon.reflect.code.CtBlock;
@@ -20,6 +23,8 @@ import spoon.reflect.code.CtCatch;
 import spoon.reflect.code.CtCodeSnippetExpression;
 import spoon.reflect.code.CtCodeSnippetStatement;
 import spoon.reflect.code.CtExpression;
+import spoon.reflect.code.CtFor;
+import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtTry;
@@ -29,9 +34,11 @@ import spoon.reflect.declaration.CtVariable;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.support.reflect.code.CtArrayAccessImpl;
 import spoon.support.reflect.code.CtAssignmentImpl;
+import spoon.support.reflect.code.CtForImpl;
 import spoon.support.reflect.code.CtInvocationImpl;
 import spoon.support.reflect.code.CtLocalVariableImpl;
 import spoon.support.reflect.code.CtTryImpl;
+import spoon.support.reflect.declaration.CtAnnotationImpl;
 
 public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	
@@ -43,6 +50,8 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	private int thisArrayDimension = 0;
 	private String thisTaskIDGroupName = null;
 	private String thisGroupSize = null;
+	private int ptLoopIndexCounter = 0;
+	private int ptAsyncTaskCounter = 0;
 	
 	public TaskIDGroupProcessor(Factory factory, Future future, CtLocalVariable<?> annotatedElement){
 		thisAnnotatedElement = annotatedElement;
@@ -91,27 +100,36 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	
 	private void modifyArrayAccessStatements(){
 		Set<CtStatement> statements = mapOfContainingStatements.keySet();
-		for(CtStatement statement : statements){
-			Set<CtExpression<?>> expressions = mapOfContainingStatements.get(statement).keySet();
-			for(CtExpression<?> expression : expressions){
-				ExpressionRole expressionRole = mapOfContainingStatements.get(statement).get(expression);
-				if(containsArrayElementSyntax(expression.toString())){
-					if(expressionRole.equals(ExpressionRole.Assigned)){
-						CtAssignmentImpl<?, ?> assignmentStmt = (CtAssignmentImpl<?, ?>) statement;
-						CtExpression<?> assignmentExp = assignmentStmt.getAssignment();
-						if(!containsArrayElementSyntax(assignmentExp.toString()))
-							modifyAssignmentStatement(assignmentStmt);
+		CtStatement currentStatement = null;
+		try{
+			for(CtStatement statement : statements){
+				currentStatement = statement;
+				Set<CtExpression<?>> expressions = mapOfContainingStatements.get(statement).keySet();
+				for(CtExpression<?> expression : expressions){
+					ExpressionRole expressionRole = mapOfContainingStatements.get(statement).get(expression);
+					if(containsArrayElementSyntax(expression.toString())){
+						if(expressionRole.equals(ExpressionRole.Assigned)){
+							CtAssignmentImpl<?, ?> assignmentStmt = (CtAssignmentImpl<?, ?>) statement;
+							CtExpression<?> assignmentExp = assignmentStmt.getAssignment();
+							if(!containsArrayElementSyntax(assignmentExp.toString())){
+								modifyAssignmentStatement(assignmentStmt);
+								break;
+							}
+							else{
+								insertWaitForTaskGroupBlock(statement);
+								return;
+							}							
+						}
 						else{
 							insertWaitForTaskGroupBlock(statement);
 							return;
-						}							
-					}
-					else{
-						insertWaitForTaskGroupBlock(statement);
-						return;
+						}
 					}
 				}
 			}
+		}catch(Exception e){
+			System.out.println("\nEXCEPTION WHILE ATTEMPTING TO MODIFY: " + currentStatement.toString() + " IN TASKIDGROUP PROCESSOR\n");
+			e.printStackTrace();
 		}
 	}
 	
@@ -169,7 +187,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 			statementModified = true;
 		}
 		
-		else if(assignment instanceof CtInvocationImpl<?>){
+		else if(hasInvocationExpression(assignment)){
 			modifyWithInvocation(accessStatement);
 			statementModified = true;
 		}
@@ -208,6 +226,9 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		CtStatement parentStatemtn = (CtStatement) parent;
 		StatementMatcherFilter<CtStatement> filter = new StatementMatcherFilter<CtStatement>(parentStatemtn);
 		((CtBlock<?>)containingBlock).insertBefore(filter, tryBlock);
+		
+		CtFor forLoop = createForLoop();
+		((CtBlock<?>)containingBlock).insertBefore(filter, forLoop);
 	}
 		
 	private void modifyWithTaskIDReplacement(CtAssignmentImpl<?, ?> accessStatement){
@@ -224,7 +245,64 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	}	
 	
 	private void modifyWithInvocation(CtAssignmentImpl<?, ?> accessStatement){
+		ptAsyncTaskCounter++;
 		
+		String asyncTaskName = "__" + thisElementName + "_" + ptAsyncTaskCounter +"__";
+		Future future = new Future() {
+			
+			@Override
+			public Class<? extends Annotation> annotationType() {
+				return Future.class;
+			}
+			
+			@Override
+			public TaskInfoType taskType() {
+				return TaskInfoType.ONEOFF;
+			}
+			
+			@Override
+			public int taskCount() {
+				return 0;
+			}
+			
+			@Override
+			public String notifies() {
+				return "";
+			}
+			
+			@Override
+			public String depends() {
+				return "";
+			}
+		};
+		
+		
+		CtAnnotation<?> futureAnnotation = thisFactory.Core().createAnnotation();
+		CtTypeReference<? extends Annotation> annotationType = thisFactory.Core().createTypeReference();
+		annotationType.setSimpleName("sp.annotations.Future");
+	
+		CtExpression<?> asyncTaskDefaultExpression = accessStatement.getAssignment();
+		futureAnnotation.setAnnotationType(annotationType);
+		Set<CtAnnotation<? extends Annotation>> annotations = new HashSet<>();
+		annotations.add(futureAnnotation);
+		
+		CtLocalVariable localAsyncTask = thisFactory.Core().createLocalVariable();
+		localAsyncTask.setType(thisGroupType);
+		localAsyncTask.setDefaultExpression(asyncTaskDefaultExpression);
+		localAsyncTask.setSimpleName(asyncTaskName);
+		//localAsyncTask.setAnnotations(annotations);
+		
+		CtBlock parentBlock = accessStatement.getParent(CtBlock.class);
+		StatementMatcherFilter<CtStatement> filter = new StatementMatcherFilter<CtStatement>(accessStatement);
+		parentBlock.insertBefore(filter, localAsyncTask);
+		InvocationProcessor processor = new InvocationProcessor(thisFactory, thisFutureAnnotation, localAsyncTask);
+		processor.process();
+		
+		String newAssignment = SpoonUtils.getTaskIDName(asyncTaskName) + ".getReturnResult()";
+		CtCodeSnippetExpression newAssignmentExpression = thisFactory.Core().createCodeSnippetExpression();
+		newAssignmentExpression.setValue(newAssignment);
+		accessStatement.setAssignment(newAssignmentExpression);
+		modifyWithTaskIDReplacement(accessStatement);
 	}
 	
 	private void modifyWithFutuerObject(Future future, CtStatement ObjDeclaration, CtAssignmentImpl<?, ?> accessStatement){
@@ -257,6 +335,12 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 			}
 		}
 		return null;
+	}
+	
+	private boolean hasInvocationExpression(CtExpression<?> assignment){
+		if(assignment instanceof CtInvocation<?>)
+			return true;
+		return false;
 	}
 	
 	private CtTry createTryBlock(){
@@ -313,6 +397,36 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		catchBlock.setBody(catchBody);
 		
 		return catchBlock;
+	}
+	
+	private CtFor createForLoop(){
+		ptLoopIndexCounter++;
+		
+		CtFor forLoop = thisFactory.Core().createFor();
+		CtCodeSnippetExpression loopCondition = thisFactory.Core().createCodeSnippetExpression();
+		CtCodeSnippetStatement  initStmt = thisFactory.Core().createCodeSnippetStatement();
+		CtCodeSnippetStatement  updateStmt = thisFactory.Core().createCodeSnippetStatement();
+		CtCodeSnippetStatement  forBody = thisFactory.Core().createCodeSnippetStatement();
+		String loopIndexName = "__ptLoopIndex" + ptLoopIndexCounter + "__";
+		
+		initStmt.setValue("int " + loopIndexName + " = 0");
+		updateStmt.setValue(loopIndexName + "++");
+		loopCondition.setValue(loopIndexName + " < " + thisGroupSize);
+		
+		String bodyString = thisElementName + "[" + loopIndexName + "] = " + thisTaskIDGroupName + ".getInnerTaskResult(" + loopIndexName + ")";    
+		forBody.setValue(bodyString);
+		
+		List<CtStatement> initStmts = new ArrayList<>();
+		initStmts.add(initStmt);
+		
+		List<CtStatement> updateStmts = new ArrayList<>();
+		updateStmts.add(updateStmt);
+		
+		forLoop.setExpression(loopCondition);
+		forLoop.setForInit(initStmts);
+		forLoop.setForUpdate(updateStmts);
+		forLoop.setBody(forBody);
+		return forLoop;
 	}
 	
 	private boolean containsArrayElementSyntax(String component){
