@@ -35,8 +35,20 @@ public abstract class PtAnnotationProcessor {
 		}
 	}
 	
+	/*
+	 * each sub-class implements this method, as a starting
+	 * point for processing the annotated elements
+	 */
 	public abstract void process();
+	
+	/*
+	 * each sub-class implements this method,
+	 * that allows printing the components of an annotated
+	 * element, in order to help with identifying the components
+	 */
 	protected abstract void printComponents();
-	//each sub-class modifies statements in its own way!
+	/*
+	 * each sub-class modifies statements in its own way!
+	 */
 	protected abstract void modifySourceCode(); 
 }

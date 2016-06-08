@@ -19,12 +19,12 @@ public class FutureArrayTest {
 		int[] array = new int[n];
 		for (int i = 0; i < 5; i++){
 			@Future(taskCount=2)
-			@AsyncCatch(throwables={InterruptedException.class, IllegalArgumentException.class}, handlers={"foo(1)", "foo1(1, 2)"})
+			@AsyncCatch(throwables={InterruptedException.class}, handlers={"foo(1)"})
 			int a = foo(i); 
 			array [i] = a;
 		}
 		array[5] = foo(300);
-		array[6] = foo(125);
+		array[6] = bb;
 		for(int i = 7; i < 10; i++){
 			array[i] = foo(i * 15);
 		}
