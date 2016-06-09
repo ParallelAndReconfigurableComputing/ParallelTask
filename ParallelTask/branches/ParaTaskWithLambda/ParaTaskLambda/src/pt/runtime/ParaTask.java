@@ -329,24 +329,32 @@ public class ParaTask {
 	public static <T> Collection<T> getPtWrapper(Collection<T> collection){
 		if(!processInParallel)
 			return collection;
+		
+		processingInParallel(false);
 		return new PtCollectionWrapper<>(collection);
 	}
 	
 	public static <K, V> Map<K, V> getPtWrapper(Map<K, V> map){
 		if(!processInParallel)
 			return map;
+		
+		processingInParallel(false);
 		return new PtMapWrapper<>(map);
 	}
 	
 	public static <T> List<T> getPtWrapper(List<T> list){
 		if(!processInParallel)
 			return list;
+		
+		processingInParallel(false);
 		return new PtListWrapper<>(list);
 	}
 	
 	public static <T> Set<T> getPtWrapper(Set<T> set){
 		if(!processInParallel)
 			return set;
+		
+		processingInParallel(false);
 		return new PtSetWrapper<>(set);
 	}
 			

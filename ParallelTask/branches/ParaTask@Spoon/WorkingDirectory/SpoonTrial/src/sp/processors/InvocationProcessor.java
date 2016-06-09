@@ -13,6 +13,8 @@ import sp.annotations.AsyncCatch;
 import sp.annotations.Future;
 import sp.annotations.StatementMatcherFilter;
 import spoon.reflect.Factory;
+import spoon.reflect.code.CtArrayAccess;
+import spoon.reflect.code.CtBinaryOperator;
 import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtCodeSnippetExpression;
 import spoon.reflect.code.CtExpression;
@@ -20,8 +22,10 @@ import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtStatementList;
+import spoon.reflect.code.CtUnaryOperator;
 import spoon.reflect.code.CtVariableAccess;
 import spoon.reflect.declaration.CtAnnotation;
+import spoon.reflect.declaration.CtAnnotationType;
 import spoon.reflect.declaration.CtVariable;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
@@ -47,12 +51,14 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 	private boolean throwsExceptions = false;
 	private Factory thisFactory = null;
 	private Map<Class<? extends Exception>, String> asyncExceptions = null;
+	private List<CtVariableAccess<?>> variableAccessExpressions = null;
 	
 	public InvocationProcessor(Factory factory, Future future, CtLocalVariable<?> annotatedElement){
 		dependencies = new HashSet<>();
 		handlers = new HashSet<>();
 		asyncExceptions = new HashMap<>();
 		argumentsAndTypes = new HashMap<>();
+		variableAccessExpressions = new ArrayList<>();
 		
 		thisFutureAnnotation = future;
 		thisAnnotatedElement = annotatedElement;
@@ -176,29 +182,24 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 	}	
 	
 	private void processInvocationArguments(){
-		
-		List<CtExpression<?>> arguments = thisInvocation.getArguments();
-		
-		for (CtExpression<?> argument : arguments){
-			if (argument instanceof CtVariableAccess<?>){
-				CtVariableAccess<?> varAccess = (CtVariableAccess<?>) argument;
-				String argName = varAccess.toString();
-				String origName = SpoonUtils.getOrigName(argName);
+		listVariableAccessExpressions();
+		for (CtVariableAccess<?> varAccess : variableAccessExpressions){
+			String argName = varAccess.toString();
+			String origName = SpoonUtils.getOrigName(argName);
 				
-				if(SpoonUtils.isTaskIDReplacement(thisAnnotatedElement, argName)){
+			if(SpoonUtils.isTaskIDReplacement(thisAnnotatedElement, argName)){
 					
-					CtLocalVariable<?> declaration = (CtLocalVariable<?>)SpoonUtils.getDeclarationStatement(thisAnnotatedElement, origName);
-					CtTypeReference taskIDType = getTaskIDType(declaration);
+				CtLocalVariable<?> declaration = (CtLocalVariable<?>)SpoonUtils.getDeclarationStatement(thisAnnotatedElement, origName);
+				CtTypeReference taskIDType = getTaskIDType(declaration);
 					
-					varAccess.getVariable().setSimpleName(SpoonUtils.getLambdaArgName(origName)+SpoonUtils.getResultPhrase());
-					varAccess.setType(taskIDType);					
-					argumentsAndTypes.put(varAccess.getType().toString(), SpoonUtils.getLambdaArgName(origName));
-				}
-				else{
-					varAccess.getVariable().setSimpleName(SpoonUtils.getNonLambdaArgName(argName));
-					argumentsAndTypes.put(SpoonUtils.getType(varAccess.getType().toString()), SpoonUtils.getNonLambdaArgName(argName));
-				}				
+				varAccess.getVariable().setSimpleName(SpoonUtils.getLambdaArgName(origName)+SpoonUtils.getResultPhrase());
+				varAccess.setType(taskIDType);					
+				argumentsAndTypes.put(varAccess.getType().toString(), SpoonUtils.getLambdaArgName(origName));
 			}
+			else{
+				varAccess.getVariable().setSimpleName(SpoonUtils.getNonLambdaArgName(argName));
+				argumentsAndTypes.put(SpoonUtils.getType(varAccess.getType().toString()), SpoonUtils.getNonLambdaArgName(argName));
+			}				
 		}
 	}
 	
@@ -237,7 +238,7 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 		executable.setSimpleName(SpoonUtils.getAsTaskSyntax());
 		thisInvocation.setExecutable(executable);
 		
-		addNewStatements();		
+		addNewStatements();	
 	}
 
 	private void addNewStatements(){
@@ -536,6 +537,40 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 		
 		String newArgumentPhrase = "\n\t\t\t" + functorTypeCast + getLambdaArgs() + " -> " + invocationPhrase;
 		return newArgumentPhrase;
+	}
+	
+	private void listVariableAccessExpressions(){
+		variableAccessExpressions = new ArrayList<>();
+		listVariableAccessExpressions(thisInvocation);
+	}
+	
+	private void listVariableAccessExpressions(CtExpression<?> expression){
+		
+		if(expression instanceof CtVariableAccess<?>){
+			CtVariableAccess<?> variableAccess = (CtVariableAccess<?>) expression;
+			variableAccessExpressions.add(variableAccess);
+		}
+		else if (expression instanceof CtBinaryOperator<?>){
+			CtBinaryOperator<?> binaryOperator = (CtBinaryOperator<?>) expression;
+			listVariableAccessExpressions(binaryOperator.getLeftHandOperand());
+			listVariableAccessExpressions(binaryOperator.getRightHandOperand());
+		}
+		else if(expression instanceof CtInvocationImpl<?>){
+			CtInvocationImpl<?> invocation = (CtInvocationImpl<?>) expression;
+			List<CtExpression<?>> arguments = invocation.getArguments();
+			for(CtExpression<?> argument : arguments){
+				listVariableAccessExpressions(argument);
+			}
+		}
+		else if (expression instanceof CtUnaryOperator<?>){
+			CtUnaryOperator<?> unaryOperator = (CtUnaryOperator<?>) expression;
+			listVariableAccessExpressions(unaryOperator.getOperand());
+		}
+		else if (expression instanceof CtArrayAccess<?, ?>){
+			CtArrayAccess<?, ?> arrayAccess = (CtArrayAccess<?, ?>) expression;
+			listVariableAccessExpressions(arrayAccess.getIndexExpression());
+		}
+		
 	}
 
 	@Override
