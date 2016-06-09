@@ -248,35 +248,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		ptAsyncTaskCounter++;
 		
 		String asyncTaskName = "__" + thisElementName + "_" + ptAsyncTaskCounter +"__";
-		Future future = new Future() {
-			
-			@Override
-			public Class<? extends Annotation> annotationType() {
-				return Future.class;
-			}
-			
-			@Override
-			public TaskInfoType taskType() {
-				return TaskInfoType.ONEOFF;
-			}
-			
-			@Override
-			public int taskCount() {
-				return 0;
-			}
-			
-			@Override
-			public String notifies() {
-				return "";
-			}
-			
-			@Override
-			public String depends() {
-				return "";
-			}
-		};
-		
-		
+				
 		CtAnnotation<?> futureAnnotation = thisFactory.Core().createAnnotation();
 		CtTypeReference<? extends Annotation> annotationType = thisFactory.Core().createTypeReference();
 		annotationType.setSimpleName("sp.annotations.Future");

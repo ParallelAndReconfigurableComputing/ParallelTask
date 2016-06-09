@@ -6,8 +6,7 @@ public class FutureArrayTest {
         return i * 10;
     }
     
-    @SuppressWarnings("unchecked")
-	public static void main(String[] args) {
+    public static void main(String[] args) {
         pt.runtime.TaskInfoNoArgs<Integer> __bbPtTask__ = ((pt.runtime.TaskInfoNoArgs<Integer>)(pt.runtime.ParaTask.asTask(pt.runtime.ParaTask.TaskType.ONEOFF ,4 ,
 			(pt.functionalInterfaces.FunctorNoArgsWithReturn<Integer>)() -> FutureArrayTest.foo(34))));
         pt.runtime.TaskID<Integer> __bbPtTaskID__ = __bbPtTask__.start();
@@ -27,10 +26,9 @@ public class FutureArrayTest {
         __arrayPtTaskIDGroup__.setInnerTask(5, ____array_1__PtTaskID__);
         __arrayPtTaskIDGroup__.setInnerTask(6, __bbPtTaskID__);
         for (int i = 7 ; i < 10 ; i++) {
-        	int index = i;
-            pt.runtime.TaskInfoNoArgs<Integer> ____array_2__PtTask__ = ((pt.runtime.TaskInfoNoArgs<Integer>)(pt.runtime.ParaTask.asTask(pt.runtime.ParaTask.TaskType.ONEOFF ,
-			(pt.functionalInterfaces.FunctorNoArgsWithReturn<Integer>)() -> FutureArrayTest.foo((index * 15)))));
-            pt.runtime.TaskID<Integer> ____array_2__PtTaskID__ = ____array_2__PtTask__.start();
+            pt.runtime.TaskInfoOneArg<Integer, Integer> ____array_2__PtTask__ = ((pt.runtime.TaskInfoOneArg<Integer, Integer>)(pt.runtime.ParaTask.asTask(pt.runtime.ParaTask.TaskType.ONEOFF ,
+			(pt.functionalInterfaces.FunctorOneArgWithReturn<Integer, Integer>)(__iPtNonLambdaArg__) -> FutureArrayTest.foo((__iPtNonLambdaArg__ * 15)))));
+            pt.runtime.TaskID<Integer> ____array_2__PtTaskID__ = ____array_2__PtTask__.start(i);
             __arrayPtTaskIDGroup__.setInnerTask(i, ____array_2__PtTaskID__);
         }
         int[] myarray = new int[2];
