@@ -670,11 +670,12 @@ public class SpoonUtils {
 	
 	/**
 	 * Finds and returns the declaration statement of an argument that has
-	 * been used within another variable declaration. 
+	 * been used within another statement. 
 	 * 
-	 * @param currentStatement
-	 * @param argName
-	 * @return CtStatement declaring statement
+	 * @param currentStatement : CtStatement, the statement, in which the variable is used.
+	 * @param argName : String, the name of the variable, for which we are looking for the declaration. 
+	 * 
+	 * @return CtStatement, declaring statement
 	 */
 	public static CtStatement getDeclarationStatement(CtStatement currentStatement, String argName) {
 		if (!argName.matches("[a-zA-Z0-9_]+")) {
@@ -721,10 +722,14 @@ public class SpoonUtils {
 	
 	/**
 	 * Indicates if an argument that is used at the time of the declaration of another element
-	 * is itself a future variable or not. 
+	 * is itself a future variable or not. If yes, then its name is replaced by its <code>taskInfo</code>
+	 * equivalent. 
 	 * 
-	 * @param currentDeclaredElement
-	 * @param argName
+	 * @param currentDeclaredElement : CtLocalVariable, the annotated element that is currently being 
+	 * processed by spoon processor.
+	 * 
+	 * @param argName : String, the name of the element being investigated.
+	 * 
 	 * @return <code>true</code>, if the argument is a future variable, <code>false</code> otherwise. 
 	 */
 	public static boolean isFutureVariable(CtLocalVariable<?> currentDeclaredElement, String argName){
@@ -809,6 +814,20 @@ public class SpoonUtils {
 		return elementName;
 	}
 	
+	/**
+	 * Indicates if an object represents the taskID object of a task that has been declared
+	 * before the statement that is currently being processed by spoon processor.
+	 * Considering that spoon processes elements in order of appearance, if a taskInfo has
+	 * been created, and its values replaced by <code>taskID.getReturnResult()</code>, then
+	 * it must be declared before, and hence processed before the current element being processed.
+	 *  
+	 * @param element : CtLocalVariable, the local variable declaration that is annotated, and is currently
+	 * being processed by spoon.
+	 * 
+	 * @param name : String, the name of the variable that is being inspected. 
+	 * 
+	 * @return <code>true</code> if the variable is replace by a taskID object, <code>false</code> otherwise.
+	 */
 	public static boolean isTaskIDReplacement(CtLocalVariable<?> element, String name){
 		if(name.startsWith("__") && name.endsWith("PtTaskID__"+getResultPhrase())){
 			String originalName = getOrigName(name);

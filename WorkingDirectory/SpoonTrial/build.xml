@@ -66,7 +66,7 @@
 			<arg line="-cp ${spoon.jar}${Delim}dist/classes spoon.Launcher -o ${gen.dir} -i input/test/FutureArrayTest.java -p sp.processors.ArrayProcessor" />
 		</exec> -->
 		<exec executable="java">
-			<arg line="-cp ${spoon.jar}${Delim}dist/classes spoon.Launcher -o ${gen.dir} -i input/test/FutureArrayTest.java -p sp.processors.PtFutureProcessor" />
+			<arg line="-cp ${PT.jar}${Delim}${spoon.jar}${Delim}dist/classes spoon.Launcher -o ${gen.dir} -i src/test -p sp.processors.PtFutureProcessor" />
 		</exec> 
 	</target>
 	

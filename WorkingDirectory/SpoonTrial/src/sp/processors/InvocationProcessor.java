@@ -25,7 +25,6 @@ import spoon.reflect.code.CtStatementList;
 import spoon.reflect.code.CtUnaryOperator;
 import spoon.reflect.code.CtVariableAccess;
 import spoon.reflect.declaration.CtAnnotation;
-import spoon.reflect.declaration.CtAnnotationType;
 import spoon.reflect.declaration.CtVariable;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
@@ -36,9 +35,7 @@ import spoon.support.reflect.reference.CtExecutableReferenceImpl;
 
 public class InvocationProcessor extends PtAnnotationProcessor {
 	
-	private Future thisFutureAnnotation = null;
 	private CtInvocation<?> thisInvocation = null;
-	private CtLocalVariable<?> thisAnnotatedElement = null;
 	private String thisElementName = null;
 	private String thisTaskIDName = null;
 	private String thisTaskInfoName = null;
@@ -49,7 +46,6 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 	private Set<String> handlers = null;
 	private Map<String, String> argumentsAndTypes = null;
 	private boolean throwsExceptions = false;
-	private Factory thisFactory = null;
 	private Map<Class<? extends Exception>, String> asyncExceptions = null;
 	private List<CtVariableAccess<?>> variableAccessExpressions = null;
 	
@@ -93,7 +89,7 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 	private void checkIfThrowsException(){
 		Set<CtTypeReference<? extends Throwable>> exceptions = null;
 		exceptions = thisInvocation.getExecutable().getDeclaration().getThrownTypes();
-		if(!exceptions.isEmpty())
+		if(exceptions != null && !exceptions.isEmpty())
 			throwsExceptions = true;
 	}
 	
@@ -570,12 +566,6 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 			CtArrayAccess<?, ?> arrayAccess = (CtArrayAccess<?, ?>) expression;
 			listVariableAccessExpressions(arrayAccess.getIndexExpression());
 		}
-		
-	}
-
-	@Override
-	protected void printComponents() {
-		// TODO Auto-generated method stub
 		
 	}
 
