@@ -23,6 +23,7 @@ public class PtFutureProcessor extends AbstractAnnotationProcessor<Future, CtLoc
 		
 		if(elementIsCollectionDeclaration(annotatedElement)){
 			CollectionWrapperProcessor processor = new CollectionWrapperProcessor(getFactory(), annotation, annotatedElement);
+			processor.process();
 		}
 		
 		else if (elementIsArrayDeclaration(annotatedElement)){
@@ -56,7 +57,7 @@ public class PtFutureProcessor extends AbstractAnnotationProcessor<Future, CtLoc
 	
 	private boolean elementIsCollectionDeclaration(CtLocalVariable<?> annotatedElement){
 		String elementType = annotatedElement.getType().toString();
-		if(elementType.contains("List<") || elementType.contains("Set<") || elementType.contains("Map<") || elementType.contains("Collection<"))
+		if(elementType.contains("List") || elementType.contains("Set") || elementType.contains("Map") || elementType.contains("Collection")) 
 			return true;		
 		return false;
 	}

@@ -3,16 +3,21 @@ package sp.processors;
 import java.util.Map;
 import java.util.Set;
 
+import sp.annotations.Future;
 import sp.processors.SpoonUtils.ExpressionRole;
+import spoon.reflect.Factory;
 import spoon.reflect.code.CtExpression;
+import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.reference.CtTypeReference;
 
 public abstract class PtAnnotationProcessor {
 	
-	protected CtStatement thisAnnotatedElement = null;
+	protected CtLocalVariable<?> thisAnnotatedElement = null;
 	protected String thisElementName = null;
 	protected CtTypeReference<?> thisElementType = null;
+	protected Future thisFutureAnnotation = null;
+	protected Factory thisFactory = null;
 	protected Map<CtStatement, Map<CtExpression<?>, ExpressionRole>> mapOfContainingStatements = null;
 	
 	protected void printIncludingExpressions(){
@@ -30,7 +35,7 @@ public abstract class PtAnnotationProcessor {
 				String role = "";
 				role = mapOfExp.get(expression).toString();
 				
-				System.out.println(", role: " + role);
+				System.out.println(", role: " + role + ", class: " + expression.getClass());
 			}					
 		}
 	}
@@ -42,11 +47,21 @@ public abstract class PtAnnotationProcessor {
 	public abstract void process();
 	
 	/*
-	 * each sub-class implements this method,
+	 * each sub-class can implement this method,
 	 * that allows printing the components of an annotated
 	 * element, in order to help with identifying the components
 	 */
-	protected abstract void printComponents();
+	protected void printComponents(){
+		System.out.println("Signature: " + thisAnnotatedElement.getSignature());
+		System.out.println("SimpleName: " + thisAnnotatedElement.getSimpleName());
+		System.out.println("Class: " + thisAnnotatedElement.getClass().toString());
+		System.out.println("Default Expression: " + thisAnnotatedElement.getDefaultExpression());
+		System.out.println("Position: " + thisAnnotatedElement.getPosition().toString());
+		System.out.println("Reference: " + thisAnnotatedElement.getReference().toString());
+		System.out.println("Reference Type: " + thisAnnotatedElement.getReferencedTypes().toString());
+		System.out.println("Type: " + thisAnnotatedElement.getType().toString());
+	}	
+	
 	/*
 	 * each sub-class modifies statements in its own way!
 	 */

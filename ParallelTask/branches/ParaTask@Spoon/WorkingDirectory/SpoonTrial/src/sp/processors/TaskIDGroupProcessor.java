@@ -2,20 +2,14 @@ package sp.processors;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javafx.scene.ParentBuilder;
-import pt.runtime.TaskIDGroup;
-import pt.wrappers.PtMapWrapper;
 import sp.annotations.Future;
 import sp.annotations.StatementMatcherFilter;
-import sp.annotations.TaskInfoType;
 import sp.processors.SpoonUtils.ExpressionRole;
 import spoon.reflect.Factory;
 import spoon.reflect.code.CtBlock;
@@ -30,23 +24,15 @@ import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtTry;
 import spoon.reflect.declaration.CtAnnotation;
 import spoon.reflect.declaration.CtElement;
-import spoon.reflect.declaration.CtVariable;
 import spoon.reflect.reference.CtTypeReference;
-import spoon.support.reflect.code.CtArrayAccessImpl;
 import spoon.support.reflect.code.CtAssignmentImpl;
-import spoon.support.reflect.code.CtForImpl;
-import spoon.support.reflect.code.CtInvocationImpl;
-import spoon.support.reflect.code.CtLocalVariableImpl;
-import spoon.support.reflect.code.CtTryImpl;
-import spoon.support.reflect.declaration.CtAnnotationImpl;
+
 
 public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	
-	private CtLocalVariable<?> thisAnnotatedElement = null;
-	private Future thisFutureAnnotation = null;
+	
 	private CtTypeReference<?> thisElementType = null;
 	private CtTypeReference<?> thisGroupType = null;
-	private Factory thisFactory = null;
 	private int thisArrayDimension = 0;
 	private String thisTaskIDGroupName = null;
 	private String thisGroupSize = null;
@@ -174,9 +160,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	 *                          //separately 
 	 */
 	private void modifyAssignmentStatement(CtAssignmentImpl<?, ?> accessStatement){
-		CtExpression<?> assigned = accessStatement.getAssigned();
 		CtExpression<?> assignment = accessStatement.getAssignment();
-		String assignedString = assigned.toString();
 		String assignmentString = assignment.toString();
 		boolean statementModified = false;
 		
@@ -408,18 +392,6 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		if(matcher.find())
 			return true;
 		return false;
-	}
-	
-	@Override
-	protected void printComponents(){
-		System.out.println("Signature: " + thisAnnotatedElement.getSignature());
-		System.out.println("SimpleName: " + thisAnnotatedElement.getSimpleName());
-		System.out.println("Class: " + thisAnnotatedElement.getClass().toString());
-		System.out.println("Default Expression: " + thisAnnotatedElement.getDefaultExpression());
-		System.out.println("Position: " + thisAnnotatedElement.getPosition().toString());
-		System.out.println("Reference: " + thisAnnotatedElement.getReference().toString());
-		System.out.println("Reference Type: " + thisAnnotatedElement.getReferencedTypes().toString());
-		System.out.println("Type: " + thisAnnotatedElement.getType().toString());
 	}	
 	
 	//-------------------------------------------------------HELPER METHODS------------------------------------------------------
