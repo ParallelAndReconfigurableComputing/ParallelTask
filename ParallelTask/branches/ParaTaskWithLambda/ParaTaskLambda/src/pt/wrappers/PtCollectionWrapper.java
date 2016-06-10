@@ -5,10 +5,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.Set;
-//import java.util.Spliterator;
 import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.UnaryOperator;
 
 import pt.runtime.TaskID;
@@ -17,7 +14,6 @@ public class PtCollectionWrapper<T> implements Collection<T>, Iterable<T> {
 	
 	ConcurrentLinkedDeque<PtCollectionObject<T>> thisCollection;
 	Collection<T> thisOriginalCollection;
-	AtomicBoolean isSubclassOfSet = new AtomicBoolean(false);
 	
 	public PtCollectionWrapper(){
 		thisCollection = new ConcurrentLinkedDeque<>();
@@ -27,9 +23,6 @@ public class PtCollectionWrapper<T> implements Collection<T>, Iterable<T> {
 	public PtCollectionWrapper(Collection<T> originalCollection) {
 		thisCollection = new ConcurrentLinkedDeque<>();
 		thisOriginalCollection = originalCollection;
-		
-		if(thisOriginalCollection instanceof Set)
-			isSubclassOfSet.set(true);
 		
 		if(!thisOriginalCollection.isEmpty()){
 			for (T element : thisOriginalCollection){
@@ -101,22 +94,14 @@ public class PtCollectionWrapper<T> implements Collection<T>, Iterable<T> {
 
 	@Override
 	public boolean add(T e) {
-		if(isSubclassOfSet.get() && contains(e))
-			return false;
-		
 		return thisCollection.add(new PtCollectionObject<T>(e));
 	}
 	
 	public boolean add(TaskID<T> taskID){
-		if(isSubclassOfSet.get() && contains(taskID))
-			return false;
-	
 		return thisCollection.add(new PtCollectionObject<T>(taskID));
 	}
 	
-	public boolean add(PtCollectionObject<T> collectionObject){
-		if(isSubclassOfSet.get() && contains(collectionObject))
-			return false;
+	private boolean add(PtCollectionObject<T> collectionObject){
 		return thisCollection.add(collectionObject);
 	}
 

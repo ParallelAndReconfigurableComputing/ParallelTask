@@ -21,13 +21,21 @@ public class PtFutureProcessor extends AbstractAnnotationProcessor<Future, CtLoc
 		 * This operation is done within this main processor! 
 		 * */
 		
-		if(elementIsInvocation(annotatedElement)){
-			InvocationProcessor processor = new InvocationProcessor(getFactory(), annotation, annotatedElement);
-			processor.process();
+		if(elementIsCollectionDeclaration(annotatedElement)){
+			CollectionWrapperProcessor processor = new CollectionWrapperProcessor(getFactory(), annotation, annotatedElement);
 		}
 		
 		else if (elementIsArrayDeclaration(annotatedElement)){
 			TaskIDGroupProcessor processor = new TaskIDGroupProcessor(getFactory(), annotation, annotatedElement);
+			processor.process();
+		}
+		
+		/*
+		 * It is important to keep this check the last, because other cases may also contain an invocation expression
+		 * that returns an array, a collection, etc.
+		 */
+		else if(elementIsInvocation(annotatedElement)){
+			InvocationProcessor processor = new InvocationProcessor(getFactory(), annotation, annotatedElement);
 			processor.process();
 		}
 	}
@@ -46,7 +54,10 @@ public class PtFutureProcessor extends AbstractAnnotationProcessor<Future, CtLoc
 		return false;
 	}
 	
-	private boolean elementIsCollectionDeclaration(){
+	private boolean elementIsCollectionDeclaration(CtLocalVariable<?> annotatedElement){
+		String elementType = annotatedElement.getType().toString();
+		if(elementType.contains("List<") || elementType.contains("Set<") || elementType.contains("Map<") || elementType.contains("Collection<"))
+			return true;		
 		return false;
 	}
 }

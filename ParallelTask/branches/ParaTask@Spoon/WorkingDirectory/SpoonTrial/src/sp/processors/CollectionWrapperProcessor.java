@@ -1,10 +1,11 @@
 package sp.processors;
 
 import sp.annotations.Future;
+import spoon.reflect.Factory;
 import spoon.reflect.declaration.CtVariable;
 
 public class CollectionWrapperProcessor {
-	public CollectionWrapperProcessor(Future future, CtVariable<?> annotatedElement){
+	public CollectionWrapperProcessor(Factory factory, Future future, CtVariable<?> annotatedElement){
 		/*
 		 *In the collection wrapper, taskID objects can be added to the collection wrapper.
 		 *So first, before every annotated collection wrapper invocation call:

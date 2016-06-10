@@ -330,7 +330,7 @@ public class ParaTask {
 		if(!processInParallel)
 			return collection;
 		
-		processingInParallel(false);
+		processInParallel = false;
 		return new PtCollectionWrapper<>(collection);
 	}
 	
@@ -338,7 +338,7 @@ public class ParaTask {
 		if(!processInParallel)
 			return map;
 		
-		processingInParallel(false);
+		processInParallel = false;
 		return new PtMapWrapper<>(map);
 	}
 	
@@ -346,7 +346,7 @@ public class ParaTask {
 		if(!processInParallel)
 			return list;
 		
-		processingInParallel(false);
+		processInParallel = false;
 		return new PtListWrapper<>(list);
 	}
 	
@@ -354,7 +354,7 @@ public class ParaTask {
 		if(!processInParallel)
 			return set;
 		
-		processingInParallel(false);
+		processInParallel = false;
 		return new PtSetWrapper<>(set);
 	}
 			
