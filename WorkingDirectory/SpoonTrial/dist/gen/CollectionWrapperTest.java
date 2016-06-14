@@ -1,4 +1,4 @@
-package test;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,12 +20,14 @@ public class CollectionWrapperTest {
     
     public static void main(String[] args) {
         pt.runtime.TaskInfoNoArgs<Integer> __specialNumPtTask__ = ((pt.runtime.TaskInfoNoArgs<Integer>)(pt.runtime.ParaTask.asTask(pt.runtime.ParaTask.TaskType.ONEOFF ,
-			(pt.functionalInterfaces.FunctorNoArgsWithReturn<Integer>)() -> test.CollectionWrapperTest.simulateWork(-2))));
+			(pt.functionalInterfaces.FunctorNoArgsWithReturn<Integer>)() -> CollectionWrapperTest.simulateWork(-2))));
         pt.runtime.TaskID<Integer> __specialNumPtTaskID__ = __specialNumPtTask__.start();
-        List<java.lang.Integer>  myList = pt.runtime.ParaTask.getPtWrapper(new ArrayList<java.lang.Integer> ());
+        pt.runtime.ParaTask.processingInParallel(true);
+        List<java.lang.Integer>  __myListPtTask__ = pt.runtime.ParaTask.getPtWrapper(new ArrayList<java.lang.Integer> ());
+        pt.wrappers.PtListWrapper<java.lang.Integer> myList = ((pt.wrappers.PtListWrapper<java.lang.Integer>)(__myListPtTask__));
         for (int i = 0 ; i < 20 ; i++) {
             pt.runtime.TaskInfoOneArg<Integer, Integer> __numPtTask__ = ((pt.runtime.TaskInfoOneArg<Integer, Integer>)(pt.runtime.ParaTask.asTask(pt.runtime.ParaTask.TaskType.ONEOFF ,
-			(pt.functionalInterfaces.FunctorOneArgWithReturn<Integer, Integer>)(__iPtNonLambdaArg__) -> test.CollectionWrapperTest.simulateWork(__iPtNonLambdaArg__))));
+			(pt.functionalInterfaces.FunctorOneArgWithReturn<Integer, Integer>)(__iPtNonLambdaArg__) -> CollectionWrapperTest.simulateWork(__iPtNonLambdaArg__))));
             pt.runtime.TaskID<Integer> __numPtTaskID__ = __numPtTask__.start(i);
             if ((i % 3) == 0)
                 myList.add(i);
