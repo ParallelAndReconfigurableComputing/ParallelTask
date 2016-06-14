@@ -232,6 +232,10 @@ public class PtCollectionWrapper<T> implements Collection<T>, Iterable<T> {
 		return null;
 	}
 	
+	public T get(TaskID<Integer> id){
+		return get(id.getReturnResult());
+	}
+	
 	public T set(int index, T element){
 		if (index < 0 || index >= size())
 			throw new IndexOutOfBoundsException();

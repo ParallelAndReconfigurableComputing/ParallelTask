@@ -869,6 +869,22 @@ public class SpoonUtils {
 		return "pt.runtime.ParaTask.asTask";
 	}
 	
+	public static String getCollecitonWrapperSyntax(){
+		return "pt.wrappers.PtCollectionWrapper";
+	}
+	
+	public static String getListWrapperSyntax(){
+		return "pt.wrappers.PtListWrapper";
+	}
+	
+	public static String getMapWrapperSyntax(){
+		return "pt.wrappers.PtMapWrapper";
+	}
+	
+	public static String getSetWrapperSyntax(){
+		return "pt.wrappers.PtSetWrapper";
+	}
+	
 	public static String getPtTaskTypeSyntax(){
 		return getParaTaskSyntax() + ".TaskType";
 	}

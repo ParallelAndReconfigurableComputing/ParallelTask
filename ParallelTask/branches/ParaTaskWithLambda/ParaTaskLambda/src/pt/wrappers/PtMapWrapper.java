@@ -61,6 +61,10 @@ public class PtMapWrapper<K, V> implements Map<K, V> {
 	public V get(Object key) {
 		return thisMap.get(key).getObject();
 	}
+	
+	public V get(TaskID<?> id){
+		return get(id.getReturnResult());
+	}
 
 	@Override
 	public V put(K key, V value) {
