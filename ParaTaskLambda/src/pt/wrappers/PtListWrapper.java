@@ -18,6 +18,11 @@ public class PtListWrapper<E> implements List<E> {
 	ConcurrentLinkedDeque<PtCollectionObject<E>> thisCollection = null;
 	List<E> thisOrignialCollection = null;
 	
+	/*
+	 * Consider that for every method that receives an 'index' parameter of type "int" the
+	 * program might send a TaskID<Integer>, so they need to be overridden accordingly!
+	 * */
+	
 	public PtListWrapper() {
 		thisCollection = new ConcurrentLinkedDeque<>();
 	}
@@ -222,6 +227,10 @@ public class PtListWrapper<E> implements List<E> {
 		}
 		
 		return null;
+	}
+	
+	public E get(TaskID<Integer> id){
+		return get(id.getReturnResult());
 	}
 
 	@Override
