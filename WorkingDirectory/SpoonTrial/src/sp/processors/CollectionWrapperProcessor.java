@@ -82,15 +82,20 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 	}
 	
 	private void findCollectionInvocationArguments(){
-		List<CtStatement> containingStmts = SpoonUtils.findVarAccessOtherThanFutureDefinition(thisAnnotatedElement.getParent(CtBlock.class), thisAnnotatedElement);
-		mapOfContainingStatements = SpoonUtils.listAllExpressionsOfStatements(containingStmts);
+		List<CtStatement> containingStatements = SpoonUtils.findVarAccessOtherThanFutureDefinition(thisAnnotatedElement.getParent(CtBlock.class), thisAnnotatedElement);
+		mapOfContainingStatements = SpoonUtils.listAllExpressionsOfStatements(containingStatements);
 		variableAccessArguments = new ArrayList<>();
 		invocationArguments = new HashMap<>();
 		
 		Set<CtStatement> statements = mapOfContainingStatements.keySet();
 		for(CtStatement statement : statements){
-			insideCollectionStatement = false;
-			statementInvocations = new ArrayList<>();
+			/*
+			 * collects the invocations that are used within an invocation on the collection (e.g., myList.add(foo(a) + foox(b)); )
+			 * for further investigations, if any of the methods is supposed to be processed asynchronously (i.e., has @Task annotation).
+			*/
+			statementInvocations = new ArrayList<>(); 
+			//indicates if we have found an invocation statement on the collection. 
+			insideCollectionStatement = false; 
 		
 			if(statement instanceof CtInvocationImpl<?>){
 				CtInvocationImpl<?> invocation = (CtInvocationImpl<?>) statement;
@@ -105,7 +110,7 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 					}					
 				}
 			}
-
+			
 			if(!insideCollectionStatement){
 				Set<CtExpression<?>> statementExpressions = mapOfContainingStatements.get(statement).keySet();
 				for (CtExpression<?> expression : statementExpressions){
@@ -182,54 +187,44 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 					annotatedInvocations++;
 				}			
 			}
-			System.out.println("annotated invocations: " + annotatedInvocations);
-			if(annotatedInvocations > 1)
-				throw new IllegalArgumentException("\n MULTIPLE METHODS WTIH @Task ANNOTATION ARE USED WITHIN AN INVOCATION"
-						+ " CALL IN STATEMENT: " + statement.toString());
-			else if(annotatedInvocations == 1)
-				modifyWithInvocation(annotatedInvocations, statement, invocations);
+			modifyWithInvocation(annotatedInvocations, statement, invocations);
 		}
 	}
 	
 	private void modifyWithInvocation(int annotatedInvocations, CtStatement parentStatement, List<CtInvocation<?>> invocations){
-		CtInvocation<?> invocation = null;
-		for(CtInvocation<?> invo : invocations){
-			System.out.println("processing " + invo.toString());
-			if(hasTaskAnnotation(invo)){
-				invocation = invo;
-				break;
+		for(CtInvocation<?> invocation : invocations){
+			if(hasTaskAnnotation(invocation)){
+				newLocalVariableIndex++;
+				CtLocalVariable<?> newLocalVariable = thisFactory.Core().createLocalVariable();
+
+				CtTypeReference newVariableType = invocation.getExecutable().getType();
+				newLocalVariable.setType(newVariableType);
+			
+				String newVariableName = invocation.getExecutable().getSimpleName() + "_" + newLocalVariableIndex;
+				String newVariableTaskIDName = "";
+				if(!(invocation.getParent() instanceof CtInvocation<?>))
+					newVariableTaskIDName = SpoonUtils.getTaskIDName(newVariableName)+".getReturnResult()";
+				else
+					newVariableTaskIDName = SpoonUtils.getTaskIDName(newVariableName);
+				
+				
+				newLocalVariable.setSimpleName(newVariableName);	
+				newLocalVariable.setDefaultExpression((CtExpression)invocation);
+				
+				StatementMatcherFilter<CtStatement> filter = new StatementMatcherFilter<CtStatement>(parentStatement);
+				CtBlock<?> parentBlock = thisAnnotatedElement.getParent(CtBlock.class);
+				parentBlock.insertBefore(filter, newLocalVariable);
+				
+				InvocationProcessor processor = new InvocationProcessor(thisFactory, thisFutureAnnotation, newLocalVariable);
+				processor.process();
+				
+				CtVariableAccess<?> varAccess = thisFactory.Core().createVariableAccess();
+				CtVariableReference varReference = thisFactory.Core().createFieldReference();
+				varReference.setSimpleName(newVariableTaskIDName);
+				varAccess.setVariable(varReference);
+				invocation.replace(varAccess);
 			}
-		}
-
-		newLocalVariableIndex++;
-		CtLocalVariable<?> newLocalVariable = thisFactory.Core().createLocalVariable();
-
-		CtTypeReference newVariableType = invocation.getExecutable().getType();
-		newLocalVariable.setType(newVariableType);
-	
-		String newVariableName = invocation.getExecutable().getSimpleName() + "_" + newLocalVariableIndex;
-		String newVariableTaskIDName = "";
-		if(!(invocation.getParent() instanceof CtInvocation<?>))
-			newVariableTaskIDName = SpoonUtils.getTaskIDName(newVariableName)+".getReturnResult()";
-		else
-			newVariableTaskIDName = SpoonUtils.getTaskIDName(newVariableName);
-		
-		
-		newLocalVariable.setSimpleName(newVariableName);	
-		newLocalVariable.setDefaultExpression((CtExpression)invocation);
-		
-		StatementMatcherFilter<CtStatement> filter = new StatementMatcherFilter<CtStatement>(parentStatement);
-		CtBlock<?> parentBlock = thisAnnotatedElement.getParent(CtBlock.class);
-		parentBlock.insertBefore(filter, newLocalVariable);
-		
-		InvocationProcessor processor = new InvocationProcessor(thisFactory, thisFutureAnnotation, newLocalVariable);
-		processor.process();
-		
-		CtVariableAccess<?> varAccess = thisFactory.Core().createVariableAccess();
-		CtVariableReference varReference = thisFactory.Core().createFieldReference();
-		varReference.setSimpleName(newVariableTaskIDName);
-		varAccess.setVariable(varReference);
-		invocation.replace(varAccess);
+		}		
 	}
 	
 	

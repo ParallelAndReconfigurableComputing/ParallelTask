@@ -73,10 +73,7 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 		processInvocationArguments();
 		modifySourceCode();
 		
-	}
-	
-
-		
+	}		
 	
 	private void getInvocations(){
 		CtExpression<?> expression = thisAnnotatedElement.getDefaultExpression();
@@ -87,10 +84,15 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 	}
 	
 	private void checkIfThrowsException(){
-		Set<CtTypeReference<? extends Throwable>> exceptions = null;
-		exceptions = thisInvocation.getExecutable().getDeclaration().getThrownTypes();
-		if(exceptions != null && !exceptions.isEmpty())
-			throwsExceptions = true;
+		try{
+			Set<CtTypeReference<? extends Throwable>> exceptions = null;
+			exceptions = thisInvocation.getExecutable().getDeclaration().getThrownTypes();
+			if(exceptions != null && !exceptions.isEmpty())
+				throwsExceptions = true;
+		}catch(Exception e){
+			System.out.println("\n EXCEPTION THROWN FOR INVOCATION: " + thisInvocation.toString() + "\n");
+			e.printStackTrace();
+		}
 	}
 	
 	private void replaceOccurrencesWithTaskIDName(){
