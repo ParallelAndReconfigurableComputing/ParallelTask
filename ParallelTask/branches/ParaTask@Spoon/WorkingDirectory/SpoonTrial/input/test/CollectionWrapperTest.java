@@ -4,6 +4,7 @@ import java.util.Random;
 
 import pt.runtime.ParaTask;
 import sp.annotations.Future;
+import sp.annotations.Task;
 
 public class CollectionWrapperTest {
 	
@@ -16,6 +17,15 @@ public class CollectionWrapperTest {
 		}catch(Exception e){e.printStackTrace();}
 		System.out.println("Thread " + Thread.currentThread().getId() + " is returning " + (i * random));
 		return (i * random);
+	}
+	
+	@Task()
+	public static int foo(int arg){
+		return arg;
+	}
+	
+	public static int foox(int arg){
+		return arg;
 	}
 	
 	public static void main(String[] args){
@@ -40,8 +50,8 @@ public class CollectionWrapperTest {
 		
 		
 		for(int counter = 0; counter < myList.size(); counter++){
-			int num = myList.get(counter);
-			System.out.println("get(Index): " + myList.get(counter) + ", and num: " + num);
+			int num = myList.get(foox(counter) + foo(0));
+			System.out.println("get(Index): " + myList.get(foo(counter)) + ", and num: " + num);
 		}
 	}
 }
