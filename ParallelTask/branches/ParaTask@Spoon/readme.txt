@@ -18,6 +18,24 @@ The command line for running a project under spoon is as follows:
 
 $ java -classpath /path/to/binary/of/your/processor.jar:spoon-core-5.0.2-jar-with-dependencies.jar -jar spoon-core-5.0.2-jar-with-dependencies.jar -i /path/to/src/of/your/project -p fr.inria.gforge.spoon.processors.CatchProcessor
 
+If this command doesn't work for the ant builder, then use the following:
+
+$ java -cp /path/to/binary/of/your/processor.jar:/path/to/built/classes/of/source:spoon-core-5.0.2-jar-with-dependencies.jar spoon.Launcher -o distination/dir -i path/to/input/directory(or file) -p /path/to/annotation/processor (e.g., sp.processors.PtFutureProcesor)
+
+For implementing java command lines in ant, use a target like the following:
+
+<target name="process" depends="compile, compressJar" description="Process the annotated code">
+		<exec executable="java">
+			<arg line="-cp ${spoon.jar}${Delim}dist/classes spoon.Launcher -o ${gen.dir} -i input/test/FutureArrayTest.java -p sp.processors.ArrayProcessor" />
+		</exec> 
+		<exec executable="java">
+			<arg line="-cp ${PT.jar}${Delim}${spoon.jar}${Delim}dist/classes spoon.Launcher -o ${gen.dir} -i input/test/CollectionWrapperTest.java -p sp.processors.PtFutureProcessor" />
+		</exec> 
+	</target>
+
+Defines a target that runs "ArrayProcessor" first, and then runs "PtFutureProcessor". Both processors are located under 'sp.processors.PtFutureProcessor' in the 'src' folder, so the same structure would be searched for the built
+files. 
+
 
 Note: '-i' and '-p' are command line options for the spoon executable jar file.
 These options can be listed as follows.
