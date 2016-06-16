@@ -1,0 +1,496 @@
+/**
+ * Copyright (C) 2006-2015 INRIA and contributors
+ * Spoon - http://spoon.gforge.inria.fr/
+ *
+ * This software is governed by the CeCILL-C License under French law and
+ * abiding by the rules of distribution of free software. You can use, modify
+ * and/or redistribute the software under the terms of the CeCILL-C license as
+ * circulated by CEA, CNRS and INRIA at http://www.cecill.info.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the CeCILL-C License for more details.
+ *
+ * The fact that you are presently reading this means that you have had
+ * knowledge of the CeCILL-C license and that you accept its terms.
+ */
+package spoon.support;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Serializable;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.xml.sax.SAXException;
+
+import spoon.SpoonException;
+import spoon.compiler.Environment;
+import spoon.compiler.InvalidClassPathException;
+import spoon.compiler.SpoonFile;
+import spoon.compiler.SpoonFolder;
+import spoon.processing.FileGenerator;
+import spoon.processing.ProblemFixer;
+import spoon.processing.ProcessingManager;
+import spoon.processing.Processor;
+import spoon.processing.ProcessorProperties;
+import spoon.reflect.cu.SourcePosition;
+import spoon.reflect.declaration.CtElement;
+import spoon.reflect.declaration.CtExecutable;
+import spoon.reflect.declaration.CtType;
+import spoon.reflect.declaration.ParentNotInitializedException;
+import spoon.reflect.factory.Factory;
+import spoon.support.compiler.FileSystemFolder;
+import spoon.support.processing.XmlProcessorProperties;
+
+/**
+ * This class implements a simple Spoon environment that reports messages in the
+ * standard output stream (Java-compliant).
+ */
+public class StandardEnvironment implements Serializable, Environment {
+
+	/**
+	 * The processors' properties files extension (.xml)
+	 */
+	public static final String PROPERTIES_EXT = ".xml";
+
+	private static final long serialVersionUID = 1L;
+
+	private FileGenerator<? extends CtElement> defaultFileGenerator;
+
+	private int errorCount = 0;
+
+	private transient Factory factory;
+
+	ProcessingManager manager;
+
+	private boolean processingStopped = false;
+
+	private boolean autoImports = false;
+
+	private int warningCount = 0;
+
+	private File xmlRootFolder;
+
+	private String[] sourceClasspath = null;
+
+	private URLClassLoader classLoader = null;
+
+	private boolean preserveLineNumbers = false;
+
+	private boolean copyResources = true;
+
+	private boolean generateJavadoc = false;
+
+	private Logger logger = Logger.getLogger(StandardEnvironment.class);
+
+	private Level level = Level.OFF;
+
+	private boolean shouldCompile;
+
+	/**
+	 * Creates a new environment with a <code>null</code> default file
+	 * generator.
+	 */
+	public StandardEnvironment() {
+	}
+
+	@Override
+	public void debugMessage(String message) {
+		logger.debug(message);
+	}
+
+	@Override
+	public boolean isAutoImports() {
+		return autoImports;
+	}
+
+	@Override
+	public void setAutoImports(boolean autoImports) {
+		this.autoImports = autoImports;
+	}
+
+	@Override
+	public FileGenerator<? extends CtElement> getDefaultFileGenerator() {
+		return defaultFileGenerator;
+	}
+
+	@Override
+	public Factory getFactory() {
+		return factory;
+	}
+
+	@Override
+	public Level getLevel() {
+		return this.level;
+	}
+
+	@Override
+	public void setLevel(String level) {
+		this.level = toLevel(level);
+		logger.setLevel(this.level);
+	}
+
+	@Override
+	public boolean shouldCompile() {
+		return shouldCompile;
+	}
+
+	@Override
+	public void setShouldCompile(boolean shouldCompile) {
+		this.shouldCompile = shouldCompile;
+	}
+
+	private Level toLevel(String level) {
+		if (level == null || level.isEmpty()) {
+			throw new SpoonException("Wrong level given at Spoon.");
+		}
+		return Level.toLevel(level, Level.ALL);
+	}
+
+	@Override
+	public ProcessingManager getManager() {
+		return manager;
+	}
+
+	Map<String, ProcessorProperties> processorProperties = new TreeMap<String, ProcessorProperties>();
+
+	@Override
+	public ProcessorProperties getProcessorProperties(String processorName) throws FileNotFoundException, IOException, SAXException {
+		if (processorProperties.containsKey(processorName)) {
+			return processorProperties.get(processorName);
+		}
+
+		InputStream in = getPropertyStream(processorName);
+		XmlProcessorProperties prop;
+		try {
+			prop = new XmlProcessorProperties(getFactory(), processorName, in);
+		} catch (SAXException e) {
+			throw new RuntimeException(e);
+		}
+		processorProperties.put(processorName, prop);
+		return prop;
+	}
+
+	private InputStream getPropertyStream(String processorName) throws FileNotFoundException {
+		File[] listFiles = getXmlRootFolder().listFiles();
+		if (listFiles != null) {
+			for (File child : listFiles) {
+				if (child.getName().equals(processorName + PROPERTIES_EXT)) {
+					return new FileInputStream(child);
+				}
+			}
+		}
+		throw new FileNotFoundException();
+	}
+
+	/**
+	 * Gets the root folder where the processors' XML configuration files are
+	 * located.
+	 */
+	public File getXmlRootFolder() {
+		if (xmlRootFolder == null) {
+			xmlRootFolder = new File(".");
+		}
+		return xmlRootFolder;
+	}
+
+	/**
+	 * Tells if the processing is stopped, generally because one of the
+	 * processors called {@link #setProcessingStopped(boolean)} after reporting
+	 * an error.
+	 */
+	@Override
+	public boolean isProcessingStopped() {
+		return processingStopped;
+	}
+
+	private void prefix(StringBuffer buffer, Level level) {
+		if (level == Level.ERROR) {
+			buffer.append("error: ");
+			errorCount++;
+		} else if (level == Level.WARN) {
+			buffer.append("warning: ");
+			warningCount++;
+		}
+	}
+
+	@Override
+	public void report(Processor<?> processor, Level level, CtElement element, String message) {
+		StringBuffer buffer = new StringBuffer();
+
+		prefix(buffer, level);
+
+		// Adding message
+		buffer.append(message);
+
+		// Add sourceposition (javac format)
+		try {
+			CtType<?> type = (element instanceof CtType) ? (CtType<?>) element : element.getParent(CtType.class);
+			SourcePosition sp = element.getPosition();
+
+			if (sp == null) {
+				buffer.append(" (Unknown Source)");
+			} else {
+				buffer.append(" at " + type.getQualifiedName() + ".");
+				CtExecutable<?> exe = (element instanceof CtExecutable) ? (CtExecutable<?>) element : element.getParent(CtExecutable.class);
+				if (exe != null) {
+					buffer.append(exe.getSimpleName());
+				}
+				buffer.append("(" + sp.getFile().getName() + ":" + sp.getLine() + ")");
+			}
+		} catch (ParentNotInitializedException e) {
+			buffer.append(" (invalid parent)");
+		}
+
+		print(buffer.toString(), level);
+	}
+
+	@Override
+	public void report(Processor<?> processor, Level level, CtElement element, String message, ProblemFixer<?>... fixes) {
+		report(processor, level, element, message);
+	}
+
+	@Override
+	public void report(Processor<?> processor, Level level, String message) {
+		StringBuffer buffer = new StringBuffer();
+
+		prefix(buffer, level);
+		// Adding message
+		buffer.append(message);
+		print(buffer.toString(), level);
+	}
+
+	private void print(String message, Level level) {
+		if (level.equals(Level.ERROR)) {
+			logger.error(message);
+		} else if (level.equals(Level.WARN)) {
+			logger.warn(message);
+		} else if (level.equals(Level.DEBUG)) {
+			logger.debug(message);
+		} else if (level.equals(Level.INFO)) {
+			logger.info(message);
+		}
+	}
+
+	/**
+	 * This method should be called to report the end of the processing.
+	 */
+	public void reportEnd() {
+		logger.info("end of processing: ");
+		if (warningCount > 0) {
+			logger.info(warningCount + " warning");
+			if (warningCount > 1) {
+				logger.info("s");
+			}
+			if (errorCount > 0) {
+				logger.info(", ");
+			}
+		}
+		if (errorCount > 0) {
+			logger.info(errorCount + " error");
+			if (errorCount > 1) {
+				logger.info("s");
+			}
+		}
+		if ((errorCount + warningCount) > 0) {
+			logger.info("\n");
+		} else {
+			logger.info("no errors, no warnings");
+		}
+	}
+
+	public void reportProgressMessage(String message) {
+		logger.info(message);
+	}
+
+	public void setDebug(boolean debug) {
+	}
+
+	public void setDefaultFileGenerator(FileGenerator<? extends CtElement> defaultFileGenerator) {
+		this.defaultFileGenerator = defaultFileGenerator;
+		defaultFileGenerator.setFactory(getFactory());
+	}
+
+	public void setManager(ProcessingManager manager) {
+		this.manager = manager;
+	}
+
+	public void setProcessingStopped(boolean processingStopped) {
+		this.processingStopped = processingStopped;
+	}
+
+	public void setVerbose(boolean verbose) {
+	}
+
+	public void setXmlRootFolder(File xmlRootFolder) {
+		this.xmlRootFolder = xmlRootFolder;
+	}
+
+	int complianceLevel = 7;
+
+	public int getComplianceLevel() {
+		return complianceLevel;
+	}
+
+	public void setComplianceLevel(int level) {
+		complianceLevel = level;
+	}
+
+	public void setProcessorProperties(String processorName, ProcessorProperties prop) {
+		processorProperties.put(processorName, prop);
+	}
+
+	boolean useTabulations = false;
+
+	public boolean isUsingTabulations() {
+		return useTabulations;
+	}
+
+	public void useTabulations(boolean tabulation) {
+		useTabulations = tabulation;
+	}
+
+	int tabulationSize = 4;
+
+	public int getTabulationSize() {
+		return tabulationSize;
+	}
+
+	public void setTabulationSize(int tabulationSize) {
+		this.tabulationSize = tabulationSize;
+	}
+
+	@Override
+	public ClassLoader getClassLoader() {
+		if (classLoader == null) {
+			classLoader = new URLClassLoader(urlClasspath(), Thread.currentThread().getContextClassLoader());
+		}
+		return classLoader;
+	}
+
+	/**
+	 * Creates a URL class path from {@link getSourceClasspath()}
+	 */
+	public URL[] urlClasspath() {
+		String[] classpath = getSourceClasspath();
+		int length = (classpath == null) ? 0 : classpath.length;
+		URL[] urls = new URL[length];
+		for (int i = 0; i < length; i += 1) {
+			try {
+				urls[i] = new File(classpath[i]).toURI().toURL();
+			} catch (MalformedURLException e) {
+				throw new IllegalStateException("Invalid classpath: " + classpath, e);
+			}
+		}
+		return urls;
+	}
+
+	@Override
+	public String[] getSourceClasspath() {
+		return sourceClasspath;
+	}
+
+	@Override
+	public void setSourceClasspath(String[] sourceClasspath) {
+		verifySourceClasspath(sourceClasspath);
+		this.sourceClasspath = sourceClasspath;
+		this.classLoader = null;
+	}
+
+	private void verifySourceClasspath(String[] sourceClasspath) throws InvalidClassPathException {
+		for (String classPathElem : sourceClasspath) {
+			// preconditions
+			File classOrJarFolder = new File(classPathElem);
+			if (!classOrJarFolder.exists()) {
+				throw new InvalidClassPathException(classPathElem + " does not exist, it is not a valid folder");
+			}
+
+			if (classOrJarFolder.isDirectory()) {
+				// it should not contain a java file
+				SpoonFolder tmp = new FileSystemFolder(classOrJarFolder);
+				List<SpoonFile> javaFiles = tmp.getAllJavaFiles();
+				if (javaFiles.size() > 0) {
+					logger.warn("You're trying to give source code in the classpath, this should be given to " + "addInputSource " + javaFiles);
+				}
+			}
+		}
+	}
+
+	@Override
+	public int getErrorCount() {
+		return errorCount;
+	}
+
+	@Override
+	public int getWarningCount() {
+		return warningCount;
+	}
+
+	private ClassLoader inputClassLoader;
+
+	@Override
+	public ClassLoader getInputClassLoader() {
+		if (inputClassLoader == null) {
+			return Thread.currentThread().getContextClassLoader();
+		} else {
+			return this.inputClassLoader;
+		}
+	}
+
+	@Override
+	public void setInputClassLoader(ClassLoader classLoader) {
+		this.inputClassLoader = classLoader;
+	}
+
+	@Override
+	public boolean isPreserveLineNumbers() {
+		return preserveLineNumbers;
+	}
+
+	@Override
+	public void setPreserveLineNumbers(boolean preserveLineNumbers) {
+		this.preserveLineNumbers = preserveLineNumbers;
+	}
+
+	private boolean noclasspath = false;
+
+	@Override
+	public void setNoClasspath(boolean option) {
+		noclasspath = option;
+	}
+
+	@Override
+	public boolean getNoClasspath() {
+		return noclasspath;
+	}
+
+	@Override
+	public boolean isCopyResources() {
+		return copyResources;
+	}
+
+	@Override
+	public void setCopyResources(boolean copyResources) {
+		this.copyResources = copyResources;
+	}
+
+	@Override
+	public boolean isGenerateJavadoc() {
+		return generateJavadoc;
+	}
+
+	@Override
+	public void setGenerateJavadoc(boolean generateJavadoc) {
+		this.generateJavadoc = generateJavadoc;
+	}
+}

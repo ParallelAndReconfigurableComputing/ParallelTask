@@ -1,16 +1,45 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<project name="ParaTaskWithAnnotations" basedir=".">
+<project name="ParaTaskWithAnnotations" default="main" basedir=".">
 
-	<property name="src.dir" location="src" />
-	<property name="test.dir" location="test" />
+	<property name="src.dir"      value="src"  />
+	<property name="test.dir"     value="test" />
+	<property name="dist.dir"     value="dist" />
+	<property name="gen.dir"      value="${dist.dir}/gen" />
+	<property name="classes.dir"  value="${dist.dir}/classes" />
+	<property name="lib.dir"      value="libs" />
+	<property name="spoon.jar"    value="${lib.dir}/spoon-core-1.4-jar-with-dependencies.jar"/>
+	<property name="PT.jar"		  value="${lib.dir}/PTLambda-Runtime-1.0.4.jar"/>
 
-	<property name="dist.dir" location="dist" />
-	<property name="gen.dir" location="${dist.dir}/gen" />
-	<property name="classes.dir" location="${dist.dir}/classes" />
-	<property name="lib.dir" location="libs" />
-	<property name="spoon.jar" location="${lib.dir}/spoon-core-1.4-jar-with-dependencies.jar"/>
-
-	<target name="init" description="Creating the folders.">
+	<!-- Check the operating system -->
+	<target name="CheckOS">
+		<condition property="isWindows">
+			<os family="windows" />
+		</condition>
+		
+		<condition property="isLinux">
+			<os family="unix" />
+		</condition>
+	</target>
+	
+	<!-- Decide about the path delimiter based on OS -->
+	<target name="WinDelimiter" depends="CheckOS" if="isWindows">
+		<property name="Delim" value=";" />
+		<echo message="Operating system is Windows, delimiter is ;"></echo>
+	</target>
+	
+	<target name="LinDelimiter" depends="CheckOS" if="isLinux">
+		<property name="Delim" value=":" />	
+		<echo message="Operating system is Linux, delimiter is :"></echo>
+	</target>
+	
+ 	<!-- At this stage the delimiter is decided -->
+	<target name="clean" depends="WinDelimiter, LinDelimiter" >
+	 		<delete dir="${dist.dir}" />
+			<delete dir="${classes.dir}" />
+			<delete dir="${gen.dir}" />
+ 	</target>
+		
+	<target name="init" depends="clean" description="Creating the folders.">
 		<mkdir dir="${dist.dir}" />
 		<mkdir dir="${classes.dir}" />
 		<mkdir dir="${gen.dir}" />
@@ -20,18 +49,28 @@
 		<javac includeantruntime="true" srcdir="${src.dir}" destdir="${classes.dir}">
 			<classpath>
 				<pathelement location="${spoon.jar}" />
+				<pathelement location="${PT.jar}"/>
 			</classpath>
 		</javac>
 	</target>
+	
+	<target name="compressJar" depends="compile" description="compress compiled files into jar">
+		<jar basedir="${classes.dir}" destfile="${gen.dir}/annotation-processor-1.0.jar">
+			<zipgroupfileset dir="${lib.dir}" includes="**/*.jar"/>
+		</jar>
+	</target>
 
-	<target name="clean" >
-		<delete dir="${classes.dir}" />
-		<delete dir="${gen.dir}" />
+	
+	<target name="process" depends="compile, compressJar" description="Process the annotated code">
+		<!-- <exec executable="java">
+			<arg line="-cp ${spoon.jar}${Delim}dist/classes spoon.Launcher -o ${gen.dir} -i input/test/FutureArrayTest.java -p sp.processors.ArrayProcessor" />
+		</exec> -->
+		<exec executable="java">
+			<arg line="-cp ${PT.jar}${Delim}${spoon.jar}${Delim}dist/classes spoon.Launcher -o ${gen.dir} -i input/test/CollectionWrapperTest.java -p sp.processors.PtFutureProcessor" />
+		</exec> 
 	</target>
 	
-	<target name="process" depends="compile" description="Process the annotated code">
-		<exec executable="java">
-			<arg line="-cp ${spoon.jar}:dist/classes spoon.Launcher -v -o ${gen.dir} -i input/ -p pt.processors.FutureProcessor" />
-		</exec>
+	<target name="main" depends="process">
+		<description>Main Target</description>
 	</target>
 </project>
