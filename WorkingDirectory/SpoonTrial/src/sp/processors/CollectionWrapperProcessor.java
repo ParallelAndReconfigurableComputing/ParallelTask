@@ -167,6 +167,8 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 	}
 	
 	private void modifyWithTaskIDReplacement(CtVariableAccess<?> varAccess){
+		if(!(varAccess.getParent() instanceof CtInvocation<?>))
+			return;
 		String varName = varAccess.toString();
 		varName = SpoonUtils.getOrigName(varName);
 		varName = varName.trim();
@@ -202,11 +204,11 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 			
 				String newVariableName = invocation.getExecutable().getSimpleName() + "_" + newLocalVariableIndex;
 				String newVariableTaskIDName = "";
+				
 				if(!(invocation.getParent() instanceof CtInvocation<?>))
 					newVariableTaskIDName = SpoonUtils.getTaskIDName(newVariableName)+".getReturnResult()";
 				else
 					newVariableTaskIDName = SpoonUtils.getTaskIDName(newVariableName);
-				
 				
 				newLocalVariable.setSimpleName(newVariableName);	
 				newLocalVariable.setDefaultExpression((CtExpression)invocation);

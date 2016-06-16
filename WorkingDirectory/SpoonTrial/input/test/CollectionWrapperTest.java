@@ -47,7 +47,7 @@ public class CollectionWrapperTest {
 		}
 		
 		myList.add(specialNum);
-		
+		myList.add(specialNum + 2);
 		
 		for(int counter = 0; counter < myList.size(); counter++){
 			int num = myList.get(foox(counter) + foo(0));
