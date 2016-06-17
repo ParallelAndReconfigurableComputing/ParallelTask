@@ -5,7 +5,7 @@ import java.util.Set;
 
 import sp.annotations.Future;
 import sp.processors.SpoonUtils.ExpressionRole;
-import spoon.reflect.Factory;
+import spoon.reflect.factory.Factory;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.code.CtStatement;

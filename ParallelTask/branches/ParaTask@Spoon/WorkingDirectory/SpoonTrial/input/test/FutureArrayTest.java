@@ -1,4 +1,4 @@
-
+package test;
 
 import sp.annotations.AsyncCatch;
 import sp.annotations.Future;
@@ -10,6 +10,7 @@ public class FutureArrayTest {
 	}
 	
 	public static void main(String[] args) {
+		ObjectTest tester = new ObjectTest(3);
 		
 		@Future(taskCount = 4)
 		int bb = foo(34);
@@ -23,14 +24,14 @@ public class FutureArrayTest {
 			int a = foo(i); 
 			array [i] = a;
 		}
-		array[5] = foo(300);
+		array[5] = tester.get();
 		array[6] = bb;
 		for(int i = 7; i < 10; i++){
 			array[i] = foo(i * 15);
 		}
 		
 		int[] myarray = new int[2];
-		myarray[0] = 1;
+		myarray[0] = tester.get();
 		
 		System.out.println(array.length);
 		
