@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project basedir="." default="main" name="AnnotatedHouse">
+   	<property name="src.dir"     value="src"  />
+	<property name="build.dir"   value="build"/>
+	<property name="dest.dir"    value="dest" />
+	<property name="libs.dir"    value="libs" />
+	<property name="gen.dir"     value="${dest.dir}/gen"/>
+	<property name="classes.dir" value="${dest.dir}/classes" />
+	<property name="spoon.jar"   value="${libs.dir}/annotation-processor-1.0.jar" />
+	
+	<target name="checkOS">
+		<condition property="isWindows">
+			<os family="windows"/>
+		</condition>
+		
+		<condition property="isLinux">
+			<os family="unix"/>
+		</condition>
+	</target>
+	
+	<target name="winDelimeter" depends="checkOS" if="isWindows">
+		<property name="Delim" value=";" />
+		<echo message="Operating system is Windows, delimiter is ;"></echo>
+	</target>
+	
+	<target name="linuxDelimiter" depends="checkOS" if="isLinux">
+		<property name="Delim" value=":" />
+		<echo message="Operating system is Linux, delimiter is :"></echo>
+	</target>
+	
+	<target name="clean" depends="winDelimeter, linuxDelimiter">
+		<delete dir="${build.dir}"/>
+		<delete dir="${dest.dir}"/>
+		<delete dir="${classes.dir}"/>
+		<delete dir="${gen.dir}"/>
+	</target>
+	
+	<target name="mkDir" depends="clean">
+		<mkdir dir="${build.dir}"/>
+		<mkdir dir="${dest.dir}"/>
+		<mkdir dir="${classes.dir}"/>
+		<mkdir dir="${gen.dir}"/>
+	</target>
+	
+	<target name="compile" depends="mkDir">
+		<javac srcdir="${src.dir}"  destdir="${classes.dir}">
+			<classpath>
+				<pathelement path="${spoon.jar}"/>
+			</classpath>		
+		</javac>
+	</target>
+	
+	<target name="runJava" depends="compile">
+		<java classname="spoon.Launcher">
+			<classpath>
+				<pathelement path="${spoon.jar}"/>
+			</classpath>
+			<arg value="-o${gen.dir}"/>
+			<arg line="-i ${src.dir}/annotatedHouse/"/>
+			<arg value="-psp.processors.PtFutureProcessor"/>
+		</java>
+	</target>
+	
+	<target name="main" depends="compile">
+		<exec executable="java"><!-- sp.processors. -->
+			<arg line="-cp ${spoon.jar} spoon.Launcher -o ${gen.dir} -i ${src.dir} -p sp.processors.PtFutureProcessor"/>
+		</exec>
+   	</target>
+</project>
