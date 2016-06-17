@@ -33,6 +33,21 @@ import spoon.support.reflect.code.CtInvocationImpl;
 import spoon.support.reflect.code.CtLocalVariableImpl;
 import spoon.support.reflect.reference.CtExecutableReferenceImpl;
 
+/**
+ * This annotation processor, processes <code>Future</code> annotations that specifically appear at
+ * the time of declaring a local variable. For example:</br>
+ * (a)Future</br>
+ * int a = foo(x);
+ * </br>
+ * It transforms the variable declaration into the declaration of a TaskInfo object. Using the attributes
+ * of the <code>Future</code> annotation, this processor configures MULTI, ONEOFF, INTERACTIVE and MULTI_IO
+ * tasks. Moreover, using the <code><b>depends</b></code> attribute, which is a comma separated string of future 
+ * variables, a programmer can specify the future variables that a specific future variable needs to wait for
+ * before it starts processing. 
+ *  
+ * @author Mostafa Mehrabi
+ * @since  2016
+ */
 public class InvocationProcessor extends PtAnnotationProcessor {
 	
 	private CtInvocation<?> thisInvocation = null;
