@@ -660,7 +660,7 @@ public class SpoonUtils {
 	}
 	
 	public static boolean hasAnnotation(CtStatement s, Class<?> clazz) {
-		Set<CtAnnotation<? extends Annotation>> ats = s.getAnnotations();
+		List<CtAnnotation<? extends Annotation>> ats = s.getAnnotations();
 		for(CtAnnotation<? extends Annotation> a : ats) {
 			if(clazz.isInstance(a.getActualAnnotation()))
 				return true;
@@ -790,11 +790,11 @@ public class SpoonUtils {
 	
 	public static String getOrigName(String elementName) {
 		
-		if(elementName.startsWith("__") && elementName.endsWith("PtLambdaArg__"+getResultPhrase()))
-			return elementName.substring("__".length(), (elementName.length() - ("PtLambdaArg__"+getResultPhrase()).length()));
+		if(elementName.startsWith("__") && elementName.endsWith("PtLambdaArg__"+getResultSyntax()))
+			return elementName.substring("__".length(), (elementName.length() - ("PtLambdaArg__"+getResultSyntax()).length()));
 		
-		else if (elementName.startsWith("__") && elementName.endsWith("PtTaskID__"+getResultPhrase()))
-			return elementName.substring("__".length(), (elementName.length() - ("PtTaskID__"+getResultPhrase()).length()));
+		else if (elementName.startsWith("__") && elementName.endsWith("PtTaskID__"+getResultSyntax()))
+			return elementName.substring("__".length(), (elementName.length() - ("PtTaskID__"+getResultSyntax()).length()));
 		
 		else if (elementName.startsWith("__") && elementName.endsWith("PtTask__"))
 			return elementName.substring("__".length(), (elementName.length() - "PtTask__".length()));
@@ -829,7 +829,7 @@ public class SpoonUtils {
 	 * @return <code>true</code> if the variable is replace by a taskID object, <code>false</code> otherwise.
 	 */
 	public static boolean isTaskIDReplacement(CtLocalVariable<?> element, String name){
-		if(name.startsWith("__") && name.endsWith("PtTaskID__"+getResultPhrase())){
+		if(name.startsWith("__") && name.endsWith("PtTaskID__"+getResultSyntax())){
 			String originalName = getOrigName(name);
 			if(isFutureVariable(element, originalName)){
 				return true;
@@ -838,12 +838,24 @@ public class SpoonUtils {
 		return false;
 	}
 	
-	public static String getResultPhrase(){
+	public static String getResultSyntax(){
 		return ".getReturnResult()";
 	}
 	
-	public static String getResultPhrase(int index){
+	public static String getResultSyntax(int index){
 		return ".getReturnResult(" + index + ")";
+	}
+	
+	public static String getDependsOnSyntax(){
+		return "depndsOn";
+	}
+	
+	public static String getNotifiesSyntax(){
+		return "registerSlotToNotify";
+	}
+	
+	public static String getAsyncExceptionSyntax(){
+		return "registerAsyncCatch";
 	}
 	
 	public static String getParaTaskSyntax(){
@@ -899,5 +911,5 @@ public class SpoonUtils {
 	
 	public static String getNotifyDelimiter(){
 		return ";";
-	}
+	}	
 }

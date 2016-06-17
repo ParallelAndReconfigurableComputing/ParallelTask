@@ -11,7 +11,7 @@ import java.util.Set;
 import sp.annotations.Future;
 import sp.annotations.StatementMatcherFilter;
 import sp.annotations.Task;
-import spoon.reflect.Factory;
+import spoon.reflect.factory.Factory;
 import spoon.reflect.code.CtArrayAccess;
 import spoon.reflect.code.CtBinaryOperator;
 import spoon.reflect.code.CtBlock;
@@ -154,8 +154,8 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 		processor.process();
 		
 		//Annotation processed, so remove it!
-		Set<CtAnnotation<? extends Annotation>> annotations = new HashSet<>();
-		Set<CtAnnotation<? extends Annotation>> actualAnnotations = declarationStatement.getAnnotations();
+		List<CtAnnotation<? extends Annotation>> annotations = new ArrayList<>();
+		List<CtAnnotation<? extends Annotation>> actualAnnotations = declarationStatement.getAnnotations();
 		for(CtAnnotation<? extends Annotation> annotation : actualAnnotations){
 			Annotation actualAnnotation = annotation.getActualAnnotation();
 			if(!(actualAnnotation instanceof Future))
@@ -220,7 +220,7 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 				InvocationProcessor processor = new InvocationProcessor(thisFactory, thisFutureAnnotation, newLocalVariable);
 				processor.process();
 				
-				CtVariableAccess<?> varAccess = thisFactory.Core().createVariableAccess();
+				CtVariableAccess<?> varAccess = thisFactory.Core().createVariableRead();
 				CtVariableReference varReference = thisFactory.Core().createFieldReference();
 				varReference.setSimpleName(newVariableTaskIDName);
 				varAccess.setVariable(varReference);
@@ -232,7 +232,7 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 	
 //----------------------------------------------------HELPER METHODS---------------------------------------------------
 	private Future hasFutureAnnotation(CtStatement declarationStatement){
-		Set<CtAnnotation<? extends Annotation>> annotations = declarationStatement.getAnnotations();
+		List<CtAnnotation<? extends Annotation>> annotations = declarationStatement.getAnnotations();
 		for(CtAnnotation<? extends Annotation> annotation : annotations){
 			Annotation actualAnno = annotation.getActualAnnotation();
 			if(actualAnno instanceof Future){
@@ -244,8 +244,9 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 	}
 	
 	private boolean hasTaskAnnotation(CtInvocation<?> methodInovcation){
-		Annotation[] annotations = methodInovcation.getExecutable().getAnnotations();
-		for(Annotation annotation : annotations){
+		List<CtAnnotation<? extends Annotation>> annotations = methodInovcation.getExecutable().getAnnotations();
+		for(CtAnnotation<? extends Annotation> anno : annotations){
+			Annotation annotation = anno.getActualAnnotation();
 			if(annotation instanceof Task){
 				return true;
 			}
@@ -294,7 +295,7 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 		
 		CtLocalVariable<?> castedColleciton = thisFactory.Core().createLocalVariable();
 	
-		CtVariableAccess varAccess = thisFactory.Core().createVariableAccess();
+		CtVariableAccess varAccess = thisFactory.Core().createVariableRead();
 		
 		CtVariableReference varRef = thisFactory.Core().createFieldReference();
 		varRef.setSimpleName(SpoonUtils.getTaskName(thisElementName));
