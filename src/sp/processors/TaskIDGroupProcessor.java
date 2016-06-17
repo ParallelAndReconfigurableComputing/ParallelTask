@@ -11,9 +11,10 @@ import java.util.regex.Pattern;
 import sp.annotations.Future;
 import sp.annotations.StatementMatcherFilter;
 import sp.processors.SpoonUtils.ExpressionRole;
-import spoon.reflect.Factory;
+import spoon.reflect.factory.Factory;
 import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtCatch;
+import spoon.reflect.code.CtCatchVariable;
 import spoon.reflect.code.CtCodeSnippetExpression;
 import spoon.reflect.code.CtCodeSnippetStatement;
 import spoon.reflect.code.CtExpression;
@@ -193,9 +194,11 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	}
 	
 	private void insertWaitForTaskGroupBlock(CtStatement statement){
+		try{
 		CtElement containingBlock = thisAnnotatedElement.getParent(CtBlock.class);
-		CtElement parent = statement.getParent(CtBlock.class);
-		
+		//CtElement parent = statement.getParent(CtBlock.class);
+		CtElement parent = statement;
+				
 		while(!containingBlock.equals(parent.getParent())){
 			parent = parent.getParent();
 		}
@@ -211,8 +214,13 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		StatementMatcherFilter<CtStatement> filter = new StatementMatcherFilter<CtStatement>(parentStatemtn);
 		((CtBlock<?>)containingBlock).insertBefore(filter, tryBlock);
 		
-		CtFor forLoop = createForLoop();
-		((CtBlock<?>)containingBlock).insertBefore(filter, forLoop);
+		if(!(thisGroupType.toString().contains("Void"))){
+			CtFor forLoop = createForLoop();
+			((CtBlock<?>)containingBlock).insertBefore(filter, forLoop);
+		}
+		}catch(Exception e){
+			System.out.println("EXCEPTION WAS THROWN");
+		}
 	}
 		
 	private void modifyWithTaskIDReplacement(CtAssignmentImpl<?, ?> accessStatement){
@@ -267,8 +275,8 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		processor.process();
 		
 		//Annotation processed, so remove it!
-		Set<CtAnnotation<? extends Annotation>> annotations = new HashSet<>();
-		Set<CtAnnotation<? extends Annotation>> actualAnnotations = futureObjDeclaration.getAnnotations();
+		List<CtAnnotation<? extends Annotation>> annotations = new ArrayList<>();
+		List<CtAnnotation<? extends Annotation>> actualAnnotations = futureObjDeclaration.getAnnotations();
 		for(CtAnnotation<? extends Annotation> annotation : actualAnnotations){
 			Annotation actualAnnotation = annotation.getActualAnnotation();
 			if(!(actualAnnotation instanceof Future))
@@ -282,7 +290,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	
 	private Future hasFutureAnnotation(CtStatement statement){
 		CtLocalVariable<?> declarationStatement = (CtLocalVariable<?>) statement;
-		Set<CtAnnotation<? extends Annotation>> annotations = declarationStatement.getAnnotations();
+		List<CtAnnotation<? extends Annotation>> annotations = declarationStatement.getAnnotations();
 		for(CtAnnotation<? extends Annotation> annotation : annotations){
 			Annotation actualAnnotation = annotation.getActualAnnotation();
 			if(actualAnnotation instanceof Future){
@@ -336,7 +344,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		else
 			exceptionMessage = "e.printStackTrace(\"" + message +"\")";
 		
-		CtLocalVariable<? extends Throwable> catchParameter = thisFactory.Core().createLocalVariable();
+		CtCatchVariable<? extends Throwable> catchParameter = thisFactory.Core().createCatchVariable();
 		catchParameter.setType(exceptionType);
 		catchParameter.setSimpleName("e");
 		catchBlock.setParameter(catchParameter);
