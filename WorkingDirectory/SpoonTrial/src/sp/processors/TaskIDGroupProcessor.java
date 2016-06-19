@@ -28,7 +28,37 @@ import spoon.reflect.declaration.CtElement;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.support.reflect.code.CtAssignmentImpl;
 
-
+/**
+ * This annotation processor processes <code>Future</code> annotations that appear at the declaration
+ * of a local array. For example:
+ * </br></br>
+ * (a)Future</br>
+ * Obj[] futureGroup = new Obj[num];
+ * </br></br>
+ * The processor only allows one dimensional future groups. This type is specifically used for grouping
+ * TaskID objects that return the same type (e.g., Integer), and allows users to set a barrier in their
+ * program to wait for the tasks until they are all finished. The waiting occurs at the first access to
+ * an element of the array. 
+ * </br></br>
+ * For example:
+ * </br></br>
+ * Obj element = futureGroup[0];
+ * </br></br>
+ * gets the following statements added before it by the compiler.
+ * </br></br>
+ * try{</br>
+ * 	&nbsp;&nbsp;&nbsp;_futureGroupTaskID_.wiatTillFinished(); </br>
+ * }catch(Exception e){</br>
+ * 	&nbsp;&nbsp;&nbsp;e.printStackTrace();</br>
+ * }</br>
+ * </br>
+ * for(int i = 0; i < futureGroup.size(); i++){</br>
+ * 	&nbsp;&nbsp;&nbsp;futureGroup[i] = _futureGroupTaskID_.getReturnResult(i);</br>
+ * }</br></br>
+ * 
+ * @author Mostafa Mehrabi
+ *
+ */
 public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	
 	
@@ -84,7 +114,15 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		modifyArrayAccessStatements();
 	}
 	
-	
+	/*
+	 * Modifies the statements in which this future array is assigned a future variables. This future
+	 * variable can be either declared before the declaration of this future array, or after that. 
+	 * Both cases are considered when processing. In another case, an invocation can be assigned to an
+	 * element of this future array, which will get a customized declaration by the compiler. 
+	 * Moreover, once it encounters the first statement in which the value for an element of the future
+	 * array is accessed, the compiler inserts the barrier phrase for waiting for all tasksk of the 
+	 * future array, until they are processed and finished.   
+	 */
 	private void modifyArrayAccessStatements(){
 		Set<CtStatement> statements = mapOfContainingStatements.keySet();
 		CtStatement currentStatement = null;

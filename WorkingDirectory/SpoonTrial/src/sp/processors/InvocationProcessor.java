@@ -35,7 +35,7 @@ import spoon.support.reflect.reference.CtExecutableReferenceImpl;
 
 /**
  * This annotation processor, processes <code>Future</code> annotations that specifically appear at
- * the time of declaring a local variable. For example:</br>
+ * the declaration of a local variable. For example:</br>
  * (a)Future</br>
  * int a = foo(x);
  * </br>
