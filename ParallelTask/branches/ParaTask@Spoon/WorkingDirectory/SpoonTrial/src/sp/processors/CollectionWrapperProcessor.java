@@ -30,7 +30,7 @@ import spoon.support.reflect.code.CtInvocationImpl;
 
 /**
  * This annotation processor processes the <code>Future</code> annotations that appear
- * at the time of declaring a collection (i.e., List, Set, Map, Collection for other
+ * at the declaration of a collection (i.e., List, Set, Map, Collection for other
  * types), in order to obtain collection wrappers that can contain both variables and 
  * future variables.</br>
  * For example: <b>myList</b> is a <code>List</code> that calls on <code>ParaTask</code>
@@ -158,6 +158,22 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 		}	
 	}
 	
+	/*
+	 * Modifies expressions of variables, which are sent as arguments to method invocations on the collection object. 
+	 * Variables that are sent as arguments will be changed to taskID equivalent, if the variable is declared as a
+	 * future variable by the programmer. 
+	 * 
+	 * For example:
+	 * @Future
+	 * int a = foo(x); 
+	 * myList.add(a);
+	 * 
+	 * turns into:
+	 * TaskID _aTaskID_ = _aTaskInfo_.start(x);
+	 * myList.add(_aTaskID_);
+	 * 
+	 * myList is a TaskID aware collection. 
+	 */
 	private void modifyVarAccessExpressions(){
 		for(CtVariableAccess<?> varAccess : variableAccessArguments){
 			String varName = varAccess.toString();
@@ -182,6 +198,10 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 		}
 	}
 	
+	/*
+	 * Modifies future variables that are declared after the declaration of the this collection object; therefore it
+	 * is not processed by the annotation processor yet. So, it has to be processed manually.
+	 */
 	private void modifyWithFutuerObject(Future future, CtStatement declarationStatement, CtVariableAccess<?> varAccess){
 		CtLocalVariable<?> annotatedElement = (CtLocalVariable<?>) declarationStatement;
 		InvocationProcessor processor = new InvocationProcessor(thisFactory, future, annotatedElement);
@@ -200,6 +220,14 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 		modifyWithTaskIDReplacement(varAccess);
 	}
 	
+	/*
+	 * Modifies future variables that are declared before the declaration of this collection object; therefore they
+	 * are already processed. Their variable syntax is changed from <varName> to <varNameTaskID>.getReturnResult();
+	 * This method changes <varNameTaskID>.getReturnResult() to <varNameTaskID>
+	 * 
+	 * For example:
+	 * myList.add(varNameTaskID.getReturnResult()); to myList.add(varNameTaskID);
+	 */
 	private void modifyWithTaskIDReplacement(CtVariableAccess<?> varAccess){
 		if(!(varAccess.getParent() instanceof CtInvocation<?>))
 			return;
