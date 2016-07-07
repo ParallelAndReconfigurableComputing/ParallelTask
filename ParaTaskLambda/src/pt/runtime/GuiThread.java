@@ -25,8 +25,7 @@ public class GuiThread {
 		} else {
 			proxy = GuiThreadSwing.getInstance();
 		}
-		
-		//proxy.init();
+	
 		initialized = true;
 	}
 	

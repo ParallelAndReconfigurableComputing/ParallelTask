@@ -176,7 +176,8 @@ public class ParaTask {
     public static boolean setThreadPoolSize(ThreadPoolType threadPoolType, int size) {
     	if (size < 1)
 			throw new IllegalArgumentException("Trying to create a Taskpool with " + size + " threads");
-    	if (paraTaskStarted())
+    	
+    	if (isInitialized)
     		return false;
 
 		ThreadPool.setPoolSize(threadPoolType,size);
@@ -195,10 +196,10 @@ public class ParaTask {
      * @return boolean <code>true</code> if scheduling type is changed successfully, otherwise <code>false</code>.
      */
     public static boolean setSchedulingType(ScheduleType type) {
-       if (ParaTask.paraTaskStarted())
+       if (isInitialized)
     		return false;
     	scheduleType = type;
-    	return init(scheduleType);
+    	return true;
     }
     
     /**
@@ -215,12 +216,12 @@ public class ParaTask {
      * @return	The thread pool size.
      */
     public static int getThreadPoolSize(ThreadPoolType threadPoolType) {
-    	if(!isInitialized())
+    	if(!isInitialized)
     		init();
     	return ThreadPool.getPoolSize(threadPoolType);
     }
     
-    public static int getNumberOfActiveThreads(ThreadPoolType threadPoolType){
+    public static int getNumberOfActiveThreads(ThreadPoolType threadPoolType) throws IllegalAccessException{
     	return ThreadPool.getNumberOfActiveThreads(threadPoolType);
     }
 	
@@ -247,8 +248,38 @@ public class ParaTask {
 	 */
 	public static boolean init(){
 		if (scheduleType == null)
-			scheduleType = ScheduleType.MixedSchedule;
+			return init(ScheduleType.MixedSchedule);
 		return init(scheduleType);
+	}
+	
+	public static boolean init(ScheduleType scheduleType, int numberOfThreads){
+		return init(scheduleType, ThreadPoolType.ALL, numberOfThreads);
+	}
+	
+	public static boolean init(ScheduleType scheduleType){
+		if(!setSchedulingType(scheduleType))
+			return false;
+		return initializeParaTask();
+	}
+	
+	public static boolean init(int numberOfThreads){
+		return init(ThreadPoolType.ALL, numberOfThreads);
+	}
+	
+	public static boolean init(ThreadPoolType threadPoolType, int numberOfThreads){
+		if(!setThreadPoolSize(threadPoolType, numberOfThreads))
+			return false;
+		if(!setSchedulingType(ScheduleType.MixedSchedule))
+			return false;
+		return initializeParaTask();
+	}
+	
+	public static boolean init(ScheduleType scheduleType, ThreadPoolType threadPoolType, int numberOfThreads){
+		if(!setSchedulingType(scheduleType))
+			return false;
+		if(!setThreadPoolSize(threadPoolType, numberOfThreads))
+			return false;
+		return initializeParaTask();
 	}
 	
 	public static <R> void executeInterimHandler(Slot<R> slot){
@@ -272,11 +303,10 @@ public class ParaTask {
 	 * @throws IllegalAccessException 
 	 * @since  2015
 	 */
-	private static boolean init(ScheduleType scheduleType){
-		if (paraTaskStarted())
+	private static boolean initializeParaTask(){
+		if (isInitialized)
 			return false;
-			
-		isInitialized = false;
+		
 		while(!isInitialized){
 			try{
 				GuiThread.init();

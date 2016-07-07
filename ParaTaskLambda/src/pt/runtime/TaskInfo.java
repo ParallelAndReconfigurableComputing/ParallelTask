@@ -86,11 +86,6 @@ public abstract class TaskInfo<R> {
 	 */
 	protected boolean isTaskInfoOfMultiTask = false;
 	
-	static{
-		if (!ParaTask.isInitialized())
-			ParaTask.init();
-	}
-
 	protected TaskInfo(){}
 	
 	/*
