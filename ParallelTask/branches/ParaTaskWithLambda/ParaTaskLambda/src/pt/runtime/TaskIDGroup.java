@@ -373,9 +373,7 @@ public class TaskIDGroup<T> extends TaskID<T> {
 		int size = 0;
 		if(isMultiTask()){
 			while(!this.isExpanded()){
-				try{
-					Thread.sleep(ParaTask.WORKER_SLEEP_DELAY);
-				}catch(Exception e){e.printStackTrace();}
+				Thread.sleep(ParaTask.WORKER_SLEEP_DELAY);
 			}
 		}
 		size = getGroupSize();

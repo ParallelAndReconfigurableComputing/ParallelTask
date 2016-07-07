@@ -55,7 +55,7 @@ public class ThreadPool {
 	
 	private static Map<Integer, WorkerThread> oneOffTaskWorkers = new HashMap<Integer, WorkerThread>();
 
-	
+	private static boolean threadPoolInitialized = false;
 	
 	private static int globalID = 0;
 	
@@ -68,6 +68,7 @@ public class ThreadPool {
 	}
 	
 	static void resetThreadPool(){
+		threadPoolInitialized = false;
 		globalID = 0;
 	}
 	
@@ -145,19 +146,23 @@ public class ThreadPool {
 				workerThread.start();
 			}
 		}
+		threadPoolInitialized = true;
 	}
 	
 	
 	//? How should I return the pool size ?
 	//Maybe multi task thread pool size + one-off task thread pool size
-	protected static int getPoolSize(ThreadPoolType threadPoolType) {
+	protected static int getPoolSize(ThreadPoolType threadPoolType){
+		if(!threadPoolInitialized)
+			System.out.println("WARNING: METHOD \"ThreadPool.getPoolSize()\" IS CALLED BEFORE INITIALIZING PARATASK THREAD POOL!");
+		
 		switch (threadPoolType) {
 		case ONEOFF:
 			return oneOffTaskThreadPoolSize;
 		case MULTI:
 			return multiTaskThreadPoolSize;
 		default:
-			return totalNumberOfThreads;
+			return oneOffTaskThreadPoolSize + multiTaskThreadPoolSize;
 		}
 	}
 
@@ -302,6 +307,7 @@ public class ThreadPool {
 		if (!isMultiTaskWorker) {
 		    reentrantLock.lock();
 			//shouldn't we remove their taskqueues as well?
+		    //A thread should have a die() method which tells it stop its looping. 
 		   	oneOffTaskWorkers.remove(threadID);
 									
 			reentrantLock.unlock();
@@ -310,9 +316,13 @@ public class ThreadPool {
 
 	/**
 	 * Returns the approximate number of threads that are actively executing tasks.
+	 * @throws IllegalAccessException 
 	 * 
 	 * */
-	public static int getNumberOfActiveThreads(ThreadPoolType type) {
+	public static int getNumberOfActiveThreads(ThreadPoolType type) throws IllegalAccessException {
+		if(!threadPoolInitialized)
+			throw new IllegalAccessException("WARNING: METHOD \"ThreadPool.getPoolSize()\" IS CALLED BEFORE INITIALIZING PARATASK THREAD POOL!");
+		
 		switch (type) {
 		case ONEOFF:
 			return oneOffTaskWorkers.size();
