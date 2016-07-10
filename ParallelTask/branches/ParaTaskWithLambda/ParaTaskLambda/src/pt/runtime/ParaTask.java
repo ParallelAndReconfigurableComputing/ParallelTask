@@ -311,6 +311,7 @@ public class ParaTask {
 			try{
 				GuiThread.init();
 				ThreadPool.resetThreadPool();
+				TaskThread.resetTaskThreads();
 				TaskpoolFactory.resetTaskPool();
 				
 				//Create the task pool

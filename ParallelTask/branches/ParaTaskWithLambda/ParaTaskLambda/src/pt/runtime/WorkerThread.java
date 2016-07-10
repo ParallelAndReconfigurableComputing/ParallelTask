@@ -104,7 +104,7 @@ public class WorkerThread extends TaskThread {
 		}
 	}
 
-	protected boolean isMultiTaskWorker() {
+	public boolean isMultiTaskWorker() {
 		return isMultiTaskWorker;
 	}
 
