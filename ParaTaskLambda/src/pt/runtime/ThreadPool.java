@@ -62,8 +62,7 @@ public class ThreadPool {
 	private static Taskpool taskPool;
 
 	protected static void initialize(Taskpool taskpool) {
-		ThreadPool.taskPool = taskpool;
-		TaskThread.resetTaskThreads();
+		ThreadPool.taskPool = taskpool;		
 		initializeWorkerThreads(taskpool);
 	}
 	
@@ -321,7 +320,7 @@ public class ThreadPool {
 	 * */
 	public static int getNumberOfActiveThreads(ThreadPoolType type) throws IllegalAccessException {
 		if(!threadPoolInitialized)
-			throw new IllegalAccessException("WARNING: METHOD \"ThreadPool.getPoolSize()\" IS CALLED BEFORE INITIALIZING PARATASK THREAD POOL!");
+			throw new IllegalAccessException("METHOD \"ThreadPool.getNumberOfActiveThreads()\" IS CALLED BEFORE INITIALIZING PARATASK THREAD POOL!");
 		
 		switch (type) {
 		case ONEOFF:
