@@ -187,12 +187,6 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	 * @return The result of performing the reduction on the set of <code>TaskID</code>s contained in this group.
 	 */
 	T reduce(Reduction<T> reduction) {
-		try {
-			waitTillFinished();
-		} catch (ExecutionException | InterruptedException e) {
-			setException(e);
-		}
-		
 		if (groupSize == 0)			
 			return null;
 		
@@ -300,6 +294,13 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	 */
 	@Override
 	public T getReturnResult() {
+		try {
+			waitTillFinished();
+			if(hasBeenCancelled() || noReturn)
+				return null;
+		} catch (Exception e) {
+			setException(e);
+		}
 		if (this.reductionOperation == null)
 			throw new UnsupportedOperationException("This is a TaskIDGroup, you must either specify a Reduction or get individual results from the inner TaskID members.");
 		return reduce(this.reductionOperation);
@@ -313,6 +314,13 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	 * @throws InterruptedException
 	 */
 	public T getReturnResult(Reduction<T> reductionOperation) throws ExecutionException, InterruptedException {
+		try {
+			waitTillFinished();
+			if(hasBeenCancelled() || noReturn)
+				return null;
+		} catch (Exception e) {
+			setException(e);
+		}
 		if (reductionOperation == null)
 			throw new UnsupportedOperationException("This is a TaskIDGroup, you must either specify a Reduction or get individual results from the inner TaskID members.");
 		return reduce(reductionOperation);
@@ -370,6 +378,8 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	 * */
 	@Override
 	public void waitTillFinished() throws ExecutionException, InterruptedException {
+		if(hasCompleted())
+			return;
 		int size = 0;
 		if(isMultiTask()){
 			while(!this.isExpanded()){
@@ -392,6 +402,7 @@ public class TaskIDGroup<T> extends TaskID<T> {
 			} catch (ExecutionException e) {
 				/* ignore the exception, all inner exceptions will be thrown below */
 			}
+			this.status.set(COMPLETED);
 		}
 		if (hasUserError.get()) {
 			String reason = "Exception(s) occured inside multi-task execution (GlobalID of "+globalID+"). Individual exceptions are accessed via getExceptionSet()";

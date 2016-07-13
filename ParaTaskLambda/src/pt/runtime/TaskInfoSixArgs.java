@@ -13,6 +13,7 @@ public class TaskInfoSixArgs<R, T1, T2, T3, T4, T5, T6> extends TaskInfo<R> {
 	private T5 arg5; private T6 arg6;
 	
 	TaskInfoSixArgs(FunctorSixArgsNoReturn<T1, T2, T3, T4, T5, T6> functorNoReturn, TaskType taskType, int taskCount){
+		this.hasNoReturn = true;
 		this.functorNoReturn = functorNoReturn;
 		this.rudimentarySetup(taskType, taskCount);
 	}
@@ -22,6 +23,7 @@ public class TaskInfoSixArgs<R, T1, T2, T3, T4, T5, T6> extends TaskInfo<R> {
 	}
 	
 	TaskInfoSixArgs(FunctorSixArgsWithReturn<R, T1, T2, T3, T4, T5, T6> functorWithReturn, TaskType taskType, int taskCount){
+		this.hasNoReturn = false;
 		this.functorWithReturn = functorWithReturn;
 		this.rudimentarySetup(taskType, taskCount);
 	}

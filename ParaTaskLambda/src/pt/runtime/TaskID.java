@@ -84,7 +84,7 @@ public class TaskID<T> {
 	
 	protected int globalID = -1;
 	protected int relativeID = 0;
-	
+	protected boolean noReturn = false;
 	// This attribute is used in case we need to find an asynchronous exception handler
 	// of a task, within the exception handlers of its enclosing tasks.
 	protected TaskID<?> enclosingTask = null;	
@@ -170,14 +170,15 @@ public class TaskID<T> {
 	 * as well as it sets the count down latch to one. 
 	 * */
 	public TaskID(TaskInfo<T> taskInfo) {
-		this();		
+		this();
+		if(taskInfo == null)
+			throw new IllegalArgumentException("NULL POINTER HAS BEEN PASSED TO TASKID AS TASKINFO!");				
 		globalID = nextGlobalID.incrementAndGet();
 		completedLatchForRegisteringThread = new CountDownLatch(1);
 		this.taskInfo = taskInfo;
+		this.noReturn = taskInfo.hasNoReturn();
 		isInteractive = taskInfo.isInteractive();
-		if (taskInfo != null) {
-			hasSlots = taskInfo.getSlotsToNotify() != null;
-		}
+		hasSlots = taskInfo.getSlotsToNotify() != null;
 	}
 	
 	
@@ -347,7 +348,6 @@ public class TaskID<T> {
 		return status.get() == COMPLETED;
 	}
 	
-	
 	/*
 	 * Attempts to cancel the task. It first checks if the previous status of the task was 
 	 * <code>CREATED</code>. That is, the task has not started, or has not finished and has not been canceled 
@@ -479,7 +479,7 @@ public class TaskID<T> {
 	public T getReturnResult() {
 		try{
 			waitTillFinished();
-			if (hasBeenCancelled())
+			if (hasBeenCancelled() || noReturn)
 				return null;
 			return returnResult;
 		}catch(Exception e){

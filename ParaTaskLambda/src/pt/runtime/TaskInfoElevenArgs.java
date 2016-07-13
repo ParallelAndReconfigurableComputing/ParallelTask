@@ -15,6 +15,7 @@ public class TaskInfoElevenArgs<R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>
 
 	
 	TaskInfoElevenArgs(FunctorElevenArgsNoReturn<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> functorNoReturn, TaskType taskType, int taskCount){
+		this.hasNoReturn = true;
 		this.functorNoReturn = functorNoReturn;
 		this.rudimentarySetup(taskType, taskCount);
 	}
@@ -24,6 +25,7 @@ public class TaskInfoElevenArgs<R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>
 	}
 	
 	TaskInfoElevenArgs(FunctorElevenArgsWithReturn<R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> functorWithReturn, TaskType taskType, int taskCount){
+		this.hasNoReturn = false;
 		this.functorWithReturn = functorWithReturn;
 		this.rudimentarySetup(taskType, taskCount);
 	}

@@ -12,6 +12,7 @@ public class TaskInfoThreeArgs<R, T1, T2, T3> extends TaskInfo<R> {
 	private T1 arg1; private T2 arg2; private T3 arg3;
 	
 	TaskInfoThreeArgs(FunctorThreeArgsNoReturn<T1, T2, T3> functorNoReturn, TaskType taskType, int taskCount){
+		this.hasNoReturn = true;
 		this.functorNoReturn = functorNoReturn;
 		this.rudimentarySetup(taskType, taskCount);
 	}
@@ -21,6 +22,7 @@ public class TaskInfoThreeArgs<R, T1, T2, T3> extends TaskInfo<R> {
 	}
 	
 	TaskInfoThreeArgs(FunctorThreeArgsWithReturn<R, T1, T2, T3> functorWithReturn, TaskType taskType, int taskCount){
+		this.hasNoReturn = false;
 		this.functorWithReturn = functorWithReturn;
 		this.rudimentarySetup(taskType, taskCount);
 	}
