@@ -13,6 +13,7 @@ public class TaskInfoEightArgs<R, T1, T2, T3, T4, T5, T6, T7, T8> extends TaskIn
 	private T5 arg5; private T6 arg6; private T7 arg7; private T8 arg8;
 	
 	TaskInfoEightArgs(FunctorEightArgsNoReturn<T1, T2, T3, T4, T5, T6, T7, T8> functorNoReturn, TaskType taskType, int taskCount){
+		this.hasNoReturn = true;
 		this.functorNoReturn = functorNoReturn;
 		this.rudimentarySetup(taskType, taskCount);
 	}
@@ -23,6 +24,7 @@ public class TaskInfoEightArgs<R, T1, T2, T3, T4, T5, T6, T7, T8> extends TaskIn
 	}
 	
 	TaskInfoEightArgs(FunctorEightArgsWithReturn<R, T1, T2, T3, T4, T5, T6, T7, T8> functorWithReturn, TaskType taskType, int taskCount){
+		this.hasNoReturn = false;
 		this.functorWithReturn = functorWithReturn;
 		this.rudimentarySetup(taskType, taskCount);
 	}

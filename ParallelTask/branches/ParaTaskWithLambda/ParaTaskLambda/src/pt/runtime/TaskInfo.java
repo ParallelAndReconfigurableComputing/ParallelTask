@@ -77,7 +77,7 @@ public abstract class TaskInfo<R> {
 	protected boolean isMultiTask = false;
 	protected boolean isInteractive = false;
 	protected boolean registeredByGuiThread = false;
-	
+	protected boolean hasNoReturn = false;
 
 	protected Map<Class<?>, Slot<R>> asyncExceptions = new HashMap<Class<?>, Slot<R>>();
 	
@@ -216,6 +216,10 @@ public abstract class TaskInfo<R> {
 
 	public boolean isInteractive() {
 		return isInteractive;
+	}
+	
+	public boolean hasNoReturn(){
+		return hasNoReturn;
 	}
 	
 	protected void setInteractive(boolean isInteractive) {

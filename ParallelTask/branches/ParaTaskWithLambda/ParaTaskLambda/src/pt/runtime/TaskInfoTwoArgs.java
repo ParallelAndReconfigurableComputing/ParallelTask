@@ -12,6 +12,7 @@ public class TaskInfoTwoArgs<R, T1, T2> extends TaskInfo<R> {
 	private T1 arg1; private T2 arg2;
 	
 	TaskInfoTwoArgs(FunctorTwoArgsNoReturn<T1, T2> functorNoReturn, TaskType taskType, int taskCount){
+		this.hasNoReturn = true;
 		this.functorNoReturn = functorNoReturn;
 		this.rudimentarySetup(taskType, taskCount);
 	}
@@ -21,6 +22,7 @@ public class TaskInfoTwoArgs<R, T1, T2> extends TaskInfo<R> {
 	}
 	
 	TaskInfoTwoArgs(FunctorTwoArgsWithReturn<R, T1, T2> functorWithReturn, TaskType taskType, int taskCount){
+		this.hasNoReturn = false;
 		this.functorWithReturn = functorWithReturn;
 		this.rudimentarySetup(taskType, taskCount);
 	}

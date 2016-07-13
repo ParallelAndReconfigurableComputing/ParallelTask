@@ -13,6 +13,7 @@ public class TaskInfoNineArgs<R, T1, T2, T3, T4, T5, T6, T7, T8, T9> extends Tas
 	private T5 arg5; private T6 arg6; private T7 arg7; private T8 arg8; private T9 arg9;
 
 	TaskInfoNineArgs(FunctorNineArgsNoReturn<T1, T2, T3, T4, T5, T6, T7, T8, T9> functorNoReturn, TaskType taskType, int taskCount){
+		this.hasNoReturn = true;
 		this.functorNoReturn = functorNoReturn;
 		this.rudimentarySetup(taskType, taskCount);
 	}
@@ -22,6 +23,7 @@ public class TaskInfoNineArgs<R, T1, T2, T3, T4, T5, T6, T7, T8, T9> extends Tas
 	}
 	
 	TaskInfoNineArgs(FunctorNineArgsWithReturn<R, T1, T2, T3, T4, T5, T6, T7, T8, T9> functorWithReturn, TaskType taskType, int taskCount){
+		this.hasNoReturn = false;
 		this.functorWithReturn = functorWithReturn;
 		this.rudimentarySetup(taskType, taskCount);
 	}

@@ -14,6 +14,7 @@ public class TaskInfoOneArg<R, T1> extends TaskInfo<R> {
 	private FunctorOneArgWithReturn<R, T1> functorWithReturn = null;
 	
 	TaskInfoOneArg(FunctorOneArgNoReturn<T1> functorNoReturn, TaskType taskType, int taskCount){
+		this.hasNoReturn = true;
 		this.functorNoReturn = functorNoReturn;
 		this.rudimentarySetup(taskType, taskCount);
 	}
@@ -23,6 +24,7 @@ public class TaskInfoOneArg<R, T1> extends TaskInfo<R> {
 	}
 	
 	TaskInfoOneArg(FunctorOneArgWithReturn<R, T1> functorWithReturn, TaskType taskType, int taskCount){
+		this.hasNoReturn = false;
 		this.functorWithReturn = functorWithReturn;
 		this.rudimentarySetup(taskType, taskCount);
 	}
