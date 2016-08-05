@@ -88,7 +88,7 @@ public class ParaTask {
 	
 	//for internal use only
 	static final String PT_PREFIX = "__pt__";
-	static long WORKER_SLEEP_DELAY = 200;
+	static long WORKER_SLEEP_DELAY = 40;
 	static int ANY_THREAD_TASK = -1;
 	static int EXCEPTION_IN_SLOT = -1;
 	static int INTERACTIVE_SLEEP_DELAY = 60000;
