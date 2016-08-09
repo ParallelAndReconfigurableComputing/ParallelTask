@@ -1,4 +1,5 @@
 pt.functionalInterfaces
+pt.mapReducers
 pt.queues
 pt.runtime
 pt.wrappers
