@@ -11,7 +11,7 @@
 	<property name="lib.dir"      value="libs" />
 	
 	<property name="spoon.jar"    value="${lib.dir}/spoon-core-5.0.2-jar-with-dependencies.jar"/>
-	<property name="PT.jar"		  value="${lib.dir}/PTLambda-Runtime-1.0.4.jar"/>
+	<property name="PT.jar"		  value="${lib.dir}/PTLambda-Runtime-1.1.0.jar"/>
 	<property name="APACJarName"     value="APPAC-1.0.0" />
 
 	<!-- Check the operating system -->
