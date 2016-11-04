@@ -1,0 +1,61 @@
+package paratest;
+
+import paratask.runtime.CurrentTask;
+
+/**
+ * The TestParaArray1 class is a subclass of Test.
+ * 
+ * It initialises a simple Array of Bytes then runs through 
+ * incrementing them by one in a parallel fashion. This is 
+ * done by using multi tasks for processing the elements.
+ * 
+ * This implementation alternates between worker threads so 
+ * that for an example with two threads the first thread 
+ * would increment odd numbered elements while the second 
+ * thread would increment even numbered ones.
+ * 
+ * @param Size - the number of elements in the array
+ * @param Stride - the number of elements between processing
+ * 
+ * @author Peter Nicolau
+ */
+public class TestParaArray1 extends Test {
+
+	private int fThreads;
+	private int fSize;
+	private int fStride;
+	private int[] fArray;
+
+	public TestParaArray1(int threads, int size, int stride) {
+		fThreads = threads;
+		fSize = size;
+		fStride = stride;
+	}
+
+	public void execute() {
+		fArray = new int[fSize];
+		long start = System.nanoTime();
+
+		TaskID id = process();
+
+		try {
+			id.waitTillFinished();
+		} catch (ExecutionException e) {
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+		long finish = System.nanoTime();
+		System.out.println(fSize + "\t" + fStride + "\t" + (finish - start));
+	}
+
+	TASK(fThreads) public void process(){
+		int taskID = CurrentTask.relativeID();
+
+		for (int i = fStride * taskID; i < fSize; i += fStride * fThreads) {
+			fArray[i]++;
+		}
+	}
+
+}
