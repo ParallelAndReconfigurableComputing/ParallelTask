@@ -3,7 +3,6 @@ package sp.processors;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -28,6 +27,26 @@ import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.reference.CtVariableReference;
 import spoon.support.reflect.code.CtInvocationImpl;
 
+/**
+ * This annotation processor processes the <code>Future</code> annotations that appear
+ * at the declaration of a collection (i.e., List, Set, Map, Collection for other
+ * types), in order to obtain collection wrappers that can contain both variables and 
+ * future variables.</br>
+ * For example: <b>myList</b> is a <code>List</code> that calls on <code>ParaTask</code>
+ * for a collection wrapper. The object can either add future variables, or make direct
+ * calls on <b>only one</b> method (e.g., <code>myList.add(foo(a)</code>). That method
+ * <b>MUST</b> be annotated with the <code>Task</code> annotation. If <code>'myList'</code>
+ * invokes a method (e.g., <code>add</code>), for which the argument is a statement and 
+ * not an invocation expression (e.g., <code>myList.add(foo(2) + foo(3))</code>), the operation
+ * is performed sequentially iff the methods are not annotated with <code>Task</code>. However,
+ * if a method is annotated with <code>Task</code> it is executed asynchronously, but the 
+ * invocation blocks until the result from that asynchronous task is back. That is, the 
+ * corresponding future variable will not be added to the container, rather the container
+ * waits until the result from the asynchronous task is back.  
+ * 
+ * @author Mostafa Mehrabi
+ * @since  2016
+ */
 public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 	
 	private List<CtVariableAccess<?>> variableAccessArguments = null;
@@ -53,7 +72,26 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 		modifySourceCode();
 	}
 	
+	private void inspectElement(){
+		//remember to ensure that user calls pt.runtime.ParaTask.CollectionWrapper, otherwise error!
+		String thisStatement = thisAnnotatedElement.toString();
+		String collectionType = thisStatement.substring(thisStatement.indexOf("<")+1, thisStatement.indexOf(">"));
+		collectionType = APTUtils.getType(collectionType);
+		thisCollectionGenericType = thisFactory.Core().createTypeReference();
+		thisCollectionGenericType.setSimpleName(collectionType);
+		thisCollectionType = thisAnnotatedElement.getType();
+	}
+	
 
+	/*
+	 * This method first modifies every invocation on a collection wrapper that involves variable access expressions.
+	 * That is, directly using variables or future variables for invocations on the collection wrapper. 
+	 * In the next stage, the invocations that use method invocation as their arguments are processed, and compiled. 
+	 * At the end, the declaration statement is changed to declaring and casting the collection wrapper. 
+	 * Note, that the order of processes is very important. 
+	 * 
+	 * @see sp.processors.PtAnnotationProcessor#modifySourceCode()
+	 */
 	@Override
 	protected void modifySourceCode() {
 		/*
@@ -71,19 +109,14 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 		changeDeclarationName();
 		insertStatementAfterDeclaration();
 	}
-	
-	private void inspectElement(){
-		String thisStatement = thisAnnotatedElement.toString();
-		String collectionType = thisStatement.substring(thisStatement.indexOf("<")+1, thisStatement.indexOf(">"));
-		collectionType = SpoonUtils.getType(collectionType);
-		thisCollectionGenericType = thisFactory.Core().createTypeReference();
-		thisCollectionGenericType.setSimpleName(collectionType);
-		thisCollectionType = thisAnnotatedElement.getType();
-	}
-	
+		
+	/*
+	 * Finds all the arguments, both variable access and method invocations, that are used as arguments 
+	 * in an invocation on the collection wrapper.  
+	 */
 	private void findCollectionInvocationArguments(){
-		List<CtStatement> containingStatements = SpoonUtils.findVarAccessOtherThanFutureDefinition(thisAnnotatedElement.getParent(CtBlock.class), thisAnnotatedElement);
-		mapOfContainingStatements = SpoonUtils.listAllExpressionsOfStatements(containingStatements);
+		List<CtStatement> containingStatements = APTUtils.findVarAccessOtherThanFutureDefinition(thisAnnotatedElement.getParent(CtBlock.class), thisAnnotatedElement);
+		mapOfContainingStatements = APTUtils.listAllExpressionsOfStatements(containingStatements);
 		variableAccessArguments = new ArrayList<>();
 		invocationArguments = new HashMap<>();
 		
@@ -124,18 +157,34 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 		}	
 	}
 	
+	/*
+	 * Modifies expressions of variables, which are sent as arguments to method invocations on the collection object. 
+	 * Variables that are sent as arguments will be changed to taskID equivalent, if the variable is declared as a
+	 * future variable by the programmer. 
+	 * 
+	 * For example:
+	 * @Future
+	 * int a = foo(x); 
+	 * myList.add(a);
+	 * 
+	 * turns into:
+	 * TaskID _aTaskID_ = _aTaskInfo_.start(x);
+	 * myList.add(_aTaskID_);
+	 * 
+	 * myList is a TaskID aware collection. 
+	 */
 	private void modifyVarAccessExpressions(){
 		for(CtVariableAccess<?> varAccess : variableAccessArguments){
 			String varName = varAccess.toString();
 			boolean expressionModified = false;
 			
-			if(SpoonUtils.isTaskIDReplacement(thisAnnotatedElement, varName)){
+			if(APTUtils.isTaskIDReplacement(thisAnnotatedElement, varName)){
 				modifyWithTaskIDReplacement(varAccess);
 				expressionModified = true;
 			}
 			
 			else{
-				CtStatement declarationStatement = SpoonUtils.getDeclarationStatement(varAccess.getParent(CtStatement.class)
+				CtStatement declarationStatement = APTUtils.getDeclarationStatement(varAccess.getParent(CtStatement.class)
 													, varName);
 				if(declarationStatement != null){
 					Future future = hasFutureAnnotation(declarationStatement);
@@ -148,6 +197,10 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 		}
 	}
 	
+	/*
+	 * Modifies future variables that are declared after the declaration of the this collection object; therefore it
+	 * is not processed by the annotation processor yet. So, it has to be processed manually.
+	 */
 	private void modifyWithFutuerObject(Future future, CtStatement declarationStatement, CtVariableAccess<?> varAccess){
 		CtLocalVariable<?> annotatedElement = (CtLocalVariable<?>) declarationStatement;
 		InvocationProcessor processor = new InvocationProcessor(thisFactory, future, annotatedElement);
@@ -166,18 +219,31 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 		modifyWithTaskIDReplacement(varAccess);
 	}
 	
+	/*
+	 * Modifies future variables that are declared before the declaration of this collection object; therefore they
+	 * are already processed. Their variable syntax is changed from <varName> to <varNameTaskID>.getReturnResult();
+	 * This method changes <varNameTaskID>.getReturnResult() to <varNameTaskID>
+	 * 
+	 * For example:
+	 * myList.add(varNameTaskID.getReturnResult()); to myList.add(varNameTaskID);
+	 */
 	private void modifyWithTaskIDReplacement(CtVariableAccess<?> varAccess){
 		if(!(varAccess.getParent() instanceof CtInvocation<?>))
 			return;
 		String varName = varAccess.toString();
-		varName = SpoonUtils.getOrigName(varName);
+		varName = APTUtils.getOrigName(varName);
 		varName = varName.trim();
-		varName = SpoonUtils.getTaskIDName(varName);
+		varName = APTUtils.getTaskIDName(varName);
 		CtVariableReference varRef = thisFactory.Core().createFieldReference();
 		varRef.setSimpleName(varName);
 		varAccess.setVariable(varRef);
 	}
 	
+	/*
+	 * Processes every method invocation that is used as an argument in invocations
+	 * made on the collection wrapper. 
+	 * That is, it sends invocations one by one to the 'modifyWithInvocation' method.
+	 */
 	private void modifyInvocationExpressions(){
 		Set<CtStatement> statements = invocationArguments.keySet();
 		for(CtStatement statement : statements){
@@ -193,6 +259,12 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 		}
 	}
 	
+	/*
+	 * Creates a future variable declaration for the method that is invoked (e.g., "foo(a) in myList.add(foo(a))")
+	 * and alters that argument accordingly (i.e., changes that to the corresponding TaskID object), iff that method
+	 * call is the only argument; otherwise the program blocks until the result is back for that asynchronous task. 
+	 * This is the case only when the method is annotated with @Task. 
+	 */
 	private void modifyWithInvocation(int annotatedInvocations, CtStatement parentStatement, List<CtInvocation<?>> invocations){
 		for(CtInvocation<?> invocation : invocations){
 			if(hasTaskAnnotation(invocation)){
@@ -206,9 +278,9 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 				String newVariableTaskIDName = "";
 				
 				if(!(invocation.getParent() instanceof CtInvocation<?>))
-					newVariableTaskIDName = SpoonUtils.getTaskIDName(newVariableName)+".getReturnResult()";
+					newVariableTaskIDName = APTUtils.getTaskIDName(newVariableName)+".getReturnResult()";
 				else
-					newVariableTaskIDName = SpoonUtils.getTaskIDName(newVariableName);
+					newVariableTaskIDName = APTUtils.getTaskIDName(newVariableName);
 				
 				newLocalVariable.setSimpleName(newVariableName);	
 				newLocalVariable.setDefaultExpression((CtExpression)invocation);
@@ -267,7 +339,7 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 		CtCodeSnippetExpression invocationArgument = thisFactory.Core().createCodeSnippetExpression();
 		
 		executable.setSimpleName("processingInParallel");
-		invocationTarget.setValue(SpoonUtils.getParaTaskSyntax());
+		invocationTarget.setValue(APTUtils.getParaTaskSyntax());
 		invocationArgument.setValue("true");
 		List<CtExpression<?>> arguments = new ArrayList<>();
 		arguments.add(invocationArgument);
@@ -282,7 +354,7 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 	}
 	
 	private void changeDeclarationName(){
-		String newName = SpoonUtils.getTaskName(thisElementName);
+		String newName = APTUtils.getTaskName(thisElementName);
 		thisAnnotatedElement.setSimpleName(newName);
 	}
 	
@@ -298,7 +370,7 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 		CtVariableAccess varAccess = thisFactory.Core().createVariableRead();
 		
 		CtVariableReference varRef = thisFactory.Core().createFieldReference();
-		varRef.setSimpleName(SpoonUtils.getTaskName(thisElementName));
+		varRef.setSimpleName(APTUtils.getTaskName(thisElementName));
 		varAccess.setVariable(varRef);
 		varAccess.setTypeCasts(typeCast);
 		
@@ -314,17 +386,19 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 	private String getCollectionType(){
 		String currentType = thisCollectionType.toString();
 		if(currentType.contains("List"))
-			return SpoonUtils.getListWrapperSyntax();
+			return APTUtils.getListWrapperSyntax();
 		else if (currentType.contains("Set"))
-			return SpoonUtils.getSetWrapperSyntax();
+			return APTUtils.getSetWrapperSyntax();
 		else if (currentType.contains("Map"))
-			return SpoonUtils.getMapWrapperSyntax();
+			return APTUtils.getMapWrapperSyntax();
 		else
-			return SpoonUtils.getCollecitonWrapperSyntax();
-	}	
-	
+			return APTUtils.getCollecitonWrapperSyntax();
+	}		
 
-
+	/*
+	 * Finds all arguments, as well as the method calls that are used as
+	 * arguments within the invocation on a collection wrapepr. 
+	 */
 	private void findArgumentsToProcess(CtExpression<?> expression){
 		if(expression instanceof CtVariableAccess<?>){
 			if(isInsideCollection()){

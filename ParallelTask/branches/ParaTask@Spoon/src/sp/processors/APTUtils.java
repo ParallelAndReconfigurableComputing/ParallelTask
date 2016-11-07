@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -49,7 +48,7 @@ import spoon.support.reflect.code.CtUnaryOperatorImpl;
 import spoon.support.reflect.code.CtVariableAccessImpl;
 import spoon.support.reflect.code.CtWhileImpl;
 
-public class SpoonUtils {
+public class APTUtils {
 
 	public static enum ExpressionRole{Assigned, Assignment, ThrownExpression, ReturnExpression, 
 		WhileLoopExpression, DoLoopExpression, ForLoopExpression, ForEachExpression, IfConditionExpression,
@@ -847,7 +846,7 @@ public class SpoonUtils {
 	}
 	
 	public static String getDependsOnSyntax(){
-		return "depndsOn";
+		return "dependsOn";
 	}
 	
 	public static String getNotifiesSyntax(){

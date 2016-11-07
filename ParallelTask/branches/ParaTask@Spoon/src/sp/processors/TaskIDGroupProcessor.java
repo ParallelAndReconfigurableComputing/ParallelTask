@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 
 import sp.annotations.Future;
 import sp.annotations.StatementMatcherFilter;
-import sp.processors.SpoonUtils.ExpressionRole;
+import sp.processors.APTUtils.ExpressionRole;
 import spoon.reflect.factory.Factory;
 import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtCatch;
@@ -28,7 +28,37 @@ import spoon.reflect.declaration.CtElement;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.support.reflect.code.CtAssignmentImpl;
 
-
+/**
+ * This annotation processor processes <code>Future</code> annotations that appear at the declaration
+ * of a local array. For example:
+ * </br></br>
+ * (a)Future</br>
+ * Obj[] futureGroup = new Obj[num];
+ * </br></br>
+ * The processor only allows one dimensional future groups. This type is specifically used for grouping
+ * TaskID objects that return the same type (e.g., Integer), and allows users to set a barrier in their
+ * program to wait for the tasks until they are all finished. The waiting occurs at the first access to
+ * an element of the array. 
+ * </br></br>
+ * For example:
+ * </br></br>
+ * Obj element = futureGroup[0];
+ * </br></br>
+ * gets the following statements added before it by the compiler.
+ * </br></br>
+ * try{</br>
+ * 	&nbsp;&nbsp;&nbsp;_futureGroupTaskID_.wiatTillFinished(); </br>
+ * }catch(Exception e){</br>
+ * 	&nbsp;&nbsp;&nbsp;e.printStackTrace();</br>
+ * }</br>
+ * </br>
+ * for(int i = 0; i < futureGroup.size(); i++){</br>
+ * 	&nbsp;&nbsp;&nbsp;futureGroup[i] = _futureGroupTaskID_.getReturnResult(i);</br>
+ * }</br></br>
+ * 
+ * @author Mostafa Mehrabi
+ *
+ */
 public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	
 	
@@ -47,7 +77,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		thisElementType = thisAnnotatedElement.getType();	
 		thisGroupType = thisFactory.Core().createTypeReference();
 		thisElementName = thisAnnotatedElement.getSimpleName();
-		thisTaskIDGroupName = SpoonUtils.getTaskIDGroupName(thisElementName);
+		thisTaskIDGroupName = APTUtils.getTaskIDGroupName(thisElementName);
 	}
 	
 	@Override
@@ -60,7 +90,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		int counter = 0;
 		String elementType = thisElementType.toString();
 		String type = elementType.substring(0, elementType.indexOf('['));
-		type = SpoonUtils.getType(type.trim());
+		type = APTUtils.getType(type.trim());
 		thisGroupType.setSimpleName(type);
 		while(elementType.indexOf(']') != -1){
 			elementType = elementType.substring(elementType.indexOf(']')+1);
@@ -78,13 +108,21 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 
 	@Override
 	protected void modifySourceCode() {
-		List<CtStatement> occurrences = SpoonUtils.findVarAccessOtherThanFutureDefinition(thisAnnotatedElement.getParent(CtBlock.class), thisAnnotatedElement);
-		mapOfContainingStatements = SpoonUtils.listAllExpressionsOfStatements(occurrences);
+		List<CtStatement> occurrences = APTUtils.findVarAccessOtherThanFutureDefinition(thisAnnotatedElement.getParent(CtBlock.class), thisAnnotatedElement);
+		mapOfContainingStatements = APTUtils.listAllExpressionsOfStatements(occurrences);
 		declareTaskIDGroup();
 		modifyArrayAccessStatements();
 	}
 	
-	
+	/*
+	 * Modifies the statements in which this future array is assigned a future variables. This future
+	 * variable can be either declared before the declaration of this future array, or after that. 
+	 * Both cases are considered when processing. In another case, an invocation can be assigned to an
+	 * element of this future array, which will get a customized declaration by the compiler. 
+	 * Moreover, once it encounters the first statement in which the value for an element of the future
+	 * array is accessed, the compiler inserts the barrier phrase for waiting for all tasksk of the 
+	 * future array, until they are processed and finished.   
+	 */
 	private void modifyArrayAccessStatements(){
 		Set<CtStatement> statements = mapOfContainingStatements.keySet();
 		CtStatement currentStatement = null;
@@ -123,14 +161,14 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	
 	private void declareTaskIDGroup(){
 		CtLocalVariable<?> taskIDGroupDeclartion = thisFactory.Core().createLocalVariable();
-		String type = SpoonUtils.getTaskIDGroupSyntax() + "<" + thisGroupType.toString() + ">";
+		String type = APTUtils.getTaskIDGroupSyntax() + "<" + thisGroupType.toString() + ">";
 		
 		CtTypeReference taskIDGroupType = thisFactory.Core().createTypeReference();
 		taskIDGroupType.setSimpleName(type);
 		taskIDGroupDeclartion.setType(taskIDGroupType);
 		taskIDGroupDeclartion.setSimpleName(thisTaskIDGroupName);
 		
-		String defaultExpressionString = "new " + SpoonUtils.getTaskIDGroupSyntax() + "<>(" + thisGroupSize + ")";
+		String defaultExpressionString = "new " + APTUtils.getTaskIDGroupSyntax() + "<>(" + thisGroupSize + ")";
 		CtCodeSnippetExpression defaultExpression = thisFactory.Core().createCodeSnippetExpression();
 		defaultExpression.setValue(defaultExpressionString);
 		taskIDGroupDeclartion.setDefaultExpression(defaultExpression);
@@ -167,7 +205,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		
 		
 		
-		if(SpoonUtils.isTaskIDReplacement(thisAnnotatedElement, assignmentString)){
+		if(APTUtils.isTaskIDReplacement(thisAnnotatedElement, assignmentString)){
 			modifyWithTaskIDReplacement(accessStatement);
 			statementModified = true;
 		}
@@ -178,7 +216,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		}
 		
 		else{
-			CtStatement declarationStatement = SpoonUtils.getDeclarationStatement(accessStatement, assignmentString);
+			CtStatement declarationStatement = APTUtils.getDeclarationStatement(accessStatement, assignmentString);
 			if(declarationStatement != null){
 				Future future = hasFutureAnnotation(declarationStatement);
 				if(future != null){
@@ -226,7 +264,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	private void modifyWithTaskIDReplacement(CtAssignmentImpl<?, ?> accessStatement){
 		String assignedString   = accessStatement.getAssigned().toString();
 		String assignmentString = accessStatement.getAssignment().toString();
-		String taskIDName = SpoonUtils.getTaskIDName(SpoonUtils.getOrigName(assignmentString));
+		String taskIDName = APTUtils.getTaskIDName(APTUtils.getOrigName(assignmentString));
 		
 		String index = assignedString.substring(assignedString.indexOf('[')+1, assignedString.indexOf(']'));
 		
@@ -262,7 +300,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		InvocationProcessor processor = new InvocationProcessor(thisFactory, thisFutureAnnotation, localAsyncTask);
 		processor.process();
 		
-		String newAssignment = SpoonUtils.getTaskIDName(asyncTaskName) + ".getReturnResult()";
+		String newAssignment = APTUtils.getTaskIDName(asyncTaskName) + ".getReturnResult()";
 		CtCodeSnippetExpression newAssignmentExpression = thisFactory.Core().createCodeSnippetExpression();
 		newAssignmentExpression.setValue(newAssignment);
 		accessStatement.setAssignment(newAssignmentExpression);

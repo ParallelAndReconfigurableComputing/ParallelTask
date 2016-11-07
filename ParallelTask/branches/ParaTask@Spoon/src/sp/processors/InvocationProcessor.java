@@ -4,7 +4,6 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.List;
@@ -33,6 +32,21 @@ import spoon.support.reflect.code.CtInvocationImpl;
 import spoon.support.reflect.code.CtLocalVariableImpl;
 import spoon.support.reflect.reference.CtExecutableReferenceImpl;
 
+/**
+ * This annotation processor, processes <code>Future</code> annotations that specifically appear at
+ * the declaration of a local variable. For example:</br>
+ * (a)Future</br>
+ * int a = foo(x);
+ * </br>
+ * It transforms the variable declaration into the declaration of a TaskInfo object. Using the attributes
+ * of the <code>Future</code> annotation, this processor configures MULTI, ONEOFF, INTERACTIVE and MULTI_IO
+ * tasks. Moreover, using the <code><b>depends</b></code> attribute, which is a comma separated string of future 
+ * variables, a programmer can specify the future variables that a specific future variable needs to wait for
+ * before it starts processing. 
+ *  
+ * @author Mostafa Mehrabi
+ * @since  2016
+ */
 public class InvocationProcessor extends PtAnnotationProcessor {
 	
 	private CtInvocation<?> thisInvocation = null;
@@ -60,11 +74,12 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 		thisAnnotatedElement = annotatedElement;
 		thisElementName = annotatedElement.getSimpleName();
 		thisElementReturnType = annotatedElement.getType();
-		thisTaskIDName = SpoonUtils.getTaskIDName(thisElementName);
-		thisTaskInfoName = SpoonUtils.getTaskName(thisElementName);
+		thisTaskIDName = APTUtils.getTaskIDName(thisElementName);
+		thisTaskInfoName = APTUtils.getTaskName(thisElementName);
 		thisFactory = factory;
 	}
 	
+	@Override
 	public void process(){
 		getInvocations();
 		checkIfThrowsException();
@@ -96,9 +111,9 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 	
 	private void replaceOccurrencesWithTaskIDName(){
 		String regex = "\\b" + thisElementName + "\\b";
-		List<CtStatement> statementsAccessingThisVar = SpoonUtils.findVarAccessOtherThanFutureDefinition
+		List<CtStatement> statementsAccessingThisVar = APTUtils.findVarAccessOtherThanFutureDefinition
 				((CtBlockImpl<?>)thisAnnotatedElement.getParent(), thisAnnotatedElement);
-		SpoonUtils.modifyStatements(statementsAccessingThisVar, regex, (thisTaskIDName+SpoonUtils.getResultSyntax()));
+		APTUtils.modifyStatements(statementsAccessingThisVar, regex, (thisTaskIDName+APTUtils.getResultSyntax()));
 	}
 	
 	private void inspectAnnotation(){
@@ -119,9 +134,9 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 		//this method could be subject to changes to extract from multiple invocations
 		List<CtExpression<?>> arguments = thisInvocation.getArguments();
 		for (CtExpression<?> argument : arguments){
-			if(SpoonUtils.isTaskIDReplacement(thisAnnotatedElement, argument.toString())){
-				String originalArgumentName = SpoonUtils.getOrigName(argument.toString());
-				dependencies.add(SpoonUtils.getTaskIDName(originalArgumentName));
+			if(APTUtils.isTaskIDReplacement(thisAnnotatedElement, argument.toString())){
+				String originalArgumentName = APTUtils.getOrigName(argument.toString());
+				dependencies.add(APTUtils.getTaskIDName(originalArgumentName));
 			}
 		}				
 	}	
@@ -132,7 +147,7 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 	 * is a multi-task.  
 	 */
 	private void extractTaskInfoFromAnnotation(){
-		thisTaskType = SpoonUtils.getTaskType(thisFutureAnnotation.taskType()).trim();
+		thisTaskType = APTUtils.getTaskType(thisFutureAnnotation.taskType()).trim();
 		thisTaskCount = thisFutureAnnotation.taskCount();
 		if(thisTaskCount < 0)
 			thisTaskCount = 0;
@@ -147,7 +162,7 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 	private void extractDependenciesFromAnnotation(){
 		String dependsOn = thisFutureAnnotation.depends();
 		if (!dependsOn.isEmpty()){
-			String[] dependsArray = dependsOn.split(SpoonUtils.getDependsOnDelimiter());
+			String[] dependsArray = dependsOn.split(APTUtils.getDependsOnDelimiter());
 			for (String dependencyName : dependsArray){
 				//if not trimmed, duplicates with invisible white-space
 				//might get added
@@ -155,9 +170,9 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 						
 				if(!dependencyName.isEmpty()){
 					//in case user feeds taskID name etc. Small possibility but...
-					dependencyName = SpoonUtils.getOrigName(dependencyName); 
-					if(SpoonUtils.isFutureVariable(thisAnnotatedElement, dependencyName))
-						dependencies.add(SpoonUtils.getTaskIDName(dependencyName));
+					dependencyName = APTUtils.getOrigName(dependencyName); 
+					if(APTUtils.isFutureVariable(thisAnnotatedElement, dependencyName))
+						dependencies.add(APTUtils.getTaskIDName(dependencyName));
 				}
 			}					
 		}		
@@ -170,7 +185,7 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 	private void extractHandlersFromAnnotation(){
 		String notifyHandlers = thisFutureAnnotation.notifies();
 		if(!notifyHandlers.isEmpty()){
-			String[] handlersArray = notifyHandlers.split(SpoonUtils.getNotifyDelimiter());
+			String[] handlersArray = notifyHandlers.split(APTUtils.getNotifyDelimiter());
 			for (String handler : handlersArray){
 				handler = handler.trim();
 				if(!handler.isEmpty()){
@@ -214,22 +229,22 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 		listVariableAccessExpressions();
 		for (CtVariableAccess<?> varAccess : variableAccessExpressions){
 			String argName = varAccess.toString();
-			String origName = SpoonUtils.getOrigName(argName);
+			String origName = APTUtils.getOrigName(argName);
 				
-			if(SpoonUtils.isTaskIDReplacement(thisAnnotatedElement, argName)){
+			if(APTUtils.isTaskIDReplacement(thisAnnotatedElement, argName)){
 					
-				CtLocalVariable<?> declaration = (CtLocalVariable<?>)SpoonUtils.getDeclarationStatement(thisAnnotatedElement, origName);
+				CtLocalVariable<?> declaration = (CtLocalVariable<?>)APTUtils.getDeclarationStatement(thisAnnotatedElement, origName);
 				CtTypeReference taskIDType = getTaskIDType(declaration);
 					
-				varAccess.getVariable().setSimpleName(SpoonUtils.getLambdaArgName(origName)+SpoonUtils.getResultSyntax());
+				varAccess.getVariable().setSimpleName(APTUtils.getLambdaArgName(origName)+APTUtils.getResultSyntax());
 				varAccess.setType(taskIDType);					
-				argumentsAndTypes.put(SpoonUtils.getLambdaArgName(origName), varAccess.getType());
+				argumentsAndTypes.put(APTUtils.getLambdaArgName(origName), varAccess.getType());
 			}
 			else{
-				varAccess.getVariable().setSimpleName(SpoonUtils.getNonLambdaArgName(argName));
+				varAccess.getVariable().setSimpleName(APTUtils.getNonLambdaArgName(argName));
 				CtTypeReference<?> varType = thisFactory.Core().createTypeReference();
-				varType.setSimpleName(SpoonUtils.getType(varAccess.getType().toString()));
-				argumentsAndTypes.put(SpoonUtils.getNonLambdaArgName(argName), varType);
+				varType.setSimpleName(APTUtils.getType(varAccess.getType().toString()));
+				argumentsAndTypes.put(APTUtils.getNonLambdaArgName(argName), varType);
 			}				
 		}
 	}
@@ -263,7 +278,7 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 		thisAnnotatedElement.setType(thisElementNewType);
 		
 		//2
-		thisAnnotatedElement.setSimpleName(SpoonUtils.getTaskName(thisElementName));
+		thisAnnotatedElement.setSimpleName(APTUtils.getTaskName(thisElementName));
 		
 		//3
 		List<CtExpression<?>> arguments = new ArrayList<>();
@@ -297,7 +312,7 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 		
 		//5
 		CtExecutableReference executable = thisFactory.Core().createExecutableReference();
-		executable.setSimpleName(SpoonUtils.getAsTaskSyntax());
+		executable.setSimpleName(APTUtils.getAsTaskSyntax());
 		thisInvocation.setExecutable(executable);
 		//if invocation target is not set to null, the 'asTask' method maybe called on an incorrect target. 
 		thisInvocation.setTarget(null); 
@@ -351,7 +366,7 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 			return null;
 		
 		CtInvocationImpl<?> dependsOnInvoc = (CtInvocationImpl<?>) thisFactory.Core().createInvocation();
-		String dependsOnExecutable = SpoonUtils.getTaskName(thisElementName) + "." + SpoonUtils.getDependsOnSyntax();
+		String dependsOnExecutable = APTUtils.getTaskName(thisElementName) + "." + APTUtils.getDependsOnSyntax();
 		String dependsOnArguments = "";
 		int counter = 0;
 		for (String dependency : dependencies){
@@ -387,12 +402,12 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 		
 		CtInvocationImpl<?> notifyStatement = (CtInvocationImpl<?>) thisFactory.Core().createInvocation();
 		CtExecutableReferenceImpl executablePhrase = (CtExecutableReferenceImpl<?>) thisFactory.Core().createExecutableReference();
-		executablePhrase.setSimpleName(SpoonUtils.getParaTaskSyntax() + "." + SpoonUtils.getNotifiesSyntax());
+		executablePhrase.setSimpleName(APTUtils.getParaTaskSyntax() + "." + APTUtils.getNotifiesSyntax());
 		notifyStatement.setExecutable(executablePhrase);
 		
 				
 		for (String handler : handlers){
-			String execArgument = SpoonUtils.getTaskName(thisElementName) + ", " + handler;
+			String execArgument = APTUtils.getTaskName(thisElementName) + ", " + handler;
 			CtCodeSnippetExpression<?> notiesExpression = thisFactory.Core().createCodeSnippetExpression();
 			notiesExpression.setValue(execArgument);
 			List<CtExpression<?>> notifyStatemtnArgument = new ArrayList<>();
@@ -422,7 +437,7 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 		  arguments.add(argument);
 		  
 		  CtExecutableReference executable = thisFactory.Core().createExecutableReference();
-		  executable.setSimpleName(SpoonUtils.getParaTaskSyntax() + "." + SpoonUtils.getAsyncExceptionSyntax());
+		  executable.setSimpleName(APTUtils.getParaTaskSyntax() + "." + APTUtils.getAsyncExceptionSyntax());
 		  
 		  invocation.setExecutable(executable);
 		  invocation.setArguments(arguments);
@@ -459,11 +474,11 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 			
 			CtTypeReference<?> argumentType = argumentsAndTypes.get(argumentName);
 			
-			if (SpoonUtils.isNonLambdaArg(argumentName))				
-				startPhrase += SpoonUtils.getOrigName(argumentName);
+			if (APTUtils.isNonLambdaArg(argumentName))				
+				startPhrase += APTUtils.getOrigName(argumentName);
 			
-			else if (SpoonUtils.isLambdaArg(argumentName))
-				startPhrase += SpoonUtils.getTaskIDName(SpoonUtils.getOrigName(argumentName));
+			else if (APTUtils.isLambdaArg(argumentName))
+				startPhrase += APTUtils.getTaskIDName(APTUtils.getOrigName(argumentName));
 			 
 			counter++;
 			if(counter != argumentNames.size())
@@ -541,8 +556,8 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 	 * Figures out the generic type set for this TaskInfo object. 
 	 */
 	private String getTaskInfoType(){
-		String returnPhase = (thisElementReturnType.toString().contains("Void")) ? "Void" : SpoonUtils.getReturnType(thisElementReturnType.toString());
-		String taskInfoType = SpoonUtils.getTaskInfoSyntax() + getNumArgs() + "<" + returnPhase;
+		String returnPhase = (thisElementReturnType.toString().contains("Void")) ? "Void" : APTUtils.getReturnType(thisElementReturnType.toString());
+		String taskInfoType = APTUtils.getTaskInfoSyntax() + getNumArgs() + "<" + returnPhase;
 		Set<String> argumentNames = argumentsAndTypes.keySet();
 		for(String argumentName : argumentNames){
 			taskInfoType += ", " + argumentsAndTypes.get(argumentName).toString();
@@ -559,8 +574,8 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 	 * instead, the functor name is appended with "NoReturn" or "WithReturn". 
 	 */
 	private String getFunctorType(){
-		String functorReturnPhrase = (thisElementReturnType.toString().contains("Void")) ? "NoReturn<" : ("WithReturn<"+SpoonUtils.getReturnType(thisElementReturnType.toString())+", ");
-		String functorName = SpoonUtils.getFunctorSyntax() + getNumArgs() + functorReturnPhrase;
+		String functorReturnPhrase = (thisElementReturnType.toString().contains("Void")) ? "NoReturn<" : ("WithReturn<"+APTUtils.getReturnType(thisElementReturnType.toString())+", ");
+		String functorName = APTUtils.getFunctorSyntax() + getNumArgs() + functorReturnPhrase;
 		return functorName;
 	}
 	
@@ -570,10 +585,10 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 	 */
 	private CtTypeReference getTaskIDType(CtVariable<?> declaration){
 		String declarationType = declaration.getType().toString();
-		declarationType = SpoonUtils.getOrigName(declarationType);
-		String taskType = SpoonUtils.getReturnType(declarationType);		
+		declarationType = APTUtils.getOrigName(declarationType);
+		String taskType = APTUtils.getReturnType(declarationType);		
 		
-		taskType = SpoonUtils.getTaskIdSyntax() + "<" + taskType + ">";
+		taskType = APTUtils.getTaskIdSyntax() + "<" + taskType + ">";
 		CtTypeReference<?> taskIDType = thisFactory.Core().createTypeReference();
 		taskIDType.setSimpleName(taskType);
 		return taskIDType;

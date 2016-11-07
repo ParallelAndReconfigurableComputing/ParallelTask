@@ -12,7 +12,7 @@
 	
 	<property name="spoon.jar"    value="${lib.dir}/spoon-core-5.0.2-jar-with-dependencies.jar"/>
 	<property name="PT.jar"		  value="${lib.dir}/PTLambda-Runtime-1.1.0.jar"/>
-	<property name="APACJarName"     value="APPAC-1.0.0" />
+	<property name="APTJarName"     value="@PT-1.0.0" />
 
 	<!-- Check the operating system -->
 	<target name="CheckOS">
@@ -62,7 +62,7 @@
 	</target>
 	
 	<target name="compressJar" depends="compile" description="compress compiled files into jar">
-		<jar basedir="${classes.dir}" destfile="${release.dir}/${APACJarName}.jar">
+		<jar basedir="${classes.dir}" destfile="${release.dir}/${APTJarName}.jar">
 			<zipgroupfileset dir="${lib.dir}" includes="**/*.jar"/>
 		</jar>
 	</target>
@@ -80,11 +80,11 @@
 	</target>
 	
 	<target name="docJar" depends="javaDoc" description="compressing javaDoc into jar">
-		<jar basedir="${docs.dir}" destfile="${release.dir}/${APACJarName}-docs.jar" />
+		<jar basedir="${docs.dir}" destfile="${release.dir}/${APTJarName}-docs.jar" />
 	</target>
 	
 	<target name="srcJar" depends="init" description="compressing source files into jar">
-		<jar basedir="${src.dir}" destfile="${release.dir}/${APACJarName}-src.jar" />
+		<jar basedir="${src.dir}" destfile="${release.dir}/${APTJarName}-src.jar" />
 	</target>
 
 	
