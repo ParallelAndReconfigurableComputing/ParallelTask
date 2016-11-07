@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 
 import sp.annotations.Future;
 import sp.annotations.StatementMatcherFilter;
-import sp.processors.SpoonUtils.ExpressionRole;
+import sp.processors.APTUtils.ExpressionRole;
 import spoon.reflect.factory.Factory;
 import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtCatch;
@@ -77,7 +77,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		thisElementType = thisAnnotatedElement.getType();	
 		thisGroupType = thisFactory.Core().createTypeReference();
 		thisElementName = thisAnnotatedElement.getSimpleName();
-		thisTaskIDGroupName = SpoonUtils.getTaskIDGroupName(thisElementName);
+		thisTaskIDGroupName = APTUtils.getTaskIDGroupName(thisElementName);
 	}
 	
 	@Override
@@ -90,7 +90,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		int counter = 0;
 		String elementType = thisElementType.toString();
 		String type = elementType.substring(0, elementType.indexOf('['));
-		type = SpoonUtils.getType(type.trim());
+		type = APTUtils.getType(type.trim());
 		thisGroupType.setSimpleName(type);
 		while(elementType.indexOf(']') != -1){
 			elementType = elementType.substring(elementType.indexOf(']')+1);
@@ -108,8 +108,8 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 
 	@Override
 	protected void modifySourceCode() {
-		List<CtStatement> occurrences = SpoonUtils.findVarAccessOtherThanFutureDefinition(thisAnnotatedElement.getParent(CtBlock.class), thisAnnotatedElement);
-		mapOfContainingStatements = SpoonUtils.listAllExpressionsOfStatements(occurrences);
+		List<CtStatement> occurrences = APTUtils.findVarAccessOtherThanFutureDefinition(thisAnnotatedElement.getParent(CtBlock.class), thisAnnotatedElement);
+		mapOfContainingStatements = APTUtils.listAllExpressionsOfStatements(occurrences);
 		declareTaskIDGroup();
 		modifyArrayAccessStatements();
 	}
@@ -161,14 +161,14 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	
 	private void declareTaskIDGroup(){
 		CtLocalVariable<?> taskIDGroupDeclartion = thisFactory.Core().createLocalVariable();
-		String type = SpoonUtils.getTaskIDGroupSyntax() + "<" + thisGroupType.toString() + ">";
+		String type = APTUtils.getTaskIDGroupSyntax() + "<" + thisGroupType.toString() + ">";
 		
 		CtTypeReference taskIDGroupType = thisFactory.Core().createTypeReference();
 		taskIDGroupType.setSimpleName(type);
 		taskIDGroupDeclartion.setType(taskIDGroupType);
 		taskIDGroupDeclartion.setSimpleName(thisTaskIDGroupName);
 		
-		String defaultExpressionString = "new " + SpoonUtils.getTaskIDGroupSyntax() + "<>(" + thisGroupSize + ")";
+		String defaultExpressionString = "new " + APTUtils.getTaskIDGroupSyntax() + "<>(" + thisGroupSize + ")";
 		CtCodeSnippetExpression defaultExpression = thisFactory.Core().createCodeSnippetExpression();
 		defaultExpression.setValue(defaultExpressionString);
 		taskIDGroupDeclartion.setDefaultExpression(defaultExpression);
@@ -205,7 +205,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		
 		
 		
-		if(SpoonUtils.isTaskIDReplacement(thisAnnotatedElement, assignmentString)){
+		if(APTUtils.isTaskIDReplacement(thisAnnotatedElement, assignmentString)){
 			modifyWithTaskIDReplacement(accessStatement);
 			statementModified = true;
 		}
@@ -216,7 +216,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		}
 		
 		else{
-			CtStatement declarationStatement = SpoonUtils.getDeclarationStatement(accessStatement, assignmentString);
+			CtStatement declarationStatement = APTUtils.getDeclarationStatement(accessStatement, assignmentString);
 			if(declarationStatement != null){
 				Future future = hasFutureAnnotation(declarationStatement);
 				if(future != null){
@@ -264,7 +264,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	private void modifyWithTaskIDReplacement(CtAssignmentImpl<?, ?> accessStatement){
 		String assignedString   = accessStatement.getAssigned().toString();
 		String assignmentString = accessStatement.getAssignment().toString();
-		String taskIDName = SpoonUtils.getTaskIDName(SpoonUtils.getOrigName(assignmentString));
+		String taskIDName = APTUtils.getTaskIDName(APTUtils.getOrigName(assignmentString));
 		
 		String index = assignedString.substring(assignedString.indexOf('[')+1, assignedString.indexOf(']'));
 		
@@ -300,7 +300,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		InvocationProcessor processor = new InvocationProcessor(thisFactory, thisFutureAnnotation, localAsyncTask);
 		processor.process();
 		
-		String newAssignment = SpoonUtils.getTaskIDName(asyncTaskName) + ".getReturnResult()";
+		String newAssignment = APTUtils.getTaskIDName(asyncTaskName) + ".getReturnResult()";
 		CtCodeSnippetExpression newAssignmentExpression = thisFactory.Core().createCodeSnippetExpression();
 		newAssignmentExpression.setValue(newAssignment);
 		accessStatement.setAssignment(newAssignmentExpression);

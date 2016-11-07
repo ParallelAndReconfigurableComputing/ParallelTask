@@ -4,7 +4,6 @@ import sp.annotations.Future;
 import spoon.processing.AbstractAnnotationProcessor;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtLocalVariable;
-import spoon.reflect.declaration.CtVariable;
 import spoon.support.reflect.code.CtInvocationImpl;
 
 public class PtFutureProcessor extends AbstractAnnotationProcessor<Future, CtLocalVariable<?>> {

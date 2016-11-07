@@ -55,7 +55,7 @@ public class OldAnnotation {
 						return null; 
   				 }
 			})));
-            __Var2PtTask__.depndsOn(__VarPtTaskID__);
+            __Var2PtTask__.dependsOn(__VarPtTaskID__);
             pt.runtime.ParaTask.registerSlotToNotify(__Var2PtTask__, ()->simp.foo1(7));
             pt.runtime.TaskID<Integer> __Var2PtTaskID__ = __Var2PtTask__.start(VarX, __VarPtTaskID__);
             pt.runtime.TaskInfoOneArg<Integer, pt.runtime.TaskID<Integer>> __Var3PtTask__ = ((pt.runtime.TaskInfoOneArg<Integer, pt.runtime.TaskID<Integer>>)(pt.runtime.ParaTask.asTask(pt.runtime.ParaTask.TaskType.ONEOFF, 
@@ -67,7 +67,7 @@ public class OldAnnotation {
 						return null; 
   				 }
 			})));
-            __Var3PtTask__.depndsOn(__VarPtTaskID__, __Var2PtTaskID__);
+            __Var3PtTask__.dependsOn(__VarPtTaskID__, __Var2PtTaskID__);
             pt.runtime.TaskID<Integer> __Var3PtTaskID__ = __Var3PtTask__.start(__Var2PtTaskID__);
             java.lang.System.out.println(("The result of Var2 + Var3 is: " + (__Var2PtTaskID__.getReturnResult() + __Var3PtTaskID__.getReturnResult())));
         } catch (java.lang.InterruptedException e) {

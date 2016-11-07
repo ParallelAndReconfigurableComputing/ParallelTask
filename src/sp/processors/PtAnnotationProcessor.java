@@ -4,13 +4,19 @@ import java.util.Map;
 import java.util.Set;
 
 import sp.annotations.Future;
-import sp.processors.SpoonUtils.ExpressionRole;
+import sp.processors.APTUtils.ExpressionRole;
 import spoon.reflect.factory.Factory;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.reference.CtTypeReference;
 
+/**
+ * This abstract class must be implemented by every annotation processor. 
+ * 
+ * @author Mostafa Mehrabi
+ *
+ */
 public abstract class PtAnnotationProcessor {
 	
 	protected CtLocalVariable<?> thisAnnotatedElement = null;
