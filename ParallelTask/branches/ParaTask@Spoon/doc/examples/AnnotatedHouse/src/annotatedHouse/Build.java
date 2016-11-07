@@ -20,7 +20,7 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
 
 import pt.runtime.ParaTask;
-import pt.runtime.ParaTask.ScheduleType;
+import pt.runtime.ParaTask.PTSchedulingType;
 import sp.annotations.Future;
 import sp.annotations.TaskInfoType;
 
@@ -91,7 +91,7 @@ public class Build extends JFrame implements ActionListener {
 		}
 		else{
 			currentJob = "Parallel";
-			ParaTask.setSchedulingType(ScheduleType.WorkSharing);
+			ParaTask.setSchedulingType(PTSchedulingType.WorkSharing);
 			
 			@Future(notifies="finishedBuilding()")
 			Void task = houseApplet.buildTask(colorWalls, colorRoof);
