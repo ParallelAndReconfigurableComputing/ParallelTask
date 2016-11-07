@@ -73,7 +73,7 @@ public class Build extends javax.swing.JFrame implements java.awt.event.ActionLi
             pt.runtime.TaskID<Void> __taskPtTaskID__ = __taskPtTask__.start(colorRoof, colorWalls);
         } else {
             currentJob = "Parallel";
-            pt.runtime.ParaTask.setSchedulingType(pt.runtime.ParaTask.ScheduleType.WorkSharing);
+            pt.runtime.ParaTask.setSchedulingType(pt.runtime.ParaTask.PTSchedulingType.WorkSharing);
             pt.runtime.TaskInfoTwoArgs<Void, java.awt.Color, java.awt.Color> __taskPtTask__ = ((pt.runtime.TaskInfoTwoArgs<Void, java.awt.Color, java.awt.Color>)(pt.runtime.ParaTask.asTask(pt.runtime.ParaTask.TaskType.ONEOFF, 
 			(pt.functionalInterfaces.FunctorTwoArgsNoReturn<java.awt.Color, java.awt.Color>)(__colorRoofPtNonLambdaArg__, __colorWallsPtNonLambdaArg__) -> houseApplet.buildTask(__colorWallsPtNonLambdaArg__, __colorRoofPtNonLambdaArg__))));
             pt.runtime.ParaTask.registerSlotToNotify(__taskPtTask__, ()->finishedBuilding());
