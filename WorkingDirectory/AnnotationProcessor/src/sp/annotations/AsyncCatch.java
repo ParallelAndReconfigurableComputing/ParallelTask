@@ -1,11 +1,11 @@
 package sp.annotations;
 
 import java.lang.annotation.Target;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Repeatable;
 
-import static java.lang.annotation.ElementType.LOCAL_VARIABLE;
-
-
-@Target(LOCAL_VARIABLE)
+@Repeatable(AsyncCatches.class)
+@Target(ElementType.LOCAL_VARIABLE)
 public @interface AsyncCatch {
     Class<? extends Exception>[] throwables();
     String[] handlers();

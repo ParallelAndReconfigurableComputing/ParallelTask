@@ -16,6 +16,7 @@ public class StatementMatcherFilter<T extends CtStatement> implements Filter<T> 
 		return false;
 	}
 
+	@SuppressWarnings("unchecked")
 	public Class<T> getType() {
 		return (Class<T>) targetElement.getClass(); 
 	}
