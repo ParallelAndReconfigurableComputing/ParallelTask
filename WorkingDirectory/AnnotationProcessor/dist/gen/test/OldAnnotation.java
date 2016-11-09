@@ -24,9 +24,9 @@ public class OldAnnotation {
 
     public static void main(java.lang.String[] args) {
         pt.runtime.TaskInfoNoArgs<Integer> __VarPtTask__ = ((pt.runtime.TaskInfoNoArgs<Integer>)(pt.runtime.ParaTask.asTask(pt.runtime.ParaTask.TaskType.MULTI, 
-			(pt.functionalInterfaces.FunctorNoArgsWithReturn<Integer, >)() -> test.OldAnnotation.foo3(10))));
-        pt.runtime.ParaTask.registerAsyncCatch(__VarPtTask__, IllegalArgumentException.class, ()->{try{foo1(1, 2);}catch(Exception e){e.printStackTrace();}});
-        pt.runtime.ParaTask.registerAsyncCatch(__VarPtTask__, InterruptedException.class, ()->{try{foo(1);}catch(Exception e){e.printStackTrace();}});
+			(pt.functionalInterfaces.FunctorNoArgsWithReturn<Integer>)() -> test.OldAnnotation.foo3(10))));
+        pt.runtime.ParaTask.registerAsyncCatch(__VarPtTask__, java.lang.InterruptedException.class, ()->{try{foo(1);}catch(Exception e){e.printStackTrace();}});
+        pt.runtime.ParaTask.registerAsyncCatch(__VarPtTask__, java.lang.IllegalArgumentException.class, ()->{try{foo1(1, 2);}catch(Exception e){e.printStackTrace();}});
         pt.runtime.TaskID<Integer> __VarPtTaskID__ = __VarPtTask__.start();
         try {
             test.SimpleAnnotation simp = new test.SimpleAnnotation();

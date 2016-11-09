@@ -60,7 +60,7 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 	private Set<String> handlers = null;
 	private Map<String, CtTypeReference<?>> argumentsAndTypes = null;
 	private boolean throwsExceptions = false;
-	private Map<Class<? extends Exception>, String> asyncExceptions = null;
+	private Map<String, String> asyncExceptions = null;
 	private List<CtVariableAccess<?>> variableAccessExpressions = null;
 	
 	public InvocationProcessor(Factory factory, Future future, CtLocalVariable<?> annotatedElement){
@@ -212,7 +212,7 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 					throw new IllegalArgumentException("THE NUMBER OF EXCEPTION CLASSES SPECIFIED FOR " + thisAnnotatedElement + 
 							" IS NOT COMPLIANT WITH THE NUMBER OF HANDLERS SPECIFIED FOR THOSE EXCEPTIONS!");
 				for(int i = 0; i < handlers.length; i++){
-					asyncExceptions.put(exceptions[i], ("()->{try{" + handlers[i]) +";}catch(Exception e){e.printStackTrace();}}");
+					asyncExceptions.put(exceptions[i].getName(), ("()->{try{" + handlers[i]) +";}catch(Exception e){e.printStackTrace();}}");
 				}
 			}
 		}
@@ -425,13 +425,13 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 	 */
 	private List<CtInvocationImpl<?>> getAsyncExceptionStatements(){
 	  List<CtInvocationImpl<?>> invocations = new ArrayList<>();
-	  Set<Class<? extends Exception>> exceptions = asyncExceptions.keySet();
+	  Set<String> exceptions = asyncExceptions.keySet();
 	  
-	  for(Class<? extends Exception> exception : exceptions){
+	  for(String exception : exceptions){
 		  CtInvocationImpl<?> invocation = new CtInvocationImpl<>();
 		  
 		  CtCodeSnippetExpression<?> argument = thisFactory.Core().createCodeSnippetExpression();
-		  argument.setValue(thisTaskInfoName + ", " + exception.getSimpleName() + ".class, " + asyncExceptions.get(exception));
+		  argument.setValue(thisTaskInfoName + ", " + exception + ".class, " + asyncExceptions.get(exception));
 		 
 		  List<CtExpression<?>> arguments = new ArrayList<>();
 		  arguments.add(argument);
@@ -574,8 +574,10 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 	 * instead, the functor name is appended with "NoReturn" or "WithReturn". 
 	 */
 	private String getFunctorType(){
-		String functorReturnPhrase = (thisElementReturnType.toString().contains("Void")) ? "NoReturn<" : ("WithReturn<"+APTUtils.getReturnType(thisElementReturnType.toString())+", ");
+		String functorReturnPhrase = (thisElementReturnType.toString().contains("Void")) ? "NoReturn<" : ("WithReturn<"+APTUtils.getReturnType(thisElementReturnType.toString()));
 		String functorName = APTUtils.getFunctorSyntax() + getNumArgs() + functorReturnPhrase;
+		if(!(functorName.contains("NoReturn") || functorName.contains("NoArgsWithReturn")))
+			functorName += ", ";
 		return functorName;
 	}
 	
