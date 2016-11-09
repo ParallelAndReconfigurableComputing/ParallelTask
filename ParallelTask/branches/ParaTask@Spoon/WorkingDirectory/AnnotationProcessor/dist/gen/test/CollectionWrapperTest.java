@@ -26,7 +26,7 @@ public class CollectionWrapperTest {
 
     public static void main(java.lang.String[] args) {
         pt.runtime.TaskInfoNoArgs<Integer> __specialNumPtTask__ = ((pt.runtime.TaskInfoNoArgs<Integer>)(pt.runtime.ParaTask.asTask(pt.runtime.ParaTask.TaskType.ONEOFF, 
-			(pt.functionalInterfaces.FunctorNoArgsWithReturn<Integer, >)() -> test.CollectionWrapperTest.simulateWork((-2)))));
+			(pt.functionalInterfaces.FunctorNoArgsWithReturn<Integer>)() -> test.CollectionWrapperTest.simulateWork((-2)))));
         pt.runtime.TaskID<Integer> __specialNumPtTaskID__ = __specialNumPtTask__.start();
         java.util.List<java.lang.Integer> myList = pt.runtime.ParaTask.getPtWrapper(new java.util.ArrayList<java.lang.Integer>());
         for (int i = 0 ; i < 20 ; i++) {

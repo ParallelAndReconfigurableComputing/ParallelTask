@@ -7,6 +7,8 @@ import java.lang.annotation.Repeatable;
 @Repeatable(AsyncCatches.class)
 @Target(ElementType.LOCAL_VARIABLE)
 public @interface AsyncCatch {
+	/**
+	 */
     Class<? extends Exception>[] throwables();
     String[] handlers();
 }
