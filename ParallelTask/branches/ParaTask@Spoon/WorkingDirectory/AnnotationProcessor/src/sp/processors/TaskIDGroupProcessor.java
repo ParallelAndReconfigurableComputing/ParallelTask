@@ -61,8 +61,6 @@ import spoon.support.reflect.code.CtAssignmentImpl;
  */
 public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	
-	
-	private CtTypeReference<?> thisElementType = null;
 	private CtTypeReference<?> thisGroupType = null;
 	private int thisArrayDimension = 0;
 	private String thisTaskIDGroupName = null;
@@ -133,7 +131,10 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 				for(CtExpression<?> expression : expressions){
 					ExpressionRole expressionRole = mapOfContainingStatements.get(statement).get(expression);
 					if(containsArrayElementSyntax(expression.toString())){
-						if(expressionRole.equals(ExpressionRole.Assigned)){
+						//Check if array element is on the left side of an assignment expression
+						if(expressionRole.equals(ExpressionRole.Assigned)){ 
+							//if yes, then change the expression into adding a taskID to a taskGroup if 
+							//the array element is only on the left side of the assignment (i.e., a[] = ... )
 							CtAssignmentImpl<?, ?> assignmentStmt = (CtAssignmentImpl<?, ?>) statement;
 							CtExpression<?> assignmentExp = assignmentStmt.getAssignment();
 							if(!containsArrayElementSyntax(assignmentExp.toString())){
@@ -141,11 +142,14 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 								break;
 							}
 							else{
+								//otherwise an array element has been referred to in this statement, so insert the wait block 
 								insertWaitForTaskGroupBlock(statement);
 								return;
 							}							
 						}
 						else{
+							//if the expression is not an assignment expression, then array element is definitely
+							//referred to, so insert the wait block.
 							insertWaitForTaskGroupBlock(statement);
 							return;
 						}
@@ -158,7 +162,9 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		}
 	}
 	
-	
+	/*
+	 * Insert a declaration statement for the TaskIDGroup before the declaration for the array. 
+	 */
 	private void declareTaskIDGroup(){
 		CtLocalVariable<?> taskIDGroupDeclartion = thisFactory.Core().createLocalVariable();
 		String type = APTUtils.getTaskIDGroupSyntax() + "<" + thisGroupType.toString() + ">";
@@ -175,7 +181,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		
 		CtBlock<?> parentBlock = thisAnnotatedElement.getParent(CtBlock.class);
 		StatementMatcherFilter<CtStatement> filter = new StatementMatcherFilter<CtStatement>(thisAnnotatedElement);
-		
+	
 		parentBlock.insertAfter(filter, taskIDGroupDeclartion);
 	}
 	
@@ -228,7 +234,8 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		
 		if(!statementModified)
 			throw new UnsupportedOperationException("\nTHE EXPRESSION " + assignmentString + " IN STATEMENT: " + accessStatement 
-					+ " IS NOT SUPPORTED BY PARATASK FUTURE ARRAYS YET!\nPARATASK FUTURE ARRAYS ARE MEANT TO GROUP ASYNCHRONOUS TASKS!");
+					+ " IS NOT SUPPORTED BY PARATASK FUTURE ARRAYS YET!\nPARATASK FUTURE ARRAYS ARE MEANT TO GROUP ASYNCHRONOUS TASKS ONLY!"
+					+ "\nTHE EXPRESSION " + assignmentString + " IS PROBABLY COMBINING TASKID WITH OTHER EXPRESSIONS!");
 	}
 	
 	private void insertWaitForTaskGroupBlock(CtStatement statement){

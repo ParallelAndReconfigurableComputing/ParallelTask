@@ -46,7 +46,7 @@ public abstract class PtAnnotationProcessor {
 		}
 	}
 	
-	/*
+	/**
 	 * each sub-class implements this method, as a starting
 	 * point for processing the annotated elements
 	 */
