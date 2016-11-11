@@ -62,6 +62,7 @@ import spoon.support.reflect.code.CtAssignmentImpl;
 public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	
 	private CtTypeReference<?> thisGroupType = null;
+	private Future thisFutureAnnotation = null;
 	private int thisArrayDimension = 0;
 	private String thisTaskIDGroupName = null;
 	private String thisGroupSize = null;
@@ -238,13 +239,14 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 					+ "\nTHE EXPRESSION " + assignmentString + " IS PROBABLY COMBINING TASKID WITH OTHER EXPRESSIONS!");
 	}
 	
-	private void insertWaitForTaskGroupBlock(CtStatement statement){
+	private void insertWaitForTaskGroupBlock(CtStatement containingStatement){
 		try{
-		CtElement containingBlock = thisAnnotatedElement.getParent(CtBlock.class);
+		CtElement parentBlockOfAnnotatedElement = thisAnnotatedElement.getParent(CtBlock.class);
 		//CtElement parent = statement.getParent(CtBlock.class);
-		CtElement parent = statement;
+		CtElement parent = containingStatement;
 				
-		while(!containingBlock.equals(parent.getParent())){
+		//go to the same scope in which the task group is defined. 
+		while(!parentBlockOfAnnotatedElement.equals(parent.getParent())){
 			parent = parent.getParent();
 		}
 		
@@ -257,11 +259,11 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		tryBlock.setCatchers(catchers);
 		CtStatement parentStatemtn = (CtStatement) parent;
 		StatementMatcherFilter<CtStatement> filter = new StatementMatcherFilter<CtStatement>(parentStatemtn);
-		((CtBlock<?>)containingBlock).insertBefore(filter, tryBlock);
+		((CtBlock<?>)parentBlockOfAnnotatedElement).insertBefore(filter, tryBlock);
 		
 		if(!(thisGroupType.toString().contains("Void"))){
 			CtFor forLoop = createForLoop();
-			((CtBlock<?>)containingBlock).insertBefore(filter, forLoop);
+			((CtBlock<?>)parentBlockOfAnnotatedElement).insertBefore(filter, forLoop);
 		}
 		}catch(Exception e){
 			System.out.println("EXCEPTION WAS THROWN");
@@ -332,19 +334,6 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	}
 	
 	//-------------------------------------------------------HELPER METHODS------------------------------------------------------
-	
-	private Future hasFutureAnnotation(CtStatement statement){
-		CtLocalVariable<?> declarationStatement = (CtLocalVariable<?>) statement;
-		List<CtAnnotation<? extends Annotation>> annotations = declarationStatement.getAnnotations();
-		for(CtAnnotation<? extends Annotation> annotation : annotations){
-			Annotation actualAnnotation = annotation.getActualAnnotation();
-			if(actualAnnotation instanceof Future){
-				Future future = (Future) actualAnnotation;
-				return future;
-			}
-		}
-		return null;
-	}
 	
 	private boolean hasInvocationExpression(CtExpression<?> assignment){
 		if(assignment instanceof CtInvocation<?>)

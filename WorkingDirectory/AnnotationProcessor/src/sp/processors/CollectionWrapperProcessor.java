@@ -50,6 +50,7 @@ import spoon.support.reflect.code.CtInvocationImpl;
 public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 	
 	private List<CtVariableAccess<?>> variableAccessArguments = null;
+	private Future thisFutureAnnotation = null;
 	private List<CtInvocation<?>> statementInvocations = null;
 	private Map<CtStatement, List<CtInvocation<?>>> invocationArguments = null;
 	private boolean insideCollectionStatement = false;
@@ -303,17 +304,6 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 	
 	
 //----------------------------------------------------HELPER METHODS---------------------------------------------------
-	private Future hasFutureAnnotation(CtStatement declarationStatement){
-		List<CtAnnotation<? extends Annotation>> annotations = declarationStatement.getAnnotations();
-		for(CtAnnotation<? extends Annotation> annotation : annotations){
-			Annotation actualAnno = annotation.getActualAnnotation();
-			if(actualAnno instanceof Future){
-				Future future = (Future) actualAnno;
-				return future;
-			}
-		}
-		return null;
-	}
 	
 	private boolean hasTaskAnnotation(CtInvocation<?> methodInovcation){
 		List<CtAnnotation<? extends Annotation>> annotations = methodInovcation.getExecutable().getAnnotations();

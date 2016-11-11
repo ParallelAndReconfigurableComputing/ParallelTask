@@ -9,7 +9,9 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import pt.runtime.ParaTask.PTSchedulingType;
 import sp.annotations.TaskInfoType;
+import sp.annotations.TaskScheduingPolicy;
 import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtCatch;
 import spoon.reflect.code.CtExpression;
@@ -902,6 +904,18 @@ public class APTUtils {
 	
 	public static String getTaskType(TaskInfoType taskType){
 		return getPtTaskTypeSyntax()+"."+taskType.toString();
+	}
+	
+	public static String getPtScheduleTypeSynatx(){
+		return getParaTaskSyntax() + ".PTSchedulingType";
+	}
+	
+	public static String getScheduleType(TaskScheduingPolicy schedulingPolicy){
+		return getPtScheduleTypeSynatx() + "." + schedulingPolicy.toString();
+	}
+	
+	public static String getDefaultNumberOfThreads(){
+		return "Runtime.getRuntime().availableProcessors()";
 	}
 	
 	public static String getDependsOnDelimiter(){
