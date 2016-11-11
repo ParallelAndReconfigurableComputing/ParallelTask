@@ -50,6 +50,7 @@ import spoon.support.reflect.reference.CtExecutableReferenceImpl;
 public class InvocationProcessor extends PtAnnotationProcessor {
 	
 	private CtInvocation<?> thisInvocation = null;
+	private Future thisFutureAnnotation = null;
 	private String thisElementName = null;
 	private String thisTaskIDName = null;
 	private String thisTaskInfoName = null;

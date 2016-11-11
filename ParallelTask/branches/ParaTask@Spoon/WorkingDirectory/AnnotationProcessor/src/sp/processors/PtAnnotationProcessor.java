@@ -1,5 +1,7 @@
 package sp.processors;
 
+import java.lang.annotation.Annotation;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -9,6 +11,7 @@ import spoon.reflect.factory.Factory;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.code.CtStatement;
+import spoon.reflect.declaration.CtAnnotation;
 import spoon.reflect.reference.CtTypeReference;
 
 /**
@@ -22,9 +25,36 @@ public abstract class PtAnnotationProcessor {
 	protected CtLocalVariable<?> thisAnnotatedElement = null;
 	protected String thisElementName = null;
 	protected CtTypeReference<?> thisElementType = null;
-	protected Future thisFutureAnnotation = null;
 	protected Factory thisFactory = null;
 	protected Map<CtStatement, Map<CtExpression<?>, ExpressionRole>> mapOfContainingStatements = null;
+	
+	
+	
+	/**
+	 * each sub-class implements this method, as a starting
+	 * point for processing the annotated elements
+	 */
+	public abstract void process();
+		
+	/*
+	 * each sub-class modifies statements in its own way!
+	 */
+	protected abstract void modifySourceCode(); 
+	
+//----------------------------------------------------HELPER METHODS---------------------------------------------------
+
+	protected Future hasFutureAnnotation(CtStatement declarationStatement){
+		//CtLocalVariable<?> declarationStatement = (CtLocalVariable<?>) statement;
+		List<CtAnnotation<? extends Annotation>> annotations = declarationStatement.getAnnotations();
+		for(CtAnnotation<? extends Annotation> annotation : annotations){
+			Annotation actualAnnotation = annotation.getActualAnnotation();
+			if(actualAnnotation instanceof Future){
+				Future future = (Future) actualAnnotation;
+				return future;
+			}
+		}
+		return null;
+	}
 	
 	protected void printIncludingExpressions(){
 		Set<CtStatement> statements = mapOfContainingStatements.keySet();
@@ -46,12 +76,6 @@ public abstract class PtAnnotationProcessor {
 		}
 	}
 	
-	/**
-	 * each sub-class implements this method, as a starting
-	 * point for processing the annotated elements
-	 */
-	public abstract void process();
-	
 	/*
 	 * each sub-class can implement this method,
 	 * that allows printing the components of an annotated
@@ -66,10 +90,5 @@ public abstract class PtAnnotationProcessor {
 		System.out.println("Reference: " + thisAnnotatedElement.getReference().toString());
 		System.out.println("Reference Type: " + thisAnnotatedElement.getReferencedTypes().toString());
 		System.out.println("Type: " + thisAnnotatedElement.getType().toString());
-	}	
-	
-	/*
-	 * each sub-class modifies statements in its own way!
-	 */
-	protected abstract void modifySourceCode(); 
+	}		
 }

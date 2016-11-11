@@ -1,5 +1,5 @@
 package sp.annotations;
 
 public enum TaskScheduingPolicy {
-	WorkStealing, WorkSharing, MixedScheduling
+	WorkStealing, WorkSharing, MixedSchedule
 }

@@ -5,6 +5,6 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.METHOD)
 public @interface ParaTask {
-	TaskScheduingPolicy schedulingPolicy() default TaskScheduingPolicy.MixedScheduling;
+	TaskScheduingPolicy schedulingPolicy() default TaskScheduingPolicy.MixedSchedule;
 	int numberOfThreads() default 0;
 }
