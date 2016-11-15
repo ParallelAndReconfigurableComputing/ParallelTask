@@ -9,8 +9,10 @@ import sp.annotations.Future;
 import sp.processors.APTUtils.ExpressionRole;
 import spoon.reflect.factory.Factory;
 import spoon.reflect.code.CtExpression;
+import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.code.CtStatement;
+import spoon.reflect.code.CtVariableAccess;
 import spoon.reflect.declaration.CtAnnotation;
 import spoon.reflect.reference.CtTypeReference;
 
@@ -76,19 +78,33 @@ public abstract class PtAnnotationProcessor {
 		}
 	}
 	
+	protected void printVarAccessComponents(CtVariableAccess<?> variableAccess){
+		System.out.println("Signature: " + variableAccess.getSignature().toString());
+		System.out.println("Variable: " + variableAccess.getVariable().toString());
+	}
+	
+	protected void printInvocationComponents(CtInvocation<?> invocation){
+		System.out.println("Signature: " + invocation.getSignature());
+		System.out.println("label: " + invocation.getLabel());
+		System.out.println("Arguments: " + invocation.getArguments());
+		System.out.println("Executable: " + invocation.getExecutable());
+		System.out.println("Target: " + invocation.getTarget());
+		System.out.println("Type: " + invocation.getType());
+	}
+	
 	/*
 	 * each sub-class can implement this method,
 	 * that allows printing the components of an annotated
 	 * element, in order to help with identifying the components
 	 */
-	protected void printComponents(){
-		System.out.println("Signature: " + thisAnnotatedElement.getSignature());
-		System.out.println("SimpleName: " + thisAnnotatedElement.getSimpleName());
-		System.out.println("Class: " + thisAnnotatedElement.getClass().toString());
-		System.out.println("Default Expression: " + thisAnnotatedElement.getDefaultExpression());
-		System.out.println("Position: " + thisAnnotatedElement.getPosition().toString());
-		System.out.println("Reference: " + thisAnnotatedElement.getReference().toString());
-		System.out.println("Reference Type: " + thisAnnotatedElement.getReferencedTypes().toString());
-		System.out.println("Type: " + thisAnnotatedElement.getType().toString());
+	protected void printLocalVariableComponents(CtLocalVariable<?> localVariable){
+		System.out.println("Signature: " + localVariable.getSignature());
+		System.out.println("SimpleName: " + localVariable.getSimpleName());
+		System.out.println("Class: " + localVariable.getClass().toString());
+		System.out.println("Default Expression: " + localVariable.getDefaultExpression());
+		System.out.println("Position: " + localVariable.getPosition().toString());
+		System.out.println("Reference: " + localVariable.getReference().toString());
+		System.out.println("Reference Type: " + localVariable.getReferencedTypes().toString());
+		System.out.println("Type: " + localVariable.getType().toString());
 	}		
 }

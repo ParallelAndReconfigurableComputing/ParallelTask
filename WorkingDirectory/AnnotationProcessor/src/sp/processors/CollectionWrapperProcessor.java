@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.eclipse.jdt.core.compiler.InvalidInputException;
+
 import sp.annotations.Future;
 import sp.annotations.StatementMatcherFilter;
 import sp.annotations.Task;
@@ -26,6 +28,7 @@ import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.reference.CtVariableReference;
 import spoon.support.reflect.code.CtInvocationImpl;
+import spoon.support.reflect.code.CtVariableAccessImpl;
 
 /**
  * This annotation processor processes the <code>Future</code> annotations that appear
@@ -52,7 +55,7 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 	private List<CtVariableAccess<?>> variableAccessArguments = null;
 	private List<CtInvocation<?>> statementInvocations = null;
 	private Map<CtStatement, List<CtInvocation<?>>> invocationArguments = null;
-	private Future thisFutureAnnotation = null;
+	private Future  thisFutureAnnotation = null;
 	private boolean insideCollectionStatement = false;
 	private int     encounteredInvocationArguments = 0;
 	private int     newLocalVariableIndex = 0;
@@ -68,19 +71,33 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 
 	@Override
 	public void process() {
+		if(!validate())
+			return;
 		inspectElement();
 		findCollectionInvocationArguments();
+		
 		modifySourceCode();
 	}
 	
-	private void inspectElement(){
-		//remember to ensure that user calls pt.runtime.ParaTask.CollectionWrapper, otherwise error!
+	private void inspectElement(){		
 		String thisStatement = thisAnnotatedElement.toString();
 		String collectionType = thisStatement.substring(thisStatement.indexOf("<")+1, thisStatement.indexOf(">"));
 		collectionType = APTUtils.getType(collectionType);
 		thisCollectionGenericType = thisFactory.Core().createTypeReference();
 		thisCollectionGenericType.setSimpleName(collectionType);
 		thisCollectionType = thisAnnotatedElement.getType();
+	}
+	
+	
+	private boolean validate(){
+		String defaultExpression = thisAnnotatedElement.getDefaultExpression().toString();
+		if(!(defaultExpression.contains(APTUtils.getParaTaskWrapperSyntax()))){
+			System.out.println("ANNOTATION PROCESSING ERROR FOR:\n" + thisAnnotatedElement);
+			System.out.println("\nFUTURE ANNOTATION MUST BE USED FOR DECLARING COLLECTIONS THAT INVOKE: pt.runtime.ParaTask.getPtWrapper"
+					+ "\nEXAMPLE: List<Integer> myList = ParaTask.getPtWrapper(new ArrayList<Integer>())");
+			return false;
+		}
+		return true;
 	}
 	
 
@@ -107,19 +124,37 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 	
 	private void modifyCollectionDeclaration(){
 		insertStatementBeforeDeclaration();
+		System.out.println("pre-statement modification done");
 		changeDeclarationName();
+		System.out.println("Statement modification done");
 		insertStatementAfterDeclaration();
+		System.out.println("Post statement modification done");
 	}
 		
 	/*
-	 * Finds all the arguments, both variable access and method invocations, that are used as arguments 
-	 * in an invocation on the collection wrapper.  
+	 * Finds all the arguments, both variable access and method invocations, that are used 
+	 * in an invocation on the collection wrapper. That is, finding arguments that fit within
+	 * one of the following invocation formats:
+	 * 
+	 * myList.add(_taskIDReplacement_.getReturnResult())
+	 * 
+	 * or
+	 * 
+	 * @Future
+	 * Obj a = foo();
+	 * myList.add( a ) --> where "a" is a future variable that is not processed yet
+	 * 
+	 * or
+	 * 
+	 * myList.add(foo(a)) --> where "foo" is a function annotated with @Task
+	 * 
+	 * The rest of the cases do not need to be processed. 
 	 */
 	private void findCollectionInvocationArguments(){
 		List<CtStatement> containingStatements = APTUtils.findVarAccessOtherThanFutureDefinition(thisAnnotatedElement.getParent(CtBlock.class), thisAnnotatedElement);
 		mapOfContainingStatements = APTUtils.listAllExpressionsOfStatements(containingStatements);
-		variableAccessArguments = new ArrayList<>();
-		invocationArguments = new HashMap<>();
+		variableAccessArguments = new ArrayList<>(); //lists all variable access arguments in an invocation on collection wrapper, that may comply with the second case
+		invocationArguments = new HashMap<>(); //lists all invocations encountered within an invocation on collection wrapper, that may comply with first and third cases 
 		
 		Set<CtStatement> statements = mapOfContainingStatements.keySet();
 		for(CtStatement statement : statements){
@@ -128,15 +163,18 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 			 * for further investigations, if any of the methods is supposed to be processed asynchronously (i.e., has @Task annotation).
 			*/
 			statementInvocations = new ArrayList<>(); 
-			//indicates if we have found an invocation statement on the collection. 
+			/*
+			 * indicates if we have found an invocation statement on the collection, 
+			 * in which case, the arguments are collected to see if they fit within 
+			 * any of the formats mentioned above.
+			*/
 			insideCollectionStatement = false; 
 		
 			if(statement instanceof CtInvocationImpl<?>){
 				CtInvocationImpl<?> invocation = (CtInvocationImpl<?>) statement;
 				CtExpression<?> target = invocation.getTarget();
 				if(target != null){
-					String invocTarget = invocation.getTarget().toString();
-					if(invocTarget.contains(thisElementName)){
+					if(targetIsThisElement(target)){
 						insideCollectionStatement = true;
 						List<CtExpression<?>> arguments = invocation.getArguments();
 						for(CtExpression<?> argument : arguments)
@@ -145,6 +183,10 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 				}
 			}
 			
+			/*
+			 * If the statement is not an invocation on the collection, then it may contain expressions that are
+			 * invocations on the collection. Therefore, its expressions need to be further inspected. 
+			 */
 			if(!insideCollectionStatement){
 				Set<CtExpression<?>> statementExpressions = mapOfContainingStatements.get(statement).keySet();
 				for (CtExpression<?> expression : statementExpressions){
@@ -152,6 +194,7 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 				}
 			}
 			
+			// if there are invocations within the statement that must be inspected, then add them to the list. 
 			if(statementInvocations.size() != 0){
 				invocationArguments.put(statement, statementInvocations);
 			}
@@ -196,11 +239,12 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 				}
 			}			
 		}
+		System.out.println("modifyVarAccessExpression done");
 	}
 	
 	/*
-	 * Modifies future variables that are declared after the declaration of the this collection object; therefore it
-	 * is not processed by the annotation processor yet. So, it has to be processed manually.
+	 * Modifies future variables that are declared after the declaration of the this collection object; therefore they
+	 * are not processed by the annotation processor yet. So, they have to be processed manually.
 	 */
 	private void modifyWithFutuerObject(Future future, CtStatement declarationStatement, CtVariableAccess<?> varAccess){
 		CtLocalVariable<?> annotatedElement = (CtLocalVariable<?>) declarationStatement;
@@ -316,6 +360,27 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 		return false;
 	}
 	
+	protected void printVariableAccessArguments(){
+		System.out.println("Printing Variable Access Expressions");
+		for(CtVariableAccess<?> variableAccess : variableAccessArguments){
+			System.out.println("----------------------------------------------------");
+			printVarAccessComponents(variableAccess);
+			System.out.println("----------------------------------------------------");
+		}
+	}
+	
+	protected void printStatementInvocations(){
+		System.out.println("Printing Invocations That Were Found In Statements");
+		for(CtInvocation<?> invocation : statementInvocations){		
+			System.out.println("----------------------------------------------------");
+			System.out.println("----------------------------------------------------");		
+		}
+	}
+	
+	/*
+	 * Indicates if the initial statement being inspected is an invocation on the collection wrapper,
+	 * or if an invocation on the collection wrapper has been encountered within a statement or expression.
+	 */
 	private boolean isInsideCollection(){
 		if(insideCollectionStatement || (encounteredInvocationArguments != 0))
 			return true;
@@ -323,6 +388,7 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 	}
 	
 	private void insertStatementBeforeDeclaration(){
+		System.out.println("Inserting statement before collection declaration");
 		CtInvocation invokePT = thisFactory.Core().createInvocation();
 		CtExecutableReference executable = thisFactory.Core().createExecutableReference();
 		CtCodeSnippetExpression invocationTarget = thisFactory.Core().createCodeSnippetExpression();
@@ -386,10 +452,14 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 	}		
 
 	/*
-	 * Finds all arguments, as well as the method calls that are used as
-	 * arguments within the invocation on a collection wrapepr. 
+	 * Finds all variable-access arguments, as well as the method calls that are used
+	 * within the invocation on a collection wrapper, for further processing.
 	 */
 	private void findArgumentsToProcess(CtExpression<?> expression){
+		/*
+		 * if the expression is a variable-access, and it is within an invocation on the collection, 
+		 * it needs to be remembered for further inspections. 
+		 */
 		if(expression instanceof CtVariableAccess<?>){
 			if(isInsideCollection()){
 				CtVariableAccess<?> variableAccess = (CtVariableAccess<?>) expression;
@@ -411,14 +481,13 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 				/*
 				 * There might be methods inside the collection invocation, that are supposed
 				 * to be processed in parallel (i.e., with @Task annotation). So, given that 
-				 * a method call inside collection invocation (e.g., list.add(foo(3);) is not
-				 * targeting the collection itself, we add it for furthe inspections. 
+				 * a method call inside collection invocation (e.g., list.add(foo(3));) is not
+				 * targeting the collection itself, we add it for further inspections. 
 				 */
 				CtExpression<?> target = invocation.getTarget();
 				
 				if(target != null){//if method call is on an object
-					String invocTarget = invocation.getTarget().toString();
-					if(!(invocTarget.contains(thisElementName)))
+					if(!targetIsThisElement(target))
 						statementInvocations.add(invocation);
 				}
 				else
@@ -427,8 +496,7 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 			
 			CtExpression<?> target = invocation.getTarget();
 			if(target != null){
-				String invocTarget = invocation.getTarget().toString();
-				if(invocTarget.contains(thisElementName)){
+				if(targetIsThisElement(target)){
 					encounteredInvocationArguments++; //we use a global counter because collectionInvocations may be nested. 
 					thisCollectionInvocation = true; //every cycle of recursion uses its own boolean flag!
 				}
@@ -454,6 +522,15 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 			CtArrayAccess<?, ?> arrayAccess = (CtArrayAccess<?, ?>) expression;
 			findArgumentsToProcess(arrayAccess.getIndexExpression());
 		}		
+	}
+	
+	private boolean targetIsThisElement(CtExpression<?> target){
+		String targetString = target.toString();
+		String[] targetElements = targetString.split("\\.");
+		if((targetElements[targetElements.length-1].trim()).equals(thisElementName)){
+			return true;
+		}
+		return false;
 	}
 //----------------------------------------------------HELPER METHODS---------------------------------------------------
 }

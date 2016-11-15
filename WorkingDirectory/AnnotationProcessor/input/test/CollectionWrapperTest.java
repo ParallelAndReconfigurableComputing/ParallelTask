@@ -36,6 +36,7 @@ public class CollectionWrapperTest {
 		int specialNum = simulateWork(-2);
 		
 		@Future
+		//List<Integer> myList = new ArrayList<>();
 		List<Integer> myList = ParaTask.getPtWrapper(new ArrayList<Integer>());
 		
 		for(int i = 0; i < 20; i++){

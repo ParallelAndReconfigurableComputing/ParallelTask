@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import pt.runtime.ParaTask.PTSchedulingType;
 import sp.annotations.TaskInfoType;
 import sp.annotations.TaskScheduingPolicy;
 import spoon.reflect.code.CtBlock;
@@ -837,6 +836,10 @@ public class APTUtils {
 			}
 		}
 		return false;
+	}
+	
+	public static String getParaTaskWrapperSyntax(){
+		return "ParaTask.getPtWrapper(";
 	}
 	
 	public static String getResultSyntax(){
