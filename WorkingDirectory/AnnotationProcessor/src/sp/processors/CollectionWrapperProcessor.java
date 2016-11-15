@@ -373,6 +373,7 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 		System.out.println("Printing Invocations That Were Found In Statements");
 		for(CtInvocation<?> invocation : statementInvocations){		
 			System.out.println("----------------------------------------------------");
+			printInvocationComponents(invocation);
 			System.out.println("----------------------------------------------------");		
 		}
 	}
