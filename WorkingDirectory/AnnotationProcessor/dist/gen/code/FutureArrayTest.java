@@ -25,22 +25,22 @@ public class FutureArrayTest {
             pt.runtime.ParaTask.registerAsyncCatch(__aPtTask__, java.io.IOException.class, ()->{try{foo(2);}catch(Exception e){e.printStackTrace();}});
             pt.runtime.ParaTask.registerAsyncCatch(__aPtTask__, java.lang.RuntimeException.class, ()->{try{foo(3);}catch(Exception e){e.printStackTrace();}});
             pt.runtime.TaskID<Integer> __aPtTaskID__ = __aPtTask__.start(i);
-            __arrayPtTaskIDGroup__.setInnerTask(i, __aPtTaskID__);
+            array[i] = __aPtTaskID__.getReturnResult();
         }
-        pt.runtime.TaskInfoNoArgs<Integer> ____array_1__PtTask__ = ((pt.runtime.TaskInfoNoArgs<Integer>)(pt.runtime.ParaTask.asTask(pt.runtime.ParaTask.TaskType.ONEOFF, 
-			(pt.functionalInterfaces.FunctorNoArgsWithReturn<Integer>)() -> tester.get())));
-        pt.runtime.TaskID<Integer> ____array_1__PtTaskID__ = ____array_1__PtTask__.start();
-        __arrayPtTaskIDGroup__.setInnerTask(5, ____array_1__PtTaskID__);
-        __arrayPtTaskIDGroup__.setInnerTask(6, __bbPtTaskID__);
+        array[5] = tester.get();
+        array[6] = __bbPtTaskID__.getReturnResult();
         for (int i = 7 ; i < 10 ; i++) {
-            pt.runtime.TaskInfoOneArg<Integer, Integer> ____array_2__PtTask__ = ((pt.runtime.TaskInfoOneArg<Integer, Integer>)(pt.runtime.ParaTask.asTask(pt.runtime.ParaTask.TaskType.ONEOFF, 
-			(pt.functionalInterfaces.FunctorOneArgWithReturn<Integer, Integer>)(__iPtNonLambdaArg__) -> code.FutureArrayTest.foo((__iPtNonLambdaArg__ * 15)))));
-            pt.runtime.TaskID<Integer> ____array_2__PtTaskID__ = ____array_2__PtTask__.start(i);
-            __arrayPtTaskIDGroup__.setInnerTask(i, ____array_2__PtTaskID__);
+            array[i] = code.FutureArrayTest.foo((i * 15));
         }
         int[] myarray = new int[2];
         myarray[0] = tester.get();
         java.lang.System.out.println(array.length);
+        for (int i = 0 ; i < (array.length) ; i++) {
+            java.lang.System.out.print(array[i]);
+            if (i != ((array.length) - 1))
+                java.lang.System.out.print(", ");
+            
+        }
         try {
             __arrayPtTaskIDGroup__.waitTillFinished();
         } catch (Exception e) {
@@ -48,12 +48,6 @@ public class FutureArrayTest {
         }
         for (int __ptLoopIndex1__ = 0 ; __ptLoopIndex1__ < n ; __ptLoopIndex1__++)
             array[__ptLoopIndex1__] = __arrayPtTaskIDGroup__.getInnerTaskResult(__ptLoopIndex1__);
-        for (int i = 0 ; i < (array.length) ; i++) {
-            java.lang.System.out.print(array[i]);
-            if (i != ((array.length) - 1))
-                java.lang.System.out.print(", ");
-            
-        }
         for (int i = 0 ; i < (array.length) ; i++) {
             code.FutureArrayTest.foo(array[i]);
         }

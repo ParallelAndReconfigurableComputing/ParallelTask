@@ -7,6 +7,7 @@ import java.util.Random;
 import pt.runtime.ParaTask;
 import sp.annotations.Future;
 import sp.annotations.Task;
+import sp.annotations.InitParaTask;
 
 public class CollectionWrapperTest {
 	
@@ -30,6 +31,7 @@ public class CollectionWrapperTest {
 		return arg;
 	}
 	
+	@InitParaTask()
 	public static void main(String[] args){
 		
 		@Future

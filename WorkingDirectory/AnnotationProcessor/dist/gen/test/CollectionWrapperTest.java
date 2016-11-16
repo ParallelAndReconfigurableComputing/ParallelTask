@@ -25,6 +25,7 @@ public class CollectionWrapperTest {
     }
 
     public static void main(java.lang.String[] args) {
+        pt.runtime.ParaTask.init(pt.runtime.ParaTask.PTSchedulingType.MixedSchedule, java.lang.Runtime.getRuntime().availableProcessors());
         pt.runtime.TaskInfoNoArgs<Integer> __specialNumPtTask__ = ((pt.runtime.TaskInfoNoArgs<Integer>)(pt.runtime.ParaTask.asTask(pt.runtime.ParaTask.TaskType.ONEOFF, 
 			(pt.functionalInterfaces.FunctorNoArgsWithReturn<Integer>)() -> test.CollectionWrapperTest.simulateWork((-2)))));
         pt.runtime.TaskID<Integer> __specialNumPtTaskID__ = __specialNumPtTask__.start();

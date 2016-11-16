@@ -52,8 +52,8 @@ import spoon.support.reflect.code.CtVariableAccessImpl;
  */
 public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 	
-	private List<CtVariableAccess<?>> variableAccessArguments = null;
-	private List<CtInvocation<?>> statementInvocations = null;
+	private List<CtVariableAccess<?>> variableAccessArgumentsToBeProcessed = null;
+	private List<CtInvocation<?>> invocationsToBeProcessed = null;
 	private Map<CtStatement, List<CtInvocation<?>>> invocationArguments = null;
 	private Future  thisFutureAnnotation = null;
 	private boolean insideCollectionStatement = false;
@@ -75,7 +75,6 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 			return;
 		inspectElement();
 		findCollectionInvocationArguments();
-		
 		modifySourceCode();
 	}
 	
@@ -151,18 +150,24 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 	 * The rest of the cases do not need to be processed. 
 	 */
 	private void findCollectionInvocationArguments(){
+		System.out.println("/\\/\\/\\/\\/\\FINDCOLLECTIONARGUMENTS/\\/\\/\\/\\");
 		List<CtStatement> containingStatements = APTUtils.findVarAccessOtherThanFutureDefinition(thisAnnotatedElement.getParent(CtBlock.class), thisAnnotatedElement);
 		mapOfContainingStatements = APTUtils.listAllExpressionsOfStatements(containingStatements);
-		variableAccessArguments = new ArrayList<>(); //lists all variable access arguments in an invocation on collection wrapper, that may comply with the second case
+		//System.out.println("containing statements: " + mapOfContainingStatements); 
+
+		
+		variableAccessArgumentsToBeProcessed = new ArrayList<>(); //lists all variable access arguments in an invocation on collection wrapper, that may comply with the second case
 		invocationArguments = new HashMap<>(); //lists all invocations encountered within an invocation on collection wrapper, that may comply with first and third cases 
 		
 		Set<CtStatement> statements = mapOfContainingStatements.keySet();
 		for(CtStatement statement : statements){
+			//System.out.println("inspecting: " + statement + " elements: " + mapOfContainingStatements.get(statement));
+
 			/*
 			 * collects the invocations that are used within an invocation on the collection (e.g., myList.add(foo(a) + foox(b)); )
 			 * for further investigations, if any of the methods is supposed to be processed asynchronously (i.e., has @Task annotation).
 			*/
-			statementInvocations = new ArrayList<>(); 
+			invocationsToBeProcessed = new ArrayList<>(); 
 			/*
 			 * indicates if we have found an invocation statement on the collection, 
 			 * in which case, the arguments are collected to see if they fit within 
@@ -195,8 +200,9 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 			}
 			
 			// if there are invocations within the statement that must be inspected, then add them to the list. 
-			if(statementInvocations.size() != 0){
-				invocationArguments.put(statement, statementInvocations);
+			if(invocationsToBeProcessed.size() != 0){
+				//System.out.println("adding " + invocationsToBeProcessed + " for " + statement);
+				invocationArguments.put(statement, invocationsToBeProcessed);
 			}
 		}	
 	}
@@ -218,7 +224,7 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 	 * myList is a TaskID aware collection. 
 	 */
 	private void modifyVarAccessExpressions(){
-		for(CtVariableAccess<?> varAccess : variableAccessArguments){
+		for(CtVariableAccess<?> varAccess : variableAccessArgumentsToBeProcessed){
 			String varName = varAccess.toString();
 			boolean expressionModified = false;
 			
@@ -362,7 +368,7 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 	
 	protected void printVariableAccessArguments(){
 		System.out.println("Printing Variable Access Expressions");
-		for(CtVariableAccess<?> variableAccess : variableAccessArguments){
+		for(CtVariableAccess<?> variableAccess : variableAccessArgumentsToBeProcessed){
 			System.out.println("----------------------------------------------------");
 			printVarAccessComponents(variableAccess);
 			System.out.println("----------------------------------------------------");
@@ -371,9 +377,13 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 	
 	protected void printStatementInvocations(){
 		System.out.println("Printing Invocations That Were Found In Statements");
-		for(CtInvocation<?> invocation : statementInvocations){		
+		if(invocationsToBeProcessed.size() == 0){
+			System.out.println("no invocations to be processed");
+			return;
+		}
+		for(CtInvocation<?> invocation : invocationsToBeProcessed){		
 			System.out.println("----------------------------------------------------");
-			printInvocationComponents(invocation);
+			System.out.println(invocation);
 			System.out.println("----------------------------------------------------");		
 		}
 	}
@@ -464,7 +474,7 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 		if(expression instanceof CtVariableAccess<?>){
 			if(isInsideCollection()){
 				CtVariableAccess<?> variableAccess = (CtVariableAccess<?>) expression;
-				variableAccessArguments.add(variableAccess);
+				variableAccessArgumentsToBeProcessed.add(variableAccess);
 			}
 		}
 		
@@ -488,11 +498,15 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 				CtExpression<?> target = invocation.getTarget();
 				
 				if(target != null){//if method call is on an object
-					if(!targetIsThisElement(target))
-						statementInvocations.add(invocation);
+					if(!targetIsThisElement(target)){
+						//System.out.println("invocation: " + invocation + " added");
+						invocationsToBeProcessed.add(invocation);
+					}
 				}
-				else
-					statementInvocations.add(invocation);
+				else{
+					//System.out.println("invocation: " + invocation + " added");
+					invocationsToBeProcessed.add(invocation);
+				}
 			}
 			
 			CtExpression<?> target = invocation.getTarget();

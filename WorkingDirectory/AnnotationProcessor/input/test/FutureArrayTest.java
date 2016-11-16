@@ -17,7 +17,7 @@ public class FutureArrayTest {
 		return i * 10;
 	}
 	
-	@sp.annotations.ParaTask()
+	@sp.annotations.InitParaTask()
 	public static void main(String[] args) {
 		ObjectTest tester = new ObjectTest(3);
 		

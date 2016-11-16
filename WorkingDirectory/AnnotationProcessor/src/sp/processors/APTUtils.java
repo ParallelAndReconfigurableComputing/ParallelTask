@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -57,7 +58,7 @@ public class APTUtils {
 		SwitchSelectorExpression, InvocationArgumentExpression, InvocationTargetExpression, SynchronizedMonitoringExpression};
 		
 	private static Map<String, String> primitiveMap = new HashMap<String, String>();
-	private static Map<CtStatement, Map<CtExpression<?>, ExpressionRole>> mapOfExpressions = null;
+	private static List<ASTNode> listOfASTNodes = null;
 
 	static {
 		primitiveMap.put("int", "Integer");
@@ -329,10 +330,11 @@ public class APTUtils {
 		}
 	}
 	
-	public static Map<CtStatement, Map<CtExpression<?>, ExpressionRole>> listAllExpressionsOfStatements(List<CtStatement> statements){
-		mapOfExpressions = new LinkedHashMap<>();
+	public static List<ASTNode> listAllExpressionsOfStatements(List<CtStatement> statements){
+		System.out.println("****************LISTING ALL EXPRESSIONS**************************");
+		listOfASTNodes = new ArrayList<>();
 		listAllExpressions(statements);
-		return mapOfExpressions;
+		return listOfASTNodes;
 	}
 	
 	private static void listAllExpressions(List<CtStatement> statements){
@@ -372,14 +374,14 @@ public class APTUtils {
 					fetched = true;
 				}
 				if(fetched)
-					mapOfExpressions.put(assignmentImpl, statementExpressions);
+					listOfASTNodes.put(assignmentImpl, statementExpressions);
 			}
 			
 			else if (statement instanceof CtThrowImpl){
 				CtThrowImpl throwImpl = (CtThrowImpl) statement;
 				if(throwImpl.getThrownExpression() != null){
 					statementExpressions.put(throwImpl.getThrownExpression(), ExpressionRole.ThrownExpression);
-					mapOfExpressions.put(throwImpl, statementExpressions);
+					listOfASTNodes.put(throwImpl, statementExpressions);
 				}
 			}
 			
@@ -387,7 +389,7 @@ public class APTUtils {
 				CtReturnImpl<?> returnImp = (CtReturnImpl<?>) statement;
 				if(returnImp.getReturnedExpression() != null){
 					statementExpressions.put(returnImp.getReturnedExpression(), ExpressionRole.ReturnExpression);
-					mapOfExpressions.put(returnImp, statementExpressions);
+					listOfASTNodes.put(returnImp, statementExpressions);
 				}
 			}
 			
@@ -399,7 +401,7 @@ public class APTUtils {
 					
 					if(whileImpl.getLoopingExpression() != null){
 						statementExpressions.put(whileImpl.getLoopingExpression(), ExpressionRole.WhileLoopExpression);
-						mapOfExpressions.put(whileImpl, statementExpressions);
+						listOfASTNodes.put(whileImpl, statementExpressions);
 					}
 					
 					if(whileImpl.getBody() != null){
@@ -412,7 +414,7 @@ public class APTUtils {
 					CtDoImpl doImpl = (CtDoImpl) statement;
 					if(doImpl.getLoopingExpression() != null){
 						statementExpressions.put(doImpl.getLoopingExpression(), ExpressionRole.DoLoopExpression);
-						mapOfExpressions.put(doImpl, statementExpressions);
+						listOfASTNodes.put(doImpl, statementExpressions);
 					}
 					
 					if(doImpl.getBody() != null){
@@ -425,7 +427,7 @@ public class APTUtils {
 					CtForImpl forImpl = (CtForImpl) statement;
 					if(forImpl.getExpression() != null){
 						statementExpressions.put(forImpl.getExpression(), ExpressionRole.ForLoopExpression);
-						mapOfExpressions.put(forImpl, statementExpressions);
+						listOfASTNodes.put(forImpl, statementExpressions);
 					}
 					boolean fetched = false;
 					if(forImpl.getBody() != null){
@@ -449,7 +451,7 @@ public class APTUtils {
 					CtForEachImpl forEachImpl = (CtForEachImpl) statement;
 					if(forEachImpl.getExpression() != null){
 						statementExpressions.put(forEachImpl.getExpression(), ExpressionRole.ForEachExpression);
-						mapOfExpressions.put(forEachImpl, statementExpressions);
+						listOfASTNodes.put(forEachImpl, statementExpressions);
 					}
 					if(forEachImpl.getBody() != null){
 						statementsToInspect.add(forEachImpl.getBody());
@@ -462,7 +464,7 @@ public class APTUtils {
 				CtIfImpl ifImpl = (CtIfImpl) statement;
 				if(ifImpl.getCondition() != null){
 					statementExpressions.put(ifImpl.getCondition(), ExpressionRole.IfConditionExpression);
-					mapOfExpressions.put(ifImpl, statementExpressions);
+					listOfASTNodes.put(ifImpl, statementExpressions);
 				}
 				boolean fetched = false;
 				if(ifImpl.getThenStatement() != null){
@@ -489,14 +491,14 @@ public class APTUtils {
 					fetched = true;
 				}
 				if(fetched)
-					mapOfExpressions.put(assertImpl, statementExpressions);
+					listOfASTNodes.put(assertImpl, statementExpressions);
 			}
 			
 			else if (statement instanceof CtCaseImpl<?>){
 				CtCaseImpl<?> caseImpl = (CtCaseImpl<?>) statement;
 				if(caseImpl.getCaseExpression() != null){
 					statementExpressions.put(caseImpl.getCaseExpression(), ExpressionRole.CaseExpression);
-					mapOfExpressions.put(caseImpl, statementExpressions);
+					listOfASTNodes.put(caseImpl, statementExpressions);
 				}
 				if(caseImpl.getStatements() != null){
 					statementsToInspect.addAll(caseImpl.getStatements());
@@ -510,9 +512,17 @@ public class APTUtils {
 			
 			else if (statement instanceof CtLocalVariableImpl<?>){
 				CtLocalVariableImpl<?> varImpl = (CtLocalVariableImpl<?>) statement;
+				System.out.println("varImpl: " + varImpl);
 				if(varImpl.getDefaultExpression() != null){
 					statementExpressions.put(varImpl.getDefaultExpression(), ExpressionRole.LocalVarDefaultExpression);
-					mapOfExpressions.put(varImpl, statementExpressions);
+					System.out.println("defaultExpression: " + statementExpressions);
+					System.out.println("----------------------------------------------------");
+					System.out.println("varImpl: " + varImpl);
+					if(listOfASTNodes.containsKey(varImpl))
+						System.out.println("variable " + varImpl + " already exists with value: " + listOfASTNodes.get(varImpl));
+					listOfASTNodes.put(varImpl, statementExpressions);
+					System.out.println(listOfASTNodes);
+					System.out.println("----------------------------------------------------");
 				}
 			}
 			
@@ -520,7 +530,7 @@ public class APTUtils {
 				CtSynchronizedImpl syncImpl = (CtSynchronizedImpl) statement;
 				if(syncImpl.getExpression() != null){
 					statementExpressions.put(syncImpl.getExpression(), ExpressionRole.SynchronizedMonitoringExpression);
-					mapOfExpressions.put(syncImpl, statementExpressions);
+					listOfASTNodes.put(syncImpl, statementExpressions);
 				}
 				
 				if(syncImpl.getBlock() != null){
@@ -559,7 +569,7 @@ public class APTUtils {
 				CtSwitchImpl<?> switchImpl = (CtSwitchImpl<?>) statement;
 				if(switchImpl.getSelector() != null){
 					statementExpressions.put(switchImpl.getSelector(), ExpressionRole.SwitchSelectorExpression);
-					mapOfExpressions.put(switchImpl, statementExpressions);
+					listOfASTNodes.put(switchImpl, statementExpressions);
 				}
 				if(switchImpl.getCases() != null){
 					statementsToInspect.addAll(switchImpl.getCases());
@@ -582,7 +592,7 @@ public class APTUtils {
 					fetched = true;
 				}
 				if(fetched)
-				mapOfExpressions.put(invocImpl, statementExpressions);
+				listOfASTNodes.put(invocImpl, statementExpressions);
 			}
 		}
 	}
