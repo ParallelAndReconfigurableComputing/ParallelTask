@@ -329,7 +329,6 @@ public class APTUtils {
 	}
 	
 	public static List<ASTNode> listAllExpressionsOfStatements(List<CtStatement> statements){
-		System.out.println("****************LISTING ALL EXPRESSIONS**************************");
 		listOfASTNodes = new ArrayList<>();
 		listAllExpressions(statements);
 		return listOfASTNodes;

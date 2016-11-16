@@ -75,6 +75,8 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 			return;
 		inspectElement();
 		findCollectionInvocationArguments();
+		printVariableAccessArguments();
+		printStatementInvocations();
 		modifySourceCode();
 	}
 	
@@ -123,11 +125,11 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 	
 	private void modifyCollectionDeclaration(){
 		insertStatementBeforeDeclaration();
-		System.out.println("pre-statement modification done");
+		//System.out.println("pre-statement modification done");
 		changeDeclarationName();
-		System.out.println("Statement modification done");
+		//System.out.println("Statement modification done");
 		insertStatementAfterDeclaration();
-		System.out.println("Post statement modification done");
+		//System.out.println("Post statement modification done");
 	}
 		
 	/*
@@ -150,7 +152,6 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 	 * The rest of the cases do not need to be processed. 
 	 */
 	private void findCollectionInvocationArguments(){
-		System.out.println("/\\/\\/\\/\\/\\FINDCOLLECTIONARGUMENTS/\\/\\/\\/\\");
 		List<CtStatement> containingStatements = APTUtils.findVarAccessOtherThanFutureDefinition(thisAnnotatedElement.getParent(CtBlock.class), thisAnnotatedElement);
 		listOfContainingNodes = APTUtils.listAllExpressionsOfStatements(containingStatements);
 		//System.out.println("containing statements: " + mapOfContainingStatements); 
@@ -159,9 +160,12 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 		variableAccessArgumentsToBeProcessed = new ArrayList<>(); //lists all variable access arguments in an invocation on collection wrapper, that may comply with the second case
 		invocationArguments = new HashMap<>(); //lists all invocations encountered within an invocation on collection wrapper, that may comply with first and third cases 
 		
-		Set<CtStatement> statements = listOfContainingNodes.keySet();
-		for(CtStatement statement : statements){
-			//System.out.println("inspecting: " + statement + " elements: " + mapOfContainingStatements.get(statement));
+		for(ASTNode node : listOfContainingNodes){
+			CtStatement statement = node.getStatement();
+//			System.out.println("----------------------------------");
+//			System.out.println("inspecting statement: " + statement);
+//			System.out.println("Expressions: ");
+//			for(int index = 0; index < )
 
 			/*
 			 * collects the invocations that are used within an invocation on the collection (e.g., myList.add(foo(a) + foox(b)); )
@@ -193,15 +197,14 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 			 * invocations on the collection. Therefore, its expressions need to be further inspected. 
 			 */
 			if(!insideCollectionStatement){
-				Set<CtExpression<?>> statementExpressions = listOfContainingNodes.get(statement).keySet();
-				for (CtExpression<?> expression : statementExpressions){
-					findArgumentsToProcess(expression);
+				for (int index = 0; index < node.numberOfExpressions(); index++){
+					findArgumentsToProcess(node.getExpression(index));
 				}
 			}
 			
 			// if there are invocations within the statement that must be inspected, then add them to the list. 
 			if(invocationsToBeProcessed.size() != 0){
-				//System.out.println("adding " + invocationsToBeProcessed + " for " + statement);
+				System.out.println("adding " + invocationsToBeProcessed + " for " + statement);
 				invocationArguments.put(statement, invocationsToBeProcessed);
 			}
 		}	

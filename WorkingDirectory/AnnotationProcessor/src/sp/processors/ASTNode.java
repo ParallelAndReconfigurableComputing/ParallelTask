@@ -40,6 +40,7 @@ public class ASTNode {
 		Expression newExpression = new Expression();
 		newExpression.expression = expression;
 		newExpression.expressionRole = role;
+		statementExpressions.add(newExpression);
 	}
 	
 	public int numberOfExpressions(){
