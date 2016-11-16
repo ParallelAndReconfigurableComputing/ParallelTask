@@ -3,10 +3,8 @@ package sp.processors;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -339,12 +337,12 @@ public class APTUtils {
 	
 	private static void listAllExpressions(List<CtStatement> statements){
 		List<CtStatement> statementsToInspect = null;
-		Map<CtExpression<?>, ExpressionRole> statementExpressions = null;
+		//Map<CtExpression<?>, ExpressionRole> statementExpressions = null;
 		
 		for (CtStatement statement : statements){
 			
 			statementsToInspect = new ArrayList<>();
-			statementExpressions = new HashMap<>();
+			//statementExpressions = new HashMap<>();
 			
 			if (statement instanceof CtBlockImpl<?>){
 				CtBlockImpl<?> blockStatement = (CtBlockImpl<?>) statement;
@@ -355,7 +353,7 @@ public class APTUtils {
 			
 			else if (statement instanceof CtAssignmentImpl<?, ?>){
 				
-					CtAssignmentImpl<?, ?> assignmentImpl = null;
+				CtAssignmentImpl<?, ?> assignmentImpl = null;
 					
 				if (statement instanceof CtOperatorAssignmentImpl<?, ?>){
 					assignmentImpl = (CtOperatorAssignmentImpl<?, ?>) statement;
@@ -364,32 +362,38 @@ public class APTUtils {
 					assignmentImpl = (CtAssignmentImpl<?, ?>) statement;
 				}
 				
+				ASTNode node = new ASTNode(assignmentImpl);
 				boolean fetched = false;
+		
 				if(assignmentImpl.getAssigned() != null){
-					statementExpressions.put(assignmentImpl.getAssigned(), ExpressionRole.Assigned);
+					node.registerExpression(assignmentImpl.getAssigned(), ExpressionRole.Assigned);
 					fetched = true;
 				}
 				if(assignmentImpl.getAssignment() != null){
-					statementExpressions.put(assignmentImpl.getAssignment(), ExpressionRole.Assignment);
+					node.registerExpression(assignmentImpl.getAssignment(), ExpressionRole.Assignment);
 					fetched = true;
 				}
+				
 				if(fetched)
-					listOfASTNodes.put(assignmentImpl, statementExpressions);
+					listOfASTNodes.add(node);				
 			}
 			
 			else if (statement instanceof CtThrowImpl){
 				CtThrowImpl throwImpl = (CtThrowImpl) statement;
+				ASTNode node = new ASTNode(throwImpl);
+				
 				if(throwImpl.getThrownExpression() != null){
-					statementExpressions.put(throwImpl.getThrownExpression(), ExpressionRole.ThrownExpression);
-					listOfASTNodes.put(throwImpl, statementExpressions);
+					node.registerExpression(throwImpl.getThrownExpression(), ExpressionRole.ThrownExpression);
+					listOfASTNodes.add(node);
 				}
 			}
 			
 			else if (statement instanceof CtReturnImpl<?>){
 				CtReturnImpl<?> returnImp = (CtReturnImpl<?>) statement;
+				ASTNode node = new ASTNode(returnImp);
 				if(returnImp.getReturnedExpression() != null){
-					statementExpressions.put(returnImp.getReturnedExpression(), ExpressionRole.ReturnExpression);
-					listOfASTNodes.put(returnImp, statementExpressions);
+					node.registerExpression(returnImp.getReturnedExpression(), ExpressionRole.ReturnExpression);
+					listOfASTNodes.add(node);
 				}
 			}
 			
@@ -398,10 +402,11 @@ public class APTUtils {
 				if (statement instanceof CtWhileImpl){
 					
 					CtWhileImpl whileImpl = (CtWhileImpl) statement;
+					ASTNode node = new ASTNode(whileImpl);
 					
 					if(whileImpl.getLoopingExpression() != null){
-						statementExpressions.put(whileImpl.getLoopingExpression(), ExpressionRole.WhileLoopExpression);
-						listOfASTNodes.put(whileImpl, statementExpressions);
+						node.registerExpression(whileImpl.getLoopingExpression(), ExpressionRole.WhileLoopExpression);
+						listOfASTNodes.add(node);
 					}
 					
 					if(whileImpl.getBody() != null){
@@ -412,9 +417,11 @@ public class APTUtils {
 				
 				else if (statement instanceof CtDoImpl){
 					CtDoImpl doImpl = (CtDoImpl) statement;
+					ASTNode node = new ASTNode(doImpl);
+					
 					if(doImpl.getLoopingExpression() != null){
-						statementExpressions.put(doImpl.getLoopingExpression(), ExpressionRole.DoLoopExpression);
-						listOfASTNodes.put(doImpl, statementExpressions);
+						node.registerExpression(doImpl.getLoopingExpression(), ExpressionRole.DoLoopExpression);
+						listOfASTNodes.add(node);
 					}
 					
 					if(doImpl.getBody() != null){
@@ -425,10 +432,13 @@ public class APTUtils {
 				
 				else if (statement instanceof CtForImpl){
 					CtForImpl forImpl = (CtForImpl) statement;
+					ASTNode node = new ASTNode(forImpl);
+					
 					if(forImpl.getExpression() != null){
-						statementExpressions.put(forImpl.getExpression(), ExpressionRole.ForLoopExpression);
-						listOfASTNodes.put(forImpl, statementExpressions);
+						node.registerExpression(forImpl.getExpression(), ExpressionRole.ForLoopExpression);
+						listOfASTNodes.add(node);
 					}
+					
 					boolean fetched = false;
 					if(forImpl.getBody() != null){
 						statementsToInspect.add(forImpl.getBody());
@@ -449,9 +459,10 @@ public class APTUtils {
 				
 				else if (statement instanceof CtForEachImpl){
 					CtForEachImpl forEachImpl = (CtForEachImpl) statement;
+					ASTNode node = new ASTNode(forEachImpl);
 					if(forEachImpl.getExpression() != null){
-						statementExpressions.put(forEachImpl.getExpression(), ExpressionRole.ForEachExpression);
-						listOfASTNodes.put(forEachImpl, statementExpressions);
+						node.registerExpression(forEachImpl.getExpression(), ExpressionRole.ForEachExpression);
+						listOfASTNodes.add(node);
 					}
 					if(forEachImpl.getBody() != null){
 						statementsToInspect.add(forEachImpl.getBody());
@@ -462,10 +473,12 @@ public class APTUtils {
 			
 			else if (statement instanceof CtIfImpl){
 				CtIfImpl ifImpl = (CtIfImpl) statement;
+				ASTNode node = new ASTNode(ifImpl);
 				if(ifImpl.getCondition() != null){
-					statementExpressions.put(ifImpl.getCondition(), ExpressionRole.IfConditionExpression);
-					listOfASTNodes.put(ifImpl, statementExpressions);
+					node.registerExpression(ifImpl.getCondition(), ExpressionRole.IfConditionExpression);
+					listOfASTNodes.add(node);
 				}
+				
 				boolean fetched = false;
 				if(ifImpl.getThenStatement() != null){
 					statementsToInspect.add(ifImpl.getThenStatement());
@@ -475,31 +488,36 @@ public class APTUtils {
 					statementsToInspect.add(ifImpl.getElseStatement());
 					fetched = true;
 				}
+				
 				if(fetched)
 					listAllExpressions(statementsToInspect);
 			}
 			
 			else if (statement instanceof CtAssertImpl<?>){
 				CtAssertImpl<?> assertImpl = (CtAssertImpl<?>) statement;
+				ASTNode node = new ASTNode(assertImpl);
 				boolean fetched = false;
 				if(assertImpl.getAssertExpression() != null){
-					statementExpressions.put(assertImpl.getAssertExpression(), ExpressionRole.AssertEvaluationExpression);
+					node.registerExpression(assertImpl.getAssertExpression(), ExpressionRole.AssertEvaluationExpression);
 					fetched = true;
 				}
 				if(assertImpl.getExpression() != null){
-					statementExpressions.put(assertImpl.getExpression(), ExpressionRole.AssertActualExpression);
+					node.registerExpression(assertImpl.getExpression(), ExpressionRole.AssertActualExpression);
 					fetched = true;
 				}
 				if(fetched)
-					listOfASTNodes.put(assertImpl, statementExpressions);
+					listOfASTNodes.add(node);
 			}
 			
 			else if (statement instanceof CtCaseImpl<?>){
 				CtCaseImpl<?> caseImpl = (CtCaseImpl<?>) statement;
+				ASTNode node = new ASTNode(caseImpl);
+				
 				if(caseImpl.getCaseExpression() != null){
-					statementExpressions.put(caseImpl.getCaseExpression(), ExpressionRole.CaseExpression);
-					listOfASTNodes.put(caseImpl, statementExpressions);
+					node.registerExpression(caseImpl.getCaseExpression(), ExpressionRole.CaseExpression);
+					listOfASTNodes.add(node);
 				}
+				
 				if(caseImpl.getStatements() != null){
 					statementsToInspect.addAll(caseImpl.getStatements());
 					listAllExpressions(statementsToInspect);
@@ -512,25 +530,20 @@ public class APTUtils {
 			
 			else if (statement instanceof CtLocalVariableImpl<?>){
 				CtLocalVariableImpl<?> varImpl = (CtLocalVariableImpl<?>) statement;
-				System.out.println("varImpl: " + varImpl);
+				ASTNode node = new ASTNode(varImpl);
+						
 				if(varImpl.getDefaultExpression() != null){
-					statementExpressions.put(varImpl.getDefaultExpression(), ExpressionRole.LocalVarDefaultExpression);
-					System.out.println("defaultExpression: " + statementExpressions);
-					System.out.println("----------------------------------------------------");
-					System.out.println("varImpl: " + varImpl);
-					if(listOfASTNodes.containsKey(varImpl))
-						System.out.println("variable " + varImpl + " already exists with value: " + listOfASTNodes.get(varImpl));
-					listOfASTNodes.put(varImpl, statementExpressions);
-					System.out.println(listOfASTNodes);
-					System.out.println("----------------------------------------------------");
+					node.registerExpression(varImpl.getDefaultExpression(), ExpressionRole.LocalVarDefaultExpression);
+					listOfASTNodes.add(node);
 				}
 			}
 			
 			else if (statement instanceof CtSynchronizedImpl){
 				CtSynchronizedImpl syncImpl = (CtSynchronizedImpl) statement;
+				ASTNode node = new ASTNode(syncImpl);
 				if(syncImpl.getExpression() != null){
-					statementExpressions.put(syncImpl.getExpression(), ExpressionRole.SynchronizedMonitoringExpression);
-					listOfASTNodes.put(syncImpl, statementExpressions);
+					node.registerExpression(syncImpl.getExpression(), ExpressionRole.SynchronizedMonitoringExpression);
+					listOfASTNodes.add(node);
 				}
 				
 				if(syncImpl.getBlock() != null){
@@ -567,9 +580,10 @@ public class APTUtils {
 			
 			else if (statement instanceof CtSwitchImpl<?>){
 				CtSwitchImpl<?> switchImpl = (CtSwitchImpl<?>) statement;
+				ASTNode node = new ASTNode(switchImpl);
 				if(switchImpl.getSelector() != null){
-					statementExpressions.put(switchImpl.getSelector(), ExpressionRole.SwitchSelectorExpression);
-					listOfASTNodes.put(switchImpl, statementExpressions);
+					node.registerExpression(switchImpl.getSelector(), ExpressionRole.SwitchSelectorExpression);
+					listOfASTNodes.add(node);
 				}
 				if(switchImpl.getCases() != null){
 					statementsToInspect.addAll(switchImpl.getCases());
@@ -579,20 +593,23 @@ public class APTUtils {
 			
 			else if (statement instanceof CtInvocationImpl<?>){
 				CtInvocationImpl<?> invocImpl = (CtInvocationImpl<?>) statement;
+				ASTNode node = new ASTNode(invocImpl);
 				boolean fetched = false;
+				
 				if(invocImpl.getArguments() != null){
 					List<CtExpression<?>> arguments = invocImpl.getArguments();
 					for(CtExpression<?> argument : arguments){
-						statementExpressions.put(argument, ExpressionRole.InvocationArgumentExpression);
+						node.registerExpression(argument, ExpressionRole.InvocationArgumentExpression);
 					}
 					fetched = true;
 				}
+				
 				if(invocImpl.getTarget() != null){
-					statementExpressions.put(invocImpl.getTarget(), ExpressionRole.InvocationTargetExpression);
+					node.registerExpression(invocImpl.getTarget(), ExpressionRole.InvocationTargetExpression);
 					fetched = true;
 				}
 				if(fetched)
-				listOfASTNodes.put(invocImpl, statementExpressions);
+				listOfASTNodes.add(node);
 			}
 		}
 	}

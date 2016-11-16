@@ -28,7 +28,7 @@ public abstract class PtAnnotationProcessor {
 	protected String thisElementName = null;
 	protected CtTypeReference<?> thisElementType = null;
 	protected Factory thisFactory = null;
-	protected Map<CtStatement, Map<CtExpression<?>, ExpressionRole>> mapOfContainingStatements = null;
+	protected List<ASTNode> listOfContainingNodes = null;
 	
 	
 	
@@ -59,20 +59,16 @@ public abstract class PtAnnotationProcessor {
 	}
 	
 	protected void printIncludingExpressions(){
-		Set<CtStatement> statements = mapOfContainingStatements.keySet();
-		for(CtStatement statement : statements){
+		for(ASTNode node : listOfContainingNodes){
 			System.out.println("--------------------------------------------------------");
+			CtStatement statement = node.getStatement();
 			System.out.println("Inspecting statement: " + statement + ", type: " + statement.getClass());
-			Map<CtExpression<?>, ExpressionRole> mapOfExp = mapOfContainingStatements.get(statement);
-			Set<CtExpression<?>> expressions = mapOfExp.keySet();
-			
-			for(CtExpression<?> expression : expressions){
+						
+			for(int index = 0; index < node.numberOfExpressions(); index++){
+				CtExpression<?> expression = node.getExpression(index);
+				ExpressionRole role = node.getExpressionRole(index);
 				System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++");
 				System.out.print("Expression: " + expression.toString());
-				
-				String role = "";
-				role = mapOfExp.get(expression).toString();
-				
 				System.out.println(", role: " + role + ", class: " + expression.getClass());
 			}					
 		}

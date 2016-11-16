@@ -108,7 +108,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	@Override
 	protected void modifySourceCode() {
 		List<CtStatement> occurrences = APTUtils.findVarAccessOtherThanFutureDefinition(thisAnnotatedElement.getParent(CtBlock.class), thisAnnotatedElement);
-		mapOfContainingStatements = APTUtils.listAllExpressionsOfStatements(occurrences);
+		listOfContainingNodes = APTUtils.listAllExpressionsOfStatements(occurrences);
 		declareTaskIDGroup();
 		modifyArrayAccessStatements();
 	}
@@ -123,35 +123,34 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	 * future array, until they are processed and finished.   
 	 */
 	private void modifyArrayAccessStatements(){
-		Set<CtStatement> statements = mapOfContainingStatements.keySet();
 		CtStatement currentStatement = null;
 		try{
-			for(CtStatement statement : statements){
-				currentStatement = statement;
-				Set<CtExpression<?>> expressions = mapOfContainingStatements.get(statement).keySet();
-				for(CtExpression<?> expression : expressions){
-					ExpressionRole expressionRole = mapOfContainingStatements.get(statement).get(expression);
-					if(containsArrayElementSyntax(expression.toString())){
+			for(ASTNode node : listOfContainingNodes){
+				currentStatement = node.getStatement();
+				for(int index = 0; index < node.numberOfExpressions(); index++){
+					CtExpression<?> expression = node.getExpression(index);
+					ExpressionRole expressionRole = node.getExpressionRole(index);
+					if(containsSyntaxOfAnArrayElement(expression.toString())){
 						//Check if array element is on the left side of an assignment expression
 						if(expressionRole.equals(ExpressionRole.Assigned)){ 
 							//if yes, then change the expression into adding a taskID to a taskGroup if 
 							//the array element is only on the left side of the assignment (i.e., a[] = ... )
-							CtAssignmentImpl<?, ?> assignmentStmt = (CtAssignmentImpl<?, ?>) statement;
+							CtAssignmentImpl<?, ?> assignmentStmt = (CtAssignmentImpl<?, ?>) currentStatement;
 							CtExpression<?> assignmentExp = assignmentStmt.getAssignment();
-							if(!containsArrayElementSyntax(assignmentExp.toString())){
+							if(!containsSyntaxOfAnArrayElement(assignmentExp.toString())){
 								modifyAssignmentStatement(assignmentStmt);
 								break;
 							}
 							else{
 								//otherwise an array element has been referred to in this statement, so insert the wait block 
-								insertWaitForTaskGroupBlock(statement);
+								insertWaitForTaskGroupBlock(currentStatement);
 								return;
 							}							
 						}
 						else{
 							//if the expression is not an assignment expression, then array element is definitely
 							//referred to, so insert the wait block.
-							insertWaitForTaskGroupBlock(statement);
+							insertWaitForTaskGroupBlock(currentStatement);
 							return;
 						}
 					}
@@ -427,7 +426,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		return forLoop;
 	}
 	
-	private boolean containsArrayElementSyntax(String component){
+	private boolean containsSyntaxOfAnArrayElement(String component){
 		String regex = "\\b" + thisElementName + "\\b" + "\\[";
 		Pattern pattern = Pattern.compile(regex);
 		Matcher matcher = pattern.matcher(component);
