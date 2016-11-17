@@ -1,3 +1,5 @@
+
+
 package test;
 
 
@@ -23,7 +25,7 @@ public class OldAnnotation {
     }
 
     public static void main(java.lang.String[] args) {
-        pt.runtime.TaskInfoNoArgs<Integer> __VarPtTask__ = ((pt.runtime.TaskInfoNoArgs<Integer>)(pt.runtime.ParaTask.asTask(pt.runtime.ParaTask.TaskType.MULTI, 
+        pt.runtime.TaskInfoNoArgs<Integer> __VarPtTask__ = ((pt.runtime.TaskInfoNoArgs<Integer>) (pt.runtime.ParaTask.asTask(pt.runtime.ParaTask.TaskType.MULTI, 
 			(pt.functionalInterfaces.FunctorNoArgsWithReturn<Integer>)() -> test.OldAnnotation.foo3(10))));
         pt.runtime.ParaTask.registerAsyncCatch(__VarPtTask__, java.lang.InterruptedException.class, ()->{try{foo(1);}catch(Exception e){e.printStackTrace();}});
         pt.runtime.ParaTask.registerAsyncCatch(__VarPtTask__, java.lang.IllegalArgumentException.class, ()->{try{foo1(1, 2);}catch(Exception e){e.printStackTrace();}});
@@ -32,8 +34,8 @@ public class OldAnnotation {
             test.SimpleAnnotation simp = new test.SimpleAnnotation();
             simp.foo1(5);
             int[] array = new int[5];
-            for (int i = 0 ; i < 5 ; i++) {
-                pt.runtime.TaskInfoOneArg<Integer, Integer> __Var1PtTask__ = ((pt.runtime.TaskInfoOneArg<Integer, Integer>)(pt.runtime.ParaTask.asTask(pt.runtime.ParaTask.TaskType.ONEOFF, 
+            for (int i = 0; i < 5; i++) {
+                pt.runtime.TaskInfoOneArg<Integer, Integer> __Var1PtTask__ = ((pt.runtime.TaskInfoOneArg<Integer, Integer>) (pt.runtime.ParaTask.asTask(pt.runtime.ParaTask.TaskType.ONEOFF, 
 			(pt.functionalInterfaces.FunctorOneArgWithReturn<Integer, Integer>)(__iPtNonLambdaArg__) -> { try
  				 {  
 						return test.OldAnnotation.foo2(__iPtNonLambdaArg__);
@@ -46,8 +48,8 @@ public class OldAnnotation {
                 array[i] = __Var1PtTaskID__.getReturnResult();
             }
             int VarX = test.OldAnnotation.foo1(8, 5);
-            pt.runtime.TaskInfoTwoArgs<Integer, Integer, pt.runtime.TaskID<Integer>> __Var2PtTask__ = ((pt.runtime.TaskInfoTwoArgs<Integer, Integer, pt.runtime.TaskID<Integer>>)(pt.runtime.ParaTask.asTask(pt.runtime.ParaTask.TaskType.ONEOFF, 
-			(pt.functionalInterfaces.FunctorTwoArgsWithReturn<Integer, Integer, pt.runtime.TaskID<Integer>>)(__VarXPtNonLambdaArg__, __VarPtLambdaArg__) -> { try
+            pt.runtime.TaskInfoTwoArgs<Integer, Integer, int> __Var2PtTask__ = ((pt.runtime.TaskInfoTwoArgs<Integer, Integer, int>) (pt.runtime.ParaTask.asTask(pt.runtime.ParaTask.TaskType.ONEOFF, 
+			(pt.functionalInterfaces.FunctorTwoArgsWithReturn<Integer, Integer, int>)(__VarXPtNonLambdaArg__, __VarPtLambdaArg__) -> { try
  				 {  
 						return test.OldAnnotation.foo1(__VarXPtNonLambdaArg__, __VarPtLambdaArg__.getReturnResult());
  				 }catch(Exception e){
@@ -58,8 +60,8 @@ public class OldAnnotation {
             __Var2PtTask__.dependsOn(__VarPtTaskID__);
             pt.runtime.ParaTask.registerSlotToNotify(__Var2PtTask__, ()->simp.foo1(7));
             pt.runtime.TaskID<Integer> __Var2PtTaskID__ = __Var2PtTask__.start(VarX, __VarPtTaskID__);
-            pt.runtime.TaskInfoOneArg<Integer, pt.runtime.TaskID<Integer>> __Var3PtTask__ = ((pt.runtime.TaskInfoOneArg<Integer, pt.runtime.TaskID<Integer>>)(pt.runtime.ParaTask.asTask(pt.runtime.ParaTask.TaskType.ONEOFF, 
-			(pt.functionalInterfaces.FunctorOneArgWithReturn<Integer, pt.runtime.TaskID<Integer>>)(__Var2PtLambdaArg__) -> { try
+            pt.runtime.TaskInfoOneArg<Integer, int> __Var3PtTask__ = ((pt.runtime.TaskInfoOneArg<Integer, int>) (pt.runtime.ParaTask.asTask(pt.runtime.ParaTask.TaskType.ONEOFF, 
+			(pt.functionalInterfaces.FunctorOneArgWithReturn<Integer, int>)(__Var2PtLambdaArg__) -> { try
  				 {  
 						return test.OldAnnotation.foo2(__Var2PtLambdaArg__.getReturnResult());
  				 }catch(Exception e){

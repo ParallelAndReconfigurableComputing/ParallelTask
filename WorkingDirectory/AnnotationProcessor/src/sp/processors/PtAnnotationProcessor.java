@@ -14,6 +14,7 @@ import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtVariableAccess;
 import spoon.reflect.declaration.CtAnnotation;
+import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
 
 /**
@@ -75,12 +76,11 @@ public abstract class PtAnnotationProcessor {
 	}
 	
 	protected void printVarAccessComponents(CtVariableAccess<?> variableAccess){
-		System.out.println("Signature: " + variableAccess.getSignature().toString());
 		System.out.println("Variable: " + variableAccess.getVariable().toString());
 	}
 	
 	protected void printInvocationComponents(CtInvocation<?> invocation){
-		System.out.println("Signature: " + invocation.getSignature());
+		System.out.println("Signature: " + invocation.getExecutable().getSignature());
 		System.out.println("label: " + invocation.getLabel());
 		System.out.println("Arguments: " + invocation.getArguments());
 		System.out.println("Executable: " + invocation.getExecutable());
@@ -94,7 +94,6 @@ public abstract class PtAnnotationProcessor {
 	 * element, in order to help with identifying the components
 	 */
 	protected void printLocalVariableComponents(CtLocalVariable<?> localVariable){
-		System.out.println("Signature: " + localVariable.getSignature());
 		System.out.println("SimpleName: " + localVariable.getSimpleName());
 		System.out.println("Class: " + localVariable.getClass().toString());
 		System.out.println("Default Expression: " + localVariable.getDefaultExpression());

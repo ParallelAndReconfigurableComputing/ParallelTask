@@ -26,6 +26,9 @@ import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtUnaryOperator;
 import spoon.reflect.code.CtVariableAccess;
 import spoon.reflect.declaration.CtAnnotation;
+import spoon.reflect.declaration.CtClass;
+import spoon.reflect.declaration.CtExecutable;
+import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.reference.CtVariableReference;
@@ -356,26 +359,15 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 //----------------------------------------------------HELPER METHODS---------------------------------------------------
 		
 	private boolean hasTaskAnnotation(CtInvocation<?> methodInvocation){
-		CtInvocationImpl<?> invocation = (CtInvocationImpl<?>) methodInvocation;
-		System.out.println("here");
-
-		Method executable = invocation.getExecutable().getActualMethod();
-		System.out.println("here");
-		System.out.println("method: " + executable);
-		Annotation[] executableAnnotaitons = executable.getAnnotations();
-		
-		System.out.println("invocation annotations: " + executableAnnotaitons);
-//		Annotation[] annotations = methodInvocation.getExecutable().getActualMethod().getAnnotations();
-//		System.out.println("annotation is: " + annotations.toString());
-//		for(Annotation anno : annotations){
-//			//Annotation annotation = anno.getActualAnnotation();
-//			Annotation annotation = anno;
-//			if(annotation instanceof Task){
-//				System.out.println("returning true");
-//				return true;
-//			}
-//		}
-//		return false;
+		CtExecutableReference<?> executableReference = methodInvocation.getExecutable();
+		CtExecutable<?> executable = executableReference.getDeclaration();
+		List<CtAnnotation<? extends Annotation>> annotations = executable.getAnnotations();
+		for(CtAnnotation<? extends Annotation> annotation : annotations){
+			Annotation actualAnnotation  = annotation.getActualAnnotation();
+			if(actualAnnotation instanceof Task){
+				return true;
+			}
+		}
 		return false;
 	}
 	

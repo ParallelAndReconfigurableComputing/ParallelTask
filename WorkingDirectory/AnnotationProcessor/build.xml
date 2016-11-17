@@ -10,7 +10,7 @@
 	<property name="classes.dir"  value="${dist.dir}/classes" />
 	<property name="lib.dir"      value="libs" />
 	
-	<property name="spoon.jar"    value="${lib.dir}/spoon-core-5.0.2-jar-with-dependencies.jar"/>
+	<property name="spoon.jar"    value="${lib.dir}/spoon-core-5.4.0-jar-with-dependencies.jar"/>
 	<property name="PT.jar"		  value="${lib.dir}/PTLambda-Runtime-1.1.0.jar"/>
 	<property name="APTJarName"     value="@PT-1.0.0" />
 
