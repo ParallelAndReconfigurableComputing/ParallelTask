@@ -56,7 +56,8 @@ public class CollectionWrapperTest {
 		
 		for(int counter = 0; counter < myList.size(); counter++){
 			int num = myList.get(foox(counter) + foo(0));
-			System.out.println("get(Index): " + myList.get(foo(counter)) + ", and num: " + num);
+			int num2 = myList.get(foo(12));
+			System.out.println("get(Index): " + myList.get(foo(counter)) + ", and num: " + (num + num2));
 		}
 	}
 }

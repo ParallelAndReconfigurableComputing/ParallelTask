@@ -29,9 +29,7 @@ public class CollectionWrapperTest {
         pt.runtime.TaskInfoNoArgs<Integer> __specialNumPtTask__ = ((pt.runtime.TaskInfoNoArgs<Integer>)(pt.runtime.ParaTask.asTask(pt.runtime.ParaTask.TaskType.ONEOFF, 
 			(pt.functionalInterfaces.FunctorNoArgsWithReturn<Integer>)() -> test.CollectionWrapperTest.simulateWork((-2)))));
         pt.runtime.TaskID<Integer> __specialNumPtTaskID__ = __specialNumPtTask__.start();
-        pt.runtime.ParaTask.processingInParallel(true);
-        java.util.List<java.lang.Integer> __myListPtTask__ = pt.runtime.ParaTask.getPtWrapper(new java.util.ArrayList<java.lang.Integer>());
-        pt.wrappers.PtListWrapper<java.lang.Integer> myList = ((pt.wrappers.PtListWrapper<java.lang.Integer>)(__myListPtTask__));
+        java.util.List<java.lang.Integer> myList = pt.runtime.ParaTask.getPtWrapper(new java.util.ArrayList<java.lang.Integer>());
         for (int i = 0 ; i < 20 ; i++) {
             pt.runtime.TaskInfoOneArg<Integer, Integer> __numPtTask__ = ((pt.runtime.TaskInfoOneArg<Integer, Integer>)(pt.runtime.ParaTask.asTask(pt.runtime.ParaTask.TaskType.ONEOFF, 
 			(pt.functionalInterfaces.FunctorOneArgWithReturn<Integer, Integer>)(__iPtNonLambdaArg__) -> test.CollectionWrapperTest.simulateWork(__iPtNonLambdaArg__))));
@@ -46,7 +44,8 @@ public class CollectionWrapperTest {
         myList.add((__specialNumPtTaskID__.getReturnResult() + 2));
         for (int counter = 0 ; counter < (myList.size()) ; counter++) {
             int num = myList.get(((test.CollectionWrapperTest.foox(counter)) + (test.CollectionWrapperTest.foo(0))));
-            java.lang.System.out.println(((("get(Index): " + (myList.get(test.CollectionWrapperTest.foo(counter)))) + ", and num: ") + num));
+            int num2 = myList.get(test.CollectionWrapperTest.foo(12));
+            java.lang.System.out.println(((("get(Index): " + (myList.get(test.CollectionWrapperTest.foo(counter)))) + ", and num: ") + (num + num2)));
         }
     }
 }

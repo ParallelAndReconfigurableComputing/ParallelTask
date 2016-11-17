@@ -1,10 +1,12 @@
 package sp.processors;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.eclipse.jdt.core.compiler.InvalidInputException;
@@ -53,8 +55,8 @@ import spoon.support.reflect.code.CtVariableAccessImpl;
 public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 	
 	private List<CtVariableAccess<?>> variableAccessArgumentsToBeProcessed = null;
-	private List<CtInvocation<?>> invocationsToBeProcessed = null;
-	private Map<CtStatement, List<CtInvocation<?>>> invocationArguments = null;
+	private List<CtInvocation<?>> potentialAsynchronousInvocations = null;
+	private Map<CtStatement, List<CtInvocation<?>>> invocationsToBeProcessed = null;
 	private Future  thisFutureAnnotation = null;
 	private boolean insideCollectionStatement = false;
 	private int     encounteredInvocationArguments = 0;
@@ -75,8 +77,8 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 			return;
 		inspectElement();
 		findCollectionInvocationArguments();
-		printVariableAccessArguments();
-		printStatementInvocations();
+		//printVariableAccessArguments();
+		//printStatementInvocations();
 		modifySourceCode();
 	}
 	
@@ -125,11 +127,8 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 	
 	private void modifyCollectionDeclaration(){
 		insertStatementBeforeDeclaration();
-		//System.out.println("pre-statement modification done");
 		changeDeclarationName();
-		//System.out.println("Statement modification done");
 		insertStatementAfterDeclaration();
-		//System.out.println("Post statement modification done");
 	}
 		
 	/*
@@ -158,20 +157,16 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 
 		
 		variableAccessArgumentsToBeProcessed = new ArrayList<>(); //lists all variable access arguments in an invocation on collection wrapper, that may comply with the second case
-		invocationArguments = new HashMap<>(); //lists all invocations encountered within an invocation on collection wrapper, that may comply with first and third cases 
+		invocationsToBeProcessed = new HashMap<>(); //lists all invocations encountered within an invocation on collection wrapper, that may comply with first and third cases 
 		
 		for(ASTNode node : listOfContainingNodes){
 			CtStatement statement = node.getStatement();
-//			System.out.println("----------------------------------");
-//			System.out.println("inspecting statement: " + statement);
-//			System.out.println("Expressions: ");
-//			for(int index = 0; index < )
 
 			/*
 			 * collects the invocations that are used within an invocation on the collection (e.g., myList.add(foo(a) + foox(b)); )
 			 * for further investigations, if any of the methods is supposed to be processed asynchronously (i.e., has @Task annotation).
 			*/
-			invocationsToBeProcessed = new ArrayList<>(); 
+			potentialAsynchronousInvocations = new ArrayList<>(); 
 			/*
 			 * indicates if we have found an invocation statement on the collection, 
 			 * in which case, the arguments are collected to see if they fit within 
@@ -203,11 +198,10 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 			}
 			
 			// if there are invocations within the statement that must be inspected, then add them to the list. 
-			if(invocationsToBeProcessed.size() != 0){
-				System.out.println("adding " + invocationsToBeProcessed + " for " + statement);
-				invocationArguments.put(statement, invocationsToBeProcessed);
+			if(potentialAsynchronousInvocations.size() != 0){
+				invocationsToBeProcessed.put(statement, potentialAsynchronousInvocations);
 			}
-		}	
+		}
 	}
 	
 	/*
@@ -248,7 +242,6 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 				}
 			}			
 		}
-		System.out.println("modifyVarAccessExpression done");
 	}
 	
 	/*
@@ -299,17 +292,17 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 	 * That is, it sends invocations one by one to the 'modifyWithInvocation' method.
 	 */
 	private void modifyInvocationExpressions(){
-		Set<CtStatement> statements = invocationArguments.keySet();
+		Set<CtStatement> statements = invocationsToBeProcessed.keySet();
 		for(CtStatement statement : statements){
-			int annotatedInvocations = 0;
-			List<CtInvocation<?>> invocations = invocationArguments.get(statement);
+			int numOfAnnotatedInvocations = 0;
+			List<CtInvocation<?>> invocations = invocationsToBeProcessed.get(statement);
 		
 			for(CtInvocation<?> invocation : invocations){
 				if(hasTaskAnnotation(invocation)){
-					annotatedInvocations++;
+					numOfAnnotatedInvocations++;
 				}			
 			}
-			modifyWithInvocation(annotatedInvocations, statement, invocations);
+			modifyWithInvocation(numOfAnnotatedInvocations, statement, invocations);
 		}
 	}
 	
@@ -319,7 +312,7 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 	 * call is the only argument; otherwise the program blocks until the result is back for that asynchronous task. 
 	 * This is the case only when the method is annotated with @Task. 
 	 */
-	private void modifyWithInvocation(int annotatedInvocations, CtStatement parentStatement, List<CtInvocation<?>> invocations){
+	private void modifyWithInvocation(int numOfAnnotatedInvocations, CtStatement parentStatement, List<CtInvocation<?>> invocations){
 		for(CtInvocation<?> invocation : invocations){
 			if(hasTaskAnnotation(invocation)){
 				newLocalVariableIndex++;
@@ -343,8 +336,12 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 				CtBlock<?> parentBlock = thisAnnotatedElement.getParent(CtBlock.class);
 				parentBlock.insertBefore(filter, newLocalVariable);
 				
+				System.out.println("new local variable: " + newLocalVariable);
+
+				
 				InvocationProcessor processor = new InvocationProcessor(thisFactory, thisFutureAnnotation, newLocalVariable);
 				processor.process();
+				
 				
 				CtVariableAccess<?> varAccess = thisFactory.Core().createVariableRead();
 				CtVariableReference varReference = thisFactory.Core().createFieldReference();
@@ -358,14 +355,27 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 	
 //----------------------------------------------------HELPER METHODS---------------------------------------------------
 		
-	private boolean hasTaskAnnotation(CtInvocation<?> methodInovcation){
-		List<CtAnnotation<? extends Annotation>> annotations = methodInovcation.getExecutable().getAnnotations();
-		for(CtAnnotation<? extends Annotation> anno : annotations){
-			Annotation annotation = anno.getActualAnnotation();
-			if(annotation instanceof Task){
-				return true;
-			}
-		}
+	private boolean hasTaskAnnotation(CtInvocation<?> methodInvocation){
+		CtInvocationImpl<?> invocation = (CtInvocationImpl<?>) methodInvocation;
+		System.out.println("here");
+
+		Method executable = invocation.getExecutable().getActualMethod();
+		System.out.println("here");
+		System.out.println("method: " + executable);
+		Annotation[] executableAnnotaitons = executable.getAnnotations();
+		
+		System.out.println("invocation annotations: " + executableAnnotaitons);
+//		Annotation[] annotations = methodInvocation.getExecutable().getActualMethod().getAnnotations();
+//		System.out.println("annotation is: " + annotations.toString());
+//		for(Annotation anno : annotations){
+//			//Annotation annotation = anno.getActualAnnotation();
+//			Annotation annotation = anno;
+//			if(annotation instanceof Task){
+//				System.out.println("returning true");
+//				return true;
+//			}
+//		}
+//		return false;
 		return false;
 	}
 	
@@ -380,14 +390,21 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 	
 	protected void printStatementInvocations(){
 		System.out.println("Printing Invocations That Were Found In Statements");
+		
 		if(invocationsToBeProcessed.size() == 0){
 			System.out.println("no invocations to be processed");
 			return;
 		}
-		for(CtInvocation<?> invocation : invocationsToBeProcessed){		
-			System.out.println("----------------------------------------------------");
-			System.out.println(invocation);
-			System.out.println("----------------------------------------------------");		
+		
+		for(Entry<CtStatement, List<CtInvocation<?>>> entry : invocationsToBeProcessed.entrySet()){	
+			List<CtInvocation<?>> invocations = entry.getValue();
+			CtStatement statement = entry.getKey();
+			
+			for(CtInvocation<?> invocation : invocations){
+				System.out.println("----------------------------------------------------");
+				System.out.println("Invocation: " + invocation + " from statement: " + statement);
+				System.out.println("----------------------------------------------------");	
+			}
 		}
 	}
 	
@@ -402,7 +419,6 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 	}
 	
 	private void insertStatementBeforeDeclaration(){
-		System.out.println("Inserting statement before collection declaration");
 		CtInvocation invokePT = thisFactory.Core().createInvocation();
 		CtExecutableReference executable = thisFactory.Core().createExecutableReference();
 		CtCodeSnippetExpression invocationTarget = thisFactory.Core().createCodeSnippetExpression();
@@ -503,12 +519,12 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 				if(target != null){//if method call is on an object
 					if(!targetIsThisElement(target)){
 						//System.out.println("invocation: " + invocation + " added");
-						invocationsToBeProcessed.add(invocation);
+						potentialAsynchronousInvocations.add(invocation);
 					}
 				}
 				else{
 					//System.out.println("invocation: " + invocation + " added");
-					invocationsToBeProcessed.add(invocation);
+					potentialAsynchronousInvocations.add(invocation);
 				}
 			}
 			
