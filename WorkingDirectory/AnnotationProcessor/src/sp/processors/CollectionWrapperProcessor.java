@@ -320,37 +320,38 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 			if(hasTaskAnnotation(invocation)){
 				newLocalVariableIndex++;
 				CtLocalVariable<?> newLocalVariable = thisFactory.Core().createLocalVariable();
-
+				
+				//declare a variable that receives the result of the invocaiton. 
 				CtTypeReference newVariableType = invocation.getExecutable().getType();
 				newLocalVariable.setType(newVariableType);
 			
 				String newVariableName = invocation.getExecutable().getSimpleName() + "_" + newLocalVariableIndex;
-				String newVariableTaskIDName = "";
-				
-				if(!(invocation.getParent() instanceof CtInvocation<?>))
-					newVariableTaskIDName = APTUtils.getTaskIDName(newVariableName)+".getReturnResult()";
-				else
-					newVariableTaskIDName = APTUtils.getTaskIDName(newVariableName);
-				
 				newLocalVariable.setSimpleName(newVariableName);	
+				
+				//This order of replacement is very important, otherwise incorrect expressions will be replaced. 
+				CtVariableAccess<?> replacingVariable = thisFactory.Core().createVariableRead();
+				replacingVariable.setVariable((CtVariableReference)newLocalVariable.getReference());
+				invocation.replace(replacingVariable);
+			
+				
 				newLocalVariable.setDefaultExpression((CtExpression)invocation);
-				
-				StatementMatcherFilter<CtStatement> filter = new StatementMatcherFilter<CtStatement>(parentStatement);
-				CtBlock<?> parentBlock = thisAnnotatedElement.getParent(CtBlock.class);
-				parentBlock.insertBefore(filter, newLocalVariable);
-				
-				System.out.println("new local variable: " + newLocalVariable);
-
+				parentStatement.insertBefore(newLocalVariable);
 				
 				InvocationProcessor processor = new InvocationProcessor(thisFactory, thisFutureAnnotation, newLocalVariable);
 				processor.process();
 				
-				
-				CtVariableAccess<?> varAccess = thisFactory.Core().createVariableRead();
-				CtVariableReference varReference = thisFactory.Core().createFieldReference();
-				varReference.setSimpleName(newVariableTaskIDName);
-				varAccess.setVariable(varReference);
-				invocation.replace(varAccess);
+				if(replacingVariable.getParent() instanceof CtInvocation<?>){
+					String newTaskIDName = APTUtils.getTaskIDName(newVariableName);
+					CtVariableReference newTaskIDReference = thisFactory.Core().createLocalVariableReference();
+					newTaskIDReference.setSimpleName(newTaskIDName);
+					replacingVariable.setVariable(newTaskIDReference);
+				}
+					
+//				if(!(invocation.getParent() instanceof CtInvocation<?>))
+//					newVariableTaskIDName = APTUtils.getTaskIDName(newVariableName)+".getReturnResult()";
+//				else
+//					newVariableTaskIDName = APTUtils.getTaskIDName(newVariableName);
+
 			}
 		}		
 	}
@@ -369,7 +370,7 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 			}
 		}
 		return false;
-	}
+	}	
 	
 	protected void printVariableAccessArguments(){
 		System.out.println("Printing Variable Access Expressions");

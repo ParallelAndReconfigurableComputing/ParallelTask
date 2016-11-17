@@ -47,18 +47,18 @@ public class CollectionWrapperTest {
         myList.add(__specialNumPtTaskID__);
         myList.add((__specialNumPtTaskID__.getReturnResult() + 2));
         for (int counter = 0; counter < (myList.size()); counter++) {
-            pt.runtime.TaskInfoNoArgs<Integer> __foo_2PtTask__ = __foo_2PtTaskID__.getReturnResult();
+            pt.runtime.TaskInfoNoArgs<Integer> __foo_2PtTask__ = ((pt.runtime.TaskInfoNoArgs<Integer>) (pt.runtime.ParaTask.asTask(pt.runtime.ParaTask.TaskType.ONEOFF, 
+			(pt.functionalInterfaces.FunctorNoArgsWithReturn<Integer>)() -> test.CollectionWrapperTest.foo(0))));
             pt.runtime.TaskID<Integer> __foo_2PtTaskID__ = __foo_2PtTask__.start();
-            int num = myList.get(((test.CollectionWrapperTest.foox(counter)) + ((pt.runtime.TaskInfoNoArgs<Integer>) (pt.runtime.ParaTask.asTask(pt.runtime.ParaTask.TaskType.ONEOFF, 
-			(pt.functionalInterfaces.FunctorNoArgsWithReturn<Integer>)() -> test.CollectionWrapperTest.foo(0))))));
-            pt.runtime.TaskInfoNoArgs<Integer> __foo_3PtTask__ = __foo_3PtTaskID__;
+            int num = myList.get(((test.CollectionWrapperTest.foox(counter)) + __foo_2PtTaskID__.getReturnResult()));
+            pt.runtime.TaskInfoNoArgs<Integer> __foo_3PtTask__ = ((pt.runtime.TaskInfoNoArgs<Integer>) (pt.runtime.ParaTask.asTask(pt.runtime.ParaTask.TaskType.ONEOFF, 
+			(pt.functionalInterfaces.FunctorNoArgsWithReturn<Integer>)() -> test.CollectionWrapperTest.foo(12))));
             pt.runtime.TaskID<Integer> __foo_3PtTaskID__ = __foo_3PtTask__.start();
-            int num2 = myList.get(((pt.runtime.TaskInfoNoArgs<Integer>) (pt.runtime.ParaTask.asTask(pt.runtime.ParaTask.TaskType.ONEOFF, 
-			(pt.functionalInterfaces.FunctorNoArgsWithReturn<Integer>)() -> test.CollectionWrapperTest.foo(12)))));
-            pt.runtime.TaskInfoOneArg<Integer, Integer> __foo_1PtTask__ = __foo_1PtTaskID__;
+            int num2 = myList.get(__foo_3PtTaskID__);
+            pt.runtime.TaskInfoOneArg<Integer, Integer> __foo_1PtTask__ = ((pt.runtime.TaskInfoOneArg<Integer, Integer>) (pt.runtime.ParaTask.asTask(pt.runtime.ParaTask.TaskType.ONEOFF, 
+			(pt.functionalInterfaces.FunctorOneArgWithReturn<Integer, Integer>)(__counterPtNonLambdaArg__) -> test.CollectionWrapperTest.foo(__counterPtNonLambdaArg__))));
             pt.runtime.TaskID<Integer> __foo_1PtTaskID__ = __foo_1PtTask__.start(counter);
-            java.lang.System.out.println(((("get(Index): " + (myList.get(((pt.runtime.TaskInfoOneArg<Integer, Integer>) (pt.runtime.ParaTask.asTask(pt.runtime.ParaTask.TaskType.ONEOFF, 
-			(pt.functionalInterfaces.FunctorOneArgWithReturn<Integer, Integer>)(__counterPtNonLambdaArg__) -> test.CollectionWrapperTest.foo(__counterPtNonLambdaArg__))))))) + ", and num: ") + (num + num2)));
+            java.lang.System.out.println(((("get(Index): " + (myList.get(__foo_1PtTaskID__))) + ", and num: ") + (num + num2)));
         }
     }
 }

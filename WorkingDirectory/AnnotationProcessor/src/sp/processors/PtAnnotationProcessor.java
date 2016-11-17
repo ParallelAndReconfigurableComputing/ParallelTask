@@ -8,6 +8,7 @@ import java.util.Set;
 import sp.annotations.Future;
 import sp.processors.APTUtils.ExpressionRole;
 import spoon.reflect.factory.Factory;
+import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtLocalVariable;
@@ -45,6 +46,20 @@ public abstract class PtAnnotationProcessor {
 	protected abstract void modifySourceCode(); 
 	
 //----------------------------------------------------HELPER METHODS---------------------------------------------------
+	
+	protected CtStatement getParentInEnclosingBlock(CtExpression<?> expression){
+		CtStatement parentStatement = expression.getParent(CtStatement.class);
+		while(!(parentStatement.getParent() instanceof CtBlock))
+			parentStatement = parentStatement.getParent(CtStatement.class);
+		return parentStatement;
+	}
+	
+	protected CtStatement getParentInEnclosingBlock(CtStatement statement){
+		CtStatement parentStatement = statement;
+		while(!(parentStatement.getParent() instanceof CtBlock))
+			parentStatement = parentStatement.getParent(CtStatement.class);
+		return parentStatement;
+	}
 
 	protected Future hasFutureAnnotation(CtStatement declarationStatement){
 		//CtLocalVariable<?> declarationStatement = (CtLocalVariable<?>) statement;

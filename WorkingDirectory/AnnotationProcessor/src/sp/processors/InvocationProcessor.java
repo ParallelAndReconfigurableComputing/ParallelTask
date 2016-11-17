@@ -236,9 +236,10 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 					
 				CtLocalVariable<?> declaration = (CtLocalVariable<?>)APTUtils.getDeclarationStatement(thisAnnotatedElement, origName);
 				CtTypeReference taskIDType = getTaskIDType(declaration);
-					
+				
 				varAccess.getVariable().setSimpleName(APTUtils.getLambdaArgName(origName)+APTUtils.getResultSyntax());
-				varAccess.setType(taskIDType);					
+				varAccess.getVariable().setType(taskIDType);					
+				
 				argumentsAndTypes.put(APTUtils.getLambdaArgName(origName), varAccess.getType());
 			}
 			else{
