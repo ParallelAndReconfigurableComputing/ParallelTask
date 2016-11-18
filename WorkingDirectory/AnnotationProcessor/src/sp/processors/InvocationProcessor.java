@@ -56,7 +56,6 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 	private String thisTaskInfoName = null;
 	private String thisTaskType = null;
 	private int thisTaskCount = 0;
-	private CtTypeReference<?> thisElementReturnType = null;
 	private Set<String> dependencies = null;
 	private Set<String> handlers = null;
 	private Map<String, CtTypeReference<?>> argumentsAndTypes = null;
@@ -74,7 +73,7 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 		thisFutureAnnotation = future;
 		thisAnnotatedElement = annotatedElement;
 		thisElementName = annotatedElement.getSimpleName();
-		thisElementReturnType = annotatedElement.getType();
+		thisElementType = annotatedElement.getType();
 		thisTaskIDName = APTUtils.getTaskIDName(thisElementName);
 		thisTaskInfoName = APTUtils.getTaskName(thisElementName);
 		thisFactory = factory;
@@ -558,7 +557,7 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 	 * Figures out the generic type set for this TaskInfo object. 
 	 */
 	private String getTaskInfoType(){
-		String returnPhase = (thisElementReturnType.toString().contains("Void")) ? "Void" : APTUtils.getReturnType(thisElementReturnType.toString());
+		String returnPhase = (thisElementType.toString().contains("Void")) ? "Void" : APTUtils.getReturnType(thisElementType.toString());
 		String taskInfoType = APTUtils.getTaskInfoSyntax() + getNumArgs() + "<" + returnPhase;
 		Set<String> argumentNames = argumentsAndTypes.keySet();
 		for(String argumentName : argumentNames){
@@ -576,7 +575,7 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 	 * instead, the functor name is appended with "NoReturn" or "WithReturn". 
 	 */
 	private String getFunctorType(){
-		String functorReturnPhrase = (thisElementReturnType.toString().contains("Void")) ? "NoReturn<" : ("WithReturn<"+APTUtils.getReturnType(thisElementReturnType.toString()));
+		String functorReturnPhrase = (thisElementType.toString().contains("Void")) ? "NoReturn<" : ("WithReturn<"+APTUtils.getReturnType(thisElementType.toString()));
 		String functorName = APTUtils.getFunctorSyntax() + getNumArgs() + functorReturnPhrase;
 		if(!(functorName.contains("NoReturn") || functorName.contains("NoArgsWithReturn")))
 			functorName += ", ";
@@ -644,7 +643,7 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 		String returnStatement = "";
 		String catchReturnStmt = "";
 		
-		if(!thisElementReturnType.toString().contains("Void")){
+		if(!thisElementType.toString().contains("Void")){
 			returnStatement = "return ";
 			catchReturnStmt = "\t\t\t\t\t\treturn null; \n";
 		}

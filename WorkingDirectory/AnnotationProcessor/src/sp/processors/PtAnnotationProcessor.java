@@ -1,6 +1,8 @@
 package sp.processors;
 
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,8 +33,14 @@ public abstract class PtAnnotationProcessor {
 	protected CtTypeReference<?> thisElementType = null;
 	protected Factory thisFactory = null;
 	protected List<ASTNode> listOfContainingNodes = null;
+	protected List<String> listOfTypesForReduction = null;
+	protected String thisElementReductionString = null;
+	private Map<String, List<String>> typeToAvailableReductions = null;
 	
-	
+	protected PtAnnotationProcessor(){
+		initializeReductionMap();
+		
+	}
 	
 	/**
 	 * each sub-class implements this method, as a starting
@@ -44,6 +52,25 @@ public abstract class PtAnnotationProcessor {
 	 * each sub-class modifies statements in its own way!
 	 */
 	protected abstract void modifySourceCode(); 
+	
+	protected void breakDownTypesForReduction(){
+		String typeString = thisElementType.toString();
+		typeString = APTUtils.getType(typeString);
+		
+		if(typeString.contains("<") && typeString.contains(">")){
+			processAggregateType(typeString);
+		}else{
+			processPrimitiveType(typeString);
+		}
+	}
+	
+	protected void processPrimitiveType(String typeString){
+		
+	}
+	
+	protected void processAggregateType(String typeString){
+		
+	}
 	
 //----------------------------------------------------HELPER METHODS---------------------------------------------------
 	
@@ -117,4 +144,22 @@ public abstract class PtAnnotationProcessor {
 		System.out.println("Reference Type: " + localVariable.getReferencedTypes().toString());
 		System.out.println("Type: " + localVariable.getType().toString());
 	}		
+	
+	private void initializeReductionMap(){
+		//values added to the lists are all small case, because user input is turned into lower-case
+		//when processed, to reduce to chance of incompatibility.
+		typeToAvailableReductions = new HashMap<>();
+		List<String> primitiveReductions = new ArrayList<>();
+		primitiveReductions.add("sum"); primitiveReductions.add("mult"); 
+		primitiveReductions.add("min"); primitiveReductions.add("max");
+		
+		List<String> bitWise = new ArrayList<>();
+		bitWise.add("bitor"); bitWise.add("bitand"); bitWise.add("bitxor");
+		
+		List<String> bool = new ArrayList<>();
+		bool.add("or"); bool.add("and"); bool.add("xor");
+		
+		List<String> aggregate = new ArrayList<>();
+		aggregate.add("union"); aggregate.add("intersection");
+	}
 }

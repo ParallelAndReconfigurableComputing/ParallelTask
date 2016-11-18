@@ -65,7 +65,6 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 	private int     encounteredInvocationArguments = 0;
 	private int     newLocalVariableIndex = 0;
 	private CtTypeReference<?> thisCollectionGenericType = null;
-	private CtTypeReference<?> thisCollectionType = null;
 		
 	public CollectionWrapperProcessor(Factory factory, Future future, CtLocalVariable<?> annotatedElement){
 		thisAnnotatedElement = annotatedElement;
@@ -91,7 +90,7 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 		collectionType = APTUtils.getType(collectionType);
 		thisCollectionGenericType = thisFactory.Core().createTypeReference();
 		thisCollectionGenericType.setSimpleName(collectionType);
-		thisCollectionType = thisAnnotatedElement.getType();
+		thisElementType = thisAnnotatedElement.getType();
 	}
 	
 	
@@ -463,7 +462,7 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 	}	
 	
 	private String getCollectionType(){
-		String currentType = thisCollectionType.toString();
+		String currentType = thisElementType.toString();
 		if(currentType.contains("List"))
 			return APTUtils.getListWrapperSyntax();
 		else if (currentType.contains("Set"))

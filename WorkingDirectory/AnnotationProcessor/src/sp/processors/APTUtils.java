@@ -55,21 +55,21 @@ public class APTUtils {
 		AssertEvaluationExpression, AssertActualExpression, CaseExpression, LocalVarDefaultExpression,
 		SwitchSelectorExpression, InvocationArgumentExpression, InvocationTargetExpression, SynchronizedMonitoringExpression};
 		
-	private static Map<String, String> primitiveMap = new HashMap<String, String>();
+	private static Map<String, String> primitiveTypesMap = new HashMap<String, String>();
 	private static List<ASTNode> listOfASTNodes = null;
 
 	static {
-		primitiveMap.put("int", "Integer");
-		primitiveMap.put("short", "Short");
-		primitiveMap.put("long", "Long");
-		primitiveMap.put("double", "Double");
-		primitiveMap.put("boolean", "Boolean");
-		primitiveMap.put("float", "Float");
-		primitiveMap.put("byte", "Byte");
+		primitiveTypesMap.put("int", "Integer");
+		primitiveTypesMap.put("short", "Short");
+		primitiveTypesMap.put("long", "Long");
+		primitiveTypesMap.put("double", "Double");
+		primitiveTypesMap.put("boolean", "Boolean");
+		primitiveTypesMap.put("float", "Float");
+		primitiveTypesMap.put("byte", "Byte");
 	}
 
 	public static String getType(String type) {
-		String newType = primitiveMap.get(type);
+		String newType = primitiveTypesMap.get(type);
 		if (newType != null)
 			return newType;
 		return type;
