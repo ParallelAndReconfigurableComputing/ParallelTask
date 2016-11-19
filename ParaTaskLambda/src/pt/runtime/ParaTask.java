@@ -77,7 +77,7 @@ public class ParaTask {
 //	}
 			
 	//private static int threadPoolSize = Runtime.getRuntime().availableProcessors();
-	private static PTScheduleType scheduleType = null;
+	private static PTSchedulingPolicy scheduleType = null;
 	private static boolean isInitialized = false;
 	private static boolean paraTaskStartedWorking = false;
 	private static boolean processInParallel = false;
@@ -103,7 +103,7 @@ public class ParaTask {
 	 * @author Nasser Giacaman
 	 * @author Oliver Sinnen
 	 */
-	public static enum PTScheduleType { 
+	public static enum PTSchedulingPolicy { 
 		/**
 		 * Tasks are queued to a shared global queue and are executed using a first in first out policy. 
 		 */
@@ -195,7 +195,7 @@ public class ParaTask {
      * @param type The schedule to use.
      * @return boolean <code>true</code> if scheduling type is changed successfully, otherwise <code>false</code>.
      */
-    public static boolean setSchedulingType(PTScheduleType type) {
+    public static boolean setSchedulingType(PTSchedulingPolicy type) {
        if (isInitialized)
     		return false;
     	scheduleType = type;
@@ -206,7 +206,7 @@ public class ParaTask {
      * Returns the schedule being used in the runtime.  
      * @return		The schedule being used.
      */
-    public static PTScheduleType getScheduleType() {
+    public static PTSchedulingPolicy getScheduleType() {
     	return scheduleType;
     }
     
@@ -248,15 +248,15 @@ public class ParaTask {
 	 */
 	public static boolean init(){
 		if (scheduleType == null)
-			return init(PTScheduleType.MixedSchedule);
+			return init(PTSchedulingPolicy.MixedSchedule);
 		return init(scheduleType);
 	}
 	
-	public static boolean init(PTScheduleType scheduleType, int numberOfThreads){
+	public static boolean init(PTSchedulingPolicy scheduleType, int numberOfThreads){
 		return init(scheduleType, ThreadPoolType.ALL, numberOfThreads);
 	}
 	
-	public static boolean init(PTScheduleType scheduleType){
+	public static boolean init(PTSchedulingPolicy scheduleType){
 		if(!setSchedulingType(scheduleType))
 			return false;
 		return initializeParaTask();
@@ -269,12 +269,12 @@ public class ParaTask {
 	public static boolean init(ThreadPoolType threadPoolType, int numberOfThreads){
 		if(!setThreadPoolSize(threadPoolType, numberOfThreads))
 			return false;
-		if(!setSchedulingType(PTScheduleType.MixedSchedule))
+		if(!setSchedulingType(PTSchedulingPolicy.MixedSchedule))
 			return false;
 		return initializeParaTask();
 	}
 	
-	public static boolean init(PTScheduleType scheduleType, ThreadPoolType threadPoolType, int numberOfThreads){
+	public static boolean init(PTSchedulingPolicy scheduleType, ThreadPoolType threadPoolType, int numberOfThreads){
 		if(!setSchedulingType(scheduleType))
 			return false;
 		if(!setThreadPoolSize(threadPoolType, numberOfThreads))
