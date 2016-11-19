@@ -1,11 +1,11 @@
 package sp.processors;
 
 import java.lang.annotation.Annotation;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Map.Entry;
+import pu.RedLib.ShortSum;
 
 import sp.annotations.Future;
 import sp.processors.APTUtils.ExpressionRole;
@@ -17,7 +17,6 @@ import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtVariableAccess;
 import spoon.reflect.declaration.CtAnnotation;
-import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
 
 /**
@@ -35,7 +34,7 @@ public abstract class PtAnnotationProcessor {
 	protected List<ASTNode> listOfContainingNodes = null;
 	protected List<String> listOfTypesForReduction = null;
 	protected String thisElementReductionString = null;
-	private Map<String, List<String>> typeToAvailableReductions = null;
+	private Map<String, Map<String, String>> typeToAvailableReductions = null;
 	
 	protected PtAnnotationProcessor(){
 		initializeReductionMap();
@@ -60,15 +59,25 @@ public abstract class PtAnnotationProcessor {
 		if(typeString.contains("<") && typeString.contains(">")){
 			processAggregateType(typeString);
 		}else{
-			processPrimitiveType(typeString);
+			if(matchTypeWithReduction(typeString, thisElementReductionString))
+				processPrimitiveType(typeString);
 		}
 	}
 	
-	protected void processPrimitiveType(String typeString){
+	private boolean matchTypeWithReduction(String type, String reduction){
+		if(typeToAvailableReductions.containsKey(type)){
+			Map<String, String> supportedReductions = typeToAvailableReductions.get(type);
+			if(supportedReductions.containsKey(reduction))
+				return true;
+		}
+		return false;
+	}
 		
+	private void processPrimitiveType(String typeString){
+
 	}
 	
-	protected void processAggregateType(String typeString){
+	private void processAggregateType(String typeString){
 		
 	}
 	
@@ -143,23 +152,94 @@ public abstract class PtAnnotationProcessor {
 		System.out.println("Reference: " + localVariable.getReference().toString());
 		System.out.println("Reference Type: " + localVariable.getReferencedTypes().toString());
 		System.out.println("Type: " + localVariable.getType().toString());
-	}		
+	}	
 	
+	protected void printReductionMap(){
+		
+		System.out.println(" Current state of AnnotationParallelTask (APT) supports the following\n"
+			+ " reductions for the following types:");
+		
+		for(Entry<String, Map<String, String>> entry : typeToAvailableReductions.entrySet()){
+			String type = entry.getKey();
+			System.out.println("Reductions supportef for type: " + type);
+			Map<String, String> availableReductions = entry.getValue();
+			for(Entry<String, String> innerEntry : availableReductions.entrySet()){
+				String abbreviate = innerEntry.getKey();
+				String reduction = innerEntry.getValue();
+				
+				System.out.println("|----------------------------------------------------");
+				System.out.println("|word: " + abbreviate + " for: " + reduction);
+			}
+			System.out.println("|----------------------------------------------------");
+		}
+		System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+	}
+	
+	/*
+	 * In order to facilitate usage for end-users, reduction words are shortened and abbreviated in the
+	 * programming interface. The background process will map each of these words to its corresponding
+	 * RedLib class name, based on the type of user-defined future variables. 
+	 * Reductions must be commutative and associative. Abbreviated words are all small letters to reduce
+	 * the possibility of typographic errors. In this effect, reductions are abbreviated as follows:
+	 * 
+	 *   bitand = BitwiseAND | bitor = BitwiseOR | bitxor = BitwiseXOR   | and = AND     | or = OR    | 
+	 *   max = Maximum       | min = Minimum     | mult = Multiplication | min = Minimum | xor = XOR  |
+	 *   union = Union       | join = Join       | intersection = Intersection
+	 */
 	private void initializeReductionMap(){
 		//values added to the lists are all small case, because user input is turned into lower-case
 		//when processed, to reduce to chance of incompatibility.
+		Map<String, String> booleanMap = new HashMap<>();
+		booleanMap.put("and", "BooleanAND"); booleanMap.put("or", "BooleanOR"); booleanMap.put("xor", "BooleanXOR");
+		booleanMap.put("bitand", "BooleanBitwiseAND"); booleanMap.put("bitor", "BooleanBitwiseOR"); booleanMap.put("bitxor", "BooleanBitwiseXOR");
+		
+		Map<String, String> byteMap = new HashMap<>();
+		byteMap.put("bitand", "ByteBitwiseAND"); byteMap.put("bitor", "ByteBitwiseOR"); byteMap.put("bitxor", "ByteBitwiseXOR");
+		
+		Map<String, String> doubleMap = new HashMap<>();
+		doubleMap.put("max", "DoubleMaximum"); doubleMap.put("min", "DoubleMinimum"); doubleMap.put("mult", "DoubleMultiplication"); doubleMap.put("sum", "DoubleSum");
+		
+		Map<String, String> floatMap = new HashMap<>();
+		floatMap.put("max", "FloatMaximum"); floatMap.put("min", "FloatMinimum"); floatMap.put("mult", "FloatMultiplication"); floatMap.put("sum", "FloatSum");
+		
+		Map<String, String> integerMap = new HashMap<>();
+		integerMap.put("max", "IntegerMaximum"); integerMap.put("min", "IntegerMinimum"); integerMap.put("mult", "IntegerMultiplication"); integerMap.put("sum", "IntegerSum");
+		integerMap.put("bitand", "IntegerBitwiseAND"); integerMap.put("bitor", "IntegerBitwiseOR"); integerMap.put("bitxor", "IntegerBitwiseXOR");
+		
+		Map<String, String> longMap = new HashMap<>();
+		longMap.put("max", "LongMaximum"); longMap.put("min", "LongMinimum"); longMap.put("mult", "LongMultiplication"); longMap.put("sum", "LongSum");
+		longMap.put("bitand", "LongBitwiseAND"); longMap.put("bitor", "LongBitwiseOR"); longMap.put("bitxor", "LongBitwiseXOR");
+		
+		Map<String, String> shortMap = new HashMap<>();
+		shortMap.put("max", "ShortMaximum"); shortMap.put("min", "ShortMinimum"); shortMap.put("multi", "ShortMultiplication"); shortMap.put("sum", "ShortSum");
+		shortMap.put("bitand", "ShortBitwiseAND"); shortMap.put("bitor", "ShortBitwiseOR"); shortMap.put("bitxor", "ShortBitwiseXOR");
+		
+		Map<String, String> collectionMap = new HashMap<>();
+		collectionMap.put("intersection","CollectionIntersection"); collectionMap.put("join", "CollectionJoin"); collectionMap.put("union", "CollectionUnion");
+		
+		Map<String, String> listMap = new HashMap<>();
+		listMap.put("intersection", "ListIntersection"); listMap.put("join", "ListJoin"); listMap.put("union", "ListUnion");
+		
+		Map<String, String> setMap = new HashMap<>();
+		setMap.put("intersection", "SetIntersection"); setMap.put("union", "SetUnion");
+		
+		Map<String, String> mapMap = new HashMap<>();
+		mapMap.put("intersection", "MapIntersection"); mapMap.put("union", "MapUnion");
+		
+		//......................................................................................................
+		
 		typeToAvailableReductions = new HashMap<>();
-		List<String> primitiveReductions = new ArrayList<>();
-		primitiveReductions.add("sum"); primitiveReductions.add("mult"); 
-		primitiveReductions.add("min"); primitiveReductions.add("max");
-		
-		List<String> bitWise = new ArrayList<>();
-		bitWise.add("bitor"); bitWise.add("bitand"); bitWise.add("bitxor");
-		
-		List<String> bool = new ArrayList<>();
-		bool.add("or"); bool.add("and"); bool.add("xor");
-		
-		List<String> aggregate = new ArrayList<>();
-		aggregate.add("union"); aggregate.add("intersection");
+		typeToAvailableReductions.put("Boolean", booleanMap);
+		typeToAvailableReductions.put("Byte", byteMap);
+		typeToAvailableReductions.put("Collection", collectionMap);
+		typeToAvailableReductions.put("Double", doubleMap);
+		typeToAvailableReductions.put("Float", floatMap);
+		typeToAvailableReductions.put("Integer", integerMap);
+		typeToAvailableReductions.put("List", listMap);
+		typeToAvailableReductions.put("Long", longMap);
+		typeToAvailableReductions.put("Map", mapMap);
+		typeToAvailableReductions.put("Set", setMap);
+		typeToAvailableReductions.put("Short", shortMap);
 	}
+	
 }

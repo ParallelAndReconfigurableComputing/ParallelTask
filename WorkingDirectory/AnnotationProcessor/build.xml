@@ -12,6 +12,7 @@
 	
 	<property name="spoon.jar"    value="${lib.dir}/spoon-core-5.4.0-jar-with-dependencies.jar"/>
 	<property name="PT.jar"		  value="${lib.dir}/PTLambda-Runtime-1.1.0.jar"/>
+	<property name="PARC.jar"     value="${lib.dir}/PARCutils-1.2.2.jar" />
 	<property name="APTJarName"     value="@PT-1.0.0" />
 
 	<!-- Check the operating system -->
@@ -55,8 +56,9 @@
 	<target name="compile" depends="init" description="Compiles the java code">
 		<javac includeantruntime="true" srcdir="${src.dir}" destdir="${classes.dir}">
 			<classpath>
-				<pathelement location="${spoon.jar}" />
-				<pathelement location="${PT.jar}"/>
+				<pathelement path="${spoon.jar}" />
+				<pathelement path="${PT.jar}"/>
+				<pathelement path="${PARC.jar}"/>
 			</classpath>
 		</javac>
 	</target>
@@ -73,8 +75,9 @@
 				<include name="**/**"/>
 			</fileset>
 			<classpath>
-				<pathelement path="${lib.dir}/${spoon.jar}"/>
-				<pathelement path="${lib.dir}/${PT.jar}"/>
+				<pathelement path="${spoon.jar}"/>
+				<pathelement path="${PT.jar}"/>
+				<pathelement path="${PARC.jar}"/>
 			</classpath>  
 		</javadoc>
 	</target>

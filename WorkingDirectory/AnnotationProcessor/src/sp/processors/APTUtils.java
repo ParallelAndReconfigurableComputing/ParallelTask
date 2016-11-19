@@ -936,7 +936,7 @@ public class APTUtils {
 	}
 	
 	public static String getPtScheduleTypeSynatx(){
-		return getParaTaskSyntax() + ".PTSchedulingType";
+		return getParaTaskSyntax() + ".PTSchedulingPolicy";
 	}
 	
 	public static String getScheduleType(TaskScheduingPolicy schedulingPolicy){
