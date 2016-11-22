@@ -70,7 +70,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	private int ptAsyncTaskCounter = 0;
 	
 	public TaskIDGroupProcessor(Factory factory, Future future, CtLocalVariable<?> annotatedElement){
-		thisAnnotatedElement = annotatedElement;
+		thisAnnotatedElement = annotatedElement;		
 		thisFutureAnnotation = future;
 		thisFactory = factory;
 		thisElementType = thisAnnotatedElement.getType();	

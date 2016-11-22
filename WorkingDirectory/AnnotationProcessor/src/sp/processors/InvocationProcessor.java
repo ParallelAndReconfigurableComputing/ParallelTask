@@ -119,6 +119,7 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 	private void inspectAnnotation(){
 		extractDependenciesFromStatement();
 		extractTaskInfoFromAnnotation();
+		extractReductionFromAnnotation();
 		extractDependenciesFromAnnotation();
 		extractHandlersFromAnnotation();
 		extractAsyncExceptionsFromAnnotations();
@@ -151,6 +152,19 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 		thisTaskCount = thisFutureAnnotation.taskCount();
 		if(thisTaskCount < 0)
 			thisTaskCount = 0;
+	}
+	
+	/*
+	 * This method extracts user-specified reduction from the corresponding annotation. One can 
+	 * either use reserved keywords for RedLib reductions, or specify the name of a reduction 
+	 * object that is already defined before declaring the future variable, or the name of a 
+	 * class that is an implementation of RedLib Reduction interface. This reductin phrase is 
+	 * only considered if the task is a MULTI task. 
+	 */
+	private void extractReductionFromAnnotation(){
+		if(thisTaskType.contains("MULTI")){
+			thisElementReductionString = thisFutureAnnotation.reduction();
+		}
 	}
 	
 	/*
@@ -497,6 +511,16 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 		taskIdDeclaration.setDefaultExpression(defaultExp);
 		
 		return taskIdDeclaration;
+	}
+	
+	private CtInvocation<?> getReductionStatement(){
+		CtLocalVariableImpl<?> reductionDeclaration = processReduction();
+		if(reductionDeclaration == null)
+			return null;
+		/*
+		 * insert a 
+		 */
+		return null;
 	}
 	
 	

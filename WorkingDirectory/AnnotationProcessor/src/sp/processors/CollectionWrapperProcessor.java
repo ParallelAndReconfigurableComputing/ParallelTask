@@ -67,7 +67,6 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 	private CtTypeReference<?> thisCollectionGenericType = null;
 		
 	public CollectionWrapperProcessor(Factory factory, Future future, CtLocalVariable<?> annotatedElement){
-		printReductionMap();
 		thisAnnotatedElement = annotatedElement;
 		thisFactory = factory;
 		thisFutureAnnotation = future;

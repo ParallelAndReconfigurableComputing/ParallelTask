@@ -93,7 +93,7 @@
 	
 	<target name="process" depends="compressJar, docJar, srcJar" description="Process the annotated code">
 		<exec executable="java">
-			<arg line="-cp ${PT.jar}${Delim}${spoon.jar}${Delim}dist/classes spoon.Launcher -o ${gen.dir} -i input -p sp.processors.PtInitParaTaskProcessor" />
+			<arg line="-cp ${PT.jar}${Delim}${spoon.jar}${Delim}dist/classes spoon.Launcher -o ${gen.dir} -i input/test/ReductionTest.java -p sp.processors.PtInitParaTaskProcessor" />
 		</exec> 
 		<exec executable="java">
 			<arg line="-cp ${PT.jar}${Delim}${spoon.jar}${Delim}dist/classes spoon.Launcher -o ${gen.dir} -i ${gen.dir} -p sp.processors.PtFutureProcessor" />

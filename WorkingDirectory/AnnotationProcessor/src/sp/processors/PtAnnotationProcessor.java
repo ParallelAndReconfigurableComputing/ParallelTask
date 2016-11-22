@@ -20,6 +20,7 @@ import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtVariableAccess;
 import spoon.reflect.declaration.CtAnnotation;
 import spoon.reflect.reference.CtTypeReference;
+import spoon.support.reflect.code.CtLocalVariableImpl;
 
 /**
  * This abstract class must be implemented by every annotation processor. 
@@ -35,7 +36,7 @@ public abstract class PtAnnotationProcessor {
 	protected Factory thisFactory = null;
 	protected List<ASTNode> listOfContainingNodes = null;
 	protected List<TypeElement> listOfTypesForReduction = null;
-	protected String thisElementReductionString = null;
+	protected String thisElementReductionString = "";
 	private Map<String, Map<String, String>> typeToAvailableReductions = null;
 	
 	/**
@@ -49,7 +50,9 @@ public abstract class PtAnnotationProcessor {
 	 */
 	protected abstract void modifySourceCode(); 
 	
-	protected void processReduction(){
+	protected CtLocalVariableImpl<?> processReduction(){
+		if(thisElementReductionString.isEmpty())
+			return null;
 		initializeReductionMap();
 		listOfTypesForReduction = new ArrayList<>();
 		
@@ -57,6 +60,7 @@ public abstract class PtAnnotationProcessor {
 		breakDownReductionString();
 		createReductionDeclarations(); //<---- Left off here! Incomplete
 		String finalReductionPhrase = createReductionPhrase(0); // <-- needs to be checked!
+		return null;
 	}
 	
 //----------------------------------------------------HELPER METHODS---------------------------------------------------

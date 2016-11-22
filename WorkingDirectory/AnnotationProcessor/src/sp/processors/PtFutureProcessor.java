@@ -19,7 +19,6 @@ public class PtFutureProcessor extends AbstractAnnotationProcessor<Future, CtLoc
 		 * because Lambda expressions do not accept loop index as argument.
 		 * This operation is done within this main processor! 
 		 * */
-		
 		if(elementIsCollectionDeclaration(annotatedElement)){
 			CollectionWrapperProcessor processor = new CollectionWrapperProcessor(getFactory(), annotation, annotatedElement);
 			processor.process();
