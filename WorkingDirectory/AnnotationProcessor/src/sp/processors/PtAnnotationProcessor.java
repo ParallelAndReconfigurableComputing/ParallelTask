@@ -1,6 +1,7 @@
 package sp.processors;
 
 import java.lang.annotation.Annotation;
+import java.lang.annotation.ElementType;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,11 +38,6 @@ public abstract class PtAnnotationProcessor {
 	protected String thisElementReductionString = null;
 	private Map<String, Map<String, String>> typeToAvailableReductions = null;
 	
-	protected PtAnnotationProcessor(){
-		initializeReductionMap();
-		
-	}
-	
 	/**
 	 * each sub-class implements this method, as a starting
 	 * point for processing the annotated elements
@@ -54,18 +50,13 @@ public abstract class PtAnnotationProcessor {
 	protected abstract void modifySourceCode(); 
 	
 	protected void processReduction(){
+		initializeReductionMap();
 		listOfTypesForReduction = new ArrayList<>();
+		
 		breakDownElementType(thisElementReductionString);
 		breakDownReductionString();
-		if(isRedLibReduction()){
-			processRedLibReduction();
-		}
-		else if(isDeclaredReductionObject()){
-			processDeclaredReductionObject();
-		}
-		else if(isUserDefinedReductionClass()){
-			processUserDefinedReductionClass();
-		}
+		createReductionDeclarations(); //<---- Left off here! Incomplete
+		String finalReductionPhrase = createReductionPhrase(0); // <-- needs to be checked!
 	}
 	
 //----------------------------------------------------HELPER METHODS---------------------------------------------------
@@ -77,6 +68,34 @@ public abstract class PtAnnotationProcessor {
 				return true;
 		}
 		return false;
+	}
+	
+	/*
+	 * Go through every reduction, and add corresponding declaration phrase. 
+	 */
+	private void createReductionDeclarations(){
+		for(TypeElement element : listOfTypesForReduction){
+			if(isRedLibReduction(element)){
+				processRedLibReduction(element);
+			}
+			else if(isDeclaredReductionObject(element)){
+				processDeclaredReductionObject(element);
+			}
+			else if(isUserDefinedReductionClass(element)){
+				processUserDefinedReductionClass(element);
+			}
+		}
+	}
+	
+	/*
+	 * Recursively creates the nested reduction phrases. 
+	 */
+	private String createReductionPhrase(int index){
+		if(index >= listOfTypesForReduction.size())
+			return "";
+		TypeElement element = listOfTypesForReduction.get(index);
+		return "new " + element.reductionClass + element.genericType + "(" 
+				+ createReductionPhrase(index+1) + ")";
 	}
 	
 	/*
@@ -112,30 +131,138 @@ public abstract class PtAnnotationProcessor {
 	 * breaks down the reduction string provided in the annotation.
 	 */
 	private void breakDownReductionString(){
+		if(!validateReductionPhrase(thisElementReductionString)){
+			throw new IllegalArgumentException("ERROR OCCURED WHEN PROCESSING THE FOLLOWING"
+					+ "	REDUCTION PHRASE: " + thisElementReductionString);
+		}
+		
+		List<String> reductionPhrases = decomposeReductions(thisElementReductionString);	
+		if(reductionPhrases.size() != listOfTypesForReduction.size()){
+			throw new IllegalArgumentException("MISMATCH BETWEEN THE NUMBER OF SPECIFIED REDUCTIONS, " + reductionPhrases.size() 
+					+ ", AND THE NUMBER OF REDUCTIONS REQUIRED, " + listOfTypesForReduction.size() + ".");
+		}
+		
+		int index = 0;
+		for(TypeElement element : listOfTypesForReduction){
+			element.reductionClass = reductionPhrases.get(index);
+			index++;
+		}
+	}
+	
+	/*
+	 * A nested reduction phrase is valid if nesting is done correctly. In this effect
+	 * the number of right and left parentheses must be equal, and all right parentheses
+	 * must occur consecutively. Thus a valid example is:
+	 * union(intersection(sum))
+	 * invalid examples are: (union(intersection(sum)) or (union(intersection)sum) 
+	 */
+	private boolean validateReductionPhrase(String phrase){
+		if(!equalNumOfParanthesis(phrase)){
+			System.out.println("Reduction phrase " + phrase + " is not valid!");
+			System.out.println("The number of left and right parentheses are not equal");
+			return false;
+		}
+		if(!consecutiveRightParanthesis(phrase)){	
+			System.out.println("Reduction phrase " + phrase + " is not valid!");
+			System.out.println("Incorrect nesting of reductions");
+			return false;
+		}
+		return true;
+	}
+	
+	private boolean equalNumOfParanthesis(String phrase){
+		String tempPhrase = phrase;
+		int numOfLeftPhrase = 0, numOfRightPhrase = 0;
+		while(tempPhrase.contains("(")){
+			numOfLeftPhrase++;
+			tempPhrase = tempPhrase.substring((tempPhrase.indexOf("(")+1));
+		}
+		
+		tempPhrase = phrase;
+		while(tempPhrase.contains(")")){
+			numOfRightPhrase++;
+			tempPhrase = tempPhrase.substring((tempPhrase.indexOf(")")+1));
+		}
+	
+		if(numOfLeftPhrase != numOfRightPhrase)
+			return false;
+		return true;
+	}
+		
+	private boolean consecutiveRightParanthesis(String phrase){
+		
+		if(!phrase.contains("("))
+			return true;
+		
+		if(phrase.contains(")") && (phrase.charAt(phrase.length()-1) !=')'))
+			return false;
+		
+		String tempPhrase = phrase.substring((phrase.indexOf(")")+1));
+		while(tempPhrase.contains(")")){
+			if(tempPhrase.indexOf(")") != 0)
+				return false;
+			tempPhrase = tempPhrase.substring((tempPhrase.indexOf(")")+1));
+		}
+		return true;
+	}
+	
+	/*
+	 * Decomposes the reductions specified by the programmer in a hierarchy that 
+	 * correspond them to the types in order. For example:
+	 * Map<Strin, Map<String, Integer>> expects a reduction phrase like: union(intersection(sum))
+	 * where reductions must correspond to types as follows:
+	 * Map     <--> union
+	 * Map     <--> intersection
+	 * Integer <--> sum
+	 */
+	private List<String> decomposeReductions(String reduction){
+		validateReductionPhrase(reduction);
+		String[] reductionPhrases = reduction.split("\\(");
+		for(int i = 0; i< reductionPhrases.length; i++){
+			reductionPhrases[i] = reductionPhrases[i].replace(")", "");
+			reductionPhrases[i] = reductionPhrases[i].trim();
+		}
+		
+		List<String> reductions = new ArrayList<>();
+		
+		for(String phrase : reductionPhrases){
+			if (!phrase.isEmpty())
+				reductions.add(phrase.toLowerCase());
+		}
+		
+		return reductions;
+	}
+	
+	private boolean isRedLibReduction(TypeElement element){
+		if(!matchTypeWithReduction(element.elementType, element.reductionClass)){
+			System.out.println("ONE OR MORE SPECIFIED REDUCTION/S NOT SUPPORTED BY REDLIB REDUCTIONS!");
+			return false;
+		}
+		return true;
+	}
+	
+	/*
+	 * If the reduction object is already declared by a user, it
+	 * needs to be the inner-most reduction, it cannot nest any other
+	 * reduction, because it is an object.  
+	 */
+	private boolean isDeclaredReductionObject(TypeElement element){
+		return false;
+	}
+	
+	private boolean isUserDefinedReductionClass(TypeElement element){
+		return false;
+	}
+	
+	private void processRedLibReduction(TypeElement element){
 		
 	}
 	
-	private boolean isRedLibReduction(){
-		return false;
-	}
-	
-	private boolean isDeclaredReductionObject(){
-		return false;
-	}
-	
-	private boolean isUserDefinedReductionClass(){
-		return false;
-	}
-	
-	private void processRedLibReduction(){
-		
-	}
-	
-	private void processDeclaredReductionObject(){
+	private void processDeclaredReductionObject(TypeElement element){
 				
 	}
 	
-	private void processUserDefinedReductionClass(){
+	private void processUserDefinedReductionClass(TypeElement element){
 		
 	}
 	
@@ -145,8 +272,88 @@ public abstract class PtAnnotationProcessor {
 	
 	private void processAggregateType(String typeString){
 		
+	}	
+	
+	/*
+	 * In order to facilitate usage for end-users, reduction words are shortened and abbreviated in the
+	 * programming interface. The background process will map each of these words to its corresponding
+	 * RedLib class name, based on the type of user-defined future variables. 
+	 * Reductions must be commutative and associative. Abbreviated words are all small letters to reduce
+	 * the possibility of typographic errors. In this effect, reductions are abbreviated as follows:
+	 * 
+	 *   bitand = BitwiseAND | bitor = BitwiseOR | bitxor = BitwiseXOR   | and = AND     | or = OR    | 
+	 *   max = Maximum       | min = Minimum     | mult = Multiplication | min = Minimum | xor = XOR  |
+	 *   union = Union       | join = Join       | intersection = Intersection
+	 */
+	@SuppressWarnings("unchecked")
+	private void initializeReductionMap(){
+		//values added to the lists are all small case, because user input is turned into lower-case
+		//when processed, to reduce to chance of incompatibility.
+		String booleanStr = "Boolean"; String byteStr = "Byte"; String collectionStr = "Collection";
+		String doubleStr = "Double"; String floatStr = "Float"; String integerStr = "Integer"; String setStr = "Set";
+		String listStr = "List"; String longStr = "Long"; String shortStr = "Short"; String mapStr = "Map";
+		
+		
+		Map<String, String> bitWiseMap = new HashMap<>();
+		bitWiseMap.put("bitand", "BitwiseAND");
+		bitWiseMap.put("bitor",  "BitwiseOR" );
+		bitWiseMap.put("bitxor", "BitwiseXOR");
+		
+		Map<String, String> logicMap = new HashMap<>();
+		logicMap.put("and", "AND");
+		logicMap.put("or",  "OR" );
+		logicMap.put("xor", "XOR");
+		
+		Map<String, String> primitiveMap = new HashMap<>();
+		primitiveMap.put("min",  "Minimum");
+		primitiveMap.put("max",  "Maximum");
+		primitiveMap.put("sum",  "Sum" 	  );
+		primitiveMap.put("mult", "Multiplication");
+		
+		Map<String, String> aggregateMap = new HashMap<>();
+		aggregateMap.put("union", "Union");
+		aggregateMap.put("intersection", "Intersection");
+		
+		Map<String, String> collectionsMap = new HashMap<>();
+		collectionsMap.put("join", "Join");
+
+		typeToAvailableReductions = new HashMap<>();
+		concatenate(booleanStr, bitWiseMap, logicMap);
+		concatenate(byteStr, bitWiseMap);
+		concatenate(collectionStr, aggregateMap, collectionsMap);
+		concatenate(doubleStr, primitiveMap);
+		concatenate(floatStr, primitiveMap);
+		concatenate(integerStr, primitiveMap, bitWiseMap);
+		concatenate(listStr, aggregateMap, collectionsMap);
+		concatenate(longStr, primitiveMap, bitWiseMap);
+		concatenate(mapStr, aggregateMap);
+		concatenate(setStr, aggregateMap);
+		concatenate(shortStr, primitiveMap, bitWiseMap);
 	}
 	
+	@SuppressWarnings("unchecked")
+	private void concatenate(String type, Map<String, String>... maps){
+		Map<String, String> typeToReductions = new HashMap<>();
+		for(Map<String, String> map : maps){
+			for(Entry<String, String> entry : map.entrySet()){
+				String abbreviation = entry.getKey();
+				String reduction = entry.getValue();
+				typeToReductions.put(abbreviation, type+reduction);
+			}
+		}
+		typeToAvailableReductions.put(type, typeToReductions);
+	}
+	
+	private class TypeElement{
+		TypeElement(String type, String generic){
+			elementType = type;
+			genericType = generic;
+		}
+		String elementType = "";
+		String genericType = "";
+		String reductionClass = "";
+	}
+
 	protected CtStatement getParentInEnclosingBlock(CtExpression<?> expression){
 		CtStatement parentStatement = expression.getParent(CtStatement.class);
 		while(!(parentStatement.getParent() instanceof CtBlock))
@@ -239,83 +446,4 @@ public abstract class PtAnnotationProcessor {
 		System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 	}
 	
-	/*
-	 * In order to facilitate usage for end-users, reduction words are shortened and abbreviated in the
-	 * programming interface. The background process will map each of these words to its corresponding
-	 * RedLib class name, based on the type of user-defined future variables. 
-	 * Reductions must be commutative and associative. Abbreviated words are all small letters to reduce
-	 * the possibility of typographic errors. In this effect, reductions are abbreviated as follows:
-	 * 
-	 *   bitand = BitwiseAND | bitor = BitwiseOR | bitxor = BitwiseXOR   | and = AND     | or = OR    | 
-	 *   max = Maximum       | min = Minimum     | mult = Multiplication | min = Minimum | xor = XOR  |
-	 *   union = Union       | join = Join       | intersection = Intersection
-	 */
-	@SuppressWarnings("unchecked")
-	private void initializeReductionMap(){
-		//values added to the lists are all small case, because user input is turned into lower-case
-		//when processed, to reduce to chance of incompatibility.
-		String booleanStr = "Boolean"; String byteStr = "Byte"; String collectionStr = "Collection";
-		String doubleStr = "Double"; String floatStr = "Float"; String integerStr = "Integer"; String setStr = "Set";
-		String listStr = "List"; String longStr = "Long"; String shortStr = "Short"; String mapStr = "Map";
-		
-		
-		Map<String, String> bitWiseMap = new HashMap<>();
-		bitWiseMap.put("bitand", "BitwiseAND");
-		bitWiseMap.put("bitor",  "BitwiseOR" );
-		bitWiseMap.put("bitxor", "BitwiseXOR");
-		
-		Map<String, String> logicMap = new HashMap<>();
-		logicMap.put("and", "AND");
-		logicMap.put("or",  "OR" );
-		logicMap.put("xor", "XOR");
-		
-		Map<String, String> primitiveMap = new HashMap<>();
-		primitiveMap.put("min",  "Minimum");
-		primitiveMap.put("max",  "Maximum");
-		primitiveMap.put("sum",  "Sum" 	  );
-		primitiveMap.put("mult", "Multiplication");
-		
-		Map<String, String> aggregateMap = new HashMap<>();
-		aggregateMap.put("union", "Union");
-		aggregateMap.put("intersection", "Intersection");
-		
-		Map<String, String> collectionsMap = new HashMap<>();
-		collectionsMap.put("join", "Join");
-
-		typeToAvailableReductions = new HashMap<>();
-		concatenate(booleanStr, bitWiseMap, logicMap);
-		concatenate(byteStr, bitWiseMap);
-		concatenate(collectionStr, aggregateMap, collectionsMap);
-		concatenate(doubleStr, primitiveMap);
-		concatenate(floatStr, primitiveMap);
-		concatenate(integerStr, primitiveMap, bitWiseMap);
-		concatenate(listStr, aggregateMap, collectionsMap);
-		concatenate(longStr, primitiveMap, bitWiseMap);
-		concatenate(mapStr, aggregateMap);
-		concatenate(setStr, aggregateMap);
-		concatenate(shortStr, primitiveMap, bitWiseMap);
-	}
-	
-	@SuppressWarnings("unchecked")
-	private void concatenate(String type, Map<String, String>... maps){
-		Map<String, String> typeToReductions = new HashMap<>();
-		for(Map<String, String> map : maps){
-			for(Entry<String, String> entry : map.entrySet()){
-				String abbreviation = entry.getKey();
-				String reduction = entry.getValue();
-				typeToReductions.put(abbreviation, type+reduction);
-			}
-		}
-		typeToAvailableReductions.put(type, typeToReductions);
-	}
-	
-	private class TypeElement{
-		TypeElement(String type, String generic){
-			reductionType = type;
-			genericType = generic;
-		}
-		String reductionType = "";
-		String genericType = "";
-		String reductionClass = "";
-	}
 }
