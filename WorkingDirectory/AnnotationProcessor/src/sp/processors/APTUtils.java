@@ -48,6 +48,13 @@ import spoon.support.reflect.code.CtUnaryOperatorImpl;
 import spoon.support.reflect.code.CtVariableAccessImpl;
 import spoon.support.reflect.code.CtWhileImpl;
 
+/**
+ * Offers additional utilities for parsing the AST, finding specific 
+ * statements, and modifying statements/expressions. 
+ * 
+ * @author Mostafa Mehrabi
+ * @since  2016
+ */
 public class APTUtils {
 
 	public static enum ExpressionRole{Assigned, Assignment, ThrownExpression, ReturnExpression, 

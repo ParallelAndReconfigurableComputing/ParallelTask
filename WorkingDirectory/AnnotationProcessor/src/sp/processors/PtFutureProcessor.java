@@ -6,6 +6,13 @@ import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtLocalVariable;
 import spoon.support.reflect.code.CtInvocationImpl;
 
+/**
+ * This class is called by the annotation processor, for processing any code
+ * element that is annotated with the Future annotation.
+ * 
+ * @author Mostafa Mehrabi
+ * @since  2016
+ */
 public class PtFutureProcessor extends AbstractAnnotationProcessor<Future, CtLocalVariable<?>> {
 
 	@Override

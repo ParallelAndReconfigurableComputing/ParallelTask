@@ -16,6 +16,15 @@ import spoon.support.reflect.code.CtExpressionImpl;
 import spoon.support.reflect.code.CtInvocationImpl;
 import spoon.support.reflect.declaration.CtMethodImpl;
 
+/**
+ * This annotation processor, specifically processes the annotation for initializing ParaTask with 
+ * user-specified scheduling policy and number of threads. If these attributes are not specified for
+ * the annotation, the processor will consider the default values, which are <code>MixedScheduling</code>
+ * for task scheduling policy and <b>the number of available processor</b> on a system for the number
+ * of threads. 
+ * @author Mostafa Mehrabi
+ * @since  2016
+ */
 public class PtInitParaTaskProcessor extends AbstractAnnotationProcessor<InitParaTask, CtMethodImpl<?>> {
 
 	InitParaTask thisAnnotation = null;
