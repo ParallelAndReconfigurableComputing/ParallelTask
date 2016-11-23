@@ -96,7 +96,7 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 	
 	private boolean validate(){
 		String defaultExpression = thisAnnotatedElement.getDefaultExpression().toString();
-		if(!(defaultExpression.contains(APTUtils.getParaTaskWrapperSyntax()))){
+		if(!(defaultExpression.contains(APTUtils.getGetWrapperSyntax()))){
 			System.out.println("ANNOTATION PROCESSING ERROR FOR:\n" + thisAnnotatedElement);
 			System.out.println("\nFUTURE ANNOTATION MUST BE USED FOR DECLARING COLLECTIONS THAT INVOKE: pt.runtime.ParaTask.getPtWrapper"
 					+ "\nEXAMPLE: List<Integer> myList = ParaTask.getPtWrapper(new ArrayList<Integer>())");

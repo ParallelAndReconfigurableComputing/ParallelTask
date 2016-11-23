@@ -164,7 +164,9 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 	private void extractReductionFromAnnotation(){
 		if(thisTaskType.contains("MULTI")){
 			thisElementReductionString = thisFutureAnnotation.reduction();
-		}
+		}else{
+			thisElementReductionString = "";
+		}			
 	}
 	
 	/*
@@ -367,6 +369,11 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 		
 		sts.add(getStartStatement());	
 		
+		System.out.println("calling the reduction statement");
+		CtInvocation<?> reductionInvocation = getReductionStatement();
+		if(reductionInvocation != null)
+			sts.add(reductionInvocation);
+		
 		statements.setStatements(sts);
 		return statements;
 	}
@@ -513,7 +520,12 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 		return taskIdDeclaration;
 	}
 	
+	/*
+	 * declaring individual future variables cannot be global (i.e., they cannot be fields),
+	 * therefore, only consider inserting this statement for local variable declarations. 
+	 */
 	private CtInvocation<?> getReductionStatement(){
+		System.out.println("ReductionStatement called");
 		CtLocalVariableImpl<?> reductionDeclaration = processReduction();
 		if(reductionDeclaration == null)
 			return null;

@@ -55,8 +55,11 @@ public class PtFutureProcessor extends AbstractAnnotationProcessor<Future, CtLoc
 	
 	private boolean elementIsCollectionDeclaration(CtLocalVariable<?> annotatedElement){
 		String elementType = annotatedElement.getType().toString();
-		if(elementType.contains("List") || elementType.contains("Set") || elementType.contains("Map") || elementType.contains("Collection")) 
-			return true;		
+		if(elementType.contains("List") || elementType.contains("Set") || elementType.contains("Map") || elementType.contains("Collection")) {
+			String defaultExpression = annotatedElement.getDefaultExpression().toString();
+			if(defaultExpression.contains(APTUtils.getGetWrapperSyntax()))
+				return true;		
+		}
 		return false;
 	}
 }

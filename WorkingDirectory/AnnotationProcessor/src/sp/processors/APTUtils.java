@@ -864,7 +864,14 @@ public class APTUtils {
 		return false;
 	}
 	
-	public static String getParaTaskWrapperSyntax(){
+	public static String getRedLibPackageSyntax(){
+		return "pu.RedLib.";
+	}
+	
+	public static String getGetWrapperSyntax(){
+		//to make sure that definitely method "getPtWrapper()" is called
+		//and not something that has similar name e.g., getPtWrapperEx()
+		//the left parenthesis is involved in the syntax!
 		return "ParaTask.getPtWrapper(";
 	}
 	

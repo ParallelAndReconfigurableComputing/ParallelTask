@@ -1,13 +1,11 @@
 package sp.processors;
 
 import java.lang.annotation.Annotation;
-import java.lang.annotation.ElementType;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import pu.RedLib.ShortSum;
 
 import sp.annotations.Future;
 import sp.processors.APTUtils.ExpressionRole;
@@ -51,25 +49,49 @@ public abstract class PtAnnotationProcessor {
 	protected abstract void modifySourceCode(); 
 	
 	protected CtLocalVariableImpl<?> processReduction(){
-		if(thisElementReductionString.isEmpty())
+		if(thisElementReductionString.isEmpty()){
+			System.out.println("returning null");
 			return null;
+		}
+		
 		initializeReductionMap();
 		listOfTypesForReduction = new ArrayList<>();
 		
-		breakDownElementType(thisElementReductionString);
+		breakDownElementType(thisElementType.toString());
 		breakDownReductionString();
 		createReductionDeclarations(); //<---- Left off here! Incomplete
 		String finalReductionPhrase = createReductionPhrase(0); // <-- needs to be checked!
+		System.out.println("final reduction string: " + finalReductionPhrase);
 		return null;
 	}
 	
 //----------------------------------------------------HELPER METHODS---------------------------------------------------
 	
-	private boolean matchTypeWithReduction(String type, String reduction){
+	/*
+	 * Returns true if RedLib already supports the user-specified reduction.
+	 * Note that, user-specified reduction string is converted to lower case
+	 * since the reductions registered in the map are all lower case. This 
+	 * offers more convenience for a user, since they don't have to worry about
+	 * case sensitivity of the reduction names.  
+	 * If the reduction is supported by RedLib, based on the reduction that is
+	 * registered for an element, and the element's type, the corresponding RedLib
+	 * reduction replaces the user-specified syntax for that element in the type
+	 * hierarchy that is extracted by the program.
+	 */
+	private boolean matchTypeWithReduction(TypeElement element){
+		String type = element.elementType;
+		String reduction = element.reductionClass.toLowerCase();
+		
+		//in case the specified type is fully qualified e.g., java.util.Map
+		String[] typeQualifiedPaths = type.split("\\.");
+		type = typeQualifiedPaths[typeQualifiedPaths.length-1];
+		
 		if(typeToAvailableReductions.containsKey(type)){
 			Map<String, String> supportedReductions = typeToAvailableReductions.get(type);
-			if(supportedReductions.containsKey(reduction))
+			if(supportedReductions.containsKey(reduction)){
+				element.reductionClass = APTUtils.getRedLibPackageSyntax() + supportedReductions.get(reduction);
 				return true;
+			}
 		}
 		return false;
 	}
@@ -79,14 +101,15 @@ public abstract class PtAnnotationProcessor {
 	 */
 	private void createReductionDeclarations(){
 		for(TypeElement element : listOfTypesForReduction){
-			if(isRedLibReduction(element)){
-				processRedLibReduction(element);
-			}
-			else if(isDeclaredReductionObject(element)){
-				processDeclaredReductionObject(element);
-			}
-			else if(isUserDefinedReductionClass(element)){
-				processUserDefinedReductionClass(element);
+			System.out.println("type: " + element.elementType);
+			if(!isRedLibReduction(element)){
+				if(isDeclaredReductionObject(element)){
+					processDeclaredReductionObject(element);
+				}
+				
+				else if(isUserDefinedReductionClass(element)){
+					processUserDefinedReductionClass(element);
+				}
 			}
 		}
 	}
@@ -117,8 +140,13 @@ public abstract class PtAnnotationProcessor {
 			generic = "";
 		}
 		
+		type = APTUtils.getType(type);
 		TypeElement obj = new TypeElement(type, generic);
 		listOfTypesForReduction.add(obj);
+		
+		//in case the specified type is fully qualified e.g., java.util.Map
+		String[] typeQualifiedPaths = type.split("\\.");
+		type = typeQualifiedPaths[typeQualifiedPaths.length-1];
 		
 		if(generic.contains(",") && type.equals("Map")){
 			breakDownElementType(getNestedType(generic));
@@ -135,21 +163,26 @@ public abstract class PtAnnotationProcessor {
 	 * breaks down the reduction string provided in the annotation.
 	 */
 	private void breakDownReductionString(){
-		if(!validateReductionPhrase(thisElementReductionString)){
-			throw new IllegalArgumentException("ERROR OCCURED WHEN PROCESSING THE FOLLOWING"
-					+ "	REDUCTION PHRASE: " + thisElementReductionString);
-		}
-		
-		List<String> reductionPhrases = decomposeReductions(thisElementReductionString);	
-		if(reductionPhrases.size() != listOfTypesForReduction.size()){
-			throw new IllegalArgumentException("MISMATCH BETWEEN THE NUMBER OF SPECIFIED REDUCTIONS, " + reductionPhrases.size() 
-					+ ", AND THE NUMBER OF REDUCTIONS REQUIRED, " + listOfTypesForReduction.size() + ".");
-		}
-		
-		int index = 0;
-		for(TypeElement element : listOfTypesForReduction){
-			element.reductionClass = reductionPhrases.get(index);
-			index++;
+		try{
+			if(!validateReductionPhrase(thisElementReductionString)){
+				throw new Exception("ERROR OCCURED WHEN PROCESSING THE FOLLOWING"
+						+ "	REDUCTION PHRASE: " + thisElementReductionString);
+			}
+			
+			List<String> reductionPhrases = decomposeReductions(thisElementReductionString);
+			if(reductionPhrases.size() != listOfTypesForReduction.size()){
+				throw new Exception("MISMATCH BETWEEN THE NUMBER OF SPECIFIED REDUCTIONS, " + reductionPhrases.size() 
+						+ ", AND THE NUMBER OF REDUCTIONS REQUIRED, " + listOfTypesForReduction.size() + ".");
+			}
+			
+			int index = 0;
+			for(TypeElement element : listOfTypesForReduction){
+				element.reductionClass = reductionPhrases.get(index);
+				index++;
+			}
+		}catch(Exception e){
+			System.err.println("ERROR OCCURED WHILE PROCESSING REDUCTIONS:\n");
+			e.printStackTrace();
 		}
 	}
 	
@@ -231,15 +264,14 @@ public abstract class PtAnnotationProcessor {
 		
 		for(String phrase : reductionPhrases){
 			if (!phrase.isEmpty())
-				reductions.add(phrase.toLowerCase());
+				reductions.add(phrase);
 		}
 		
 		return reductions;
 	}
 	
 	private boolean isRedLibReduction(TypeElement element){
-		if(!matchTypeWithReduction(element.elementType, element.reductionClass)){
-			System.out.println("ONE OR MORE SPECIFIED REDUCTION/S NOT SUPPORTED BY REDLIB REDUCTIONS!");
+		if(!matchTypeWithReduction(element)){
 			return false;
 		}
 		return true;
@@ -258,9 +290,8 @@ public abstract class PtAnnotationProcessor {
 		return false;
 	}
 	
-	private void processRedLibReduction(TypeElement element){
-		
-	}
+	
+	
 	
 	private void processDeclaredReductionObject(TypeElement element){
 				

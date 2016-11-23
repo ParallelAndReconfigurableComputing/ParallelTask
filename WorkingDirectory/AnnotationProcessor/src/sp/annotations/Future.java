@@ -10,4 +10,5 @@ public @interface Future {
     String   reduction() default "";
     TaskInfoType taskType()  default TaskInfoType.ONEOFF;
     int      taskCount() default 0;
+    boolean  elasticGroup() default false;
 }

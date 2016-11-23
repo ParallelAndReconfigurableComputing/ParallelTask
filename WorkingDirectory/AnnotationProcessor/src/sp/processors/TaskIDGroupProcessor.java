@@ -22,11 +22,13 @@ import spoon.reflect.code.CtFor;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.code.CtStatement;
+import spoon.reflect.code.CtStatementList;
 import spoon.reflect.code.CtTry;
 import spoon.reflect.declaration.CtAnnotation;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.support.reflect.code.CtAssignmentImpl;
+import spoon.support.reflect.code.CtInvocationImpl;
 
 /**
  * This annotation processor processes <code>Future</code> annotations that appear at the declaration
@@ -68,6 +70,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	private String thisGroupSize = null;
 	private int ptLoopIndexCounter = 0;
 	private int ptAsyncTaskCounter = 0;
+	private boolean elasticTaskGroup;
 	
 	public TaskIDGroupProcessor(Factory factory, Future future, CtLocalVariable<?> annotatedElement){
 		thisAnnotatedElement = annotatedElement;		
@@ -77,13 +80,20 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		thisGroupType = thisFactory.Core().createTypeReference();
 		thisElementName = thisAnnotatedElement.getSimpleName();
 		thisTaskIDGroupName = APTUtils.getTaskIDGroupName(thisElementName);
+		elasticTaskGroup = false;
 	}
 	
 	@Override
 	public void process(){
+		inspectFutureAnnotation();
 		inspectArrayDeclaration();
 		modifySourceCode();
 	}	
+	
+	private void inspectFutureAnnotation(){
+		thisElementReductionString = thisFutureAnnotation.reduction();
+		elasticTaskGroup = thisFutureAnnotation.elasticGroup();
+	}
 	
 	private void inspectArrayDeclaration(){
 		int counter = 0;
@@ -105,11 +115,17 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		thisGroupSize = defaultExpression.substring(defaultExpression.lastIndexOf('[')+1, defaultExpression.indexOf(']'));		
 	}
 
+	/*
+	 * ElasticTaskGroups where there is no size-boundary for a task group. This is especifically the case where a task group
+	 * is defined as a field. We should allow field declarations of future groups and hybrid collections. A field future group
+	 * can only be an elastic task group, because the size of the array maybe unknown at the time of declaring the array. 
+	 * @see sp.processors.PtAnnotationProcessor#modifySourceCode()
+	 */
 	@Override
 	protected void modifySourceCode() {
 		List<CtStatement> occurrences = APTUtils.findVarAccessOtherThanFutureDefinition(thisAnnotatedElement.getParent(CtBlock.class), thisAnnotatedElement);
 		listOfContainingNodes = APTUtils.listAllExpressionsOfStatements(occurrences);
-		declareTaskIDGroup();
+		insertNewStatements();
 		modifyArrayAccessStatements();
 	}
 	
@@ -162,10 +178,25 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		}
 	}
 	
+	private void insertNewStatements(){
+		CtStatementList statementList = thisFactory.Core().createStatementList();
+		List<CtStatement> statements = new ArrayList<>();
+		statements.add(declareTaskIDGroup());
+		statements.add(insertReductionPhrase());
+		
+//		CtBlock<?> parentBlock = thisAnnotatedElement.getParent(CtBlock.class);
+//		StatementMatcherFilter<CtStatement> filter = new StatementMatcherFilter<CtStatement>(thisAnnotatedElement);
+//	
+//		parentBlock.insertAfter(filter, taskIDGroupDeclartion);
+		
+		thisAnnotatedElement.insertAfter(statementList);
+	}
+	
+	
 	/*
 	 * Insert a declaration statement for the TaskIDGroup before the declaration for the array. 
 	 */
-	private void declareTaskIDGroup(){
+	private CtLocalVariable<?> declareTaskIDGroup(){
 		CtLocalVariable<?> taskIDGroupDeclartion = thisFactory.Core().createLocalVariable();
 		String type = APTUtils.getTaskIDGroupSyntax() + "<" + thisGroupType.toString() + ">";
 		
@@ -174,15 +205,18 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		taskIDGroupDeclartion.setType(taskIDGroupType);
 		taskIDGroupDeclartion.setSimpleName(thisTaskIDGroupName);
 		
-		String defaultExpressionString = "new " + APTUtils.getTaskIDGroupSyntax() + "<>(" + thisGroupSize + ")";
+		String taskSize = (elasticTaskGroup) ? "" : thisGroupSize;
+		String defaultExpressionString = "new " + APTUtils.getTaskIDGroupSyntax() + "<>(" + taskSize + ")";
 		CtCodeSnippetExpression defaultExpression = thisFactory.Core().createCodeSnippetExpression();
 		defaultExpression.setValue(defaultExpressionString);
 		taskIDGroupDeclartion.setDefaultExpression(defaultExpression);
 		
-		CtBlock<?> parentBlock = thisAnnotatedElement.getParent(CtBlock.class);
-		StatementMatcherFilter<CtStatement> filter = new StatementMatcherFilter<CtStatement>(thisAnnotatedElement);
+		return taskIDGroupDeclartion;
+	}
 	
-		parentBlock.insertAfter(filter, taskIDGroupDeclartion);
+
+	private CtInvocation<?> insertReductionPhrase(){
+		return null;
 	}
 	
 	/*
