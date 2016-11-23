@@ -12,7 +12,6 @@ import java.util.Set;
 import org.eclipse.jdt.core.compiler.InvalidInputException;
 
 import sp.annotations.Future;
-import sp.annotations.StatementMatcherFilter;
 import sp.annotations.Task;
 import spoon.reflect.factory.Factory;
 import spoon.reflect.code.CtArrayAccess;

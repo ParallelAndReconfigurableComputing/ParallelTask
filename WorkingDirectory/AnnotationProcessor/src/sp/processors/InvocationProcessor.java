@@ -10,7 +10,6 @@ import java.util.List;
 
 import sp.annotations.AsyncCatch;
 import sp.annotations.Future;
-import sp.annotations.StatementMatcherFilter;
 import spoon.reflect.factory.Factory;
 import spoon.reflect.code.CtArrayAccess;
 import spoon.reflect.code.CtBinaryOperator;
