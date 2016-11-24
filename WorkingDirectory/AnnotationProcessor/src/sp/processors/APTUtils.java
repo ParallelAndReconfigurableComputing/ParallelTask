@@ -666,15 +666,21 @@ public class APTUtils {
 	 */
 	public static List<CtStatement> findVarAccessOtherThanFutureDefinition(CtBlock<?> block, CtVariable<?> element) {
 		List<CtStatement> blockStatements = block.getStatements();
-		if(element instanceof CtField<?>){
-			System.out.println("HellO");
-			System.out.println(blockStatements);
-		}
 		List<CtStatement> statementsWithThisFutureVariable = new ArrayList<>();
-		boolean foundDef = false;
+		boolean search = false; //search for statements that access a variable can start after 
+								//the declaration statement of that variable is found.
 		
+		/*
+		 * foundDef is a flag that indicates that the declaration of a variable is found, and then after that the 
+		 * search for other statements in which a variable is used can be performed. For fields, the situation is
+		 * different, as the declaration of a filed is before every block statement, so the flag is already set to
+		 * true. However, cases should be considered in which fields are overridden in inner blocks.  
+		 */
+		if(element instanceof CtField<?>)
+			search = true;
+				
 		String varName = element.getSimpleName();
-		
+				
 		for (CtStatement statement : blockStatements) {
 			
 			if (statement instanceof CtBlock<?>){
@@ -683,11 +689,25 @@ public class APTUtils {
 			}
 			
 			else{
+				/*
+				 * If we encounter a variable declaration statement that overrides 
+				 * a field, then searching for that field through that statement block
+				 * must be stopped. 
+				 */
+				if(statement instanceof CtLocalVariable<?>){
+					CtLocalVariable<?> variable = (CtLocalVariable<?>) statement;
+					if(element instanceof CtField<?>){
+						if(variable.getSimpleName() == element.getSimpleName()){
+							search = false;
+						}
+					}
+				}
 				String statementString = statement.toString();
-					
-				if (!foundDef){
-					if (statement.equals(element))
-						foundDef = true;
+								
+				if (!search){
+					if (statement.equals(element)){//this will never become true for a field variable.
+						search = true;
+					}
 				}
 				
 				else {
@@ -702,14 +722,6 @@ public class APTUtils {
 		}
 
 		return statementsWithThisFutureVariable;
-	}
-	
-	public static CtStatement findFieldDeclaration(CtField<?> field){
-		CtBlock<?> classBlock = field.getParent(CtBlock.class);
-		List<CtStatement> classStatements = classBlock.getStatements();
-		System.out.println("class statements: "); 
-		System.out.println(classStatements);
-		return null;
 	}
 	
 	public static boolean hasAnnotation(CtStatement s, Class<?> clazz) {

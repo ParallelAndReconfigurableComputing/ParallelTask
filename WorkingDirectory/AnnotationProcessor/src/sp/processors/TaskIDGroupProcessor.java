@@ -65,23 +65,25 @@ import spoon.support.reflect.code.CtInvocationImpl;
  */
 public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	
-	private CtTypeReference<?> thisGroupType = null;
-	private Future thisFutureAnnotation = null;
-	private int thisArrayDimension = 0;
-	private String thisTaskIDGroupName = null;
-	private String thisGroupSize = null;
-	private int ptLoopIndexCounter = 0;
-	private int ptAsyncTaskCounter = 0;
-	private boolean elasticTaskGroup = false;
+	protected CtTypeReference<?> thisGroupType = null;
+	protected Future thisFutureAnnotation = null;
+	protected int thisArrayDimension = 0;
+	protected String thisTaskIDGroupName = null;
+	protected String thisGroupSize = null;
+	protected int ptLoopIndexCounter = 0;
+	protected int ptAsyncTaskCounter = 0;
+	protected boolean elasticTaskGroup = false;
 
 	
-	protected TaskIDGroupProcessor(){}
-	
-	public TaskIDGroupProcessor(Factory factory, Future future, CtLocalVariable<?> annotatedElement){
+	protected TaskIDGroupProcessor(Factory factory, Future future){
 		thisFutureAnnotation = future;
 		thisFactory = factory;
 		thisGroupType = thisFactory.Core().createTypeReference();
 		thisGroupSize = "";
+	}
+	
+	public TaskIDGroupProcessor(Factory factory, Future future, CtLocalVariable<?> annotatedElement){
+		this(factory, future);
 		thisAnnotatedElement = annotatedElement;		
 		thisElementType = thisAnnotatedElement.getType();	
 		thisElementName = thisAnnotatedElement.getSimpleName();
@@ -100,7 +102,11 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		elasticTaskGroup = thisFutureAnnotation.elasticGroup();
 	}
 	
-	private void inspectArrayDeclaration(){
+	protected void inspectArrayDeclaration(){
+		inspectArrayDeclaration(thisAnnotatedElement.getDefaultExpression().toString());
+	}
+	
+	protected void inspectArrayDeclaration(String defaultExpression){
 		int counter = 0;
 		String elementType = thisElementType.toString();
 		String type = elementType.substring(0, elementType.indexOf('['));
@@ -116,11 +122,16 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 			throw new IllegalArgumentException("ONLY ONE DIMENSIONAL ARRAYS CAN BE DECLARED AS FUTURE ARRAYS!\n"
 					+ "ERROR DETECTED IN: " + thisAnnotatedElement);
 		
-		String defaultExpression = thisAnnotatedElement.getDefaultExpression().toString();
 		thisGroupSize = defaultExpression.substring(defaultExpression.lastIndexOf('[')+1, defaultExpression.indexOf(']'));		
 
 	}
-
+	
+	protected List<CtStatement> findOccurrences(){
+		List<CtStatement> occurrences = null;
+		occurrences = APTUtils.findVarAccessOtherThanFutureDefinition(thisAnnotatedElement.getParent(CtBlock.class), thisAnnotatedElement);
+		return occurrences;
+	}
+	
 	/*
 	 * ElasticTaskGroups where there is no size-boundary for a task group. This is especifically the case where a task group
 	 * is defined as a field. We should allow field declarations of future groups and hybrid collections. A field future group
@@ -128,15 +139,12 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	 * @see sp.processors.PtAnnotationProcessor#modifySourceCode()
 	 */
 	@Override
-	protected void modifySourceCode() {
-		List<CtStatement> occurrences = null;
-		
-		occurrences = APTUtils.findVarAccessOtherThanFutureDefinition(thisAnnotatedElement.getParent(CtBlock.class), thisAnnotatedElement);
-		
-		listOfContainingNodes = APTUtils.listAllExpressionsOfStatements(occurrences);
+	protected void modifySourceCode() {		
+		listOfContainingNodes = APTUtils.listAllExpressionsOfStatements(findOccurrences());
 		insertNewStatements();
 		modifyArrayAccessStatements();
 	}
+		
 	
 	/*
 	 * Modifies the statements in which this future array is assigned a future variables. This future
