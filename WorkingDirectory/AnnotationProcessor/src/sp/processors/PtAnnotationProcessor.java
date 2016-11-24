@@ -11,14 +11,15 @@ import sp.annotations.Future;
 import sp.processors.APTUtils.ExpressionRole;
 import spoon.reflect.factory.Factory;
 import spoon.reflect.code.CtBlock;
+import spoon.reflect.code.CtCodeSnippetExpression;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtVariableAccess;
 import spoon.reflect.declaration.CtAnnotation;
+import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
-import spoon.support.reflect.code.CtLocalVariableImpl;
 
 /**
  * This abstract class must be implemented by every annotation processor. 
@@ -35,7 +36,10 @@ public abstract class PtAnnotationProcessor {
 	protected List<ASTNode> listOfContainingNodes = null;
 	protected List<TypeElement> listOfTypesForReduction = null;
 	protected String thisElementReductionString = "";
+	protected String thisReductionObjectName = null;
 	private Map<String, Map<String, String>> typeToAvailableReductions = null;
+	
+	protected PtAnnotationProcessor(){}
 	
 	/**
 	 * each sub-class implements this method, as a starting
@@ -48,21 +52,56 @@ public abstract class PtAnnotationProcessor {
 	 */
 	protected abstract void modifySourceCode(); 
 	
-	protected CtLocalVariableImpl<?> processReduction(){
+	/*
+	 * declaring individual future variables cannot be global (i.e., they cannot be fields),
+	 * therefore, only consider inserting this statement for local variable declarations. 
+	 */
+	protected List<CtStatement> getReductionStatements(String elementType, String idName){
+		CtLocalVariable<?> reductionDeclaration = processReduction(elementType);
+		if(reductionDeclaration == null)
+			return null;
+		
+		List<CtStatement> reductionStatements = new ArrayList<>();
+	
+		reductionStatements.add(reductionDeclaration);
+		reductionStatements.add(getSettingReductionStatement(idName));
+		return reductionStatements;
+	}
+	
+	protected CtLocalVariable<?> processReduction(String elementType){
 		if(thisElementReductionString.isEmpty()){
-			System.out.println("returning null");
 			return null;
 		}
 		
 		initializeReductionMap();
 		listOfTypesForReduction = new ArrayList<>();
 		
-		breakDownElementType(thisElementType.toString());
+		breakDownElementType(elementType);
 		breakDownReductionString();
-		createReductionDeclarations(); //<---- Left off here! Incomplete
-		String finalReductionPhrase = createReductionPhrase(0); // <-- needs to be checked!
-		System.out.println("final reduction string: " + finalReductionPhrase);
-		return null;
+		createReductionDeclarations(); 
+		String finalReductionPhrase = createReductionPhrase(0); 
+	//	System.out.println("final reduction string: " + finalReductionPhrase);
+		CtLocalVariable<?> finalReductionDeclaration = createFinalReductionDeclaration(finalReductionPhrase);
+		return finalReductionDeclaration;
+	}
+	
+	protected CtInvocation<?> getSettingReductionStatement(String idName){
+		CtInvocation<?> setReductionStatement = thisFactory.Core().createInvocation();
+		CtCodeSnippetExpression reductionObject = thisFactory.Core().createCodeSnippetExpression();
+		CtCodeSnippetExpression taskIDName = thisFactory.Core().createCodeSnippetExpression();
+		CtExecutableReference   executable  = thisFactory.Core().createExecutableReference();
+		
+		List<CtExpression<?>> arguments = new ArrayList<>();
+		reductionObject.setValue(thisReductionObjectName);
+		taskIDName.setValue(idName);
+		executable.setSimpleName(APTUtils.getSetReductionSyntax());
+		setReductionStatement.setExecutable(executable);
+		
+		arguments.add(taskIDName);
+		arguments.add(reductionObject);
+		
+		setReductionStatement.setArguments(arguments);
+		return setReductionStatement;
 	}
 	
 //----------------------------------------------------HELPER METHODS---------------------------------------------------
@@ -96,12 +135,32 @@ public abstract class PtAnnotationProcessor {
 		return false;
 	}
 	
+	private CtLocalVariable<?> createFinalReductionDeclaration(String reductionPhrase){
+		thisReductionObjectName = APTUtils.getTaskReductionName(thisElementName);
+		TypeElement topElement = listOfTypesForReduction.get(0);
+		
+		String topElementReductionType = topElement.reductionClass;
+		String topElementGenericType = topElement.genericType;
+		String reductionType = topElementReductionType + topElementGenericType;
+		
+		CtCodeSnippetExpression defaultExpression = thisFactory.Core().createCodeSnippetExpression();
+		defaultExpression.setValue(reductionPhrase);
+		
+		CtTypeReference reductionTypeRef = thisFactory.Core().createTypeReference();
+		reductionTypeRef.setSimpleName(reductionType);
+		
+		CtLocalVariable<?> reductionDeclaration = thisFactory.Core().createLocalVariable();
+		reductionDeclaration.setType(reductionTypeRef);
+		reductionDeclaration.setSimpleName(thisReductionObjectName);
+		reductionDeclaration.setDefaultExpression(defaultExpression);
+		return reductionDeclaration;
+	}
+	
 	/*
 	 * Go through every reduction, and add corresponding declaration phrase. 
 	 */
 	private void createReductionDeclarations(){
 		for(TypeElement element : listOfTypesForReduction){
-			System.out.println("type: " + element.elementType);
 			if(!isRedLibReduction(element)){
 				if(isDeclaredReductionObject(element)){
 					processDeclaredReductionObject(element);

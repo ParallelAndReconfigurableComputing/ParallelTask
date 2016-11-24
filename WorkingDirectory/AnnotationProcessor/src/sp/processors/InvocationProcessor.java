@@ -50,7 +50,6 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 	
 	private CtInvocation<?> thisInvocation = null;
 	private Future thisFutureAnnotation = null;
-	private String thisElementName = null;
 	private String thisTaskIDName = null;
 	private String thisTaskInfoName = null;
 	private String thisTaskType = null;
@@ -247,9 +246,13 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 			String origName = APTUtils.getOrigName(argName);
 				
 			if(APTUtils.isTaskIDReplacement(thisAnnotatedElement, argName)){
-					
+				
+				/*
+				 * only LocalVariables can be future variables, and therefore, a taskID replacement can only be related to a 
+				 * LocalVariable. 
+				 */
 				CtLocalVariable<?> declaration = (CtLocalVariable<?>)APTUtils.getDeclarationStatement(thisAnnotatedElement, origName);
-				CtTypeReference taskIDType = getTaskIDType(declaration);
+				CtTypeReference taskIDType = getTaskIDType(declaration, false);
 				
 				varAccess.getVariable().setSimpleName(APTUtils.getLambdaArgName(origName)+APTUtils.getResultSyntax());
 				varAccess.getVariable().setType(taskIDType);					
@@ -368,10 +371,9 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 		
 		sts.add(getStartStatement());	
 		
-		System.out.println("calling the reduction statement");
-		CtInvocation<?> reductionInvocation = getReductionStatement();
-		if(reductionInvocation != null)
-			sts.add(reductionInvocation);
+		List<CtStatement> reductionStatements = getReductionStatements(thisElementType.toString(), APTUtils.getTaskIDName(thisElementName));
+		if(reductionStatements != null)
+			sts.addAll(reductionStatements);
 		
 		statements.setStatements(sts);
 		return statements;
@@ -506,35 +508,24 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 				startPhrase += ", ";
 		}
 		startPhrase += ")";
-		startPhrase = thisTaskInfoName + startPhrase;
-				
+		
+		boolean taskIDGroup = (thisTaskType.contains("MULTI")) ? true : false;
+		CtTypeReference taskIDType = getTaskIDType(thisAnnotatedElement, taskIDGroup);
+		String castingPhrase = "";
+		if(taskIDGroup)
+			castingPhrase = "(" + taskIDType.toString() + ")";
+		
+		startPhrase = castingPhrase + thisTaskInfoName + startPhrase;
 		CtCodeSnippetExpression defaultExp = thisFactory.Core().createCodeSnippetExpression();
 		defaultExp.setValue(startPhrase);
-		
-		CtTypeReference taskIDType = getTaskIDType(thisAnnotatedElement);
+				
 		taskIdDeclaration.setType(taskIDType);
 		taskIdDeclaration.setSimpleName(thisTaskIDName);
 		taskIdDeclaration.setDefaultExpression(defaultExp);
 		
 		return taskIdDeclaration;
 	}
-	
-	/*
-	 * declaring individual future variables cannot be global (i.e., they cannot be fields),
-	 * therefore, only consider inserting this statement for local variable declarations. 
-	 */
-	private CtInvocation<?> getReductionStatement(){
-		System.out.println("ReductionStatement called");
-		CtLocalVariableImpl<?> reductionDeclaration = processReduction();
-		if(reductionDeclaration == null)
-			return null;
-		/*
-		 * insert a 
-		 */
-		return null;
-	}
-	
-	
+			
 	//---------------------------------------HELPER METHODS-----------------------------------------
 	
 	private String getNumArgs(){
@@ -620,13 +611,20 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 	/*
 	 * Figures out the TaskID type of this task. For example: TaskID<Integer>, if the future variable
 	 * is of type 'int/Integer'. 
+	 * The boolean argument 'taskIDGroup' specifies if the created TaskID must be a TaskIDGroup. This
+	 * boolean value is here, because TaskIDGroups are only meant to be created for the start statements,
+	 * and not when TaskIDs are used as functor arguments. 
 	 */
-	private CtTypeReference getTaskIDType(CtVariable<?> declaration){
+	private CtTypeReference getTaskIDType(CtVariable<?> declaration, boolean taskIDGroup){
 		String declarationType = declaration.getType().toString();
 		declarationType = APTUtils.getOrigName(declarationType);
-		String taskType = APTUtils.getReturnType(declarationType);		
+		String taskType = APTUtils.getReturnType(declarationType);
 		
-		taskType = APTUtils.getTaskIdSyntax() + "<" + taskType + ">";
+		if(taskIDGroup)
+			taskType = APTUtils.getTaskIDGroupSyntax() + "<" + taskType + ">";
+		else
+			taskType = APTUtils.getTaskIdSyntax() + "<" + taskType + ">";
+		
 		CtTypeReference<?> taskIDType = thisFactory.Core().createTypeReference();
 		taskIDType.setSimpleName(taskType);
 		return taskIDType;

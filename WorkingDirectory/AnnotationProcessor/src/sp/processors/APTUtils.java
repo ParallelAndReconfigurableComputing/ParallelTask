@@ -17,6 +17,7 @@ import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.declaration.CtAnnotation;
 import spoon.reflect.declaration.CtElement;
+import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtVariable;
 import spoon.reflect.reference.CtVariableReference;
 import spoon.support.reflect.code.CtArrayAccessImpl;
@@ -47,6 +48,7 @@ import spoon.support.reflect.code.CtTryImpl;
 import spoon.support.reflect.code.CtUnaryOperatorImpl;
 import spoon.support.reflect.code.CtVariableAccessImpl;
 import spoon.support.reflect.code.CtWhileImpl;
+import spoon.support.reflect.declaration.CtFieldImpl;
 
 /**
  * Offers additional utilities for parsing the AST, finding specific 
@@ -87,7 +89,13 @@ public class APTUtils {
 			//this is a series of generic types from
 			//TaskInfo or TaskID. The first one is return type.
 			String[] types = type.split(",");
-			type = types[0].trim();
+			
+			if(types[0].contains("Map"))
+				type = types[0] + "," + types[1];
+			else
+				type = types[0];
+			
+			type = type.trim();
 		}
 		else
 			type = getType(type);
@@ -277,6 +285,7 @@ public class APTUtils {
 				else if (expression instanceof CtInvocationImpl<?>){
 					CtInvocationImpl<?> invocation = (CtInvocationImpl<?>) expression;
 					expressionsToModify.addAll(invocation.getArguments());
+					expressionsToModify.add(invocation.getTarget());
 					modifyExpressions(expressionsToModify, regex, replacement);
 				}
 				
@@ -655,9 +664,12 @@ public class APTUtils {
 	 * @param element
 	 * @return
 	 */
-	public static List<CtStatement> findVarAccessOtherThanFutureDefinition(CtBlock<?> block,
-			CtVariable<?> element) {
+	public static List<CtStatement> findVarAccessOtherThanFutureDefinition(CtBlock<?> block, CtVariable<?> element) {
 		List<CtStatement> blockStatements = block.getStatements();
+		if(element instanceof CtField<?>){
+			System.out.println("HellO");
+			System.out.println(blockStatements);
+		}
 		List<CtStatement> statementsWithThisFutureVariable = new ArrayList<>();
 		boolean foundDef = false;
 		
@@ -692,6 +704,14 @@ public class APTUtils {
 		return statementsWithThisFutureVariable;
 	}
 	
+	public static CtStatement findFieldDeclaration(CtField<?> field){
+		CtBlock<?> classBlock = field.getParent(CtBlock.class);
+		List<CtStatement> classStatements = classBlock.getStatements();
+		System.out.println("class statements: "); 
+		System.out.println(classStatements);
+		return null;
+	}
+	
 	public static boolean hasAnnotation(CtStatement s, Class<?> clazz) {
 		List<CtAnnotation<? extends Annotation>> ats = s.getAnnotations();
 		for(CtAnnotation<? extends Annotation> a : ats) {
@@ -713,13 +733,7 @@ public class APTUtils {
 	public static CtStatement getDeclarationStatement(CtStatement currentStatement, String argName) {
 		if (!argName.matches("[a-zA-Z0-9_]+")) {
 			return null;
-		}
-		
-		/*
-		 * If the argument does not have the same name as the current declared element, which is being
-		 * inspected, then its names is changed into a TaskName format iff it is a future variable. 
-		 */		
-		String argTaskName = getTaskName(argName);
+		}		
 		
 		CtBlock<?> block = currentStatement.getParent(CtBlock.class);
 		while(block != null){
@@ -728,28 +742,47 @@ public class APTUtils {
 			for(CtStatement statement : blockStatements) {
 				
 				if(statement == currentStatement){
-					if(currentStatement instanceof CtLocalVariableImpl<?>){
-						CtLocalVariableImpl<?> currentDeclaration = (CtLocalVariableImpl<?>) currentStatement;
-						if(currentDeclaration.getSimpleName().equals(argTaskName) || currentDeclaration.getSimpleName().equals(argName))
-							return statement;
-					}
+					if(isTheWantedDeclaration(statement, argName))
+						return statement;
 					else
 						break;
 				}
 				
-				if (statement instanceof CtLocalVariable<?>){
-					if(statement instanceof CtVariable<?>){
-						CtVariable<?> variableDeclaration = (CtVariable<?>) statement;
-						if(variableDeclaration.getSimpleName().equals(argTaskName) || variableDeclaration.getSimpleName().equals(argName)){
-							return statement;
-						}
-					}
-				}
+				if (statement instanceof CtVariable<?>){
+					if(isTheWantedDeclaration(statement, argName))
+						return statement;
+				}				
 			}
 			
 			block = block.getParent(CtBlock.class);
 		}
 		return null;
+	}
+	
+	/**
+	 * Checks if the statement that is passed as an argument, is the declaration statement of the
+	 * variable name that is also sent as an argument. 
+	 */
+	public static boolean isTheWantedDeclaration(CtStatement statement, String argName){
+		/*
+		 * If the argument does not have the same name as the current declared element, which is being
+		 * inspected, then its names is changed into a TaskName format iff it is a future variable. 
+		 */		
+		String argTaskName = getTaskName(argName);
+		
+		if(statement instanceof CtLocalVariableImpl<?>){
+			CtLocalVariableImpl<?> currentDeclaration = (CtLocalVariableImpl<?>) statement;
+			if(currentDeclaration.getSimpleName().equals(argTaskName) || currentDeclaration.getSimpleName().equals(argName))
+				return true;
+		}
+		
+		else if(statement instanceof CtFieldImpl<?>){
+			CtFieldImpl<?> currentDeclaration = (CtFieldImpl<?>) statement;
+			if(currentDeclaration.getSimpleName().equals(argTaskName) || currentDeclaration.getSimpleName().equals(argName))
+				return true;
+		}
+		
+		return false;
 	}
 	
 	
@@ -791,6 +824,10 @@ public class APTUtils {
 			parent = parent.getParent();
 		}
 		return parents;
+	}
+	
+	public static String getTaskReductionName(String name){
+		return "__" + name + "PtTaskReductionObjct__";
 	}
 	
 	public static String getTaskIDName(String name) {
@@ -923,6 +960,10 @@ public class APTUtils {
 	}
 	public static String getAsTaskSyntax(){
 		return "pt.runtime.ParaTask.asTask";
+	}
+	
+	public static String getSetReductionSyntax(){
+		return "pt.runtime.ParaTask.setReductionOperationForTaskIDGroup";
 	}
 	
 	public static String getCollecitonWrapperSyntax(){

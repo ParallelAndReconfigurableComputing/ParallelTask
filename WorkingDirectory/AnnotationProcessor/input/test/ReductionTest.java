@@ -11,14 +11,11 @@ import pu.loopScheduler.LoopScheduler;
 import pu.loopScheduler.LoopSchedulerFactory;
 import pu.loopScheduler.LoopSchedulerFactory.LoopSchedulingType;
 import sp.annotations.Future;
+import sp.annotations.InitParaTask;
 import sp.annotations.TaskInfoType;
 
 public class ReductionTest {
 	
-	public ReductionTest(int size){
-		
-	}
-
 	public int foo(int x){
 		return x*10;
 	}
@@ -29,7 +26,9 @@ public class ReductionTest {
 		Random rand = new Random();
 		int result = 0;
 		for(int i = range.loopStart; i < range.loopEnd; i += range.localStride){
-			int randomNo = rand.nextInt(i);
+			int randomNo = 0;
+			if(i != 0)
+				randomNo = rand.nextInt(i);
 			result += foo(randomNo);
 		}
 		return result;
@@ -41,6 +40,7 @@ public class ReductionTest {
 		return newMap;
 	}
 	
+	@InitParaTask()
 	public void process(int range){
 		
 		LoopScheduler scheduler = LoopSchedulerFactory.createLoopScheduler(0, range, 1, Runtime.getRuntime().availableProcessors(),
@@ -55,5 +55,10 @@ public class ReductionTest {
 		Map<String, Integer> task2 = mapMaker("HI");
 		
 		System.out.println("The result for task2 is: " + task2.get("HI"));
+	}
+	
+	public static void main(String[] args){
+	  	ReductionTest test = new ReductionTest();
+	  	test.process(20);
 	}
 }

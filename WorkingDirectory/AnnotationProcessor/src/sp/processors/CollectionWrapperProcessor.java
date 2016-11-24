@@ -435,6 +435,10 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 		thisAnnotatedElement.setSimpleName(newName);
 	}
 	
+	/*
+	 * This method adds a casting statement after the declaration of the collection. That is done to 
+	 * allow using the overloading functions that accept TaskID objects. 
+	 */
 	private void insertStatementAfterDeclaration(){
 		String newTypeString = getCollectionType() + "<" + thisCollectionGenericType + ">";
 		CtTypeReference newType = thisFactory.Core().createTypeReference();

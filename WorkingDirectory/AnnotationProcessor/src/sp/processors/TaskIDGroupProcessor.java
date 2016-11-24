@@ -24,7 +24,10 @@ import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtStatementList;
 import spoon.reflect.code.CtTry;
 import spoon.reflect.declaration.CtAnnotation;
+import spoon.reflect.declaration.CtClass;
+import spoon.reflect.declaration.CtConstructor;
 import spoon.reflect.declaration.CtElement;
+import spoon.reflect.declaration.CtField;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.support.reflect.code.CtAssignmentImpl;
 import spoon.support.reflect.code.CtInvocationImpl;
@@ -69,18 +72,21 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	private String thisGroupSize = null;
 	private int ptLoopIndexCounter = 0;
 	private int ptAsyncTaskCounter = 0;
-	private boolean elasticTaskGroup;
+	private boolean elasticTaskGroup = false;
+
+	
+	protected TaskIDGroupProcessor(){}
 	
 	public TaskIDGroupProcessor(Factory factory, Future future, CtLocalVariable<?> annotatedElement){
-		thisAnnotatedElement = annotatedElement;		
 		thisFutureAnnotation = future;
 		thisFactory = factory;
-		thisElementType = thisAnnotatedElement.getType();	
 		thisGroupType = thisFactory.Core().createTypeReference();
+		thisGroupSize = "";
+		thisAnnotatedElement = annotatedElement;		
+		thisElementType = thisAnnotatedElement.getType();	
 		thisElementName = thisAnnotatedElement.getSimpleName();
 		thisTaskIDGroupName = APTUtils.getTaskIDGroupName(thisElementName);
-		elasticTaskGroup = false;
-	}
+	}	
 	
 	@Override
 	public void process(){
@@ -89,7 +95,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		modifySourceCode();
 	}	
 	
-	private void inspectFutureAnnotation(){
+	protected void inspectFutureAnnotation(){
 		thisElementReductionString = thisFutureAnnotation.reduction();
 		elasticTaskGroup = thisFutureAnnotation.elasticGroup();
 	}
@@ -112,6 +118,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		
 		String defaultExpression = thisAnnotatedElement.getDefaultExpression().toString();
 		thisGroupSize = defaultExpression.substring(defaultExpression.lastIndexOf('[')+1, defaultExpression.indexOf(']'));		
+
 	}
 
 	/*
@@ -122,7 +129,10 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	 */
 	@Override
 	protected void modifySourceCode() {
-		List<CtStatement> occurrences = APTUtils.findVarAccessOtherThanFutureDefinition(thisAnnotatedElement.getParent(CtBlock.class), thisAnnotatedElement);
+		List<CtStatement> occurrences = null;
+		
+		occurrences = APTUtils.findVarAccessOtherThanFutureDefinition(thisAnnotatedElement.getParent(CtBlock.class), thisAnnotatedElement);
+		
 		listOfContainingNodes = APTUtils.listAllExpressionsOfStatements(occurrences);
 		insertNewStatements();
 		modifyArrayAccessStatements();
@@ -181,13 +191,14 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		CtStatementList statementList = thisFactory.Core().createStatementList();
 		List<CtStatement> statements = new ArrayList<>();
 		statements.add(declareTaskIDGroup());
-		statements.add(insertReductionPhrase());
+		statements.addAll(getReductionStatements(thisGroupType.toString(), APTUtils.getTaskIDGroupName(thisElementName)));
 		
 //		CtBlock<?> parentBlock = thisAnnotatedElement.getParent(CtBlock.class);
 //		StatementMatcherFilter<CtStatement> filter = new StatementMatcherFilter<CtStatement>(thisAnnotatedElement);
 //	
 //		parentBlock.insertAfter(filter, taskIDGroupDeclartion);
-		
+	
+		statementList.setStatements(statements);
 		thisAnnotatedElement.insertAfter(statementList);
 	}
 	
@@ -209,15 +220,10 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		CtCodeSnippetExpression defaultExpression = thisFactory.Core().createCodeSnippetExpression();
 		defaultExpression.setValue(defaultExpressionString);
 		taskIDGroupDeclartion.setDefaultExpression(defaultExpression);
-		
 		return taskIDGroupDeclartion;
 	}
 	
 
-	private CtInvocation<?> insertReductionPhrase(){
-		return null;
-	}
-	
 	/*
 	 * Three types of assignments must be considered by the compiler.
 	 * 

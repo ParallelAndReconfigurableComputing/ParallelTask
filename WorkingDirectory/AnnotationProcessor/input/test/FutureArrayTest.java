@@ -11,7 +11,11 @@ import sp.annotations.Future;
 public class FutureArrayTest {
 	
 	@Future
-	List<Integer> myHybridList = ParaTask.getPtWrapper(new ArrayList<Integer>());
+	static int[] myArray = new int[10];
+	
+	public FutureArrayTest(){
+    	
+    }
 	
 	public static int foo(int i){
 		return i * 10;
@@ -25,7 +29,7 @@ public class FutureArrayTest {
 		int bb = foo(34);
 		
 		int n = 10;
-		@Future
+		@Future(elasticGroup=true, reduction="sum")
 		int[] array = new int[n];
 		for (int i = 0; i < 5; i++){
 			@Future(taskCount=2)
@@ -40,7 +44,7 @@ public class FutureArrayTest {
 		for(int i = 7; i < 10; i++){
 			array[i] = foo(i * 15);
 		}
-		
+		myArray[0] = foo(3);
 		int[] myarray = new int[2];
 		myarray[0] = tester.get();
 		
