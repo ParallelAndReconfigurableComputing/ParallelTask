@@ -99,7 +99,10 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	
 	protected void inspectFutureAnnotation(){
 		thisElementReductionString = thisFutureAnnotation.reduction();
-		elasticTaskGroup = thisFutureAnnotation.elasticGroup();
+		if(!elasticTaskGroup){	//for field task groups this attribute is automatically set to true, 
+			 					//so don't inspect further. 
+			elasticTaskGroup = thisFutureAnnotation.elasticGroup();
+		}
 	}
 	
 	protected void inspectArrayDeclaration(){
@@ -196,16 +199,18 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	}
 	
 	private void insertNewStatements(){
+	
+		List<CtStatement> reductionStatements = getReductionStatements(thisGroupType.toString(), APTUtils.getTaskIDGroupName(thisElementName));
+		insertNewStatements(declareTaskIDGroup(), reductionStatements);
+
+	}
+	
+	protected void insertNewStatements(CtLocalVariable<?> taskIDGroupDeclarationStatement, List<CtStatement> reductionStatements){
 		CtStatementList statementList = thisFactory.Core().createStatementList();
 		List<CtStatement> statements = new ArrayList<>();
-		statements.add(declareTaskIDGroup());
-		statements.addAll(getReductionStatements(thisGroupType.toString(), APTUtils.getTaskIDGroupName(thisElementName)));
-		
-//		CtBlock<?> parentBlock = thisAnnotatedElement.getParent(CtBlock.class);
-//		StatementMatcherFilter<CtStatement> filter = new StatementMatcherFilter<CtStatement>(thisAnnotatedElement);
-//	
-//		parentBlock.insertAfter(filter, taskIDGroupDeclartion);
-	
+		statements.add(taskIDGroupDeclarationStatement);
+		if(reductionStatements != null)
+			statements.addAll(reductionStatements);
 		statementList.setStatements(statements);
 		thisAnnotatedElement.insertAfter(statementList);
 	}
@@ -236,7 +241,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	 * Three types of assignments must be considered by the compiler.
 	 * 
 	 * 1. array[i] = _taskIDReplacement_.getReturnResult(); 
-	 *                    //__taskIDReplacement__ belongs to a future variable
+	 *                    //__taskIDReplacement__ belongs to a future variable	
 	 *                    //that has been already processed by the compiler.
 	 *                    //This means, that the future variable is declared
 	 *                    //before 'array' the future TaskIDGroup
