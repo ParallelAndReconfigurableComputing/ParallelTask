@@ -10,12 +10,16 @@ import sp.annotations.Future;
 
 public class FutureArrayTest {
 	
-	@Future
+	@Future(reduction="sum")
 	static int[] myArray = new int[10];
 	
-	public FutureArrayTest(){
-    	
+	public FutureArrayTest(int i){
+    	myArray[1] = foo(i);
     }
+	
+	public FutureArrayTest(){
+	   	System.out.println("Hello, default constructor");
+	}
 	
 	public static int foo(int i){
 		return i * 10;

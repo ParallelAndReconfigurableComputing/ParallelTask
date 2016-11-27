@@ -287,7 +287,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		if(!statementModified)
 			throw new UnsupportedOperationException("\nTHE EXPRESSION " + assignmentString + " IN STATEMENT: " + accessStatement 
 					+ " IS NOT SUPPORTED BY PARATASK FUTURE ARRAYS YET!\nPARATASK FUTURE ARRAYS ARE MEANT TO GROUP ASYNCHRONOUS TASKS ONLY!"
-					+ "\nTHE EXPRESSION " + assignmentString + " IS PROBABLY COMBINING TASKID WITH OTHER EXPRESSIONS!");
+					+ "\nTHE EXPRESSION " + assignmentString + " IS PROBABLY COMBINING TASKID WITH OTHER TYPES OF EXPRESSIONS!");
 	}
 	
 	private void insertWaitForTaskGroupBlock(CtStatement containingStatement){

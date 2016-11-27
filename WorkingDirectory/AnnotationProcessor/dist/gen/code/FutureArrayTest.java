@@ -6,7 +6,17 @@ package code;
 public class FutureArrayTest {
     static int[] myArray = new int[10];
 
+    public FutureArrayTest(int i) {
+        pt.runtime.TaskInfoOneArg<Integer, Integer> ____myArray_1__PtTask__ = ((pt.runtime.TaskInfoOneArg<Integer, Integer>) (pt.runtime.ParaTask.asTask(pt.runtime.ParaTask.TaskType.ONEOFF, 
+			(pt.functionalInterfaces.FunctorOneArgWithReturn<Integer, Integer>)(__iPtNonLambdaArg__) -> code.FutureArrayTest.foo(__iPtNonLambdaArg__))));
+        pt.runtime.TaskID<Integer> ____myArray_1__PtTaskID__ = ____myArray_1__PtTask__.start(i);
+        __myArrayPtTaskIDGroup__.setInnerTask(1, ____myArray_1__PtTaskID__);
+    }
+
     public FutureArrayTest() {
+        pu.RedLib.IntegerSum __myArrayPtTaskReductionObjct__ = new pu.RedLib.IntegerSum();
+        pt.runtime.ParaTask.setReductionOperationForTaskIDGroup(__myArrayPtTaskIDGroup__, __myArrayPtTaskReductionObjct__);
+        java.lang.System.out.println("Hello, default constructor");
     }
 
     public static int foo(int i) {
@@ -44,10 +54,10 @@ public class FutureArrayTest {
             pt.runtime.TaskID<Integer> ____array_2__PtTaskID__ = ____array_2__PtTask__.start(i);
             __arrayPtTaskIDGroup__.setInnerTask(i, ____array_2__PtTaskID__);
         }
-        pt.runtime.TaskInfoNoArgs<Integer> ____myArray_1__PtTask__ = ((pt.runtime.TaskInfoNoArgs<Integer>) (pt.runtime.ParaTask.asTask(pt.runtime.ParaTask.TaskType.ONEOFF, 
+        pt.runtime.TaskInfoNoArgs<Integer> ____myArray_2__PtTask__ = ((pt.runtime.TaskInfoNoArgs<Integer>) (pt.runtime.ParaTask.asTask(pt.runtime.ParaTask.TaskType.ONEOFF, 
 			(pt.functionalInterfaces.FunctorNoArgsWithReturn<Integer>)() -> code.FutureArrayTest.foo(3))));
-        pt.runtime.TaskID<Integer> ____myArray_1__PtTaskID__ = ____myArray_1__PtTask__.start();
-        __myArrayPtTaskIDGroup__.setInnerTask(0, ____myArray_1__PtTaskID__);
+        pt.runtime.TaskID<Integer> ____myArray_2__PtTaskID__ = ____myArray_2__PtTask__.start();
+        __myArrayPtTaskIDGroup__.setInnerTask(0, ____myArray_2__PtTaskID__);
         int[] myarray = new int[2];
         myarray[0] = tester.get();
         java.lang.System.out.println(array.length);

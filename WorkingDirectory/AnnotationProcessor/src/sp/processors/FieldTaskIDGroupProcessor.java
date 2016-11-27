@@ -1,8 +1,6 @@
 package sp.processors;
 
-import java.nio.file.WatchEvent.Modifier;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -10,6 +8,7 @@ import sp.annotations.Future;
 import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtStatementList;
+import spoon.reflect.code.CtBlock;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtConstructor;
 import spoon.reflect.declaration.CtField;
@@ -53,13 +52,16 @@ public class FieldTaskIDGroupProcessor extends TaskIDGroupProcessor {
 			List<CtStatement> containingStatements = APTUtils.findVarAccessOtherThanFutureDefinition(method.getBody(), thisAnnotatedField);
 			occurrences.addAll(containingStatements);
 		}
-//		System.out.println(occurrences);
 		return occurrences;
 	}
 	
 	@Override
 	protected void insertNewStatements(CtLocalVariable<?> taskIDGroupDeclarationStatement, List<CtStatement> reductionStatements){
-		System.out.println("insert statement " + taskIDGroupDeclarationStatement.toString() + " for field");
+		insertField(taskIDGroupDeclarationStatement);
+		insertReductionStatements(reductionStatements);
+	}
+	
+	private void insertField(CtLocalVariable<?> taskIDGroupDeclarationStatement){
 		CtClassImpl<?> parentClass = (CtClassImpl<?>) thisAnnotatedField.getParent(CtClass.class);
 		CtField taskIDGroupField = thisFactory.Core().createField();
 		taskIDGroupField.setType(taskIDGroupDeclarationStatement.getType());
@@ -67,8 +69,21 @@ public class FieldTaskIDGroupProcessor extends TaskIDGroupProcessor {
 		taskIDGroupField.setDefaultExpression(taskIDGroupDeclarationStatement.getDefaultExpression());
 		taskIDGroupField.setModifiers(fieldModifiers);
 		parentClass.addField(taskIDGroupField);
-		//parentClass.addField(thisAnnotatedField.getPosition().getLine(), taskIDGroupField);
+	}
+	
+	private void insertReductionStatements(List<CtStatement> reductionStatemetnts){
+		CtClassImpl<?> parentClass = (CtClassImpl<?>) thisAnnotatedField.getParent(CtClass.class);
+		CtConstructor constructor = parentClass.getConstructor();
 		
+		if(constructor == null){
+			constructor = thisFactory.Core().createConstructor();
+		}
+		
+		CtStatementList statements = thisFactory.Core().createStatementList();
+		statements.setStatements(reductionStatemetnts);
+		CtBlock<?> constructorBlock = (CtBlock<?>) constructor.getBody();
+		constructorBlock.insertBegin(statements);
+		parentClass.addConstructor(constructor);
 	}
 }
 
