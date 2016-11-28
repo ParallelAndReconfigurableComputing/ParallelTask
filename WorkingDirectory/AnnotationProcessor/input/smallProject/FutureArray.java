@@ -6,9 +6,11 @@ import sp.annotations.Future;
 
 public class FutureArray {
 	@Future(reduction="sum")
-	int[] myArray = new int[10];
-	int range = 0;
+	int[] myArray;
+	int range = 5;
+	
 	public FutureArray(int num){
+		myArray = new int[num];
 		range = num;		
 	}
 	

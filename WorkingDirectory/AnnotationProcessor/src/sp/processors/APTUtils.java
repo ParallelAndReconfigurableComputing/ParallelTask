@@ -658,8 +658,7 @@ public class APTUtils {
 
 	/**
 	 * Finds the occurrence of a future variable within the block
-	 * of that future variable. However, this only finds the first
-	 * occurrence of that future variable, and not the others.
+	 * of that future variable. 
 	 * @param block
 	 * @param element
 	 * @return
@@ -839,7 +838,7 @@ public class APTUtils {
 	}
 	
 	public static String getTaskReductionName(String name){
-		return "__" + name + "PtTaskReductionObjct__";
+		return "__" + name + "PtTaskReductionObject__";
 	}
 	
 	public static String getTaskIDName(String name) {
@@ -849,6 +848,10 @@ public class APTUtils {
 	public static String getTaskIDGroupName(String name){
 		return "__" + name + "PtTaskIDGroup__";
 	}
+	
+	public static String getTaskIDGroupSizeSyntax(String name){
+		return "__" + name + "PtTaskIDGroupSize__";
+	}	
 	
 	public static String getLambdaArgName(String name) {
 		return "__" + name + "PtLambdaArg__";
@@ -970,6 +973,7 @@ public class APTUtils {
 	public static String getTaskIDGroupSyntax()	{
 		return "pt.runtime.TaskIDGroup";
 	}
+	
 	public static String getAsTaskSyntax(){
 		return "pt.runtime.ParaTask.asTask";
 	}

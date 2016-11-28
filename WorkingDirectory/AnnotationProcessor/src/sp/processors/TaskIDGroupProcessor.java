@@ -8,9 +8,12 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.print.attribute.standard.NumberOfDocuments;
+
 import sp.annotations.Future;
 import sp.processors.APTUtils.ExpressionRole;
 import spoon.reflect.factory.Factory;
+import spoon.reflect.code.CtAssignment;
 import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtCatch;
 import spoon.reflect.code.CtCatchVariable;
@@ -20,6 +23,7 @@ import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtFor;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtLocalVariable;
+import spoon.reflect.code.CtNewArray;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtStatementList;
 import spoon.reflect.code.CtTry;
@@ -28,9 +32,11 @@ import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtConstructor;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtField;
+import spoon.reflect.declaration.CtVariable;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.support.reflect.code.CtAssignmentImpl;
 import spoon.support.reflect.code.CtInvocationImpl;
+import spoon.support.reflect.declaration.CtClassImpl;
 
 /**
  * This annotation processor processes <code>Future</code> annotations that appear at the declaration
@@ -66,21 +72,25 @@ import spoon.support.reflect.code.CtInvocationImpl;
 public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	
 	protected CtTypeReference<?> thisGroupType = null;
+	protected CtExpression<?> thisGroupDeclarationExpression = null;
 	protected Future thisFutureAnnotation = null;
 	protected int thisArrayDimension = 0;
 	protected String thisTaskIDGroupName = null;
 	protected String thisGroupSize = null;
+	protected String thisGroupSizeName = null;
 	protected int ptLoopIndexCounter = 0;
 	protected int ptAsyncTaskCounter = 0;
 	protected boolean elasticTaskGroup = false;
-	protected CtClass<?> parentClass = null;
-
+	protected boolean instantiatedLater = false;
+	protected CtClass parentClass = null;
+	
 	
 	protected TaskIDGroupProcessor(Factory factory, Future future){
 		thisFutureAnnotation = future;
 		thisFactory = factory;
 		thisGroupType = thisFactory.Core().createTypeReference();
 		thisGroupSize = "";
+		thisGroupSizeName = "";
 	}
 	
 	public TaskIDGroupProcessor(Factory factory, Future future, CtLocalVariable<?> annotatedElement){
@@ -89,6 +99,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		thisElementType = thisAnnotatedElement.getType();	
 		thisElementName = thisAnnotatedElement.getSimpleName();
 		thisTaskIDGroupName = APTUtils.getTaskIDGroupName(thisElementName);
+		thisGroupSizeName = APTUtils.getTaskIDGroupSizeSyntax(thisElementName);
 		parentClass = thisAnnotatedElement.getParent(CtClass.class);
 	}	
 	
@@ -108,7 +119,8 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	}
 	
 	protected void inspectArrayDeclaration(){
-		inspectArrayDeclaration(thisAnnotatedElement.getDefaultExpression().toString());
+		getInstantiationExpression(thisAnnotatedElement);
+		inspectArrayDeclaration(thisGroupDeclarationExpression.toString());
 	}
 	
 	protected void inspectArrayDeclaration(String defaultExpression){
@@ -131,10 +143,10 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 
 	}
 	
-	protected List<CtStatement> findOccurrences(){
-		List<CtStatement> occurrences = null;
-		occurrences = APTUtils.findVarAccessOtherThanFutureDefinition(thisAnnotatedElement.getParent(CtBlock.class), thisAnnotatedElement);
-		return occurrences;
+	protected List<CtStatement> findVarAccessStatements(){
+		List<CtStatement> varAccessStatements = null;
+		varAccessStatements = APTUtils.findVarAccessOtherThanFutureDefinition(thisAnnotatedElement.getParent(CtBlock.class), thisAnnotatedElement);
+		return varAccessStatements;
 	}
 	
 	/*
@@ -145,7 +157,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	 */
 	@Override
 	protected void modifySourceCode() {		
-		listOfContainingNodes = APTUtils.listAllExpressionsOfStatements(findOccurrences());
+		listOfContainingNodes = APTUtils.listAllExpressionsOfStatements(findVarAccessStatements());
 		insertNewStatements();
 		modifyArrayAccessStatements();
 	}
@@ -202,10 +214,37 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	}
 	
 	private void insertNewStatements(){
-	
+		if(!(thisGroupType.toString().contains("Void"))){
+			if(instantiatedLater)
+				insertTaskIDSizeStatements();
+		}
 		List<CtStatement> reductionStatements = getReductionStatements(thisGroupType.toString(), APTUtils.getTaskIDGroupName(thisElementName));
 		insertNewStatements(declareTaskIDGroup(), reductionStatements);
-
+	}
+	
+	/*
+	 * The taskIdSize statement will initialize a new variable call taskIDGroupSize that indicates the 
+	 * size of an array. These statements are only entered if the instantiation of an array happens anywhere
+	 * other than its declaration point. In this case, the value that is used by the programmer to specify
+	 * the size of the array may be limited to a specific scope, and not recognized in other scopes. Therefore,
+	 * the compiler declares a variable in the same scope as the declared TaskGroup, for later looping over the
+	 * elements of the taskIDGroup. 
+	 */
+	private void insertTaskIDSizeStatements(){
+		CtLocalVariable<?> taskGroupSizeVarDeclaration = declareTaskIDGroupSizeVariable();
+		CtAssignment<?, ?> instantiateTaskGroupSizeVariable = instantiateTaskIDGroupVariable();
+		
+		insertTaskIDSizeDeclaration(taskGroupSizeVarDeclaration);
+		insertTaskIDSizeAssignment(instantiateTaskGroupSizeVariable);
+	}
+	
+	protected void insertTaskIDSizeDeclaration(CtLocalVariable<?> taskGroupSizeVarDeclaration){
+		thisAnnotatedElement.insertBefore(taskGroupSizeVarDeclaration);
+	}
+	
+	protected void insertTaskIDSizeAssignment(CtAssignment<?, ?> instantiateTaskGroupSizeVariable){
+		CtStatement parentStatement = thisGroupDeclarationExpression.getParent(CtStatement.class);
+		parentStatement.insertAfter(instantiateTaskGroupSizeVariable);
 	}
 	
 	protected void insertNewStatements(CtLocalVariable<?> taskIDGroupDeclarationStatement, List<CtStatement> reductionStatements){
@@ -393,6 +432,69 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	
 	//-------------------------------------------------------HELPER METHODS------------------------------------------------------
 	
+	/*
+	 * If the size of the array is not specified at the time of declaring the array, then 
+	 * the taskIDGroup will be an elastic one. 
+	 */
+	protected void getInstantiationExpression(CtVariable<?> variable){
+		try{
+			thisGroupDeclarationExpression = variable.getDefaultExpression();
+			if(thisGroupDeclarationExpression == null){
+				instantiatedLater = true;
+				elasticTaskGroup = true;
+				thisGroupDeclarationExpression = findDefaultExpression(variable);
+			}
+		}catch(Exception e){
+			System.err.println("There was no \"new\" statement found for future group: " + thisElementName);
+			e.printStackTrace();
+		}
+	}
+	
+	/*
+	 * Returns the first instantiation statement that is found for a future array. 
+	 * If a future array is instantiated more than once through the user-code, the
+	 * behavior of the compiler will be undefined, as there is no guarantee on which
+	 * instantiation statement will be found first by the compiler. 
+	 */
+	private CtExpression<?> findDefaultExpression(CtVariable<?> variable) throws Exception{
+		List<CtStatement> varAccessStatements = findVarAccessStatements();
+		List<ASTNode> varAccessNodes = null;
+		boolean assignmentFound = false;
+		
+		if(varAccessStatements != null){
+			varAccessNodes = APTUtils.listAllExpressionsOfStatements(varAccessStatements);
+		}
+		
+		for(ASTNode varAccessNode : varAccessNodes){
+			
+			CtStatement nodeStatement = varAccessNode.getStatement();
+			
+			if(nodeStatement instanceof CtAssignment<?, ?>){
+				
+				int numOfExpressions = varAccessNode.numberOfExpressions();
+				
+				for(int index = 0; index < numOfExpressions; index++){
+					CtExpression<?> expression = varAccessNode.getExpression(index);
+					ExpressionRole role = varAccessNode.getExpressionRole(index);
+					if(role.equals(ExpressionRole.Assigned)){
+						String expressionName = expression.toString();
+						if(expressionName.equals(variable.getSimpleName()))
+							assignmentFound = true;
+					}
+					else if(role.equals(ExpressionRole.Assignment)){
+						if(expression instanceof CtNewArray<?>){
+							if(assignmentFound)
+								return expression;
+						}
+					}
+				}
+			}
+			
+		}
+		
+		throw new Exception("FUTURE GROUP " + variable.getSimpleName() + " HAS BEEN DECLARED, BUT IS NOT INSTANTIATED WITH A NEW ARRAY STATEMENT!");
+	}
+	
 	private boolean hasInvocationExpression(CtExpression<?> assignment){
 		if(assignment instanceof CtInvocation<?>)
 			return true;
@@ -422,6 +524,30 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		
 	private CtCatch createCatchBlock(String exceptionClass){
 		return createCatchBlock(exceptionClass, "");
+	}
+	
+	private CtLocalVariable<?> declareTaskIDGroupSizeVariable(){
+		CtLocalVariable<?> taskIDGroupSizeVariable = thisFactory.Core().createLocalVariable();
+		CtTypeReference taskIDGroupSizeType = thisFactory.Core().createTypeReference();
+		taskIDGroupSizeType.setSimpleName("int");
+		taskIDGroupSizeVariable.setType(taskIDGroupSizeType);
+		taskIDGroupSizeVariable.setSimpleName(thisGroupSizeName);
+		taskIDGroupSizeVariable.setDefaultExpression(null);
+		return taskIDGroupSizeVariable;
+	}
+	
+	private CtAssignment<?, ?> instantiateTaskIDGroupVariable(){
+		CtAssignment<?, ?> instantiateTaskIDGroup = thisFactory.Core().createAssignment();
+		CtCodeSnippetExpression assigned = thisFactory.Core().createCodeSnippetExpression();
+		CtCodeSnippetExpression assignment = thisFactory.Core().createCodeSnippetExpression();
+		
+		assigned.setValue(thisGroupSizeName);
+		assignment.setValue(thisGroupSize);
+		
+		instantiateTaskIDGroup.setAssigned(assigned);
+		instantiateTaskIDGroup.setAssignment(assignment);
+		
+		return instantiateTaskIDGroup;
 	}
 	
 	private CtCatch createCatchBlock(String exceptionClass, String message){
@@ -465,9 +591,11 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		CtCodeSnippetStatement  forBody = thisFactory.Core().createCodeSnippetStatement();
 		String loopIndexName = "__ptLoopIndex" + ptLoopIndexCounter + "__";
 		
+		String loopSize = (instantiatedLater) ? thisGroupSizeName : thisGroupSize;
+		
 		initStmt.setValue("int " + loopIndexName + " = 0");
 		updateStmt.setValue(loopIndexName + "++");
-		loopCondition.setValue(loopIndexName + " < " + thisGroupSize);
+		loopCondition.setValue(loopIndexName + " < " + loopSize);
 		
 		String bodyString = thisElementName + "[" + loopIndexName + "] = " + thisTaskIDGroupName + ".getInnerTaskResult(" + loopIndexName + ")";    
 		forBody.setValue(bodyString);

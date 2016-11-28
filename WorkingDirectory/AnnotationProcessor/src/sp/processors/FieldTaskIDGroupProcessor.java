@@ -10,6 +10,10 @@ import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtStatementList;
 import spoon.reflect.code.CtBlock;
+import spoon.reflect.code.CtCodeSnippetExpression;
+import spoon.reflect.code.CtCodeSnippetStatement;
+import spoon.reflect.code.CtExpression;
+import spoon.reflect.declaration.CtAnonymousExecutable;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtConstructor;
 import spoon.reflect.declaration.CtField;
@@ -22,41 +26,54 @@ public class FieldTaskIDGroupProcessor extends TaskIDGroupProcessor {
 	private CtField<?> thisAnnotatedField = null;
 	private Set<ModifierKind> fieldModifiers = null;
 		
+	/*
+	 * 1- Cases where the default expression for a declaration is after the declaration line, for example:
+	 * int[] i;
+	 * 
+	 * i = new int[num]
+	 * must be investigated. 
+	 * 
+	 * 
+	 * 2- receiving the total result of a taskIdGroup when a reduction is specified must be supported as well. 
+	 * Current best solution is that the programmer declares the name of the indicator via an attribute of future
+	 * (e.g., String totalGroupResult() default ""; --> and the code replaces the declaration of that code with 
+	 * taskIDGroup.getReturnResult();
+	 * For this case, if the default expression is provided at a later point, it must be found and removed. 
+	 */
 	public FieldTaskIDGroupProcessor(Factory factory, Future future, CtField<?> annotatedElement){
 		super(factory, future);
 		thisAnnotatedField = annotatedElement;
 		thisElementType = thisAnnotatedField.getType();
 		thisElementName = thisAnnotatedField.getSimpleName();
 		thisTaskIDGroupName = APTUtils.getTaskIDGroupName(thisElementName);
+		thisGroupSizeName = APTUtils.getTaskIDGroupSizeSyntax(thisElementName);
 		elasticTaskGroup = true;
 		parentClass = thisAnnotatedField.getParent(CtClass.class);
-		System.out.println("field default expression: " + thisAnnotatedField.getDefaultExpression());
 	}
 	
 	@Override
 	protected void inspectArrayDeclaration(){
 		fieldModifiers = thisAnnotatedField.getModifiers();
-		inspectArrayDeclaration(thisAnnotatedField.getDefaultExpression().toString());
+		getInstantiationExpression(thisAnnotatedField);
+		inspectArrayDeclaration(thisGroupDeclarationExpression.toString());
 	}
 	
 	@Override
-	protected List<CtStatement> findOccurrences(){
-		List<CtStatement> occurrences = new ArrayList<>();
-		CtClass	parentClass = thisAnnotatedField.getParent(CtClass.class);
+	protected List<CtStatement> findVarAccessStatements(){
+		List<CtStatement> accessStatements = new ArrayList<>();
 		Set<CtConstructor<?>> constructors = parentClass.getConstructors();
 		Set<CtMethod<?>> methods = parentClass.getAllMethods();
 			
 		for(CtConstructor<?> constructor : constructors){
 			List<CtStatement> containingStatements = APTUtils.findVarAccessOtherThanFutureDefinition(constructor.getBody(), thisAnnotatedField);
-			occurrences.addAll(containingStatements);
+			accessStatements.addAll(containingStatements);
 		}
 		
 		for(CtMethod<?> method : methods){
 			List<CtStatement> containingStatements = APTUtils.findVarAccessOtherThanFutureDefinition(method.getBody(), thisAnnotatedField);
-			occurrences.addAll(containingStatements);
+			accessStatements.addAll(containingStatements);
 		}
-		System.out.println("occurrences: " + occurrences);
-		return occurrences;
+		return accessStatements;
 	}
 	
 	@Override
@@ -66,13 +83,21 @@ public class FieldTaskIDGroupProcessor extends TaskIDGroupProcessor {
 	}
 	
 	@Override
+	protected void insertTaskIDSizeDeclaration(CtLocalVariable<?> taskGroupSizeVarDeclaration){
+		CtField taskIDGroupSizeField = thisFactory.Core().createField();
+		taskIDGroupSizeField.setSimpleName(taskGroupSizeVarDeclaration.getSimpleName());
+		taskIDGroupSizeField.setType(taskGroupSizeVarDeclaration.getType());
+		taskIDGroupSizeField.setDefaultExpression(taskGroupSizeVarDeclaration.getDefaultExpression());
+		parentClass.addFieldAtTop(taskIDGroupSizeField);
+	}
+	
+	@Override
 	protected CtBlock<?> getParentBlockForWaitStatement(CtStatement containingStatement){
 		CtMethod<?> parentMethod = containingStatement.getParent(CtMethod.class);
 		return parentMethod.getBody();
 	}
 	
 	private void insertField(CtLocalVariable<?> taskIDGroupDeclarationStatement){
-		CtClassImpl<?> parentClass = (CtClassImpl<?>) thisAnnotatedField.getParent(CtClass.class);
 		CtField taskIDGroupField = thisFactory.Core().createField();
 		taskIDGroupField.setType(taskIDGroupDeclarationStatement.getType());
 		taskIDGroupField.setSimpleName(taskIDGroupDeclarationStatement.getSimpleName());
@@ -81,48 +106,18 @@ public class FieldTaskIDGroupProcessor extends TaskIDGroupProcessor {
 		parentClass.addFieldAtTop(taskIDGroupField);
 	}
 	
+	/*
+	 * Adds a static anonymous block to the class, in which the reduction statement is created
+	 * and assigned to the corresponding TaskIDGroup object. 
+	 */
 	private void insertReductionStatements(List<CtStatement> reductionStatemetnts){
-		CtClassImpl parentClass = (CtClassImpl<?>) thisAnnotatedField.getParent(CtClass.class);
-		CtConstructor constructor = parentClass.getConstructor();
+		Set<CtConstructor> constructors = parentClass.getConstructors();
 				
-		/*
-		 * When a new constructor is created, it does not have a body! Therefore, a new body
-		 * (i.e., CtBlock) must be created and assigned to it. Otherwise, there will be no
-		 * constructors added to the actual code. 
-		 * 
-		 * In this case, statements are inserted in the reverse order of the original statement
-		 * list, when insertBegin is used for the new block. Therefore, the list is inverted before
-		 * insertion.
-		 */		 
-		if(constructor == null){
-			System.out.println("default constrcutor is null");
-			constructor = thisFactory.Core().createConstructor();
-			CtBlock<?> block = thisFactory.Core().createBlock();
-			constructor.setBody(block);
-			
-			List<CtStatement> constructorStatements = new ArrayList<>();
-			int index = reductionStatemetnts.size() - 1;
-			for(; index >= 0; index--){
-				constructorStatements.add(reductionStatemetnts.get(index));
-			}
-			
-			reductionStatemetnts = constructorStatements;			
-		}	
-		
-		System.out.println("constructor's size: " + parentClass.getConstructors().size());
-		CtStatementList statements = thisFactory.Core().createStatementList();
-		statements.setStatements(reductionStatemetnts);
-		CtBlock<?> constructorBlock = (CtBlock<?>) constructor.getBody();
-		constructorBlock.insertBegin(statements);
-		
-		parentClass.addConstructor(constructor);
-
-//		else{
-//			System.out.println("constructors are null");
-//			Set<CtConstructor> constructors = new HashSet<>();
-//			constructors.add(constructor);
-//			parentClass.setConstructors(constructors);
-//		}
+		CtAnonymousExecutable anonymousBlock = thisFactory.Core().createAnonymousExecutable();
+		CtBlock anonymousBody = thisFactory.Core().createBlock();
+		anonymousBody.setStatements(reductionStatemetnts);
+		anonymousBlock.setBody(anonymousBody);
+		parentClass.addAnonymousExecutable(anonymousBlock);
 	}
 }
 
