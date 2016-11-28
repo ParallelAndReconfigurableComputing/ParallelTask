@@ -73,6 +73,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	protected int ptLoopIndexCounter = 0;
 	protected int ptAsyncTaskCounter = 0;
 	protected boolean elasticTaskGroup = false;
+	protected CtClass<?> parentClass = null;
 
 	
 	protected TaskIDGroupProcessor(Factory factory, Future future){
@@ -88,13 +89,14 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		thisElementType = thisAnnotatedElement.getType();	
 		thisElementName = thisAnnotatedElement.getSimpleName();
 		thisTaskIDGroupName = APTUtils.getTaskIDGroupName(thisElementName);
+		parentClass = thisAnnotatedElement.getParent(CtClass.class);
 	}	
 	
 	@Override
 	public void process(){
 		inspectFutureAnnotation();
 		inspectArrayDeclaration();
-		modifySourceCode();
+		modifySourceCode();		
 	}	
 	
 	protected void inspectFutureAnnotation(){
@@ -175,19 +177,20 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 							CtExpression<?> assignmentExp = assignmentStmt.getAssignment();
 							if(!containsSyntaxOfAnArrayElement(assignmentExp.toString())){
 								modifyAssignmentStatement(assignmentStmt);
-								break;
+							//	break; there might be more expressions with the element name!
 							}
 							else{
 								//otherwise an array element has been referred to in this statement, so insert the wait block 
 								insertWaitForTaskGroupBlock(currentStatement);
-								return;
+							//	return; We can't return straight after this statement is found, they are not always
+								//listed in order
 							}							
 						}
 						else{
 							//if the expression is not an assignment expression, then array element is definitely
 							//referred to, so insert the wait block.
 							insertWaitForTaskGroupBlock(currentStatement);
-							return;
+						//	return;
 						}
 					}
 				}
@@ -290,34 +293,38 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 					+ "\nTHE EXPRESSION " + assignmentString + " IS PROBABLY COMBINING TASKID WITH OTHER TYPES OF EXPRESSIONS!");
 	}
 	
+	protected CtBlock<?> getParentBlockForWaitStatement(CtStatement containingStatement){
+		return thisAnnotatedElement.getParent(CtBlock.class);
+	}
+	
 	private void insertWaitForTaskGroupBlock(CtStatement containingStatement){
 		try{
-		CtElement parentBlockOfAnnotatedElement = thisAnnotatedElement.getParent(CtBlock.class);
-		//CtElement parent = statement.getParent(CtBlock.class);
-		CtElement parent = containingStatement;
-				
-		//go to the same scope in which the task group is defined. 
-		while(!parentBlockOfAnnotatedElement.equals(parent.getParent())){
-			parent = parent.getParent();
-		}
-		
-		CtTry tryBlock = createTryBlock();
-		CtCatch catchBlock = createCatchBlock();
-		
-		List<CtCatch> catchers = new ArrayList<>();
-		catchers.add(catchBlock);
-		
-		tryBlock.setCatchers(catchers);
-		CtStatement parentStatemtn = (CtStatement) parent;
-		StatementMatcherFilter<CtStatement> filter = new StatementMatcherFilter<CtStatement>(parentStatemtn);
-		((CtBlock<?>)parentBlockOfAnnotatedElement).insertBefore(filter, tryBlock);
-		
-		if(!(thisGroupType.toString().contains("Void"))){
-			CtFor forLoop = createForLoop();
-			((CtBlock<?>)parentBlockOfAnnotatedElement).insertBefore(filter, forLoop);
-		}
+			CtBlock<?> parentBlockOfAnnotatedElement = getParentBlockForWaitStatement(containingStatement);
+			//CtElement parent = statement.getParent(CtBlock.class);
+			CtElement parent = containingStatement;
+					
+			//go to the same scope in which the task group is defined. 
+			while(!parentBlockOfAnnotatedElement.equals(parent.getParent())){
+				parent = parent.getParent();
+			}
+			
+			CtTry tryBlock = createTryBlock();
+			CtCatch catchBlock = createCatchBlock();
+			
+			List<CtCatch> catchers = new ArrayList<>();
+			catchers.add(catchBlock);
+			
+			tryBlock.setCatchers(catchers);
+			CtStatement parentStatemtn = (CtStatement) parent;
+			StatementMatcherFilter<CtStatement> filter = new StatementMatcherFilter<CtStatement>(parentStatemtn);
+			parentBlockOfAnnotatedElement.insertBefore(filter, tryBlock);
+			
+			if(!(thisGroupType.toString().contains("Void"))){
+				CtFor forLoop = createForLoop();
+				parentBlockOfAnnotatedElement.insertBefore(filter, forLoop);
+			}
 		}catch(Exception e){
-			System.out.println("EXCEPTION WAS THROWN");
+			System.out.println("EXCEPTION WAS THROWN WHEN INSERTING WAIT BLOCK FOR STATEMENT: " + containingStatement);
 		}
 	}
 		
