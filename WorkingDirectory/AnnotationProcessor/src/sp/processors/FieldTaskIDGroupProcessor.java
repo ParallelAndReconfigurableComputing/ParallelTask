@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import sp.annotations.Future;
+import sp.processors.APTUtils.ExpressionRole;
 import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtStatementList;
@@ -20,11 +21,13 @@ import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.ModifierKind;
 import spoon.reflect.factory.Factory;
+import spoon.support.reflect.code.CtAssignmentImpl;
 import spoon.support.reflect.declaration.CtClassImpl;
 
 public class FieldTaskIDGroupProcessor extends TaskIDGroupProcessor {
 	private CtField<?> thisAnnotatedField = null;
 	private Set<ModifierKind> fieldModifiers = null;
+	private CtMethod<?>   arrayAccessMethod = null;
 		
 	/*
 	 * 1- Cases where the default expression for a declaration is after the declaration line, for example:
@@ -80,6 +83,75 @@ public class FieldTaskIDGroupProcessor extends TaskIDGroupProcessor {
 	protected void insertNewStatements(CtLocalVariable<?> taskIDGroupDeclarationStatement, List<CtStatement> reductionStatements){
 		insertField(taskIDGroupDeclarationStatement);
 		insertReductionStatements(reductionStatements);
+	}
+	
+	
+	/*
+	 * Modifies the statements in which this future array is assigned a future variables. This future
+	 * variable can be either declared before the declaration of this future array, or after that. 
+	 * Both cases are considered when processing. In another case, an invocation can be assigned to an
+	 * element of this future array, which will get a customized declaration by the compiler. 
+	 * Moreover, once it encounters the first statement in which the value for an element of the future
+	 * array is accessed, the compiler inserts the barrier phrase for waiting for all task of the 
+	 * future array, until they are processed and finished.   
+	 * 
+	 * This case needs to be discussed within the group. Whether a method should be nominated by the user
+	 * in which the wait statement is entered, and array access statements in other methods are assumed to 
+	 * take place after the nominated method is called, therefore, wait statement is not entered there.
+	 */
+	@Override
+	protected void modifyArrayAccessStatements(){
+		CtStatement currentStatement = null;
+		try{
+			for(ASTNode node : listOfContainingNodes){
+				currentStatement = node.getStatement();
+				for(int index = 0; index < node.numberOfExpressions(); index++){
+					CtExpression<?> expression = node.getExpression(index);
+					ExpressionRole expressionRole = node.getExpressionRole(index);
+					if(containsSyntaxOfAnArrayElement(expression.toString())){
+						//Check if array element is on the left side of an assignment expression
+						if(expressionRole.equals(ExpressionRole.Assigned)){ 
+							//if yes, then change the expression into adding a taskID to a taskGroup if 
+							//the array element is only on the left side of the assignment (i.e., a[] = ... )
+							CtAssignmentImpl<?, ?> assignmentStmt = (CtAssignmentImpl<?, ?>) currentStatement;
+							CtExpression<?> assignmentExp = assignmentStmt.getAssignment();
+							if(!containsSyntaxOfAnArrayElement(assignmentExp.toString())){
+								modifyAssignmentStatement(assignmentStmt);
+								break;
+							}
+							else{
+								//otherwise an array element has been referred to in this statement, so insert the wait block 
+								if(!waitStatementEntered){
+									insertWaitForTaskGroupBlock(currentStatement);
+									arrayAccessMethod = currentStatement.getParent(CtMethod.class);
+								}else{
+									CtMethod<?> method = currentStatement.getParent(CtMethod.class);
+									if(!arrayAccessMethod.equals(method))
+										throw new Exception("Wait statement for the task group is already entered. \n"
+												+ "Currently, global task group elements can only be access in one method");
+								}								
+							}							
+						}
+						else{
+							//if the expression is not an assignment expression, then array element is definitely
+							//referred to, so insert the wait block.
+							if(!waitStatementEntered){
+								insertWaitForTaskGroupBlock(currentStatement);
+								arrayAccessMethod = currentStatement.getParent(CtMethod.class);
+							}else{
+								CtMethod<?> method = currentStatement.getParent(CtMethod.class);
+								if(!arrayAccessMethod.equals(method))
+									throw new Exception("Wait statement for the task group is already entered. \n"
+											+ "Currently, global task group elements can only be access in one method");
+							}						
+						}
+					}
+				}
+			}
+		}catch(Exception e){
+			System.out.println("\nEXCEPTION WHILE ATTEMPTING TO MODIFY: " + currentStatement.toString() + " IN TASKIDGROUP PROCESSOR\n");
+			e.printStackTrace();
+		}
 	}
 	
 	@Override

@@ -82,6 +82,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	protected int ptAsyncTaskCounter = 0;
 	protected boolean elasticTaskGroup = false;
 	protected boolean instantiatedLater = false;
+	protected boolean waitStatementEntered = false;
 	protected CtClass parentClass = null;
 	
 	
@@ -169,10 +170,14 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	 * Both cases are considered when processing. In another case, an invocation can be assigned to an
 	 * element of this future array, which will get a customized declaration by the compiler. 
 	 * Moreover, once it encounters the first statement in which the value for an element of the future
-	 * array is accessed, the compiler inserts the barrier phrase for waiting for all tasksk of the 
+	 * array is accessed, the compiler inserts the barrier phrase for waiting for all tasks of the 
 	 * future array, until they are processed and finished.   
+	 * 
+	 * Local task groups conceptually expect the access point of an array element to be the moment, from
+	 * which the programmer does not assign any other future variables to the task group, so the compiler
+	 * stops processing after the first time that an element of the array is accessed. 
 	 */
-	private void modifyArrayAccessStatements(){
+	protected void modifyArrayAccessStatements(){
 		CtStatement currentStatement = null;
 		try{
 			for(ASTNode node : listOfContainingNodes){
@@ -189,20 +194,21 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 							CtExpression<?> assignmentExp = assignmentStmt.getAssignment();
 							if(!containsSyntaxOfAnArrayElement(assignmentExp.toString())){
 								modifyAssignmentStatement(assignmentStmt);
-							//	break; there might be more expressions with the element name!
+								break; 
 							}
 							else{
 								//otherwise an array element has been referred to in this statement, so insert the wait block 
 								insertWaitForTaskGroupBlock(currentStatement);
-							//	return; We can't return straight after this statement is found, they are not always
-								//listed in order
+								waitStatementEntered = true;
+								return; 
 							}							
 						}
 						else{
 							//if the expression is not an assignment expression, then array element is definitely
 							//referred to, so insert the wait block.
 							insertWaitForTaskGroupBlock(currentStatement);
-						//	return;
+							waitStatementEntered = true;
+							return;
 						}
 					}
 				}
@@ -298,7 +304,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	 *                          //asynchronous task within the code 
 	 *                          //separately 
 	 */
-	private void modifyAssignmentStatement(CtAssignmentImpl<?, ?> accessStatement){
+	protected void modifyAssignmentStatement(CtAssignmentImpl<?, ?> accessStatement){
 		CtExpression<?> assignment = accessStatement.getAssignment();
 		String assignmentString = assignment.toString();
 		boolean statementModified = false;
@@ -336,7 +342,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		return thisAnnotatedElement.getParent(CtBlock.class);
 	}
 	
-	private void insertWaitForTaskGroupBlock(CtStatement containingStatement){
+	protected void insertWaitForTaskGroupBlock(CtStatement containingStatement){
 		try{
 			CtBlock<?> parentBlockOfAnnotatedElement = getParentBlockForWaitStatement(containingStatement);
 			//CtElement parent = statement.getParent(CtBlock.class);
@@ -613,7 +619,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		return forLoop;
 	}
 	
-	private boolean containsSyntaxOfAnArrayElement(String component){
+	protected boolean containsSyntaxOfAnArrayElement(String component){
 		String regex = "\\b" + thisElementName + "\\b" + "\\[";
 		Pattern pattern = Pattern.compile(regex);
 		Matcher matcher = pattern.matcher(component);
