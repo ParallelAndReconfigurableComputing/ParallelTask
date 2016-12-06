@@ -6,6 +6,7 @@ import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtVariable;
+import spoon.reflect.factory.Factory;
 import spoon.support.reflect.code.CtInvocationImpl;
 import spoon.support.reflect.declaration.CtFieldImpl;
 
@@ -39,6 +40,10 @@ public class PtFutureProcessor extends AbstractAnnotationProcessor<Future, CtVar
 			if(annotatedElement instanceof CtLocalVariable<?>){
 				CtLocalVariable<?> element = (CtLocalVariable<?>) annotatedElement;
 				processor = new CollectionWrapperProcessor(getFactory(), annotation, element);
+				processor.process();
+			}else{
+				CtField<?> element = (CtField<?>) annotatedElement;
+				processor = new FieldCollectionWrapperProcessor(getFactory(), annotation, element);
 				processor.process();
 			}
 		}
@@ -79,7 +84,7 @@ public class PtFutureProcessor extends AbstractAnnotationProcessor<Future, CtVar
 			return;
 		}
 	}
-	
+
 	private boolean elementIsInvocation(CtVariable<?> annotatedElement){
 		CtExpression<?> defaultExpression = annotatedElement.getDefaultExpression();
 		if (defaultExpression instanceof CtInvocationImpl<?>)

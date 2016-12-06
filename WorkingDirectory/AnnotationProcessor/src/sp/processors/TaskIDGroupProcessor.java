@@ -284,7 +284,10 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		return taskIDGroupDeclartion;
 	}
 	
-
+	protected CtVariable<?> getCurrentAnnotatedElement(){
+		return thisAnnotatedElement;
+	}
+	
 	/*
 	 * Three types of assignments must be considered by the compiler.
 	 * 
@@ -309,9 +312,9 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		String assignmentString = assignment.toString();
 		boolean statementModified = false;
 		
+		CtVariable<?> currentAnnotatedElement = getCurrentAnnotatedElement();
 		
-		
-		if(APTUtils.isTaskIDReplacement(thisAnnotatedElement, assignmentString)){
+		if(APTUtils.isTaskIDReplacement(currentAnnotatedElement, assignmentString)){
 			modifyWithTaskIDReplacement(accessStatement);
 			statementModified = true;
 		}

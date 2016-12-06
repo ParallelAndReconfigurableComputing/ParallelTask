@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -16,8 +17,10 @@ import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.declaration.CtAnnotation;
+import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtField;
+import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtVariable;
 import spoon.reflect.reference.CtVariableReference;
 import spoon.support.reflect.code.CtArrayAccessImpl;
@@ -734,7 +737,8 @@ public class APTUtils {
 	
 	/**
 	 * Finds and returns the declaration statement of an argument that has
-	 * been used within another statement. 
+	 * been used within another statement. This method expects the argument to be 
+	 * declared before the statement that is passed as <i>currentStatement</i>
 	 * 
 	 * @param currentStatement : CtStatement, the statement, in which the variable is used.
 	 * @param argName : String, the name of the variable, for which we are looking for the declaration. 
@@ -753,14 +757,20 @@ public class APTUtils {
 			for(CtStatement statement : blockStatements) {
 				
 				if(statement == currentStatement){
-					if(isTheWantedDeclaration(statement, argName))
-						return statement;
+					if(statement instanceof CtLocalVariable<?>){
+						CtLocalVariable<?> localVariable = (CtLocalVariable<?>) statement;
+						if(isTheWantedDeclaration(localVariable, argName))
+							return statement;
+						else
+							break;
+					}
 					else
 						break;
 				}
 				
 				if (statement instanceof CtVariable<?>){
-					if(isTheWantedDeclaration(statement, argName))
+					CtLocalVariable<?> localVariable = (CtLocalVariable<?>) statement;
+					if(isTheWantedDeclaration(localVariable, argName))
 						return statement;
 				}				
 			}
@@ -771,10 +781,57 @@ public class APTUtils {
 	}
 	
 	/**
+	 * This method searches the entire body of a class for the declaration of a member named as
+	 * <code>argName</code>. 
+	 * 
+	 * @param field
+	 * @param argName
+	 * @return
+	 */
+	public static CtVariable<?> getDeclarationStatement(CtField<?> field, String argName){
+		if (!argName.matches("[a-zA-Z0-9_]+")) {
+			return null;
+		}
+		
+		CtClass<?> parentClass = field.getParent(CtClass.class);
+		List<CtField<?>> classFields = parentClass.getFields();
+		
+		for(CtField<?> classField : classFields){
+			if(isTheWantedDeclaration(classField, argName))
+				return classField;
+		}
+		
+		Set<CtMethod<?>> classMethods = parentClass.getMethods();
+		for(CtMethod<?> classMethod : classMethods){
+			CtBlock<?> methodBlock = classMethod.getBody();
+			CtVariable<?> declaration = searchForVarInBlock(methodBlock, argName);
+			if(declaration != null)
+				return declaration;
+		}
+		
+		return null;
+	}
+	
+	public static CtVariable<?> searchForVarInBlock(CtBlock<?> block, String argName){
+		List<CtStatement> blockStatements = block.getStatements();
+		for(CtStatement blockStatement : blockStatements){
+			if(blockStatement instanceof CtBlock<?>)
+				searchForVarInBlock((CtBlock<?>)blockStatement, argName);
+			
+			else if(blockStatement instanceof CtLocalVariable<?>){
+				CtLocalVariable<?> localVariable = (CtLocalVariable<?>) blockStatement;
+				if(isTheWantedDeclaration(localVariable, argName))
+					return localVariable;
+			}
+		}
+		return null;
+	}
+	
+	/**
 	 * Checks if the statement that is passed as an argument, is the declaration statement of the
 	 * variable name that is also sent as an argument. 
 	 */
-	public static boolean isTheWantedDeclaration(CtStatement statement, String argName){
+	public static boolean isTheWantedDeclaration(CtVariable<?> statement, String argName){
 		/*
 		 * If the argument does not have the same name as the current declared element, which is being
 		 * inspected, then its names is changed into a TaskName format iff it is a future variable. 
@@ -809,7 +866,7 @@ public class APTUtils {
 	 * 
 	 * @return <code>true</code>, if the argument is a future variable, <code>false</code> otherwise. 
 	 */
-	public static boolean isFutureVariable(CtLocalVariable<?> currentDeclaredElement, String argName){
+	public static boolean isFutureVariable(CtVariable<?> currentDeclaredElement, String argName){
 		/*
 		 * If an object is a future variable, then its name at its declaration statement has definitely
 		 * changed to the TaskInfo format. When we transfer the name into its TaskInfo format here,
@@ -820,8 +877,18 @@ public class APTUtils {
 		 * string literal). 
 		 */
 		argName = getTaskName(argName);
+		CtVariable<?> declaration = null;
 		
-		CtLocalVariable<?> declaration = (CtLocalVariable<?>)getDeclarationStatement(currentDeclaredElement, argName);
+		if(currentDeclaredElement instanceof CtLocalVariable<?>){
+			CtLocalVariable<?> localVariable = (CtLocalVariable<?>) currentDeclaredElement;
+			declaration = (CtLocalVariable<?>)getDeclarationStatement(localVariable, argName);
+		}
+		
+		else if(currentDeclaredElement instanceof CtFieldImpl<?>){
+			CtField<?> field = (CtField<?>) currentDeclaredElement;
+			declaration = getDeclarationStatement(field, argName);
+		}
+		
 		if(declaration == null)
 			return false;
 		return true;
@@ -913,7 +980,7 @@ public class APTUtils {
 	 * 
 	 * @return <code>true</code> if the variable is replace by a taskID object, <code>false</code> otherwise.
 	 */
-	public static boolean isTaskIDReplacement(CtLocalVariable<?> element, String name){
+	public static boolean isTaskIDReplacement(CtVariable<?> element, String name){
 		if(name.startsWith("__") && name.endsWith("PtTaskID__"+getResultSyntax())){
 			String originalName = getOrigName(name);
 			if(isFutureVariable(element, originalName)){

@@ -1,7 +1,6 @@
 package sp.processors;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -9,20 +8,17 @@ import sp.annotations.Future;
 import sp.processors.APTUtils.ExpressionRole;
 import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.code.CtStatement;
-import spoon.reflect.code.CtStatementList;
 import spoon.reflect.code.CtBlock;
-import spoon.reflect.code.CtCodeSnippetExpression;
-import spoon.reflect.code.CtCodeSnippetStatement;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.declaration.CtAnonymousExecutable;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtConstructor;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtMethod;
+import spoon.reflect.declaration.CtVariable;
 import spoon.reflect.declaration.ModifierKind;
 import spoon.reflect.factory.Factory;
 import spoon.support.reflect.code.CtAssignmentImpl;
-import spoon.support.reflect.declaration.CtClassImpl;
 
 public class FieldTaskIDGroupProcessor extends TaskIDGroupProcessor {
 	private CtField<?> thisAnnotatedField = null;
@@ -86,6 +82,11 @@ public class FieldTaskIDGroupProcessor extends TaskIDGroupProcessor {
 	}
 	
 	
+	@Override
+	protected CtVariable<?> getCurrentAnnotatedElement(){
+		return thisAnnotatedField;
+	}
+	
 	/*
 	 * Modifies the statements in which this future array is assigned a future variables. This future
 	 * variable can be either declared before the declaration of this future array, or after that. 
@@ -124,6 +125,7 @@ public class FieldTaskIDGroupProcessor extends TaskIDGroupProcessor {
 								if(!waitStatementEntered){
 									insertWaitForTaskGroupBlock(currentStatement);
 									arrayAccessMethod = currentStatement.getParent(CtMethod.class);
+									waitStatementEntered = true;
 								}else{
 									CtMethod<?> method = currentStatement.getParent(CtMethod.class);
 									if(!arrayAccessMethod.equals(method))
@@ -138,6 +140,7 @@ public class FieldTaskIDGroupProcessor extends TaskIDGroupProcessor {
 							if(!waitStatementEntered){
 								insertWaitForTaskGroupBlock(currentStatement);
 								arrayAccessMethod = currentStatement.getParent(CtMethod.class);
+								waitStatementEntered = true;
 							}else{
 								CtMethod<?> method = currentStatement.getParent(CtMethod.class);
 								if(!arrayAccessMethod.equals(method))

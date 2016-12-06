@@ -28,6 +28,7 @@ import spoon.reflect.declaration.CtAnnotation;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.declaration.CtMethod;
+import spoon.reflect.declaration.CtVariable;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.reference.CtVariableReference;
@@ -59,42 +60,52 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 	private List<CtVariableAccess<?>> variableAccessArgumentsToBeProcessed = null;
 	private List<CtInvocation<?>> potentialAsynchronousInvocations = null;
 	private Map<CtStatement, List<CtInvocation<?>>> invocationsToBeProcessed = null;
-	private Future  thisFutureAnnotation = null;
+	protected Future  thisFutureAnnotation = null;
 	private boolean insideCollectionStatement = false;
 	private int     encounteredInvocationArguments = 0;
 	private int     newLocalVariableIndex = 0;
-	private CtTypeReference<?> thisCollectionGenericType = null;
-		
-	public CollectionWrapperProcessor(Factory factory, Future future, CtLocalVariable<?> annotatedElement){
-		thisAnnotatedElement = annotatedElement;
+	protected CtTypeReference<?> thisCollectionGenericType = null;
+	
+	public CollectionWrapperProcessor(Factory factory, Future future){
 		thisFactory = factory;
 		thisFutureAnnotation = future;
+	}
+		
+	public CollectionWrapperProcessor(Factory factory, Future future, CtLocalVariable<?> annotatedElement){
+		this(factory, future);
+		thisAnnotatedElement = annotatedElement;
 		thisElementName = thisAnnotatedElement.getSimpleName();
+		thisElementType = thisAnnotatedElement.getType();
 	}
 
 	@Override
 	public void process() {
 		if(!validate())
 			return;
+		
 		inspectElement();
 		findCollectionInvocationArguments();
-		//printVariableAccessArguments();
-		//printStatementInvocations();
 		modifySourceCode();
 	}
 	
 	private void inspectElement(){		
-		String thisStatement = thisAnnotatedElement.toString();
+		String thisStatement = getElementString();
 		String collectionType = thisStatement.substring(thisStatement.indexOf("<")+1, thisStatement.indexOf(">"));
 		collectionType = APTUtils.getType(collectionType);
 		thisCollectionGenericType = thisFactory.Core().createTypeReference();
 		thisCollectionGenericType.setSimpleName(collectionType);
-		thisElementType = thisAnnotatedElement.getType();
 	}
 	
+	protected String getDefaultExpression(){
+		return thisAnnotatedElement.getDefaultExpression().toString();
+	}
+	
+	protected String getElementString(){
+		return thisAnnotatedElement.toString();
+	}
 	
 	private boolean validate(){
-		String defaultExpression = thisAnnotatedElement.getDefaultExpression().toString();
+		String defaultExpression = getDefaultExpression();
 		if(!(defaultExpression.contains(APTUtils.getGetWrapperSyntax()))){
 			System.out.println("ANNOTATION PROCESSING ERROR FOR:\n" + thisAnnotatedElement);
 			System.out.println("\nFUTURE ANNOTATION MUST BE USED FOR DECLARING COLLECTIONS THAT INVOKE: pt.runtime.ParaTask.getPtWrapper"
@@ -126,10 +137,16 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 		modifyCollectionDeclaration();
 	}
 	
-	private void modifyCollectionDeclaration(){
-		insertStatementBeforeDeclaration();
-		changeDeclarationName();
-		insertStatementAfterDeclaration();
+	protected void modifyCollectionDeclaration(){
+		insertStatementBeforeDeclaration(thisAnnotatedElement);
+		changeDeclarationName(thisAnnotatedElement);
+		insertStatementAfterDeclaration(thisAnnotatedElement);
+	}
+	
+	protected List<CtStatement> findVarAccessStatements(){
+		List<CtStatement> varAccessStatements = null;
+		varAccessStatements = APTUtils.findVarAccessOtherThanFutureDefinition(thisAnnotatedElement.getParent(CtBlock.class), thisAnnotatedElement);
+		return varAccessStatements;
 	}
 		
 	/*
@@ -152,7 +169,7 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 	 * The rest of the cases do not need to be processed. 
 	 */
 	private void findCollectionInvocationArguments(){
-		List<CtStatement> containingStatements = APTUtils.findVarAccessOtherThanFutureDefinition(thisAnnotatedElement.getParent(CtBlock.class), thisAnnotatedElement);
+		List<CtStatement> containingStatements = findVarAccessStatements();
 		listOfContainingNodes = APTUtils.listAllExpressionsOfStatements(containingStatements);
 		//System.out.println("containing statements: " + mapOfContainingStatements); 
 
@@ -205,6 +222,10 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 		}
 	}
 	
+	protected CtVariable<?> getCurrenAnnotatedtElement(){
+		return thisAnnotatedElement;
+	}
+	
 	/*
 	 * Modifies expressions of variables, which are sent as arguments to method invocations on the collection object. 
 	 * Variables that are sent as arguments will be changed to taskID equivalent, if the variable is declared as a
@@ -224,11 +245,10 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 	private void modifyVarAccessExpressions(){
 		for(CtVariableAccess<?> varAccess : variableAccessArgumentsToBeProcessed){
 			String varName = varAccess.toString();
-			boolean expressionModified = false;
+			CtVariable<?> currentAnnotatedElement= getCurrenAnnotatedtElement();
 			
-			if(APTUtils.isTaskIDReplacement(thisAnnotatedElement, varName)){
+			if(APTUtils.isTaskIDReplacement(currentAnnotatedElement, varName)){
 				modifyWithTaskIDReplacement(varAccess);
-				expressionModified = true;
 			}
 			
 			else{
@@ -238,7 +258,6 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 					Future future = hasFutureAnnotation(declarationStatement);
 					if(future != null){
 						modifyWithFutuerObject(future, declarationStatement, varAccess);
-						expressionModified = true;
 					}
 				}
 			}			
@@ -320,8 +339,8 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 				CtLocalVariable<?> newLocalVariable = thisFactory.Core().createLocalVariable();
 				
 				//declare a variable that receives the result of the invocaiton. 
-				CtTypeReference newVariableType = invocation.getExecutable().getType();
-				newLocalVariable.setType(newVariableType);
+				CtTypeReference invocationType = invocation.getExecutable().getType();
+				newLocalVariable.setType(invocationType);
 			
 				String newVariableName = invocation.getExecutable().getSimpleName() + "_" + newLocalVariableIndex;
 				newLocalVariable.setSimpleName(newVariableName);	
@@ -409,7 +428,7 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 		return false;
 	}
 	
-	private void insertStatementBeforeDeclaration(){
+	protected void insertStatementBeforeDeclaration(CtStatement statement){
 		CtInvocation invokePT = thisFactory.Core().createInvocation();
 		CtExecutableReference executable = thisFactory.Core().createExecutableReference();
 		CtCodeSnippetExpression invocationTarget = thisFactory.Core().createCodeSnippetExpression();
@@ -425,21 +444,22 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 		invokePT.setTarget(invocationTarget);//pt.runtime.ParaTask
 		invokePT.setArguments(arguments);//true
 		
-		CtBlock<?> parentBlock = thisAnnotatedElement.getParent(CtBlock.class);
-		StatementMatcherFilter<CtStatement> filter = new StatementMatcherFilter<CtStatement>(thisAnnotatedElement);
-		parentBlock.insertBefore(filter, invokePT);
+		statement.insertBefore(invokePT);
+//		CtBlock<?> parentBlock = thisAnnotatedElement.getParent(CtBlock.class);
+//		StatementMatcherFilter<CtStatement> filter = new StatementMatcherFilter<CtStatement>(thisAnnotatedElement);
+//		parentBlock.insertBefore(filter, invokePT);
 	}
 	
-	private void changeDeclarationName(){
+	protected void changeDeclarationName(CtVariable<?> collectionWrapper){
 		String newName = APTUtils.getTaskName(thisElementName);
-		thisAnnotatedElement.setSimpleName(newName);
+		collectionWrapper.setSimpleName(newName);
 	}
 	
 	/*
 	 * This method adds a casting statement after the declaration of the collection. That is done to 
 	 * allow using the overloading functions that accept TaskID objects. 
 	 */
-	private void insertStatementAfterDeclaration(){
+	protected void insertStatementAfterDeclaration(CtStatement statement){
 		String newTypeString = getCollectionType() + "<" + thisCollectionGenericType + ">";
 		CtTypeReference newType = thisFactory.Core().createTypeReference();
 		newType.setSimpleName(newTypeString);
@@ -459,12 +479,13 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 		castedColleciton.setSimpleName(thisElementName);
 		castedColleciton.setDefaultExpression(varAccess);
 		
-		CtBlock<?> parentBlock = thisAnnotatedElement.getParent(CtBlock.class);
-		StatementMatcherFilter<CtStatement> filter = new StatementMatcherFilter<CtStatement>(thisAnnotatedElement);
-		parentBlock.insertAfter(filter, castedColleciton);
+		statement.insertAfter(castedColleciton);
+//		CtBlock<?> parentBlock = thisAnnotatedElement.getParent(CtBlock.class);
+//		StatementMatcherFilter<CtStatement> filter = new StatementMatcherFilter<CtStatement>(thisAnnotatedElement);
+//		parentBlock.insertAfter(filter, castedColleciton);
 	}	
 	
-	private String getCollectionType(){
+	protected String getCollectionType(){
 		String currentType = thisElementType.toString();
 		if(currentType.contains("List"))
 			return APTUtils.getListWrapperSyntax();
