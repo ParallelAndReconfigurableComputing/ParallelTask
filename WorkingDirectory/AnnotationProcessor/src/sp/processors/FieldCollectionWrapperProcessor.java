@@ -20,7 +20,6 @@ import spoon.reflect.factory.Factory;
 import spoon.reflect.reference.CtTypeReference;
 
 public class FieldCollectionWrapperProcessor extends CollectionWrapperProcessor {
-	private CtField<?> thisAnnotatedField = null;
 	private Set<ModifierKind> fieldModifiers = null;
 	private CtClass parentClass = null;
 

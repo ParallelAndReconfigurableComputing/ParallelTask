@@ -18,6 +18,8 @@ import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtVariableAccess;
 import spoon.reflect.declaration.CtAnnotation;
+import spoon.reflect.declaration.CtField;
+import spoon.reflect.declaration.CtVariable;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
 
@@ -30,6 +32,7 @@ import spoon.reflect.reference.CtTypeReference;
 public abstract class PtAnnotationProcessor {
 	
 	protected CtLocalVariable<?> thisAnnotatedElement = null;
+	protected CtField<?> thisAnnotatedField = null;
 	protected String thisElementName = null;
 	protected CtTypeReference<?> thisElementType = null;
 	protected Factory thisFactory = null;
@@ -64,7 +67,7 @@ public abstract class PtAnnotationProcessor {
 		List<CtStatement> reductionStatements = new ArrayList<>();
 	
 		reductionStatements.add(reductionDeclaration);
-		reductionStatements.add(getSettingReductionStatement(idName));
+		reductionStatements.add(getReductionSettingStatement(idName));
 		return reductionStatements;
 	}
 	
@@ -85,7 +88,7 @@ public abstract class PtAnnotationProcessor {
 		return finalReductionDeclaration;
 	}
 	
-	protected CtInvocation<?> getSettingReductionStatement(String idName){
+	protected CtInvocation<?> getReductionSettingStatement(String idName){
 		CtInvocation<?> setReductionStatement = thisFactory.Core().createInvocation();
 		CtCodeSnippetExpression reductionObject = thisFactory.Core().createCodeSnippetExpression();
 		CtCodeSnippetExpression taskIDName = thisFactory.Core().createCodeSnippetExpression();
@@ -119,7 +122,7 @@ public abstract class PtAnnotationProcessor {
 	 */
 	private boolean matchTypeWithReduction(TypeElement element){
 		String type = element.elementType;
-		String reduction = element.reductionClass.toLowerCase();
+		String reduction = element.reduction.toLowerCase();
 		
 		//in case the specified type is fully qualified e.g., java.util.Map
 		String[] typeQualifiedPaths = type.split("\\.");
@@ -128,7 +131,8 @@ public abstract class PtAnnotationProcessor {
 		if(typeToAvailableReductions.containsKey(type)){
 			Map<String, String> supportedReductions = typeToAvailableReductions.get(type);
 			if(supportedReductions.containsKey(reduction)){
-				element.reductionClass = APTUtils.getRedLibPackageSyntax() + supportedReductions.get(reduction);
+				element.reduction = APTUtils.getRedLibPackageSyntax() + supportedReductions.get(reduction);
+				element.declaredObject = false;
 				return true;
 			}
 		}
@@ -139,7 +143,7 @@ public abstract class PtAnnotationProcessor {
 		thisReductionObjectName = APTUtils.getTaskReductionName(thisElementName);
 		TypeElement topElement = listOfTypesForReduction.get(0);
 		
-		String topElementReductionType = topElement.reductionClass;
+		String topElementReductionType = topElement.reduction;
 		String topElementGenericType = topElement.genericType;
 		String reductionType = topElementReductionType + topElementGenericType;
 		
@@ -180,7 +184,7 @@ public abstract class PtAnnotationProcessor {
 		if(index >= listOfTypesForReduction.size())
 			return "";
 		TypeElement element = listOfTypesForReduction.get(index);
-		return "new " + element.reductionClass + element.genericType + "(" 
+		return "new " + element.reduction + element.genericType + "(" 
 				+ createReductionPhrase(index+1) + ")";
 	}
 	
@@ -236,7 +240,7 @@ public abstract class PtAnnotationProcessor {
 			
 			int index = 0;
 			for(TypeElement element : listOfTypesForReduction){
-				element.reductionClass = reductionPhrases.get(index);
+				element.reduction = reductionPhrases.get(index);
 				index++;
 			}
 		}catch(Exception e){
@@ -254,13 +258,13 @@ public abstract class PtAnnotationProcessor {
 	 */
 	private boolean validateReductionPhrase(String phrase){
 		if(!equalNumOfParanthesis(phrase)){
-			System.out.println("Reduction phrase " + phrase + " is not valid!");
-			System.out.println("The number of left and right parentheses are not equal");
+			System.err.println("Reduction phrase " + phrase + " is not valid!");
+			System.err.println("The number of left and right parentheses are not equal");
 			return false;
 		}
 		if(!consecutiveRightParanthesis(phrase)){	
-			System.out.println("Reduction phrase " + phrase + " is not valid!");
-			System.out.println("Incorrect nesting of reductions");
+			System.err.println("Reduction phrase " + phrase + " is not valid!");
+			System.err.println("Incorrect nesting of reductions");
 			return false;
 		}
 		return true;
@@ -342,6 +346,10 @@ public abstract class PtAnnotationProcessor {
 	 * reduction, because it is an object.  
 	 */
 	private boolean isDeclaredReductionObject(TypeElement element){
+		if(isLocalDeclaration(element.reduction))
+			return true;
+		else if (isFieldDeclaration(element.reduction))
+			return true;
 		return false;
 	}
 	
@@ -349,8 +357,24 @@ public abstract class PtAnnotationProcessor {
 		return false;
 	}
 	
+	private boolean isLocalDeclaration(String reductionName){
+		if(thisAnnotatedElement != null){
+			CtStatement declarationStatement = APTUtils.getDeclarationStatement(thisAnnotatedElement, reductionName);
+			if(declarationStatement != null)
+				return true;
+		}
+		return false;
+	}
 	
-	
+	private boolean isFieldDeclaration(String reductionName){
+		if(thisAnnotatedField != null){
+			CtVariable<?> declarationStatement = APTUtils.getDeclarationStatement(thisAnnotatedField, reductionName);
+			System.out.println("Field column: " + thisAnnotatedField.getPosition().getColumn());
+			System.out.println("Field end column: " + thisAnnotatedElement.getPosition().getEndColumn());
+			System.out.println("Field line: " + thisAnnotatedElement.getPosition().getLine());
+		}
+		return false;
+	}
 	
 	private void processDeclaredReductionObject(TypeElement element){
 				
@@ -443,9 +467,11 @@ public abstract class PtAnnotationProcessor {
 			elementType = type;
 			genericType = generic;
 		}
-		String elementType = "";
-		String genericType = "";
-		String reductionClass = "";
+		
+		boolean declaredObject = false;
+		String 	elementType = "";
+		String 	genericType = "";
+		String 	reduction = "";
 	}
 
 	protected CtStatement getParentInEnclosingBlock(CtExpression<?> expression){

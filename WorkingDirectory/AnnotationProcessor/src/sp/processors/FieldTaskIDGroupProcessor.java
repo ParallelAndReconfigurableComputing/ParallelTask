@@ -21,7 +21,6 @@ import spoon.reflect.factory.Factory;
 import spoon.support.reflect.code.CtAssignmentImpl;
 
 public class FieldTaskIDGroupProcessor extends TaskIDGroupProcessor {
-	private CtField<?> thisAnnotatedField = null;
 	private Set<ModifierKind> fieldModifiers = null;
 	private CtMethod<?>   arrayAccessMethod = null;
 		
