@@ -1,12 +1,20 @@
 package smallProject;
-
 import java.util.Random;
 
+import pt.runtime.TaskIDGroup;
+import pt.runtime.ParaTask;
+import pu.RedLib.IntegerSum;
 import sp.annotations.Future;
 
-public class FutureArray {
-	@Future(reduction="sum")
+public class FutureArray 
+{
+	
+	@Future(reduction="newInt")
 	int[] myArray;
+	
+	IntegerSum newSum = new IntegerSum();
+	Integer newInt = new Integer(0);
+	
 	int range = 5;
 	
 	public FutureArray(int num){
@@ -40,5 +48,5 @@ public class FutureArray {
 		for(int i = 0; i < range; i++){
 			System.out.println("The result of " + i + "th task: " + myArray[i]);
 		}
-	}
+	}	
 }

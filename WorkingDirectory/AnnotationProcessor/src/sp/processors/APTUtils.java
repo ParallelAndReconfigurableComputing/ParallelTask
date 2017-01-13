@@ -768,7 +768,7 @@ public class APTUtils {
 						break;
 				}
 				
-				if (statement instanceof CtVariable<?>){
+				if (statement instanceof CtLocalVariable<?>){
 					CtLocalVariable<?> localVariable = (CtLocalVariable<?>) statement;
 					if(isTheWantedDeclaration(localVariable, argName))
 						return statement;

@@ -187,11 +187,12 @@ public class FieldTaskIDGroupProcessor extends TaskIDGroupProcessor {
 	private void insertReductionStatements(List<CtStatement> reductionStatemetnts){
 		Set<CtConstructor> constructors = parentClass.getConstructors();
 				
-		CtAnonymousExecutable anonymousBlock = thisFactory.Core().createAnonymousExecutable();
-		CtBlock anonymousBody = thisFactory.Core().createBlock();
-		anonymousBody.setStatements(reductionStatemetnts);
-		anonymousBlock.setBody(anonymousBody);
-		parentClass.addAnonymousExecutable(anonymousBlock);
+		CtAnonymousExecutable newAnonymousBlock = thisFactory.Core().createAnonymousExecutable();
+		CtBlock newAnonymousBlockBody = thisFactory.Core().createBlock();
+		newAnonymousBlockBody.setStatements(reductionStatemetnts);
+		newAnonymousBlock.setBody(newAnonymousBlockBody);
+		newAnonymousBlock.setModifiers(fieldModifiers);
+		parentClass.addAnonymousExecutable(newAnonymousBlock);
 	}
 }
 

@@ -96,12 +96,12 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	
 	public TaskIDGroupProcessor(Factory factory, Future future, CtLocalVariable<?> annotatedElement){
 		this(factory, future);
-		thisAnnotatedElement = annotatedElement;		
-		thisElementType = thisAnnotatedElement.getType();	
-		thisElementName = thisAnnotatedElement.getSimpleName();
+		thisAnnotatedLocalElement = annotatedElement;		
+		thisElementType = thisAnnotatedLocalElement.getType();	
+		thisElementName = thisAnnotatedLocalElement.getSimpleName();
 		thisTaskIDGroupName = APTUtils.getTaskIDGroupName(thisElementName);
 		thisGroupSizeName = APTUtils.getTaskIDGroupSizeSyntax(thisElementName);
-		parentClass = thisAnnotatedElement.getParent(CtClass.class);
+		parentClass = thisAnnotatedLocalElement.getParent(CtClass.class);
 	}	
 	
 	@Override
@@ -120,7 +120,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	}
 	
 	protected void inspectArrayDeclaration(){
-		getInstantiationExpression(thisAnnotatedElement);
+		getInstantiationExpression(thisAnnotatedLocalElement);
 		inspectArrayDeclaration(thisGroupDeclarationExpression.toString());
 	}
 	
@@ -138,7 +138,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		thisArrayDimension = counter;
 		if(thisArrayDimension != 1)
 			throw new IllegalArgumentException("ONLY ONE DIMENSIONAL ARRAYS CAN BE DECLARED AS FUTURE ARRAYS!\n"
-					+ "ERROR DETECTED IN: " + thisAnnotatedElement);
+					+ "ERROR DETECTED IN: " + thisAnnotatedLocalElement);
 		
 		thisGroupSize = defaultExpression.substring(defaultExpression.lastIndexOf('[')+1, defaultExpression.indexOf(']'));		
 
@@ -146,7 +146,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	
 	protected List<CtStatement> findVarAccessStatements(){
 		List<CtStatement> varAccessStatements = null;
-		varAccessStatements = APTUtils.findVarAccessOtherThanFutureDefinition(thisAnnotatedElement.getParent(CtBlock.class), thisAnnotatedElement);
+		varAccessStatements = APTUtils.findVarAccessOtherThanFutureDefinition(thisAnnotatedLocalElement.getParent(CtBlock.class), thisAnnotatedLocalElement);
 		return varAccessStatements;
 	}
 	
@@ -245,7 +245,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	}
 	
 	protected void insertTaskIDSizeDeclaration(CtLocalVariable<?> taskGroupSizeVarDeclaration){
-		thisAnnotatedElement.insertBefore(taskGroupSizeVarDeclaration);
+		thisAnnotatedLocalElement.insertBefore(taskGroupSizeVarDeclaration);
 	}
 	
 	protected void insertTaskIDSizeAssignment(CtAssignment<?, ?> instantiateTaskGroupSizeVariable){
@@ -260,7 +260,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 		if(reductionStatements != null)
 			statements.addAll(reductionStatements);
 		statementList.setStatements(statements);
-		thisAnnotatedElement.insertAfter(statementList);
+		thisAnnotatedLocalElement.insertAfter(statementList);
 	}
 	
 	
@@ -285,7 +285,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	}
 	
 	protected CtVariable<?> getCurrentAnnotatedElement(){
-		return thisAnnotatedElement;
+		return thisAnnotatedLocalElement;
 	}
 	
 	/*
@@ -342,7 +342,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	}
 	
 	protected CtBlock<?> getParentBlockForWaitStatement(CtStatement containingStatement){
-		return thisAnnotatedElement.getParent(CtBlock.class);
+		return thisAnnotatedLocalElement.getParent(CtBlock.class);
 	}
 	
 	protected void insertWaitForTaskGroupBlock(CtStatement containingStatement){

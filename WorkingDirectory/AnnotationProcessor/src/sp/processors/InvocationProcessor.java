@@ -69,7 +69,7 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 		variableAccessExpressions = new ArrayList<>();
 		
 		thisFutureAnnotation = future;
-		thisAnnotatedElement = annotatedElement;
+		thisAnnotatedLocalElement = annotatedElement;
 		thisElementName = annotatedElement.getSimpleName();
 		thisElementType = annotatedElement.getType();
 		thisTaskIDName = APTUtils.getTaskIDName(thisElementName);
@@ -88,9 +88,9 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 	}		
 	
 	private void getInvocations(){
-		CtExpression<?> expression = thisAnnotatedElement.getDefaultExpression();
+		CtExpression<?> expression = thisAnnotatedLocalElement.getDefaultExpression();
 		if(!(expression instanceof CtInvocationImpl<?>))
-			throw new IllegalArgumentException("ANNOTATED ELEMENT: ->" + thisAnnotatedElement.toString()
+			throw new IllegalArgumentException("ANNOTATED ELEMENT: ->" + thisAnnotatedLocalElement.toString()
 					+ "<- IS EXPECTED TO BE AN INVOCATION STATEMENT!");
 		thisInvocation = (CtInvocationImpl<?>) expression;
 	}
@@ -110,7 +110,7 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 	private void replaceOccurrencesWithTaskIDName(){
 		String regex = "\\b" + thisElementName + "\\b";
 		List<CtStatement> statementsAccessingThisVar = APTUtils.findVarAccessOtherThanFutureDefinition
-				((CtBlockImpl<?>)thisAnnotatedElement.getParent(), thisAnnotatedElement);
+				((CtBlockImpl<?>)thisAnnotatedLocalElement.getParent(), thisAnnotatedLocalElement);
 		APTUtils.modifyStatements(statementsAccessingThisVar, regex, (thisTaskIDName+APTUtils.getResultSyntax()));
 	}
 	
@@ -133,7 +133,7 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 		//this method could be subject to changes to extract from multiple invocations
 		List<CtExpression<?>> arguments = thisInvocation.getArguments();
 		for (CtExpression<?> argument : arguments){
-			if(APTUtils.isTaskIDReplacement(thisAnnotatedElement, argument.toString())){
+			if(APTUtils.isTaskIDReplacement(thisAnnotatedLocalElement, argument.toString())){
 				String originalArgumentName = APTUtils.getOrigName(argument.toString());
 				dependencies.add(APTUtils.getTaskIDName(originalArgumentName));
 			}
@@ -185,7 +185,7 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 				if(!dependencyName.isEmpty()){
 					//in case user feeds taskID name etc. Small possibility but...
 					dependencyName = APTUtils.getOrigName(dependencyName); 
-					if(APTUtils.isFutureVariable(thisAnnotatedElement, dependencyName))
+					if(APTUtils.isFutureVariable(thisAnnotatedLocalElement, dependencyName))
 						dependencies.add(APTUtils.getTaskIDName(dependencyName));
 				}
 			}					
@@ -215,7 +215,7 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 	 * AsyncCatch annotation. 
 	 */
 	private void extractAsyncExceptionsFromAnnotations(){
-		List<CtAnnotation<? extends Annotation>> annotations = thisAnnotatedElement.getAnnotations();
+		List<CtAnnotation<? extends Annotation>> annotations = thisAnnotatedLocalElement.getAnnotations();
 		for(CtAnnotation<? extends Annotation> annotation : annotations){
 			Annotation actualAnnotation = annotation.getActualAnnotation();
 			if(actualAnnotation instanceof AsyncCatch){
@@ -223,7 +223,7 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 				Class<? extends Exception>[] exceptions = asynCatch.throwables();
 				String[] handlers = asynCatch.handlers();
 				if (exceptions.length != handlers.length)
-					throw new IllegalArgumentException("THE NUMBER OF EXCEPTION CLASSES SPECIFIED FOR " + thisAnnotatedElement + 
+					throw new IllegalArgumentException("THE NUMBER OF EXCEPTION CLASSES SPECIFIED FOR " + thisAnnotatedLocalElement + 
 							" IS NOT COMPLIANT WITH THE NUMBER OF HANDLERS SPECIFIED FOR THOSE EXCEPTIONS!");
 				for(int i = 0; i < handlers.length; i++){
 					asyncExceptions.put(exceptions[i].getName(), ("()->{try{" + handlers[i]) +";}catch(Exception e){e.printStackTrace();}}");
@@ -245,13 +245,13 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 			String argName = varAccess.toString();
 			String origName = APTUtils.getOrigName(argName);
 				
-			if(APTUtils.isTaskIDReplacement(thisAnnotatedElement, argName)){
+			if(APTUtils.isTaskIDReplacement(thisAnnotatedLocalElement, argName)){
 				
 				/*
 				 * only LocalVariables can be future variables, and therefore, a taskID replacement can only be related to a 
 				 * LocalVariable. 
 				 */
-				CtLocalVariable<?> declaration = (CtLocalVariable<?>)APTUtils.getDeclarationStatement(thisAnnotatedElement, origName);
+				CtLocalVariable<?> declaration = (CtLocalVariable<?>)APTUtils.getDeclarationStatement(thisAnnotatedLocalElement, origName);
 				CtTypeReference taskIDType = getTaskIDType(declaration, false);
 				
 				varAccess.getVariable().setSimpleName(APTUtils.getLambdaArgName(origName)+APTUtils.getResultSyntax());
@@ -294,10 +294,10 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 		//1
 		CtTypeReference thisElementNewType = thisFactory.Core().createTypeReference();
 		thisElementNewType.setSimpleName(getTaskInfoType());
-		thisAnnotatedElement.setType(thisElementNewType);
+		thisAnnotatedLocalElement.setType(thisElementNewType);
 		
 		//2
-		thisAnnotatedElement.setSimpleName(APTUtils.getTaskName(thisElementName));
+		thisAnnotatedLocalElement.setSimpleName(APTUtils.getTaskName(thisElementName));
 		
 		//3
 		List<CtExpression<?>> arguments = new ArrayList<>();
@@ -344,8 +344,8 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 	 * after the declaration statement. 
 	 */
 	private void addNewStatements(){
-		CtBlock<?> thisBlock = (CtBlock<?>) thisAnnotatedElement.getParent();
-		StatementMatcherFilter<CtStatement> filter = new StatementMatcherFilter<CtStatement>(thisAnnotatedElement);
+		CtBlock<?> thisBlock = (CtBlock<?>) thisAnnotatedLocalElement.getParent();
+		StatementMatcherFilter<CtStatement> filter = new StatementMatcherFilter<CtStatement>(thisAnnotatedLocalElement);
 		//insert the new statements after the current invocation statement. 
 		thisBlock.insertAfter(filter, newStatements());
 	}
@@ -471,14 +471,14 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 	   * AsynCatch has been processed, so remove it from the annotations. 
 	   */
 	  List<CtAnnotation<? extends Annotation>> newAnnotations = new ArrayList<>();
-	  List<CtAnnotation<? extends Annotation>> annotations = thisAnnotatedElement.getAnnotations();
+	  List<CtAnnotation<? extends Annotation>> annotations = thisAnnotatedLocalElement.getAnnotations();
 	  for(CtAnnotation<? extends Annotation> annotation : annotations){
 		  Annotation actualAnnotation = annotation.getActualAnnotation();
 		  if(!(actualAnnotation instanceof AsyncCatch))	
 			  newAnnotations.add(annotation);
 	  }
 	  
-	  thisAnnotatedElement.setAnnotations(newAnnotations);
+	  thisAnnotatedLocalElement.setAnnotations(newAnnotations);
 	  return invocations;
 	}
 	
@@ -510,7 +510,7 @@ public class InvocationProcessor extends PtAnnotationProcessor {
 		startPhrase += ")";
 		
 		boolean taskIDGroup = (thisTaskType.contains("MULTI")) ? true : false;
-		CtTypeReference taskIDType = getTaskIDType(thisAnnotatedElement, taskIDGroup);
+		CtTypeReference taskIDType = getTaskIDType(thisAnnotatedLocalElement, taskIDGroup);
 		String castingPhrase = "";
 		if(taskIDGroup)
 			castingPhrase = "(" + taskIDType.toString() + ")";

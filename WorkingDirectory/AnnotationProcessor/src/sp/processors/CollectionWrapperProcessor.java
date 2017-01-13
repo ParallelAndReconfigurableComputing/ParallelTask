@@ -73,9 +73,9 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 		
 	public CollectionWrapperProcessor(Factory factory, Future future, CtLocalVariable<?> annotatedElement){
 		this(factory, future);
-		thisAnnotatedElement = annotatedElement;
-		thisElementName = thisAnnotatedElement.getSimpleName();
-		thisElementType = thisAnnotatedElement.getType();
+		thisAnnotatedLocalElement = annotatedElement;
+		thisElementName = thisAnnotatedLocalElement.getSimpleName();
+		thisElementType = thisAnnotatedLocalElement.getType();
 	}
 
 	@Override
@@ -97,17 +97,17 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 	}
 	
 	protected String getDefaultExpression(){
-		return thisAnnotatedElement.getDefaultExpression().toString();
+		return thisAnnotatedLocalElement.getDefaultExpression().toString();
 	}
 	
 	protected String getElementString(){
-		return thisAnnotatedElement.toString();
+		return thisAnnotatedLocalElement.toString();
 	}
 	
 	private boolean validate(){
 		String defaultExpression = getDefaultExpression();
 		if(!(defaultExpression.contains(APTUtils.getGetWrapperSyntax()))){
-			System.out.println("ANNOTATION PROCESSING ERROR FOR:\n" + thisAnnotatedElement);
+			System.out.println("ANNOTATION PROCESSING ERROR FOR:\n" + thisAnnotatedLocalElement);
 			System.out.println("\nFUTURE ANNOTATION MUST BE USED FOR DECLARING COLLECTIONS THAT INVOKE: pt.runtime.ParaTask.getPtWrapper"
 					+ "\nEXAMPLE: List<Integer> myList = ParaTask.getPtWrapper(new ArrayList<Integer>())");
 			return false;
@@ -138,14 +138,14 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 	}
 	
 	protected void modifyCollectionDeclaration(){
-		insertStatementBeforeDeclaration(thisAnnotatedElement);
-		changeDeclarationName(thisAnnotatedElement);
-		insertStatementAfterDeclaration(thisAnnotatedElement);
+		insertStatementBeforeDeclaration(thisAnnotatedLocalElement);
+		changeDeclarationName(thisAnnotatedLocalElement);
+		insertStatementAfterDeclaration(thisAnnotatedLocalElement);
 	}
 	
 	protected List<CtStatement> findVarAccessStatements(){
 		List<CtStatement> varAccessStatements = null;
-		varAccessStatements = APTUtils.findVarAccessOtherThanFutureDefinition(thisAnnotatedElement.getParent(CtBlock.class), thisAnnotatedElement);
+		varAccessStatements = APTUtils.findVarAccessOtherThanFutureDefinition(thisAnnotatedLocalElement.getParent(CtBlock.class), thisAnnotatedLocalElement);
 		return varAccessStatements;
 	}
 		
@@ -223,7 +223,7 @@ public class CollectionWrapperProcessor extends PtAnnotationProcessor {
 	}
 	
 	protected CtVariable<?> getCurrenAnnotatedtElement(){
-		return thisAnnotatedElement;
+		return thisAnnotatedLocalElement;
 	}
 	
 	/*

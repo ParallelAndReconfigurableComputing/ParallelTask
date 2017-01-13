@@ -77,6 +77,7 @@ public class FieldCollectionWrapperProcessor extends CollectionWrapperProcessor 
 		insertStatementAfterDeclaration(newAssignmentStatement);
 		
 		newAnonymousBlock.setBody(anonymousBlockBody);
+		newAnonymousBlock.setModifiers(fieldModifiers);
 		parentClass.addAnonymousExecutable(newAnonymousBlock);
 	}
 	

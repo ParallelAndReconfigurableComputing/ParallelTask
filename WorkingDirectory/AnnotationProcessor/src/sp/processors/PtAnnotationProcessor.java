@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import sp.annotations.Future;
 import sp.processors.APTUtils.ExpressionRole;
@@ -31,7 +32,7 @@ import spoon.reflect.reference.CtTypeReference;
  */
 public abstract class PtAnnotationProcessor {
 	
-	protected CtLocalVariable<?> thisAnnotatedElement = null;
+	protected CtLocalVariable<?> thisAnnotatedLocalElement = null;
 	protected CtField<?> thisAnnotatedField = null;
 	protected String thisElementName = null;
 	protected CtTypeReference<?> thisElementType = null;
@@ -60,7 +61,7 @@ public abstract class PtAnnotationProcessor {
 	 * therefore, only consider inserting this statement for local variable declarations. 
 	 */
 	protected List<CtStatement> getReductionStatements(String elementType, String idName){
-		CtLocalVariable<?> reductionDeclaration = processReduction(elementType);
+		CtLocalVariable<?> reductionDeclaration = createReductionDeclaration(elementType);
 		if(reductionDeclaration == null)
 			return null;
 		
@@ -71,7 +72,7 @@ public abstract class PtAnnotationProcessor {
 		return reductionStatements;
 	}
 	
-	protected CtLocalVariable<?> processReduction(String elementType){
+	protected CtLocalVariable<?> createReductionDeclaration(String elementType){
 		if(thisElementReductionString.isEmpty()){
 			return null;
 		}
@@ -165,7 +166,7 @@ public abstract class PtAnnotationProcessor {
 	 */
 	private void createReductionDeclarations(){
 		for(TypeElement element : listOfTypesForReduction){
-			if(!isRedLibReduction(element)){
+			if(!isRedLibImplementedReduction(element)){
 				if(isDeclaredReductionObject(element)){
 					processDeclaredReductionObject(element);
 				}
@@ -192,6 +193,22 @@ public abstract class PtAnnotationProcessor {
 	 * Breaks down return type to see if it requires nested reductions.
 	 */
 	private void breakDownElementType(String returnType){
+		TypeElement typeElement = getTypeElement(returnType);
+		listOfTypesForReduction.add(typeElement);
+		
+		String type = typeElement.elementType;
+		String generic = typeElement.genericType;
+		
+		//in case the specified type is fully qualified e.g., java.util.Map
+		String[] typeQualifiedPaths = type.split("\\.");
+		type = typeQualifiedPaths[typeQualifiedPaths.length-1];
+		
+		if(generic.contains(",") && type.equals("Map")){
+			breakDownElementType(getNestedType(generic));
+		}
+	}
+	
+	private TypeElement getTypeElement(String returnType){
 		String type = "";
 		String generic = "";
 		if(returnType.contains("<") && returnType.contains(">")){
@@ -204,16 +221,8 @@ public abstract class PtAnnotationProcessor {
 		}
 		
 		type = APTUtils.getType(type);
-		TypeElement obj = new TypeElement(type, generic);
-		listOfTypesForReduction.add(obj);
-		
-		//in case the specified type is fully qualified e.g., java.util.Map
-		String[] typeQualifiedPaths = type.split("\\.");
-		type = typeQualifiedPaths[typeQualifiedPaths.length-1];
-		
-		if(generic.contains(",") && type.equals("Map")){
-			breakDownElementType(getNestedType(generic));
-		}
+		TypeElement typeElement = new TypeElement(type, generic);
+		return typeElement;
 	}
 	
 	private String getNestedType(String type){
@@ -333,7 +342,7 @@ public abstract class PtAnnotationProcessor {
 		return reductions;
 	}
 	
-	private boolean isRedLibReduction(TypeElement element){
+	private boolean isRedLibImplementedReduction(TypeElement element){
 		if(!matchTypeWithReduction(element)){
 			return false;
 		}
@@ -358,10 +367,21 @@ public abstract class PtAnnotationProcessor {
 	}
 	
 	private boolean isLocalDeclaration(String reductionName){
-		if(thisAnnotatedElement != null){
-			CtStatement declarationStatement = APTUtils.getDeclarationStatement(thisAnnotatedElement, reductionName);
+		if(thisAnnotatedLocalElement != null){
+			CtStatement declarationStatement = APTUtils.getDeclarationStatement(thisAnnotatedLocalElement, reductionName);
 			if(declarationStatement != null)
-				return true;
+				if(declarationStatement instanceof CtLocalVariable<?>){
+					CtLocalVariable<?> reductionDeclaration = (CtLocalVariable<?>) declarationStatement;
+					CtTypeReference<?> reductionTypeReference = reductionDeclaration.getType();
+					if(isReductionSubclass(reductionTypeReference))
+						return true;
+					else
+						return false;
+				}
+				else{
+					System.err.println("Reduction object declared for a local future must be a local variable as well!");
+					throw new IllegalArgumentException();
+				}
 		}
 		return false;
 	}
@@ -369,10 +389,38 @@ public abstract class PtAnnotationProcessor {
 	private boolean isFieldDeclaration(String reductionName){
 		if(thisAnnotatedField != null){
 			CtVariable<?> declarationStatement = APTUtils.getDeclarationStatement(thisAnnotatedField, reductionName);
-			System.out.println("Field column: " + thisAnnotatedField.getPosition().getColumn());
-			System.out.println("Field end column: " + thisAnnotatedElement.getPosition().getEndColumn());
-			System.out.println("Field line: " + thisAnnotatedElement.getPosition().getLine());
+			if(declarationStatement != null){
+				if (declarationStatement instanceof CtField<?>){
+					CtField<?> reductionDeclarationField = (CtField<?>) declarationStatement;
+					CtTypeReference<?> reductionTypeReference = reductionDeclarationField.getType();
+					if(isReductionSubclass(reductionTypeReference))
+						return true;
+					else
+						return false;
+				}
+				
+				else{
+					System.err.println("Reduction object declared for a field future must be a field as well!");
+					throw new IllegalArgumentException();					
+				}
+			}
 		}
+		return false;
+	}
+	
+	private boolean isReductionSubclass(CtTypeReference<?> type){
+		
+		Set<CtTypeReference<?>> parentInterfaces = type.getSuperInterfaces();
+		for (CtTypeReference<?> parentInterface : parentInterfaces){
+			String parentInterfaceName = parentInterface.toString();
+			if (parentInterfaceName.equals("pu.RedLib.Reduction"))
+				return true;
+		}
+		
+		if(type.getSuperclass() != null){
+			isReductionSubclass(type.getSuperclass());
+		}
+		
 		return false;
 	}
 	
