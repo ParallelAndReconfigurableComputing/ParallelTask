@@ -6,9 +6,7 @@ import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtVariable;
-import spoon.reflect.factory.Factory;
 import spoon.support.reflect.code.CtInvocationImpl;
-import spoon.support.reflect.declaration.CtFieldImpl;
 
 /**
  * This class is called by the annotation processor, for processing any code

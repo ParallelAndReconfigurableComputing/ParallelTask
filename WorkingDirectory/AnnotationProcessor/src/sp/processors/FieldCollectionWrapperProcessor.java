@@ -110,6 +110,7 @@ public class FieldCollectionWrapperProcessor extends CollectionWrapperProcessor 
 		parentClass.addFieldAtTop(newWrapper);
 	}
 	
+	@Override
 	protected void insertStatementAfterDeclaration(CtStatement statement){
 		String fieldTaskName = thisAnnotatedField.getSimpleName();
 		String newTypeString = getCollectionType() + "<" + thisCollectionGenericType + ">";

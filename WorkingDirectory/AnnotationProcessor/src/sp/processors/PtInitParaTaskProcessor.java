@@ -9,10 +9,7 @@ import spoon.processing.AbstractAnnotationProcessor;
 import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtCodeSnippetExpression;
 import spoon.reflect.code.CtExpression;
-import spoon.reflect.code.CtInvocation;
-import spoon.reflect.factory.Factory;
 import spoon.reflect.reference.CtExecutableReference;
-import spoon.support.reflect.code.CtExpressionImpl;
 import spoon.support.reflect.code.CtInvocationImpl;
 import spoon.support.reflect.declaration.CtMethodImpl;
 

@@ -1,15 +1,12 @@
 package sp.processors;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-
-import org.eclipse.jdt.core.compiler.InvalidInputException;
 
 import sp.annotations.Future;
 import sp.annotations.Task;
@@ -25,15 +22,12 @@ import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtUnaryOperator;
 import spoon.reflect.code.CtVariableAccess;
 import spoon.reflect.declaration.CtAnnotation;
-import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtExecutable;
-import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtVariable;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.reference.CtVariableReference;
 import spoon.support.reflect.code.CtInvocationImpl;
-import spoon.support.reflect.code.CtVariableAccessImpl;
 
 /**
  * This annotation processor processes the <code>Future</code> annotations that appear

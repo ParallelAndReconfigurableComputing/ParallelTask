@@ -8,8 +8,6 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.print.attribute.standard.NumberOfDocuments;
-
 import sp.annotations.Future;
 import sp.processors.APTUtils.ExpressionRole;
 import spoon.reflect.factory.Factory;
@@ -29,14 +27,10 @@ import spoon.reflect.code.CtStatementList;
 import spoon.reflect.code.CtTry;
 import spoon.reflect.declaration.CtAnnotation;
 import spoon.reflect.declaration.CtClass;
-import spoon.reflect.declaration.CtConstructor;
 import spoon.reflect.declaration.CtElement;
-import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtVariable;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.support.reflect.code.CtAssignmentImpl;
-import spoon.support.reflect.code.CtInvocationImpl;
-import spoon.support.reflect.declaration.CtClassImpl;
 
 /**
  * This annotation processor processes <code>Future</code> annotations that appear at the declaration

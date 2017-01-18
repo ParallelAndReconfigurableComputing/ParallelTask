@@ -5,15 +5,18 @@
 	<property name="test.dir"     value="test" />
 	<property name="dist.dir"     value="dist" />
 	<property name="docs.dir"     value="docs" />
+	<property name="input.dir"    value="input/reductionTest" />
 	<property name="release.dir"  value="release" />
 	<property name="gen.dir"      value="${dist.dir}/gen" />
 	<property name="classes.dir"  value="${dist.dir}/classes" />
 	<property name="lib.dir"      value="libs" />
+	<property name="temp.dir"     value="${dist.dir}/temp" />
+	<property name="@PT.jar"      value="${lib.dir}/@PT-1.1.0.jar" />
 	
 	<property name="spoon.jar"    value="${lib.dir}/spoon-core-5.4.0-jar-with-dependencies.jar"/>
 	<property name="PT.jar"		  value="${lib.dir}/PTLambda-Runtime-1.1.0.jar"/>
 	<property name="PARC.jar"     value="${lib.dir}/PARCutils-1.2.2.jar" />
-	<property name="APTJarName"   value="@PT-1.0.0" />
+	<property name="APTJarName"   value="@PT-1.1.0" />
 
 	<!-- Check the operating system -->
 	<target name="CheckOS">
@@ -51,6 +54,7 @@
 		<mkdir dir="${gen.dir}"  />
 		<mkdir dir="${docs.dir}" />
 		<mkdir dir="${release.dir}"/>
+		<mkdir dir="${temp.dir}"/>
 	</target>
 
 	<target name="compile" depends="init" description="Compiles the java code">
@@ -90,17 +94,32 @@
 		<jar basedir="${src.dir}" destfile="${release.dir}/${APTJarName}-src.jar" />
 	</target>
 
-	
-	<target name="process" depends="compressJar, docJar, srcJar" description="Process the annotated code">
-		<exec executable="java">
-			<arg line="-cp ${PARC.jar}${Delim}${PT.jar}${Delim}${spoon.jar}${Delim}dist/classes spoon.Launcher -o ${gen.dir} -i input/smallProject -p sp.processors.PtInitParaTaskProcessor" />
-		</exec> 
-		<exec executable="java">
-			<arg line="-cp ${PARC.jar}${Delim}${PT.jar}${Delim}${spoon.jar}${Delim}dist/classes spoon.Launcher -o ${gen.dir} -i ${gen.dir} -p sp.processors.PtFutureProcessor" />
-		</exec> 
+	<target name="tempCompile" depends="compressJar, docJar, srcJar">
+		<echo message="Temporarily compiling input files"/>
+		<javac srcdir="${input.dir}" destdir="${temp.dir}">
+			<classpath>
+				<pathelement path="${@PT.jar}"/>
+				<pathelement path="${PT.jar}"/>
+				<pathelement path="${PARC.jar}"/>
+			</classpath>
+		</javac>
 	</target>
 	
-	<target name="main" depends="process">
-		<description>Main Target</description>
+	<target name="deleteTemp">
+		<echo message="Deleting the temporary compiled files"/>
+		<delete dir="${temp.dir}"/>
+	</target>
+	
+	<target name="process" description="Process the annotated code">
+		<exec executable="java">
+			<arg line="-cp ${PARC.jar}${Delim}${PT.jar}${Delim}${spoon.jar}${Delim}${classes.dir}${Delim}${temp.dir} spoon.Launcher -o ${gen.dir} -i ${input.dir} -p sp.processors.PtFutureProcessor" />
+		</exec>
+		<exec executable="java">
+			<arg line="-cp ${PARC.jar}${Delim}${PT.jar}${Delim}${spoon.jar}${Delim}${classes.dir}${Delim}${temp.dir} spoon.Launcher -o ${gen.dir} -i ${gen.dir} -p sp.processors.PtInitParaTaskProcessor" />
+		</exec>
+	</target>	
+	
+	<target name="main" depends="tempCompile, process, deleteTemp">
+			<echo message="Running the main target of the build.xml"/>
 	</target>
 </project>

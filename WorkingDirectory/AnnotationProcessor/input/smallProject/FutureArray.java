@@ -9,7 +9,7 @@ import sp.annotations.Future;
 public class FutureArray 
 {
 	
-	@Future(reduction="newInt")
+	@Future(reduction="newSum")
 	int[] myArray;
 	
 	IntegerSum newSum = new IntegerSum();

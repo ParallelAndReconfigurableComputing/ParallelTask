@@ -1,13 +1,14 @@
 package sp.processors;
 
 import java.lang.annotation.Annotation;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
-
 import sp.annotations.Future;
 import sp.processors.APTUtils.ExpressionRole;
 import spoon.reflect.factory.Factory;
@@ -19,6 +20,7 @@ import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtVariableAccess;
 import spoon.reflect.declaration.CtAnnotation;
+import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtVariable;
 import spoon.reflect.reference.CtExecutableReference;
@@ -41,7 +43,8 @@ public abstract class PtAnnotationProcessor {
 	protected List<TypeElement> listOfTypesForReduction = null;
 	protected String thisElementReductionString = "";
 	protected String thisReductionObjectName = null;
-	private Map<String, Map<String, String>> typeToAvailableReductions = null;
+	private Map<String, Map<String, String>> redLibAvailableReductions = null;
+	private boolean mainReductionIsUserDefinedObject = false;
 	
 	protected PtAnnotationProcessor(){}
 	
@@ -67,7 +70,11 @@ public abstract class PtAnnotationProcessor {
 		
 		List<CtStatement> reductionStatements = new ArrayList<>();
 	
-		reductionStatements.add(reductionDeclaration);
+		if(!mainReductionIsUserDefinedObject)
+			reductionStatements.add(reductionDeclaration);
+		else
+			thisReductionObjectName = reductionDeclaration.getType().toString();
+		
 		reductionStatements.add(getReductionSettingStatement(idName));
 		return reductionStatements;
 	}
@@ -82,10 +89,10 @@ public abstract class PtAnnotationProcessor {
 		
 		breakDownElementType(elementType);
 		breakDownReductionString();
-		createReductionDeclarations(); 
+		createNestedReductionDeclarations(); 
 		String finalReductionPhrase = createReductionPhrase(0); 
 	//	System.out.println("final reduction string: " + finalReductionPhrase);
-		CtLocalVariable<?> finalReductionDeclaration = createFinalReductionDeclaration(finalReductionPhrase);
+		CtLocalVariable<?> finalReductionDeclaration = createMainReductionDeclaration(finalReductionPhrase);
 		return finalReductionDeclaration;
 	}
 	
@@ -110,43 +117,13 @@ public abstract class PtAnnotationProcessor {
 	
 //----------------------------------------------------HELPER METHODS---------------------------------------------------
 	
-	/*
-	 * Returns true if RedLib already supports the user-specified reduction.
-	 * Note that, user-specified reduction string is converted to lower case
-	 * since the reductions registered in the map are all lower case. This 
-	 * offers more convenience for a user, since they don't have to worry about
-	 * case sensitivity of the reduction names.  
-	 * If the reduction is supported by RedLib, based on the reduction that is
-	 * registered for an element, and the element's type, the corresponding RedLib
-	 * reduction replaces the user-specified syntax for that element in the type
-	 * hierarchy that is extracted by the program.
-	 */
-	private boolean matchTypeWithReduction(TypeElement element){
-		String type = element.elementType;
-		String reduction = element.reduction.toLowerCase();
-		
-		//in case the specified type is fully qualified e.g., java.util.Map
-		String[] typeQualifiedPaths = type.split("\\.");
-		type = typeQualifiedPaths[typeQualifiedPaths.length-1];
-		
-		if(typeToAvailableReductions.containsKey(type)){
-			Map<String, String> supportedReductions = typeToAvailableReductions.get(type);
-			if(supportedReductions.containsKey(reduction)){
-				element.reduction = APTUtils.getRedLibPackageSyntax() + supportedReductions.get(reduction);
-				element.declaredObject = false;
-				return true;
-			}
-		}
-		return false;
-	}
-	
-	private CtLocalVariable<?> createFinalReductionDeclaration(String reductionPhrase){
+	private CtLocalVariable<?> createMainReductionDeclaration(String reductionPhrase){
 		thisReductionObjectName = APTUtils.getTaskReductionName(thisElementName);
 		TypeElement topElement = listOfTypesForReduction.get(0);
 		
 		String topElementReductionType = topElement.reduction;
-		String topElementGenericType = topElement.genericType;
-		String reductionType = topElementReductionType + topElementGenericType;
+		//String topElementGenericType = topElement.genericType;
+		String reductionType = topElementReductionType; /*+ topElementGenericType;*/
 		
 		CtCodeSnippetExpression defaultExpression = thisFactory.Core().createCodeSnippetExpression();
 		defaultExpression.setValue(reductionPhrase);
@@ -164,15 +141,24 @@ public abstract class PtAnnotationProcessor {
 	/*
 	 * Go through every reduction, and add corresponding declaration phrase. 
 	 */
-	private void createReductionDeclarations(){
+	private void createNestedReductionDeclarations(){
 		for(TypeElement element : listOfTypesForReduction){
-			if(!isRedLibImplementedReduction(element)){
-				if(isDeclaredReductionObject(element)){
-					processDeclaredReductionObject(element);
-				}
+			String supportedReduction = redLibSupportedReduction(element);
+			//There are cases that some levels of nested types don't get any reductions specified to them
+			//because the higher level reduction object also considers the nested ones. This could be the
+			//case for user-specific reduction classes. 
+			if(!element.reduction.isEmpty()){
+				if(supportedReduction != null)
+					finalizeSyntaxForRedLibReduction(element, supportedReduction);
 				
-				else if(isUserDefinedReductionClass(element)){
-					processUserDefinedReductionClass(element);
+				else{
+					if(isDeclaredReductionObject(element)){
+						finalizeSyntaxForDeclaredReductionObject(element);				
+					}
+					
+					else if(isUserDefinedReductionClass(element)){
+						finalizeSyntaxForUserDefinedReductionClass(element);
+					}
 				}
 			}
 		}
@@ -184,9 +170,23 @@ public abstract class PtAnnotationProcessor {
 	private String createReductionPhrase(int index){
 		if(index >= listOfTypesForReduction.size())
 			return "";
+		
+		String reductionPhrase = "";
 		TypeElement element = listOfTypesForReduction.get(index);
-		return "new " + element.reduction + element.genericType + "(" 
-				+ createReductionPhrase(index+1) + ")";
+		
+		if(element.reduction.isEmpty())
+			return "";
+					
+		if(element.isDeclaredObject){
+			reductionPhrase = element.reduction;
+			if(index == 0)
+				mainReductionIsUserDefinedObject = true;
+		}
+		
+		else
+			reductionPhrase = "new " + element.reduction + "(" + createReductionPhrase(index+1) + ")";
+		
+		return reductionPhrase;
 	}
 	
 	/*
@@ -203,9 +203,37 @@ public abstract class PtAnnotationProcessor {
 		String[] typeQualifiedPaths = type.split("\\.");
 		type = typeQualifiedPaths[typeQualifiedPaths.length-1];
 		
-		if(generic.contains(",") && type.equals("Map")){
+		if(generic.contains(",") && isDictionaryType(type)){
 			breakDownElementType(getNestedType(generic));
 		}
+	}
+	
+	/*
+	 * Identifies a limited number of implementations for the interface "Map",
+	 * including the interface itself.
+	 */
+	private boolean isDictionaryType(String type){
+		if(type.equals("Map"))
+			return true;
+		if(type.equals("HashMap"))
+			return true;
+		if(type.equals("Hashtable"))
+			return true;
+		if(type.equals("AbstractMap"))
+			return true;
+		if(type.equals("ConcurrentHashMap"))
+			return true;
+		if(type.equals("ConcurrentSkipListMap"))
+			return true;
+		if(type.equals("EnumMap"))
+			return true;
+		if(type.equals("IdentityHashMap"))
+			return true;
+		if(type.equals("LinkedHashMap"))
+			return true;
+		if(type.equals("TreeMap"))
+			return true;
+		return false;		
 	}
 	
 	private TypeElement getTypeElement(String returnType){
@@ -242,20 +270,46 @@ public abstract class PtAnnotationProcessor {
 			}
 			
 			List<String> reductionPhrases = decomposeReductions(thisElementReductionString);
-			if(reductionPhrases.size() != listOfTypesForReduction.size()){
-				throw new Exception("MISMATCH BETWEEN THE NUMBER OF SPECIFIED REDUCTIONS, " + reductionPhrases.size() 
-						+ ", AND THE NUMBER OF REDUCTIONS REQUIRED, " + listOfTypesForReduction.size() + ".");
-			}
-			
 			int index = 0;
+			
 			for(TypeElement element : listOfTypesForReduction){
-				element.reduction = reductionPhrases.get(index);
+				
+				if (index < reductionPhrases.size())
+					element.reduction = reductionPhrases.get(index);
+				
+				else
+					//if a specified reduction is a user-declared object, then further nested levels 
+					//are already included in the object declaration.
+					element.reduction = "";
+				
 				index++;
 			}
+			
+			if(onlyRedLibReductions()){
+				if(reductionPhrases.size() != listOfTypesForReduction.size()){
+					throw new Exception("MISMATCH BETWEEN THE NUMBER OF SPECIFIED REDUCTIONS, " + reductionPhrases.size() 
+							+ ", AND THE NUMBER OF REDUCTIONS REQUIRED, " + listOfTypesForReduction.size() + ".");
+				}
+			}
+			
 		}catch(Exception e){
 			System.err.println("ERROR OCCURED WHILE PROCESSING REDUCTIONS:\n");
 			e.printStackTrace();
 		}
+	}
+	
+	private boolean onlyRedLibReductions(){
+		for(TypeElement element : listOfTypesForReduction)
+			if(!hasRedLibImplementedReduction(element))
+				return false;
+		return true;
+	}
+	
+	private boolean hasRedLibImplementedReduction(TypeElement element){
+		String supportedReduction = redLibSupportedReduction(element);
+		if(supportedReduction != null)
+			return true;
+		return false;
 	}
 	
 	/*
@@ -342,58 +396,110 @@ public abstract class PtAnnotationProcessor {
 		return reductions;
 	}
 	
-	private boolean isRedLibImplementedReduction(TypeElement element){
-		if(!matchTypeWithReduction(element)){
-			return false;
+	/*
+	 * Returns the equivalent supported reduction if RedLib already supports
+	 * the user-specified reduction.
+	 * Note that, user-specified reduction string is converted to lower case
+	 * since the reductions registered in the map are all lower case. This 
+	 * offers more convenience for a user, since they don't have to worry about
+	 * case sensitivity of the reduction names.
+	 */
+	private String redLibSupportedReduction(TypeElement element){
+		if(element.reduction.isEmpty())
+			return null;
+		
+		String type = element.elementType;
+		String reduction = element.reduction.toLowerCase();
+		
+		//in case the specified type is fully qualified e.g., java.util.Map
+		String[] typeQualifiedPaths = type.split("\\.");
+		type = typeQualifiedPaths[typeQualifiedPaths.length-1];
+		
+		if(redLibAvailableReductions.containsKey(type)){
+			Map<String, String> supportedReductionsForType = redLibAvailableReductions.get(type);
+			if(supportedReductionsForType.containsKey(reduction))
+				return supportedReductionsForType.get(reduction);
 		}
-		return true;
+		
+		return null;
 	}
-	
+		
 	/*
 	 * If the reduction object is already declared by a user, it
 	 * needs to be the inner-most reduction, it cannot nest any other
 	 * reduction, because it is an object.  
 	 */
 	private boolean isDeclaredReductionObject(TypeElement element){
-		if(isLocalDeclaration(element.reduction))
-			return true;
-		else if (isFieldDeclaration(element.reduction))
-			return true;
-		return false;
-	}
-	
-	private boolean isUserDefinedReductionClass(TypeElement element){
-		return false;
-	}
-	
-	private boolean isLocalDeclaration(String reductionName){
 		if(thisAnnotatedLocalElement != null){
-			CtStatement declarationStatement = APTUtils.getDeclarationStatement(thisAnnotatedLocalElement, reductionName);
-			if(declarationStatement != null)
-				if(declarationStatement instanceof CtLocalVariable<?>){
-					CtLocalVariable<?> reductionDeclaration = (CtLocalVariable<?>) declarationStatement;
-					CtTypeReference<?> reductionTypeReference = reductionDeclaration.getType();
-					if(isReductionSubclass(reductionTypeReference))
-						return true;
-					else
-						return false;
-				}
-				else{
-					System.err.println("Reduction object declared for a local future must be a local variable as well!");
-					throw new IllegalArgumentException();
-				}
+			if(isVisibleForLocalFuture(element.reduction))
+				return true;
+		}
+		
+		else if(thisAnnotatedField != null){
+			if (isVisibleForFieldFuture(element.reduction))
+				return true;
 		}
 		return false;
 	}
 	
-	private boolean isFieldDeclaration(String reductionName){
-		if(thisAnnotatedField != null){
+	private boolean isUserDefinedReductionClass(TypeElement element){
+		String reductionString = element.reduction;
+		Class<?> actualClass = null;
+		
+		try {
+			actualClass = Class.forName(reductionString);			
+		} catch (ClassNotFoundException e) {
+			return false;
+		}
+		
+		if(actualClass == null){
+			throw new IllegalArgumentException("THE CLASS " + reductionString + " SPECIFIED FOR REDUCTION DOES NOT EXIST.\n"
+					+ "PLEASE ENSURE THAT THE PATH SPECIFIED FOR THE CLASS IS CURRECT AND FULLY-QUALIFIED");
+		}
+	
+		if(implementsRedLibReductionInterface(actualClass)){
+			return true;
+		}
+		
+		return false;
+	}
+	
+	private boolean isVisibleForLocalFuture(String reductionName){
+			CtStatement declarationStatement = APTUtils.getDeclarationStatement(thisAnnotatedLocalElement, reductionName);
+			if(declarationStatement != null){
+				if(declarationStatement instanceof CtLocalVariable<?>){
+					CtLocalVariable<?> reductionDeclaration = (CtLocalVariable<?>) declarationStatement;
+					CtTypeReference<?> reductionTypeReference = reductionDeclaration.getType();
+					if(implementsRedLibReductionInterface(reductionTypeReference.getActualClass()))
+						return true;
+					else
+						return false;
+				}
+			}
+		
+			//else, look in the fields of the class! It might be defined there. 
+			CtClass<?> parentClass = thisAnnotatedLocalElement.getParent(CtClass.class);
+			List<CtField<?>> parentClassFields = parentClass.getFields();
+			
+			for(CtField<?> field : parentClassFields){
+				if(APTUtils.isTheWantedDeclaration(field, reductionName)){
+					CtTypeReference<?> reductionTypeReference = field.getType();
+					if(implementsRedLibReductionInterface(reductionTypeReference.getActualClass()))
+						return true;
+					else
+						return false;
+				}
+			}
+		return false;
+	}
+	
+	private boolean isVisibleForFieldFuture(String reductionName){
 			CtVariable<?> declarationStatement = APTUtils.getDeclarationStatement(thisAnnotatedField, reductionName);
 			if(declarationStatement != null){
 				if (declarationStatement instanceof CtField<?>){
 					CtField<?> reductionDeclarationField = (CtField<?>) declarationStatement;
 					CtTypeReference<?> reductionTypeReference = reductionDeclarationField.getType();
-					if(isReductionSubclass(reductionTypeReference))
+					if(implementsRedLibReductionInterface(reductionTypeReference.getActualClass()))
 						return true;
 					else
 						return false;
@@ -404,40 +510,39 @@ public abstract class PtAnnotationProcessor {
 					throw new IllegalArgumentException();					
 				}
 			}
-		}
 		return false;
 	}
 	
-	private boolean isReductionSubclass(CtTypeReference<?> type){
+	private boolean implementsRedLibReductionInterface(Class<?> type){
 		
-		Set<CtTypeReference<?>> parentInterfaces = type.getSuperInterfaces();
-		for (CtTypeReference<?> parentInterface : parentInterfaces){
-			String parentInterfaceName = parentInterface.toString();
-			if (parentInterfaceName.equals("pu.RedLib.Reduction"))
+		Class<?>[] parentInterfaces = type.getInterfaces();
+		for (Class<?> parentInterface : parentInterfaces){
+			String parentInterfaceName = parentInterface.getName();
+			if (parentInterfaceName.equals(APTUtils.getRedLibPackageSyntax() + "Reduction")){
 				return true;
+			}
 		}
 		
 		if(type.getSuperclass() != null){
-			isReductionSubclass(type.getSuperclass());
+			return implementsRedLibReductionInterface(type.getSuperclass());
 		}
 		
 		return false;
 	}
 	
-	private void processDeclaredReductionObject(TypeElement element){
-				
+	private void finalizeSyntaxForRedLibReduction(TypeElement element, String supportedReduction){
+		element.reduction = APTUtils.getRedLibPackageSyntax() + supportedReduction;
+		element.reduction = element.reduction + element.genericType;
+		element.isDeclaredObject = false;	
+	}		
+	
+	private void finalizeSyntaxForDeclaredReductionObject(TypeElement element){
+		element.isDeclaredObject = true;
 	}
 	
-	private void processUserDefinedReductionClass(TypeElement element){
-		
-	}
-	
-	private void processPrimitiveType(String typeString){
-
-	}
-	
-	private void processAggregateType(String typeString){
-		
+	private void finalizeSyntaxForUserDefinedReductionClass(TypeElement element){
+		element.reduction = element.reduction + element.genericType;
+		element.isDeclaredObject = false;
 	}	
 	
 	/*
@@ -483,7 +588,7 @@ public abstract class PtAnnotationProcessor {
 		Map<String, String> collectionsMap = new HashMap<>();
 		collectionsMap.put("join", "Join");
 
-		typeToAvailableReductions = new HashMap<>();
+		redLibAvailableReductions = new HashMap<>();
 		concatenate(booleanStr, bitWiseMap, logicMap);
 		concatenate(byteStr, bitWiseMap);
 		concatenate(collectionStr, aggregateMap, collectionsMap);
@@ -507,16 +612,17 @@ public abstract class PtAnnotationProcessor {
 				typeToReductions.put(abbreviation, type+reduction);
 			}
 		}
-		typeToAvailableReductions.put(type, typeToReductions);
+		redLibAvailableReductions.put(type, typeToReductions);
 	}
 	
 	private class TypeElement{
 		TypeElement(String type, String generic){
 			elementType = type;
 			genericType = generic;
+			isDeclaredObject = false;
 		}
 		
-		boolean declaredObject = false;
+		boolean isDeclaredObject = false;
 		String 	elementType = "";
 		String 	genericType = "";
 		String 	reduction = "";
@@ -598,7 +704,7 @@ public abstract class PtAnnotationProcessor {
 		System.out.println(" Current state of AnnotationParallelTask (APT) supports the following\n"
 			+ " reductions for the following types:");
 		
-		for(Entry<String, Map<String, String>> entry : typeToAvailableReductions.entrySet()){
+		for(Entry<String, Map<String, String>> entry : redLibAvailableReductions.entrySet()){
 			String type = entry.getKey();
 			System.out.println("Reductions supportef for type: " + type);
 			Map<String, String> availableReductions = entry.getValue();
