@@ -148,17 +148,22 @@ public abstract class PtAnnotationProcessor {
 			//because the higher level reduction object also considers the nested ones. This could be the
 			//case for user-specific reduction classes. 
 			if(!element.reduction.isEmpty()){
-				if(supportedReduction != null)
+				if(supportedReduction != null){
 					finalizeSyntaxForRedLibReduction(element, supportedReduction);
+				}
+				
+				else if(isDeclaredReductionObject(element)){
+					finalizeSyntaxForDeclaredReductionObject(element);				
+				}
+					
+				else if(isUserDefinedReductionClass(element)){
+					finalizeSyntaxForUserDefinedReductionClass(element);
+				}
 				
 				else{
-					if(isDeclaredReductionObject(element)){
-						finalizeSyntaxForDeclaredReductionObject(element);				
-					}
-					
-					else if(isUserDefinedReductionClass(element)){
-						finalizeSyntaxForUserDefinedReductionClass(element);
-					}
+					throw new IllegalArgumentException("ERROR WITH REDUCTION OPERATION: " + element.reduction + ": \n"
+							+ "THE SPECIFIED REUDCTION OPERATION IS NOT SUPPORTED BY REDLIB, NOR A USER-DECLARED OBJECT,"
+							+ "NOR IT IS THE (FULLY-QUALIFIED) NAME OF A USER-DEFINED REDUCTION CLASS!");					
 				}
 			}
 		}
@@ -459,6 +464,8 @@ public abstract class PtAnnotationProcessor {
 	
 		if(implementsRedLibReductionInterface(actualClass)){
 			return true;
+		}else{
+			System.err.println("THE CLASS: " + 	reductionString + " DOES NOT IMPLEMENT RedLib.Reduction INTERFACE!");
 		}
 		
 		return false;
