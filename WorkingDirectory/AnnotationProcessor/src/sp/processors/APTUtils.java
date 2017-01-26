@@ -687,7 +687,9 @@ public class APTUtils {
 			
 			if (statement instanceof CtBlock<?>){
 				CtBlock<?> blockStatement = (CtBlock<?>) statement;
-				findVarAccessOtherThanFutureDefinition(blockStatement, element);
+				List<CtStatement> tempList = findVarAccessOtherThanFutureDefinition(blockStatement, element);
+				if(tempList.size() != 0)
+					statementsWithThisFutureVariable.addAll(tempList);
 			}
 			
 			else{
@@ -704,10 +706,15 @@ public class APTUtils {
 						}
 					}
 				}
+				
 				String statementString = statement.toString();
 								
 				if (!search){
-					if (statement.equals(element)){//this will never become true for a field variable.
+					//this will never become true for a field variable.
+					//otherwise, the declaration of the local variable has 
+					//been reached, and from now on, we can search for the 
+					//access statements. 
+					if (statement.equals(element)){
 						search = true;
 					}
 				}

@@ -617,7 +617,7 @@ public class TaskIDGroupProcessor extends PtAnnotationProcessor{
 	}
 	
 	protected boolean containsSyntaxOfAnArrayElement(String component){
-		String regex = "\\b" + thisElementName + "\\b" + "\\[";
+		String regex = "\\b" + thisElementName + "\\b"; //+ "\\[";
 		Pattern pattern = Pattern.compile(regex);
 		Matcher matcher = pattern.matcher(component);
 		if(matcher.find())
