@@ -34,26 +34,26 @@ public class PtFutureProcessor extends AbstractAnnotationProcessor<Future, CtVar
 		}
 		
 		if(elementIsCollectionDeclaration(annotatedElement)){
-			CollectionWrapperProcessor processor;
+			HybridCollectionProcessor processor;
 			if(annotatedElement instanceof CtLocalVariable<?>){
 				CtLocalVariable<?> element = (CtLocalVariable<?>) annotatedElement;
-				processor = new CollectionWrapperProcessor(getFactory(), annotation, element);
+				processor = new HybridCollectionProcessor(getFactory(), annotation, element);
 				processor.process();
 			}else{
 				CtField<?> element = (CtField<?>) annotatedElement;
-				processor = new FieldCollectionWrapperProcessor(getFactory(), annotation, element);
+				processor = new FieldHybridCollectionProcessor(getFactory(), annotation, element);
 				processor.process();
 			}
 		}
 		
 		else if (elementIsArrayDeclaration(annotatedElement)){
-			TaskIDGroupProcessor processor;
+			FutureGroupProcessor processor;
 			if(annotatedElement instanceof CtLocalVariable<?>){
 				CtLocalVariable<?> element = (CtLocalVariable<?>) annotatedElement;
-				processor = new TaskIDGroupProcessor(getFactory(), annotation, element);
+				processor = new FutureGroupProcessor(getFactory(), annotation, element);
 			}else{
 				CtField<?> element = (CtField<?>) annotatedElement;
-				processor = new FieldTaskIDGroupProcessor(getFactory(), annotation, element);
+				processor = new FieldFutureGroupProcessor(getFactory(), annotation, element);
 			}
 			processor.process();
 		}

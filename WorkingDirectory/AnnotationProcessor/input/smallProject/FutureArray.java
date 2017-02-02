@@ -39,14 +39,32 @@ public class FutureArray
 	
 	public void processTasks(){
 		for(int i = 0; i < range; i++){
-			myArray[i] = task(i+3);
+			myArray   [ i ] = task(i+3);
 		}
-		finishTask();
+		
+		int[] bigArray = new int[2];
+		bigArray [myArray [0 ] ] = task(1);
+		bigArray[myArray[1]] = task(2);
+		Void dd = finishTask(myArray, 7);
 	}
 	
-	private void finishTask(){
-		for(int i = 0; i < range; i++){
-			System.out.println("The result of " + i + "th task: " + myArray[i]);
+	public void processInnerTasks(){
+		@Future()
+		int[] newArray = new int[7];
+		for (int i = 0; i < newArray.length; i++){
+			newArray[i] = task(i);
 		}
+		
+		System.out.println(newArray   [ 0 ] + ", " + newArray  [2]);
+		
+		newArray[4] = task(100);
+		newArray[6] = task(200);
+	}
+	
+	private Void finishTask(int array[], int index){
+		for(int i = 0; i < range; i++){
+			System.out.println("The result of " + i + "th task: " + array[i]);
+		}
+		return null;
 	}	
 }

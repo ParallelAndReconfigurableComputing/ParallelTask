@@ -13,7 +13,7 @@ public class CollectionWrapperTest {
 	
 	@Future
 	//List<Integer> myList = new ArrayList<>();
-	static List<Integer> myList = ParaTask.getPtWrapper(new ArrayList<Integer>());
+	static volatile List<Integer> myList = ParaTask.getPtWrapper(new ArrayList<Integer>());
 	
 	public static int simulateWork(int i){
 		Random rand = new Random();
