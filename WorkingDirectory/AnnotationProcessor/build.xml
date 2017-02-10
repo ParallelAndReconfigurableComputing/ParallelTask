@@ -14,7 +14,7 @@
 	<property name="@PT.jar"      value="${lib.dir}/@PT-1.1.0.jar" />
 	
 	<property name="spoon.jar"    value="${lib.dir}/spoon-core-5.4.0-jar-with-dependencies.jar"/>
-	<property name="PT.jar"		  value="${lib.dir}/PTLambda-Runtime-1.1.0.jar"/>
+	<property name="PT.jar"		  value="${lib.dir}/PTLambda-Runtime-1.1.1.jar"/>
 	<property name="PARC.jar"     value="${lib.dir}/PARCutils-1.2.2.jar" />
 	<property name="APTJarName"   value="@PT-1.1.0" />
 
@@ -112,12 +112,14 @@
 	
 	<target name="process" description="Process the annotated code">
 		<echo message="Processing the annotations started!" />
+		
+		<exec executable="java">
+			<arg line="-cp ${PARC.jar}${Delim}${PT.jar}${Delim}${spoon.jar}${Delim}${classes.dir}${Delim}${temp.dir} spoon.Launcher -o ${gen.dir} -i ${gen.dir} -p sp.processors.PtInitParaTaskProcessor" />
+		</exec>		
 		<exec executable="java">
 			<arg line="-cp ${PARC.jar}${Delim}${PT.jar}${Delim}${spoon.jar}${Delim}${classes.dir}${Delim}${temp.dir} spoon.Launcher -o ${gen.dir} -i ${input.dir} -p sp.processors.PtFutureProcessor" />
 		</exec>
-		<exec executable="java">
-			<arg line="-cp ${PARC.jar}${Delim}${PT.jar}${Delim}${spoon.jar}${Delim}${classes.dir}${Delim}${temp.dir} spoon.Launcher -o ${gen.dir} -i ${gen.dir} -p sp.processors.PtInitParaTaskProcessor" />
-		</exec>
+		
 		<echo message="Processing the annotations finished!" />
 	</target>	
 	

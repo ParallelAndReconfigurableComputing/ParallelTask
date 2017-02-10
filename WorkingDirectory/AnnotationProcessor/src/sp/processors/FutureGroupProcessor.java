@@ -67,7 +67,7 @@ import spoon.support.reflect.code.CtAssignmentImpl;
  * @author Mostafa Mehrabi
  * @since  2016
  */
-public class FutureGroupProcessor extends PtAnnotationProcessor{
+public class FutureGroupProcessor extends PtAbstractFutureProcessor{
 	
 	protected CtTypeReference<?> thisGroupType = null;
 	protected CtExpression<?> thisGroupDeclarationExpression = null;

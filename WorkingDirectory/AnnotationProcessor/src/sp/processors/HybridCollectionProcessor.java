@@ -49,7 +49,7 @@ import spoon.support.reflect.code.CtInvocationImpl;
  * @author Mostafa Mehrabi
  * @since  2016
  */
-public class HybridCollectionProcessor extends PtAnnotationProcessor {
+public class HybridCollectionProcessor extends PtAbstractFutureProcessor {
 	
 	private List<CtVariableAccess<?>> variableAccessArgumentsToBeProcessed = null;
 	private List<CtInvocation<?>> potentialAsynchronousInvocations = null;

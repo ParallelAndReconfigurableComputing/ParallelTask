@@ -9,14 +9,19 @@ import sp.annotations.Future;
 import sp.processors.APTUtils.ExpressionRole;
 import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.code.CtStatement;
+import spoon.reflect.code.CtStatementList;
+import spoon.reflect.code.CtUnaryOperator;
+import spoon.reflect.code.UnaryOperatorKind;
 import spoon.reflect.code.CtArrayRead;
 import spoon.reflect.code.CtArrayWrite;
 import spoon.reflect.code.CtAssignment;
 import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtCodeSnippetExpression;
+import spoon.reflect.code.CtCodeSnippetStatement;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtFieldAccess;
 import spoon.reflect.code.CtFieldRead;
+import spoon.reflect.code.CtIf;
 import spoon.reflect.declaration.CtAnonymousExecutable;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtConstructor;
@@ -142,7 +147,7 @@ public class FieldFutureGroupProcessor extends FutureGroupProcessor {
 							if(assignedExpression instanceof CtArrayWrite<?>){
 								//if the future group is the main array (i.e., not bigArray[futureGroup[i]])
 								if(containsFutureGroupSyntax(1, assignedExpression.toString())){
-									modifyAssignmentStatement(assignment);
+									insertAssignmentBlock(assignment);
 								}
 								//otherwise, future group is not the main array
 								else{									
@@ -181,6 +186,53 @@ public class FieldFutureGroupProcessor extends FutureGroupProcessor {
 		}
 	}	
 	
+	private void insertAssignmentBlock(CtAssignment<?, ?> assignment){
+		
+		CtIf ifStatement = createIfStatement(assignment);
+		assignment.replace(ifStatement);
+		CtBlock<?> ifBlock = (CtBlock<?>) ifStatement.getThenStatement();
+		CtAssignment<?, ?> newAssignment = (CtAssignment<?, ?>) ifBlock.getStatements().get(0);
+		modifyAssignmentStatement(newAssignment);
+	}
+	
+	private CtIf createIfStatement(CtAssignment<?, ?> assignment){
+
+		List<CtStatement> statementList = null;
+		CtIf ifStatement = thisFactory.Core().createIf();
+
+		//we don't want the elseBody to be affected by code modification, since both elseBody and
+		//ifBody refer to the same assignment statement. So, we trick the compiler, we create a 
+		//code snippet element that is not recognized as an assignment, and just has the syntax!
+		CtCodeSnippetStatement elseBody = thisFactory.Core().createCodeSnippetStatement();
+		elseBody.setValue(assignment.toString());
+
+		CtAssignment<?, ?> ifBody = thisFactory.Core().createAssignment();
+		ifBody.setAssigned((CtExpression) assignment.getAssigned());
+		ifBody.setAssignment((CtExpression) assignment.getAssignment());
+			
+		CtUnaryOperator<Boolean> ifCondition = thisFactory.Core().createUnaryOperator();
+		ifCondition.setKind(UnaryOperatorKind.NOT);
+		
+		CtCodeSnippetExpression operand = thisFactory.Core().createCodeSnippetExpression();
+		operand.setValue(syncBooleanFlagName);
+		ifCondition.setOperand(operand);
+
+		CtBlock ifBlock = thisFactory.Core().createBlock();
+		statementList = new ArrayList<>();
+		statementList.add(ifBody);
+		ifBlock.setStatements(statementList);
+		
+		CtBlock elseBlock = thisFactory.Core().createBlock();
+		statementList = new ArrayList<>();
+		statementList.add(elseBody);
+		elseBlock.setStatements(statementList);
+		
+		ifStatement.setCondition(ifCondition);
+		ifStatement.setThenStatement(ifBlock);
+		ifStatement.setElseStatement(elseBlock);		
+	
+		return ifStatement;
+	}
 	
 	@Override
 	protected void insertTaskIDSizeDeclaration(CtLocalVariable<?> taskGroupSizeVarDeclaration){
@@ -210,6 +262,8 @@ public class FieldFutureGroupProcessor extends FutureGroupProcessor {
 		syncBooleanFlag.setSimpleName(syncBooleanFlagName);
 		syncBooleanFlagType.setSimpleName("boolean");
 		syncBooleanFlag.setType(syncBooleanFlagType);
+		if(!fieldModifiers.contains(ModifierKind.VOLATILE))
+			fieldModifiers.add(ModifierKind.VOLATILE);
 		syncBooleanFlag.setModifiers(fieldModifiers);
 		parentClass.addFieldAtTop(syncBooleanFlag);
 	}

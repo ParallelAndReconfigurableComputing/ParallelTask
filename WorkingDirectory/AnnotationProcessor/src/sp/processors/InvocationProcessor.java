@@ -46,7 +46,7 @@ import spoon.support.reflect.reference.CtExecutableReferenceImpl;
  * @author Mostafa Mehrabi
  * @since  2016
  */
-public class InvocationProcessor extends PtAnnotationProcessor {
+public class InvocationProcessor extends PtAbstractFutureProcessor {
 	
 	private CtInvocation<?> thisInvocation = null;
 	private Future thisFutureAnnotation = null;
