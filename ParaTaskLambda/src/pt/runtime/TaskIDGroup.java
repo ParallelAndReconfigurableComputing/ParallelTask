@@ -58,7 +58,7 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	/*Indicates how many sub tasks should be expanded, and its value can
 	only be set from {@link AbstractTaskPool#enqueueMulti()}*/
 	private int groupSize = 0;
-	private boolean dynamicTaskGroup = false;
+	private boolean elasticTaskGroup = false;
 	
 	private Reduction<T> reductionOperation = null; 
 	
@@ -79,7 +79,7 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	private boolean isExpanded = false;
 	
 	public TaskIDGroup(){
-		dynamicTaskGroup = true;
+		elasticTaskGroup = true;
 	}
 	
 	/**
@@ -156,13 +156,13 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	 * it is used for multi task group only but not user defined group.
 	 * */
 	public void addInnerTask(TaskID<?> id) {
-		if(!dynamicTaskGroup && innerTasks.size() == groupSize)
+		if(!elasticTaskGroup && innerTasks.size() == groupSize)
 			throw new RuntimeException("\nTHE NUMBER OF INNER TASKS IS NOW THE SAME AS THE SIZE THAT WAS SET FOR THIS GROUP! NO MORE TASKS CAN BE ADDED\n"
 					+ "FOR DYNAMIC GROUP SIZE USE DEAFULT CONSTRUCTOR OF TaskIDGroup!\n");
 		
 		innerTasks.add(id);
 		
-		if(dynamicTaskGroup)
+		if(elasticTaskGroup)
 			groupSize = innerTasks.size();		
 	}
 	
@@ -244,19 +244,33 @@ public class TaskIDGroup<T> extends TaskID<T> {
 			boolean nothingToQueue = true;
 						
 			if (hasUserError()) {
-				
-				// at the moment, the handler uses the group's TaskID rather than the one for the specific task.. needs to be fixed!!
 				for (TaskID<?> taskID : innerTasks ) {
-					Throwable exception = taskID.getException();
-					if (exception != null) {
-						Slot<?> handler = getExceptionHandler(exception.getClass());
-						
-						if (handler != null) {
-							executeOneTaskSlot(handler);
-							nothingToQueue = false;
-						} else {
-							System.err.println("No asynchronous exception handler found in Task " + taskID.getGlobalID() + " for the following exception: ");
-							exception.printStackTrace();
+					if(taskID instanceof TaskIDGroup<?>){
+						TaskIDGroup<?> taskIDGroup = (TaskIDGroup<?>) taskID;
+						ParaTaskExceptionGroup group = (ParaTaskExceptionGroup) taskIDGroup.getException();
+						if(group != null){
+							Throwable[] throwables = group.getExceptionSet();
+							for(Throwable exception : throwables){
+								Slot<? extends Throwable> handler = taskIDGroup.getExceptionHandler(exception);
+								if(handler != null){
+									executeOneTaskSlot(handler);
+									nothingToQueue = false;
+								}
+							}
+						}
+					}
+					else{
+						Throwable exception = taskID.getException(); 
+						if (exception != null) {
+							Slot<? extends Throwable> handler = taskID.getExceptionHandler(exception);
+							
+							if (handler != null) {
+								executeOneTaskSlot(handler);
+								nothingToQueue = false;
+							} else {
+								System.err.println("No asynchronous exception handler found in Task " + taskID.getGlobalID() + " for the following exception: ");
+								exception.printStackTrace();
+							}
 						}
 					}
 				}
@@ -278,9 +292,28 @@ public class TaskIDGroup<T> extends TaskID<T> {
 		}
 	}
 
-
 	@Override
-	public Throwable getException() {
+	protected <E extends Throwable> Slot<E> getExceptionHandler(E occurredException){
+		if(isMultiTask()){
+			//multi-tasks have the same taskInfo with different data, so if there is a
+			//handler it should be found in the first taskInfo!
+			TaskID<?> taskID = innerTasks.get(0);
+			Slot<E> handler = taskID.getExceptionHandler(occurredException);
+			if (handler != null)
+				return handler;
+		}
+		else{
+			for(TaskID<?> taskID : innerTasks){
+				Slot<E> handler = taskID.getExceptionHandler(occurredException);
+				if(handler != null)
+					return handler;
+			}
+		}
+		return null;
+	}
+	
+	@Override
+	Throwable getException() {
 		return exceptionGroup;
 	}
 
@@ -392,8 +425,11 @@ public class TaskIDGroup<T> extends TaskID<T> {
 				TaskID<?> taskID = innerTasks.get(i);
 				if (taskID instanceof TaskIDGroup<?>) {
 					TaskIDGroup<?> taskIDGroup = (TaskIDGroup<?>) taskID;
-					while (!taskIDGroup.isExpanded()) {
-						Thread.sleep(ParaTask.WORKER_SLEEP_DELAY);
+					//if a taskIDGroup is not a multi-task it will never be marked as "expanded"
+					if(taskIDGroup.isMultiTask()){
+						while (!taskIDGroup.isExpanded()) {
+							Thread.sleep(ParaTask.WORKER_SLEEP_DELAY);
+						}
 					}
 					taskIDGroup.waitTillFinished();
 				} else {

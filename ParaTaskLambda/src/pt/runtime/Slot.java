@@ -37,7 +37,7 @@ import pt.functionalInterfaces.FunctorOneArgNoReturn;
  * 
  * */
 //Add the explanation for 'setComplete' later!
-public class Slot<R>{	
+public class Slot<T>{	
 	//final public static Slot<R> quit = new Slot<R>();
 
 	protected ConcurrentLinkedQueue<Object> interResults = null;
@@ -47,27 +47,28 @@ public class Slot<R>{
 	protected boolean isASetCompleteSlot;
 	
 	private FunctorNoArgsNoReturn functorNoArg = null;
-	private FunctorOneArgNoReturn<R> functorOneArg = null;
-	// this is the task for which this slot is attached (who should assign it?)
-	// cannot be assigned at the time the slot is created (since the TaskID wasn't created just yet)
-	protected TaskID<R> taskID = null; 		
+	private FunctorOneArgNoReturn<T> functorOneArg = null;
+	
+	// incurredException must be used for Slot objects that
+	// are used as exception handlers. 
+	private T incurredException = null;
+	// The TaskID of a slot is added to it when enqueueing a taskInfo, by 
+	// calling the setTaskIDForSlots( ) method on that taskInfo object. 
+	// This method is called by the workPool instance, when enqueueing a
+	// on-off or a multi-task.
+	protected TaskID<T> taskID = null; 		
 	
 	Slot(){}
 	
-	Slot(FunctorOneArgNoReturn<R> functor, TaskID<R> taskID){
-		this.taskID = taskID;
+	Slot(FunctorOneArgNoReturn<T> functor){
 		this.functorOneArg = functor;
-	}
-	
-	Slot(FunctorOneArgNoReturn<R> functor){
-		this.functorOneArg = functor;
-	}
+	}		
 	
 	Slot(FunctorNoArgsNoReturn functor){
 		this.functorNoArg = functor;
 	}
 	
-	public Slot<R> setIsSetCompleteSlot(boolean setComplete) {
+	public Slot<T> setIsSetCompleteSlot(boolean setComplete) {
 		this.isASetCompleteSlot = setComplete;
 		return this;
 	}	
@@ -90,29 +91,39 @@ public class Slot<R>{
 		return interResults.poll();
 	}
 	
-	public Class<?> getIntermediateResultType() {
+	Class<?> getIntermediateResultType() {
 		return interResultType;
 	}
 
-	public TaskID<R> getTaskID() {
+	TaskID<T> getTaskID() {
 		return taskID;
 	}
 	
-	public void setTaskID(TaskID<R> taskID) {
+	void setTaskID(TaskID<T> taskID) {
 		this.taskID = taskID;
 	}
 
-	public boolean isIntermediateResultSlot() {
+	boolean isIntermediateResultSlot() {
 		return isIntermediateResultSlot;
 	}
+		
+	//T is used as a generic in order to allow "Slot" work for a wider range
+	//of functionalities, but for exception handlers it must be a Throwable!
+	void setExceptionObject(T exception){
+		this.incurredException = exception;
+	}
 	
-	private R getTaskResult(){
-		return taskID.getReturnResult();
+	T getArgument(){
+		if(incurredException != null){
+			return incurredException;
+		}
+		else
+			return taskID.getReturnResult();
 	}
 
 	void execute(){
 		if (this.functorOneArg!=null){
-			functorOneArg.exec(this.getTaskResult());
+			functorOneArg.exec(getArgument());
 			return;
 		}
 		functorNoArg.exec();

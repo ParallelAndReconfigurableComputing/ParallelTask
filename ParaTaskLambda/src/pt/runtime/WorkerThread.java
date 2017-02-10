@@ -89,7 +89,7 @@ public class WorkerThread extends TaskThread {
 	public void run() {
 		while (true) {
 			TaskID<?> task = taskpool.workerTakeNextTask();
-			boolean success = executeTask(task);
+			executeTask(task);
 			
 			if (isCancelRequired) {
 				if (isCancelled) {

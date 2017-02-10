@@ -111,13 +111,12 @@ public abstract class TaskThread extends Thread {
 			threadTaskStack.pop();
 			return true;
 		} catch (Exception e) {
-			//e.printStackTrace();
 			taskID.setException(e);
 			threadTaskStack.pop();
-			//this should come after popping the task from
-			//the stack, in case the handler is activated 
-			//straight away!
-			taskID.enqueueSlots(false);
+			//For lambda expressions we don't enqueue slots when an
+			//exception occurs. This encourages better exception handling
+			//as corresponding task slots must be specified as exception handlers.
+			//taskID.enqueueSlots(false);
 			return false;
 		}
 		

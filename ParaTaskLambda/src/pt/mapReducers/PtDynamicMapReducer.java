@@ -166,7 +166,7 @@ public class PtDynamicMapReducer<T, E> extends AbstractDynamicMapReducer<T, E> {
 		while(reductionOperations.size() != (numOfComputationTasks-1)){
 			try{
 				waitingThread = Thread.currentThread();
-				Thread.sleep(200);
+				Thread.sleep(10);
 			}catch(InterruptedException e){
 				if(mapReducerInterrup){
 					waitingThread = null;

@@ -337,24 +337,24 @@ public class ParaTask {
 		return listener;
 	}	
 	
-	public static <R> void registerSlotToNotify(TaskInfo<R> taskInfo, FunctorNoArgsNoReturn functor){
-		taskInfo.notify(new Slot<R>(functor));
-	}
-	
 	public static void processingInParallel(boolean bool){
 		processInParallel = bool;
 	}
+	
+	public static <R> void registerSlotToNotify(TaskInfo<R> taskInfo, FunctorNoArgsNoReturn functor){
+		taskInfo.notify(new Slot<R>(functor));
+	}	
 	
 	public static <R> void registerSlotToNotify(TaskInfo<R> taskInfo, FunctorOneArgNoReturn<R> functor){
 		taskInfo.notify(new Slot<R>(functor));
 	}
 	
-	public static <R> void registerAsyncCatch(TaskInfo<R> taskInfo, Class<? extends Exception> exceptionClass, FunctorNoArgsNoReturn functor){
-		taskInfo.setAsyncCatch(exceptionClass, new Slot<R>(functor));
+	public static <R, E extends Throwable> void registerAsyncCatch(TaskInfo<R> taskInfo, Class<E> exceptionClass, FunctorNoArgsNoReturn functor){
+		taskInfo.setAsyncCatch(exceptionClass, new Slot<E>(functor));
 	}
 	
-	public static <R> void registerAsyncCatch(TaskInfo<R> taskInfo, Class<? extends Exception> exceptionClass, FunctorOneArgNoReturn<R> functor){
-		taskInfo.setAsyncCatch(exceptionClass, new Slot<R>(functor));
+	public static <R, E extends Throwable> void registerAsyncCatch(TaskInfo<R> taskInfo, Class<E> exceptionClass, FunctorOneArgNoReturn<E> functor){
+		taskInfo.setAsyncCatch(exceptionClass, new Slot<E>(functor));
 	}
 	
 	public static <T> Collection<T> getPtWrapper(Collection<T> collection){

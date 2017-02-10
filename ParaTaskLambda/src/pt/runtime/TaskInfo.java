@@ -25,7 +25,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import pt.runtime.ParaTask.TaskType;
 
@@ -79,7 +78,7 @@ public abstract class TaskInfo<R> {
 	protected boolean registeredByGuiThread = false;
 	protected boolean hasNoReturn = false;
 
-	protected Map<Class<?>, Slot<R>> asyncExceptions = new HashMap<Class<?>, Slot<R>>();
+	protected Map<Class<? extends Throwable>, Slot<? extends Throwable>> asyncExceptions = new HashMap<>();
 	
 	/* 
 	 * Used to identify if it is a sub task for a multi task
@@ -164,36 +163,33 @@ public abstract class TaskInfo<R> {
 			}
 		}
 		
-		if (!asyncExceptions.isEmpty()){
-			Set<Class<?>> exceptionClasses = asyncExceptions.keySet();
-			for (Class<?> exception : exceptionClasses){
-				Slot<R> handler = asyncExceptions.get(exception);
-				handler.setTaskID(taskID);
-			}
-		}
+		// We don't set TaskID for the exception handlers, instead, at the time
+		// of invoking the exception handler, the stored instance of exception
+		// must be sent to the corresponding handler. 
 	}
 
-	void setAsyncCatch(Class<?> exceptionClass, Slot<R> handler) {
+	<E extends Throwable> void setAsyncCatch(Class<E> exceptionClass, Slot<E> handler) {
 		
 		if (exceptionClass == null)
 			throw new IllegalArgumentException("There is no exception class specified!");
 		else if (handler == null)
 			throw new IllegalArgumentException("There is no exception handler specified for this exception");
 	
-		asyncExceptions.put(exceptionClass, (Slot<R>)handler);
+		asyncExceptions.put(exceptionClass, handler);
 		hasAnySlots = true;
 	}
 
 	/**
 	 * Returns the handler associated to the specified exception. 
 	 */
-	Slot<?> getExceptionHandler(Class<?> occuredException) {
+	@SuppressWarnings("unchecked")
+	<E extends Throwable> Slot<E> getExceptionHandler(Class<E> occuredException) {
 		
 		if (asyncExceptions.isEmpty())
 			return null;
 		
-		if (!asyncExceptions.containsKey(occuredException))
-			return asyncExceptions.get(occuredException);
+		if (asyncExceptions.containsKey(occuredException))
+			return (Slot<E>) asyncExceptions.get(occuredException);
 			
 		return null; 
 	}

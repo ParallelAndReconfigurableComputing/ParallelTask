@@ -5,9 +5,9 @@
 	<property name="build.dir" value="bild" />
  	<property name="dist.dir"  value="release" />
 	<property name="productName" value="PTLambda"/>
-	<property name="reductionJar" value="PARCutils-1.2.2.jar"/>
+	<property name="reductionJar" value="PARCutils-1.2.3.jar"/>
 	<property name="libsDir" value="./libs"/>
- 	<property name="jarVersion" value="1.1.0"/>
+ 	<property name="jarVersion" value="1.1.1"/>
 	
 	<!-- Check the operating system -->
     <target name="checkOS">

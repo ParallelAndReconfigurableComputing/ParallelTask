@@ -410,9 +410,6 @@ public class TaskID<T> {
 		completedLatchForNonRegisteringThreads.countDown();
 		status.set(COMPLETED);
 		changeStatusLock.unlock();
-		
-//		if (group != null) 
-//			group.oneMoreInnerTaskCompleted();			
 	}
 
 	
@@ -543,7 +540,7 @@ public class TaskID<T> {
 						//if the worker thread is cancelled, then put it to sleep
 						//until it is killed by JVM or Dalvik
 						try {
-							//200 mili-seconds of sleeping for the thread before it polls again
+							//sleeping for the thread before it polls again
 							Thread.sleep(ParaTask.WORKER_SLEEP_DELAY);
 						} catch (InterruptedException e) {
 							e.printStackTrace();
@@ -599,7 +596,7 @@ public class TaskID<T> {
 	 * Returns the exception that occurred while this task executed. 
 	 * @return	The exception that occurred.
 	 */
-	public Throwable getException() {
+	Throwable getException() {
 		return exception;
 	}
 	
@@ -665,8 +662,7 @@ public class TaskID<T> {
 				
 			} else {
 				setComplete();
-			}
-			
+			}			
 		}
 	}
 	
@@ -677,16 +673,21 @@ public class TaskID<T> {
 	 * @author Mostafa Mehrabi
 	 * @since 9/9/2014
 	 * */
-	protected Slot<?> getExceptionHandler(Class<?> occurredException) {
+	@SuppressWarnings("unchecked")
+	protected <E extends Throwable> Slot<E> getExceptionHandler(E occurredException) {
 		
 		//-- first, try to get handler defined immediately for this task
-		Slot<?> handler = taskInfo.getExceptionHandler(occurredException);
+		Slot<E> handler = (Slot<E>) taskInfo.getExceptionHandler(occurredException.getClass());
 		
 		TaskID<?> currentTask = this;
 		//-- while we have not found a handler, and while there are other enclosing tasks
 		while (handler == null && currentTask.getEnclosingTask() != null) {
 			currentTask = currentTask.getEnclosingTask();
-			handler = currentTask.getTaskInfo().getExceptionHandler(occurredException);
+			handler = (Slot<E>) currentTask.getTaskInfo().getExceptionHandler(occurredException.getClass());
+		}
+		
+		if(handler != null){
+			handler.setExceptionObject(occurredException);
 		}
 		
 		return handler;
@@ -694,7 +695,7 @@ public class TaskID<T> {
 	
 	//-- returns the number of handlers that it will execute for this TaskID
 	private boolean executeExceptionHandler() {
-		Slot<?> handler = getExceptionHandler(exception.getClass());
+		Slot<? extends Throwable> handler = getExceptionHandler(exception);
 		
 		if (handler != null) {
 			executeOneTaskSlot(handler);
