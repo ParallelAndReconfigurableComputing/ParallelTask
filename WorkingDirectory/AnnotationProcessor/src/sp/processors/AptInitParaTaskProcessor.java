@@ -22,7 +22,7 @@ import spoon.support.reflect.declaration.CtMethodImpl;
  * @author Mostafa Mehrabi
  * @since  2016
  */
-public class PtInitParaTaskProcessor extends AbstractAnnotationProcessor<InitParaTask, CtMethodImpl<?>> {
+public class AptInitParaTaskProcessor extends AbstractAnnotationProcessor<InitParaTask, CtMethodImpl<?>> {
 
 	InitParaTask thisAnnotation = null;
 	CtMethodImpl<?> thisAnnotatedMethod = null;

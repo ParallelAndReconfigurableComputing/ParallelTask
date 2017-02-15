@@ -4,15 +4,21 @@ package smallProject;
 
 
 public class FutureArray {
+    private pt.runtime.TaskIDGroup<Integer> __myArrayPtTaskIDGroup__ = new pt.runtime.TaskIDGroup<>();
+
+    private volatile boolean __myArrayPtTaskIDGroup__Synchronized = false;
+
+    private volatile java.util.concurrent.locks.Lock __myArrayPtTaskIDGroup__Lock = new java.util.concurrent.locks.ReentrantLock();
+
     int __myArrayPtTaskIDGroupSize__;
 
-    int[] myArray;
+    int range = 5;
+
+    private int[] myArray;
 
     pu.RedLib.IntegerSum newSum = new pu.RedLib.IntegerSum();
 
     java.lang.Integer newInt = new java.lang.Integer(0);
-
-    int range = 5;
 
     public FutureArray(int num) {
         myArray = new int[num];
@@ -36,11 +42,34 @@ public class FutureArray {
 
     public void processTasks() {
         for (int i = 0; i < (range); i++) {
-            myArray[i] = task((i + 3));
+            if (!__myArrayPtTaskIDGroup__Synchronized) {
+                pt.runtime.TaskInfoOneArg<Integer, Integer> ____myArray_1__PtTask__ = ((pt.runtime.TaskInfoOneArg<Integer, Integer>) (pt.runtime.ParaTask.asTask(pt.runtime.ParaTask.TaskType.ONEOFF, 
+			(pt.functionalInterfaces.FunctorOneArgWithReturn<Integer, Integer>)(__iPtNonLambdaArg__) -> task((__iPtNonLambdaArg__ + 3)))));
+                pt.runtime.TaskID<Integer> ____myArray_1__PtTaskID__ = ____myArray_1__PtTask__.start(i);
+                __myArrayPtTaskIDGroup__.setInnerTask(i, ____myArray_1__PtTaskID__);
+            }else {
+                myArray[i] = task((i + 3));
+            }
         }
         int[] bigArray = new int[2];
-        bigArray[myArray[0]] = task(1);
-        bigArray[myArray[1]] = task(2);
+        if (!__myArrayPtTaskIDGroup__Synchronized) {
+            __myArrayPtTaskIDGroup__Lock.lock();
+            if (!__myArrayPtTaskIDGroup__Synchronized) {
+                try {
+                    __myArrayPtTaskIDGroup__.waitTillFinished();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                for (int __myArrayLoopIndex1__ = 0; __myArrayLoopIndex1__ < __myArrayPtTaskIDGroupSize__; __myArrayLoopIndex1__++)
+                    myArray[__myArrayLoopIndex1__] = __myArrayPtTaskIDGroup__.getInnerTaskResult(__myArrayLoopIndex1__);
+                
+                __myArrayPtTaskIDGroup__Synchronized = true;
+            }
+            __myArrayPtTaskIDGroup__Lock.unlock();
+        }
+        for (int i = 0; i < 2; i++) {
+            bigArray[myArray[i]] = task((i + 1));
+        }
         java.lang.Void dd = finishTask(myArray, 7);
     }
 
@@ -71,6 +100,10 @@ public class FutureArray {
             java.lang.System.out.println(((("The result of " + i) + "th task: ") + (array[i])));
         }
         return null;
+    }
+
+    {
+        pt.runtime.ParaTask.setReductionOperationForTaskIDGroup(__myArrayPtTaskIDGroup__, newSum);
     }
 }
 

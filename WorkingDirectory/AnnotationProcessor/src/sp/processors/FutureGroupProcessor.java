@@ -67,7 +67,7 @@ import spoon.support.reflect.code.CtAssignmentImpl;
  * @author Mostafa Mehrabi
  * @since  2016
  */
-public class FutureGroupProcessor extends PtAbstractFutureProcessor{
+public class FutureGroupProcessor extends AptAbstractFutureProcessor{
 	
 	protected CtTypeReference<?> thisGroupType = null;
 	protected CtExpression<?> thisGroupDeclarationExpression = null;
@@ -393,23 +393,37 @@ public class FutureGroupProcessor extends PtAbstractFutureProcessor{
 				parentStatement = parentStatement.getParent();
 			}
 			
-			CtTry tryBlock = createTryBlock();
-			CtCatch catchBlock = createCatchBlock();
-			
-			List<CtCatch> catchers = new ArrayList<>();
-			catchers.add(catchBlock);
-			
-			tryBlock.setCatchers(catchers);
+			List<CtStatement> waitForStatements = getWaitForTaskGroupStatements();
 			StatementMatcherFilter<CtStatement> filter = new StatementMatcherFilter<CtStatement>((CtStatement)parentStatement);
-			parentBlockOfAnnotatedElement.insertBefore(filter, tryBlock);
-			
-			if(!(thisGroupType.toString().contains("Void"))){
-				CtFor forLoop = createForLoop();
-				parentBlockOfAnnotatedElement.insertBefore(filter, forLoop);
-			}
+
+			for(CtStatement waitStatement : waitForStatements){
+				parentBlockOfAnnotatedElement.insertBefore(filter, waitStatement);
+			}			
 		}catch(Exception e){
 			System.out.println("EXCEPTION WAS THROWN WHEN INSERTING WAIT BLOCK FOR STATEMENT: " + containingStatement);
 		}
+	}
+	
+	protected List<CtStatement> getWaitForTaskGroupStatements(){
+		return getTryAndForBlocks();
+	}	
+	
+	protected List<CtStatement> getTryAndForBlocks(){
+		List<CtStatement> waitForStatements = new ArrayList<>();
+		CtTry tryBlock = createTryBlock();
+		CtCatch catchBlock = createCatchBlock();
+		
+		List<CtCatch> catchers = new ArrayList<>();
+		catchers.add(catchBlock);
+		
+		tryBlock.setCatchers(catchers);
+		waitForStatements.add(tryBlock);
+		
+		if(!(thisGroupType.toString().contains("Void"))){
+			waitForStatements.add(createForLoopForRetrievingArrayValues());
+		}
+		
+		return waitForStatements;
 	}
 		
 	private void modifyWithTaskIDReplacement(CtAssignment<?, ?> accessStatement){
@@ -564,13 +578,9 @@ public class FutureGroupProcessor extends PtAbstractFutureProcessor{
 	}
 	
 	private CtCatch createCatchBlock(){
-		return createCatchBlock("Exception");
+		return createCatchBlock("Exception", "");
 	}	
 		
-	private CtCatch createCatchBlock(String exceptionClass){
-		return createCatchBlock(exceptionClass, "");
-	}
-	
 	private CtLocalVariable<?> declareTaskIDGroupSizeVariable(){
 		CtLocalVariable<?> taskIDGroupSizeVariable = thisFactory.Core().createLocalVariable();
 		CtTypeReference taskIDGroupSizeType = thisFactory.Core().createTypeReference();
@@ -601,11 +611,11 @@ public class FutureGroupProcessor extends PtAbstractFutureProcessor{
 		CtTypeReference exceptionType = thisFactory.Core().createTypeReference();
 		exceptionType.setSimpleName(exceptionClass);
 		
-		String exceptionMessage = "";
+		String exceptionHandlingCommand = "";
 		if(message.isEmpty())
-			exceptionMessage = "e.printStackTrace()";
+			exceptionHandlingCommand = "e.printStackTrace()";
 		else
-			exceptionMessage = "e.printStackTrace(\"" + message +"\")";
+			exceptionHandlingCommand = "e.printStackTrace(\"" + message +"\")";
 		
 		CtCatchVariable<? extends Throwable> catchParameter = thisFactory.Core().createCatchVariable();
 		catchParameter.setType(exceptionType);
@@ -615,7 +625,7 @@ public class FutureGroupProcessor extends PtAbstractFutureProcessor{
 		List<CtStatement> catchStatements = new ArrayList<>();
 		CtCodeSnippetStatement catchStatement = thisFactory.Core().createCodeSnippetStatement();
 		
-		catchStatement.setValue(exceptionMessage);
+		catchStatement.setValue(exceptionHandlingCommand);
 		catchStatements.add(catchStatement);
 		
 		
@@ -626,7 +636,7 @@ public class FutureGroupProcessor extends PtAbstractFutureProcessor{
 		return catchBlock;
 	}
 	
-	private CtFor createForLoop(){
+	private CtFor createForLoopForRetrievingArrayValues(){
 		ptLoopIndexCounter++;
 		
 		CtFor forLoop = thisFactory.Core().createFor();

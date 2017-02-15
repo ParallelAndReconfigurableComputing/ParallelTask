@@ -14,8 +14,14 @@
 	<property name="@PT.jar"      value="${lib.dir}/@PT-1.1.0.jar" />
 	
 	<property name="spoon.jar"    value="${lib.dir}/spoon-core-5.4.0-jar-with-dependencies.jar"/>
+	<property name="spoonDoc.jar" value="${lib.dir}/spoon-core-5.4.0-javadoc.jar"/>
+	<property name="spoonSrc.jar" value="${lib.dir}/spoon-core-5.4.0-sources.jar"/>
 	<property name="PT.jar"		  value="${lib.dir}/PTLambda-Runtime-1.1.1.jar"/>
-	<property name="PARC.jar"     value="${lib.dir}/PARCutils-1.2.2.jar" />
+	<property name="PTSrc.jar"    value="${lib.dir}/PTLambda-Src-1.1.1.jar"/>
+	<property name="PTDoc.jar"    value="${lib.dir}/PTLambda-JavaDoc-1.1.1.jar"/>
+	<property name="PARC.jar"     value="${lib.dir}/PARCutils-1.2.3.jar" /> 
+	<property name="PARCSrc.jar"  value="${lib.dir}/PARCutils-1.2.3-src.jar"/>
+	<property name="PARCDoc.jar"  value="${lib.dir}/PARCutils-1.2.3-javadoc.jar"/>
 	<property name="APTJarName"   value="@PT-1.1.0" />
 
 	<!-- Check the operating system -->
@@ -61,15 +67,13 @@
 		<javac includeantruntime="true" srcdir="${src.dir}" destdir="${classes.dir}">
 			<classpath>
 				<pathelement path="${spoon.jar}" />
-				<pathelement path="${PT.jar}"/>
-				<pathelement path="${PARC.jar}"/>
 			</classpath>
 		</javac>
 	</target>
 	
 	<target name="compressJar" depends="compile" description="compress compiled files into jar">
 		<jar basedir="${classes.dir}" destfile="${release.dir}/${APTJarName}.jar">
-			<zipgroupfileset dir="${lib.dir}" includes="**/*.jar"/>
+			<zipgroupfileset dir="${lib.dir}" includes="${spoon.jar}, ${PT.jar}, ${PARC.jar}"/>
 		</jar>
 	</target>
 	
@@ -81,17 +85,20 @@
 			<classpath>
 				<pathelement path="${spoon.jar}"/>
 				<pathelement path="${PT.jar}"/>
-				<pathelement path="${PARC.jar}"/>
+				<pathelement path="${PARC.jar}"/> 
 			</classpath>  
 		</javadoc>
 	</target>
 	
 	<target name="docJar" depends="javaDoc" description="compressing javaDoc into jar">
-		<jar basedir="${docs.dir}" destfile="${release.dir}/${APTJarName}-docs.jar" />
+		<jar basedir="${docs.dir}" destfile="${release.dir}/${APTJarName}-docs.jar">
+		</jar>
 	</target>
 	
 	<target name="srcJar" depends="init" description="compressing source files into jar">
-		<jar basedir="${src.dir}" destfile="${release.dir}/${APTJarName}-src.jar" />
+		<jar basedir="${src.dir}" destfile="${release.dir}/${APTJarName}-src.jar">
+			<zipgroupfileset dir="${lib.dir}" includes="${PTSrc.jar}, ${spoonSrc.jar}, ${PTSrc.jar}"/>	
+		</jar>
 	</target>
 
 	<target name="tempCompile" depends="compressJar, docJar, srcJar">
@@ -100,7 +107,7 @@
 			<classpath>
 				<pathelement path="${@PT.jar}"/>
 				<pathelement path="${PT.jar}"/>
-				<pathelement path="${PARC.jar}"/>
+				<pathelement path="${PARC.jar}"/> 
 			</classpath>
 		</javac>
 	</target>
@@ -114,10 +121,10 @@
 		<echo message="Processing the annotations started!" />
 		
 		<exec executable="java">
-			<arg line="-cp ${PARC.jar}${Delim}${PT.jar}${Delim}${spoon.jar}${Delim}${classes.dir}${Delim}${temp.dir} spoon.Launcher -o ${gen.dir} -i ${gen.dir} -p sp.processors.PtInitParaTaskProcessor" />
+			<arg line="-cp ${PARC.jar}${Delim}${PT.jar}${Delim}${spoon.jar}${Delim}${classes.dir}${Delim}${temp.dir} spoon.Launcher -o ${gen.dir} -i ${input.dir} -p sp.processors.AptInitParaTaskProcessor" />
 		</exec>		
 		<exec executable="java">
-			<arg line="-cp ${PARC.jar}${Delim}${PT.jar}${Delim}${spoon.jar}${Delim}${classes.dir}${Delim}${temp.dir} spoon.Launcher -o ${gen.dir} -i ${input.dir} -p sp.processors.PtFutureProcessor" />
+			<arg line="-cp ${PARC.jar}${Delim}${PT.jar}${Delim}${spoon.jar}${Delim}${classes.dir}${Delim}${temp.dir} spoon.Launcher -o ${gen.dir} -i ${gen.dir} -p sp.processors.AptFutureProcessor" />
 		</exec>
 		
 		<echo message="Processing the annotations finished!" />

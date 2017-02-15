@@ -997,6 +997,14 @@ public class APTUtils {
 		return false;
 	}
 	
+	public static String getLockQualifiedSyntax(){
+		return "java.util.concurrent.locks.Lock";
+	}
+	
+	public static String getReentrantLockQualifiedSyntax(){
+		return "java.util.concurrent.locks.ReentrantLock";
+	}
+	
 	public static String getRedLibPackageSyntax(){
 		return "pu.RedLib.";
 	}

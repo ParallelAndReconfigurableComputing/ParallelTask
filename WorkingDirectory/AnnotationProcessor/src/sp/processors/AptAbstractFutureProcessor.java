@@ -32,7 +32,7 @@ import spoon.reflect.reference.CtTypeReference;
  * @author Mostafa Mehrabi
  * @since  2016
  */
-public abstract class PtAbstractFutureProcessor {
+public abstract class AptAbstractFutureProcessor {
 	
 	protected CtLocalVariable<?> thisAnnotatedLocalElement = null;
 	protected CtField<?> thisAnnotatedField = null;
@@ -46,7 +46,7 @@ public abstract class PtAbstractFutureProcessor {
 	private Map<String, Map<String, String>> redLibAvailableReductions = null;
 	private boolean mainReductionIsUserDefinedObject = false;
 	
-	protected PtAbstractFutureProcessor(){}
+	protected AptAbstractFutureProcessor(){}
 	
 	/**
 	 * each sub-class implements this method, as a starting

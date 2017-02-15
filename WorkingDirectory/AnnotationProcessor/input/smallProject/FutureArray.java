@@ -9,13 +9,14 @@ import sp.annotations.Future;
 public class FutureArray 
 {
 	
-	@Future(reduction="newSum")
-	int[] myArray;
+	int range = 5;
 	
+	@Future(reduction="newSum")
+	private int[] myArray;
 	IntegerSum newSum = new IntegerSum();
 	Integer newInt = new Integer(0);
 	
-	int range = 5;
+
 	
 	public FutureArray(int num){
 		myArray = new int[num];
@@ -43,8 +44,9 @@ public class FutureArray
 		}
 		
 		int[] bigArray = new int[2];
-		bigArray [myArray [0 ] ] = task(1);
-		bigArray[myArray[1]] = task(2);
+		for(int i = 0; i < 2; i++){
+			bigArray [myArray [i ] ] = task(i+1);
+		}		
 		Void dd = finishTask(myArray, 7);
 	}
 	
