@@ -378,8 +378,8 @@ public class FutureGroupProcessor extends AptAbstractFutureProcessor{
 			return;
 		}
 		else{
-			synchronizedMethods.add(parentMethod);
 			insertWaitForTaskGroupBlock(statement);
+			synchronizedMethods.add(parentMethod);
 		}
 	}
 	
@@ -683,6 +683,11 @@ public class FutureGroupProcessor extends AptAbstractFutureProcessor{
 		//mode 2 checks if the component contains the name of the future group. That means,
 		//the component may have other syntaxes as well (e.g., BigArray[futureGroup[i]])
 		else if (mode == 2){
+			//check if component contains "toString()" invocation on the array, in which case
+			//we need to wait for the elements of the array. 
+			String toString = thisElementName+".toString()";
+			if(component.contains(toString))
+				return true;
 			//remove every occurrence of the future group on which methods are called. 
 			String redundant = thisElementName+".";
 			String tempStr = component.replace(redundant, "");

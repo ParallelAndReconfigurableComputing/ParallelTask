@@ -167,14 +167,14 @@ public class FieldFutureGroupProcessor extends FutureGroupProcessor {
 								}
 								//otherwise, future group is not the main array
 								else{									
-									insertWaitStatement(assignment);
+									inspectReferencedElement(assignment);
 								}
 							}
 						}
 						//Otherwise, if the future group appears in the assignment side as well,
 						//the future group is referenced.
 						else{
-							insertWaitStatement(currentStatement);
+							inspectReferencedElement(currentStatement);
 						}
 					}	
 					
@@ -189,7 +189,7 @@ public class FieldFutureGroupProcessor extends FutureGroupProcessor {
 						for (int expIndex = 0; expIndex < node.numberOfExpressions(); expIndex++){
 							CtExpression<?> expression = node.getExpression(expIndex);
 							if(containsFutureGroupSyntax(2, expression.toString())){
-								insertWaitStatement(currentStatement);
+								inspectReferencedElement(currentStatement);
 								break;
 							}
 						}
@@ -204,6 +204,9 @@ public class FieldFutureGroupProcessor extends FutureGroupProcessor {
 	
 	private void inspectReferencedElement(CtStatement statement){
 		CtMethod<?> parentMethod = statement.getParent(CtMethod.class);
+		if(synchronizedMethods.contains(parentMethod))
+			return;
+		
 		if(isReductionMethod(parentMethod))
 			insertReturnResultStatement(parentMethod);
 		else 
@@ -440,6 +443,7 @@ public class FieldFutureGroupProcessor extends FutureGroupProcessor {
 		CtBlock methodBlock = thisFactory.Core().createBlock();
 		methodBlock.setStatements(methodStatements);
 		method.setBody(methodBlock);
+		synchronizedMethods.add(method);
 	}
 }
 

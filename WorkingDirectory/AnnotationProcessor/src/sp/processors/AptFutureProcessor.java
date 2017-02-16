@@ -33,19 +33,10 @@ public class AptFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 			return;
 		}
 		
-		if(elementIsCollectionDeclaration(annotatedElement)){
-			HybridCollectionProcessor processor;
-			if(annotatedElement instanceof CtLocalVariable<?>){
-				CtLocalVariable<?> element = (CtLocalVariable<?>) annotatedElement;
-				processor = new HybridCollectionProcessor(getFactory(), annotation, element);
-				processor.process();
-			}else{
-				CtField<?> element = (CtField<?>) annotatedElement;
-				processor = new FieldHybridCollectionProcessor(getFactory(), annotation, element);
-				processor.process();
-			}
-		}
-		
+		/*
+		 * The order to inspection is very important, because there might be arrays of collections, as well as
+		 * arrays and collections that may also contain an invocation expression that returns an array, a collection, etc.
+		 */
 		else if (elementIsArrayDeclaration(annotatedElement)){
 			FutureGroupProcessor processor;
 			if(annotatedElement instanceof CtLocalVariable<?>){
@@ -58,10 +49,19 @@ public class AptFutureProcessor extends AbstractAnnotationProcessor<Future, CtVa
 			processor.process();
 		}
 		
-		/*
-		 * It is important to keep this check the last, because other cases may also contain an invocation expression
-		 * that returns an array, a collection, etc.
-		 */
+		if(elementIsCollectionDeclaration(annotatedElement)){
+			HybridCollectionProcessor processor;
+			if(annotatedElement instanceof CtLocalVariable<?>){
+				CtLocalVariable<?> element = (CtLocalVariable<?>) annotatedElement;
+				processor = new HybridCollectionProcessor(getFactory(), annotation, element);
+				processor.process();
+			}else{
+				CtField<?> element = (CtField<?>) annotatedElement;
+				processor = new FieldHybridCollectionProcessor(getFactory(), annotation, element);
+				processor.process();
+			}
+		}		
+		
 		else if(elementIsInvocation(annotatedElement)){
 			if(annotatedElement instanceof CtField<?>){
 				System.err.println("ERROR FOR ELEMENT: " + annotatedElement.toString());
