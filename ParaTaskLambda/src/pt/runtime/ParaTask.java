@@ -52,10 +52,10 @@ import pt.functionalInterfaces.FunctorTwelveArgsNoReturn;
 import pt.functionalInterfaces.FunctorTwelveArgsWithReturn;
 import pt.functionalInterfaces.FunctorTwoArgsNoReturn;
 import pt.functionalInterfaces.FunctorTwoArgsWithReturn;
-import pt.wrappers.PtCollectionWrapper;
-import pt.wrappers.PtListWrapper;
-import pt.wrappers.PtMapWrapper;
-import pt.wrappers.PtSetWrapper;
+import pt.hybridWrappers.PtHybridCollection;
+import pt.hybridWrappers.PtHybridList;
+import pt.hybridWrappers.PtHybridMap;
+import pt.hybridWrappers.PtHybridSet;
 
 
 /**
@@ -288,10 +288,6 @@ public class ParaTask {
 		lock.unlock();
 	}
 	
-	public static <T> void setReductionOperationForTaskIDGroup(TaskIDGroup<T> taskGroup, Reduction<T> reduction){
-		taskGroup.setReduction(reduction);
-	}
-	
 	/**
 	 * To be executed by the main thread (i.e. inside the <code>main</code> method). Registers the main thread and event 
 	 * dispatch thread with ParaTask, and instantiates a task pool with the user-specified scheduling policy.
@@ -341,6 +337,10 @@ public class ParaTask {
 		processInParallel = bool;
 	}
 	
+	public static <T> void registerReduction(TaskIDGroup<T> taskGroup, Reduction<T> reduction){
+		taskGroup.setReduction(reduction);
+	}
+	
 	public static <R> void registerSlotToNotify(TaskInfo<R> taskInfo, FunctorNoArgsNoReturn functor){
 		taskInfo.notify(new Slot<R>(functor));
 	}	
@@ -357,36 +357,40 @@ public class ParaTask {
 		taskInfo.setAsyncCatch(exceptionClass, new Slot<E>(functor));
 	}
 	
-	public static <T> Collection<T> getPtWrapper(Collection<T> collection){
+	public static <R> void registerDependences(TaskInfo<R> taskInfo, TaskID<?>... taskIDs){
+		taskInfo.dependsOn(taskIDs);
+	}
+	
+	public static <T> Collection<T> getPtHybridWrapper(Collection<T> collection){
 		if(!processInParallel)
 			return collection;
 		
 		processInParallel = false;
-		return new PtCollectionWrapper<>(collection);
+		return new PtHybridCollection<>(collection);
 	}
 	
-	public static <K, V> Map<K, V> getPtWrapper(Map<K, V> map){
+	public static <K, V> Map<K, V> getPtHybridWrapper(Map<K, V> map){
 		if(!processInParallel)
 			return map;
 		
 		processInParallel = false;
-		return new PtMapWrapper<>(map);
+		return new PtHybridMap<>(map);
 	}
 	
-	public static <T> List<T> getPtWrapper(List<T> list){
+	public static <T> List<T> getPtHybridWrapper(List<T> list){
 		if(!processInParallel)
 			return list;
 		
 		processInParallel = false;
-		return new PtListWrapper<>(list);
+		return new PtHybridList<>(list);
 	}
 	
-	public static <T> Set<T> getPtWrapper(Set<T> set){
+	public static <T> Set<T> getPtHybridWrapper(Set<T> set){
 		if(!processInParallel)
 			return set;
 		
 		processInParallel = false;
-		return new PtSetWrapper<>(set);
+		return new PtHybridSet<>(set);
 	}
 			
 	//****************************************************************************************TASK GENERATORS******************************************************************

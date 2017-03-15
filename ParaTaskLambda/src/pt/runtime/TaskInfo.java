@@ -265,7 +265,7 @@ public abstract class TaskInfo<R> {
     	}		
 	}
 	
-	public void notify(Slot<R> handler) {
+	void notify(Slot<R> handler) {
 		if (slotsToNotify == null)
 			slotsToNotify = new ArrayList<Slot<R>>();
 		this.slotsToNotify.add(handler);
@@ -273,10 +273,9 @@ public abstract class TaskInfo<R> {
 	}
 
 	
-	public void dependsOn(TaskID<?>... taskIDs) {
+	void dependsOn(TaskID<?>... taskIDs) {
 		this.dependences = Arrays.asList(taskIDs);
 	}
 
 	abstract R execute();
-
 }
