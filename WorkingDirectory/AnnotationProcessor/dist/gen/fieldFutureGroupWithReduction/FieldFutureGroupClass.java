@@ -10,8 +10,6 @@ public class FieldFutureGroupClass {
 
     volatile java.util.concurrent.locks.Lock __mapsPtTaskIDGroup__Lock = new java.util.concurrent.locks.ReentrantLock();
 
-    int __mapsPtTaskIDGroupSize__;
-
     java.util.Map<java.lang.Integer, java.util.List<java.lang.String>>[] maps;
 
     int reps = 2;
@@ -21,7 +19,6 @@ public class FieldFutureGroupClass {
     public FieldFutureGroupClass(int size) {
         fieldFutureGroupWithReduction.FieldFutureGroupClass.this.size = size;
         maps = new java.util.HashMap[(reps) * size];
-        __mapsPtTaskIDGroupSize__ = (reps) * size;
     }
 
     public java.util.Map<java.lang.Integer, java.util.List<java.lang.String>> task(int i) {
@@ -40,7 +37,7 @@ public class FieldFutureGroupClass {
         return result;
     }
 
-    @sp.annotations.ReductionMethod
+    @apt.annotations.ReductionMethod
     public java.util.Map<java.lang.Integer, java.util.List<java.lang.String>> reduce() {
         return __mapsPtTaskIDGroup__.getReturnResult();
     }
@@ -70,8 +67,8 @@ public class FieldFutureGroupClass {
     }
 
     {
-        fieldFutureGroupWithReduction.MapReduction<java.lang.Integer, java.util.List<java.lang.String>> __mapsPtTaskReductionObject__ = new fieldFutureGroupWithReduction.MapReduction<java.lang.Integer, java.util.List<java.lang.String>>(new pu.RedLib.ListUnion<java.lang.String>());
-        pt.runtime.ParaTask.setReductionOperationForTaskIDGroup(__mapsPtTaskIDGroup__, __mapsPtTaskReductionObject__);
+        fieldFutureGroupWithReduction.MapReduction __mapsPtTaskReductionObject__ = new fieldFutureGroupWithReduction.MapReduction(new pu.RedLib.ListUnion<java.lang.String>());
+        pt.runtime.ParaTask.registerReduction(__mapsPtTaskIDGroup__, __mapsPtTaskReductionObject__);
     }
 }
 

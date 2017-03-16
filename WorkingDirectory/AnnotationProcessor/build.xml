@@ -1,28 +1,28 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<project name="ParaTaskWithAnnotations" default="main" basedir=".">
+<project name="ParaTaskWithAnnotations" default="compile@PTWithExamples" basedir=".">
 
 	<property name="src.dir"      value="src"  />
 	<property name="test.dir"     value="test" />
 	<property name="dist.dir"     value="dist" />
 	<property name="docs.dir"     value="docs" />
-	<property name="input.dir"    value="input/fieldFutureGroupWithReduction" />
+	<property name="input.dir"    value="input" />
 	<property name="release.dir"  value="release" />
 	<property name="gen.dir"      value="${dist.dir}/gen" />
 	<property name="classes.dir"  value="${dist.dir}/classes" />
 	<property name="lib.dir"      value="libs" />
 	<property name="temp.dir"     value="${dist.dir}/temp" />
-	<property name="@PT.jar"      value="${lib.dir}/@PT-1.1.0.jar" />
+	<property name="@PT.jar"      value="${lib.dir}/@PT-1.2.0.jar" />
 	
 	<property name="spoon.jar"    value="${lib.dir}/spoon-core-5.4.0-jar-with-dependencies.jar"/>
 	<property name="spoonDoc.jar" value="${lib.dir}/spoon-core-5.4.0-javadoc.jar"/>
 	<property name="spoonSrc.jar" value="${lib.dir}/spoon-core-5.4.0-sources.jar"/>
-	<property name="PT.jar"		  value="${lib.dir}/PTLambda-Runtime-1.1.1.jar"/>
-	<property name="PTSrc.jar"    value="${lib.dir}/PTLambda-Src-1.1.1.jar"/>
-	<property name="PTDoc.jar"    value="${lib.dir}/PTLambda-JavaDoc-1.1.1.jar"/>
+	<property name="PT.jar"		  value="${lib.dir}/PTLambda-Runtime-1.2.0.jar"/>
+	<property name="PTSrc.jar"    value="${lib.dir}/PTLambda-Src-1.2.0.jar"/>
+	<property name="PTDoc.jar"    value="${lib.dir}/PTLambda-JavaDoc-1.2.0.jar"/>
 	<property name="PARC.jar"     value="${lib.dir}/PARCutils-1.2.3.jar" /> 
 	<property name="PARCSrc.jar"  value="${lib.dir}/PARCutils-1.2.3-src.jar"/>
 	<property name="PARCDoc.jar"  value="${lib.dir}/PARCutils-1.2.3-javadoc.jar"/>
-	<property name="APTJarName"   value="@PT-1.1.0" />
+	<property name="APTJarName"   value="@PT-1.2.0" />
 
 	<!-- Check the operating system -->
 	<target name="CheckOS">
@@ -64,20 +64,25 @@
 	</target>
 
 	<target name="compile" depends="init" description="Compiles the java code">
+		<echo message="Compiling @PT source files." />
 		<javac includeantruntime="true" srcdir="${src.dir}" destdir="${classes.dir}">
 			<classpath>
 				<pathelement path="${spoon.jar}" />
 			</classpath>
 		</javac>
+		<echo message="@PT source files compiled."/>
 	</target>
 	
 	<target name="compressJar" depends="compile" description="compress compiled files into jar">
+		<echo message="Compressing @PT compiled files into jar." />
 		<jar basedir="${classes.dir}" destfile="${release.dir}/${APTJarName}.jar">
 			<zipgroupfileset dir="${lib.dir}" includes="${spoon.jar}, ${PT.jar}, ${PARC.jar}"/>
 		</jar>
+		<echo message="Compressing @PT compiled fileds finished."/>
 	</target>
 	
 	<target name="javaDoc" depends="compile" description="creating the javaDoc">
+		<echo message="Creating javaDocs of @PT source files."/>
 		<javadoc sourcepath="${src.dir}" destdir="${docs.dir}">
 			<fileset dir="${src.dir}">
 				<include name="**/**"/>
@@ -88,17 +93,22 @@
 				<pathelement path="${PARC.jar}"/> 
 			</classpath>  
 		</javadoc>
+		<echo message="Creating @PT javaDocs finished."/>
 	</target>
 	
 	<target name="docJar" depends="javaDoc" description="compressing javaDoc into jar">
+		<echo message="Compressing @PT javaDocs into jar."/>
 		<jar basedir="${docs.dir}" destfile="${release.dir}/${APTJarName}-docs.jar">
 		</jar>
+		<echo message="Compressing @PT javaDocs finished."/>
 	</target>
 	
 	<target name="srcJar" depends="init" description="compressing source files into jar">
+		<echo message="Compressing @PT source files into jar"/>
 		<jar basedir="${src.dir}" destfile="${release.dir}/${APTJarName}-src.jar">
 			<zipgroupfileset dir="${lib.dir}" includes="${PTSrc.jar}, ${spoonSrc.jar}, ${PTSrc.jar}"/>	
 		</jar>
+		<echo message="Compressing @PT source files finished."/>
 	</target>
 
 	<target name="tempCompile" depends="compressJar, docJar, srcJar">
@@ -121,16 +131,20 @@
 		<echo message="Processing the annotations started!" />
 		
 		<exec executable="java">
-			<arg line="-cp ${PARC.jar}${Delim}${PT.jar}${Delim}${spoon.jar}${Delim}${classes.dir}${Delim}${temp.dir} spoon.Launcher -o ${gen.dir} -i ${input.dir} -p sp.processors.AptInitParaTaskProcessor" />
+			<arg line="-cp ${PARC.jar}${Delim}${PT.jar}${Delim}${spoon.jar}${Delim}${classes.dir}${Delim}${temp.dir} spoon.Launcher -o ${gen.dir} -i ${input.dir} -p apt.processors.AptInitParaTaskProcessor" />
 		</exec>		
 		<exec executable="java">
-			<arg line="-cp ${PARC.jar}${Delim}${PT.jar}${Delim}${spoon.jar}${Delim}${classes.dir}${Delim}${temp.dir} spoon.Launcher -o ${gen.dir} -i ${gen.dir} -p sp.processors.AptFutureProcessor" />
+			<arg line="-cp ${PARC.jar}${Delim}${PT.jar}${Delim}${spoon.jar}${Delim}${classes.dir}${Delim}${temp.dir} spoon.Launcher -o ${gen.dir} -i ${gen.dir} -p apt.processors.AptFutureProcessor" />
 		</exec>
 		
 		<echo message="Processing the annotations finished!" />
 	</target>	
 	
-	<target name="main" depends="tempCompile, process, deleteTemp">
-			<echo message="Running the main target of the build.xml"/>
+	<target name="compile@PTWithoutExamples" depends="compressJar, docJar, srcJar">
+		<echo message="Compiling @PT without examples."/>
+	</target>
+	
+	<target name="compile@PTWithExamples" depends="tempCompile, process, deleteTemp">
+			<echo message="Compiling @PT with examples."/>
 	</target>
 </project>

@@ -4,7 +4,7 @@ import java.util.Random;
 import pt.runtime.TaskIDGroup;
 import pt.runtime.ParaTask;
 import pu.RedLib.IntegerSum;
-import sp.annotations.Future;
+import apt.annotations.Future;
 
 public class FutureArray 
 {
@@ -51,8 +51,14 @@ public class FutureArray
 	}
 	
 	public void processInnerTasks(){
+		boolean setArray = true;
 		@Future()
-		int[] newArray = new int[7];
+		int[] newArray; 
+		if(setArray){
+			newArray = new int[7];
+		}
+		else
+			newArray = new int[8];
 		for (int i = 0; i < newArray.length; i++){
 			newArray[i] = task(i);
 		}

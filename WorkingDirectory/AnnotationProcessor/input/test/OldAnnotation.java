@@ -1,8 +1,8 @@
 package test;
-import sp.annotations.AsyncCatch;
-import sp.annotations.Future;
-import sp.annotations.InitParaTask;
-import sp.annotations.TaskInfoType;
+import apt.annotations.AsyncCatch;
+import apt.annotations.Future;
+import apt.annotations.InitParaTask;
+import apt.annotations.TaskInfoType;
 
 class SimpleAnnotation{
 	public void foo1(int x){

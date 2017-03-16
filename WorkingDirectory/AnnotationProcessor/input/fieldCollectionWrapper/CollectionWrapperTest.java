@@ -5,15 +5,15 @@ import java.util.List;
 import java.util.Random;
 
 import pt.runtime.ParaTask;
-import sp.annotations.Future;
-import sp.annotations.Task;
-import sp.annotations.InitParaTask;
+import apt.annotations.Future;
+import apt.annotations.Task;
+import apt.annotations.InitParaTask;
 
 public class CollectionWrapperTest {
 	
 	@Future
 	//List<Integer> myList = new ArrayList<>();
-	static volatile List<Integer> myList = ParaTask.getPtWrapper(new ArrayList<Integer>());
+	static volatile List<Integer> myList = ParaTask.getPtHybridWrapper(new ArrayList<Integer>());
 	
 	public static int simulateWork(int i){
 		Random rand = new Random();

@@ -8,8 +8,8 @@ import java.util.Map.Entry;
 import java.util.Random;
 
 import pu.RedLib.ListUnion;
-import sp.annotations.Future;
-import sp.annotations.ReductionMethod;
+import apt.annotations.Future;
+import apt.annotations.ReductionMethod;
 
 public class FieldFutureGroupClass {
 	@Future(reduction="fieldFutureGroupWithReduction.MapReduction(union)")

@@ -5,9 +5,9 @@ import java.util.List;
 import java.util.Random;
 
 import pt.runtime.ParaTask;
-import sp.annotations.Future;
-import sp.annotations.Task;
-import sp.annotations.InitParaTask;
+import apt.annotations.Future;
+import apt.annotations.Task;
+import apt.annotations.InitParaTask;
 
 public class CollectionWrapperTest {
 	
@@ -39,7 +39,7 @@ public class CollectionWrapperTest {
 		
 		@Future
 		//List<Integer> myList = new ArrayList<>();
-		List<Integer> myList = ParaTask.getPtWrapper(new ArrayList<Integer>());
+		List<Integer> myList = ParaTask.getPtHybridWrapper(new ArrayList<Integer>());
 		
 		for(int i = 0; i < 20; i++){
 			@Future

@@ -10,14 +10,14 @@ import pu.loopScheduler.LoopScheduler;
 import pu.loopScheduler.LoopSchedulerFactory;
 import pu.loopScheduler.LoopSchedulerFactory.LoopSchedulingType;
 import pu.loopScheduler.LoopRange;
-import sp.annotations.Future;
-import sp.annotations.TaskInfoType;
+import apt.annotations.Future;
+import apt.annotations.TaskInfoType;
 
 public class ReductionTest {
 	
 	IntegerSum intSum = new IntegerSum();
 	
-	@Future(reduction="union(reductionTest.MapSwap)")
+	@Future(reduction="union(reductionTest.MapSwap<String, Integer>)")
 	Map<String, Map<String, Integer>>[] myArray = new HashMap[5];
 	
 	public int function(LoopScheduler scheduler) throws InterruptedException{

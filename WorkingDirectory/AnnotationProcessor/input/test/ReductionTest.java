@@ -10,9 +10,9 @@ import pu.loopScheduler.LoopRange;
 import pu.loopScheduler.LoopScheduler;
 import pu.loopScheduler.LoopSchedulerFactory;
 import pu.loopScheduler.LoopSchedulerFactory.LoopSchedulingType;
-import sp.annotations.Future;
-import sp.annotations.InitParaTask;
-import sp.annotations.TaskInfoType;
+import apt.annotations.Future;
+import apt.annotations.InitParaTask;
+import apt.annotations.TaskInfoType;
 
 public class ReductionTest {
 	
