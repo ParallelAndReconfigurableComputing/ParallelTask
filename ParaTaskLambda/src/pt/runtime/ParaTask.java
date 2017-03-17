@@ -282,7 +282,15 @@ public class ParaTask {
 		return initializeParaTask();
 	}
 	
-	public static <R> void executeInterimHandler(Slot<R> slot){
+	public static void executeInterimHandler(FunctorNoArgsNoReturn functor){
+		Slot<Void> slot = new Slot<>(functor);
+		lock.lock();
+		ParaTask.getEDTTaskListener().executeSlot(slot);
+		lock.unlock();
+	}
+	
+	public static <R> void executeInterimHandler(FunctorOneArgNoReturn<R> functor){
+		Slot<R> slot = new Slot<>(functor);
 		lock.lock();
 		ParaTask.getEDTTaskListener().executeSlot(slot);
 		lock.unlock();

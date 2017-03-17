@@ -110,6 +110,8 @@ public class Slot<T>{
 	//T is used as a generic in order to allow "Slot" work for a wider range
 	//of functionalities, but for exception handlers it must be a Throwable!
 	void setExceptionObject(T exception){
+		if(!(exception instanceof Throwable))
+			throw new IllegalArgumentException("OBJECT PASSED AS AN EXCEPTION IS INVALID");
 		this.incurredException = exception;
 	}
 	

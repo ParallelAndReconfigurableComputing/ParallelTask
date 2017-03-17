@@ -20,3 +20,10 @@ Version 1.2.0 - 15/03/2017
 
 - Static method "ParaTask.setReductionOperationForTaskIDGroup" changed to
   "ParaTask.registerReduction(TaskIDGroup<?> id, Reduction<T> reduction)"
+
+
+Version 1.2.1 - 17/03/2017
+==========================
+- ParaTask.executeInterimHandler bug fixed, to receive Functors with no arg
+  and with one arg as an input, and create the corresponding slot object internally
+  by runtime. 
