@@ -1020,6 +1020,10 @@ public class APTUtils {
 		return "ParaTask.getPtHybridWrapper(";
 	}
 	
+	public static String getExecuteInterimHandlerSyntax(){
+		return ".executeInterimHandler";
+	}
+	
 	public static String getResultSyntax(){
 		return ".getReturnResult()";
 	}

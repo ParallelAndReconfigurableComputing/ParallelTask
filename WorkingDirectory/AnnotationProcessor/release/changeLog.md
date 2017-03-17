@@ -34,3 +34,10 @@ Version 1.2.0 - 16/03/2017
   corresponding array. This approach was unnecessary and error-porne. In 
   the current version this variable is not defined anymore, rather the 
   loop condition is changed to "<arrayName>.length" 
+
+Version 1.3.0 - 16/03/2017
+==========================
+- New annotation @Gui added to @PT
+  * Corresponding annotation process in progress
+
+- Sequential style for asynchronous execution handling in progress

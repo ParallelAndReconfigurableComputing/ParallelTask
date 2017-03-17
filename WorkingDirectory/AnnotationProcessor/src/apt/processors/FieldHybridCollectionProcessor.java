@@ -5,8 +5,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.log4j.lf5.viewer.FilteredLogTableModel;
-
 import apt.annotations.Future;
 import spoon.reflect.code.CtAssignment;
 import spoon.reflect.code.CtBlock;
@@ -22,6 +20,16 @@ import spoon.reflect.declaration.ModifierKind;
 import spoon.reflect.factory.Factory;
 import spoon.reflect.reference.CtTypeReference;
 
+/**
+ * This processor processes field hybrid collections.
+ * The procedure is very much similar to that of local hybrid collections, except for 
+ * the casting and invoking <code>ParaTask.processInParalle(true)</code> that is performed
+ * in anonymous blocks here. The anonymous block inherits the <code>static</code> modifier
+ * of the declared collection, if the declared collection is <code>static</code>
+ * 
+ * @author Mostafa Mehrabi
+ * @since  2017 
+ */
 public class FieldHybridCollectionProcessor extends HybridCollectionProcessor {
 	private Set<ModifierKind> fieldModifiers = null;
 	private CtClass parentClass = null;

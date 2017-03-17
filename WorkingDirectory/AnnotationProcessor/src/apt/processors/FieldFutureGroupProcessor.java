@@ -8,24 +8,17 @@ import java.util.Set;
 
 import apt.annotations.Future;
 import apt.annotations.ReductionMethod;
-import apt.processors.APTUtils.ExpressionRole;
 import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.code.CtReturn;
 import spoon.reflect.code.CtStatement;
-import spoon.reflect.code.CtStatementList;
 import spoon.reflect.code.CtUnaryOperator;
 import spoon.reflect.code.UnaryOperatorKind;
-import spoon.reflect.code.BinaryOperatorKind;
-import spoon.reflect.code.CtArrayRead;
 import spoon.reflect.code.CtArrayWrite;
 import spoon.reflect.code.CtAssignment;
-import spoon.reflect.code.CtBinaryOperator;
 import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtCodeSnippetExpression;
 import spoon.reflect.code.CtCodeSnippetStatement;
 import spoon.reflect.code.CtExpression;
-import spoon.reflect.code.CtFieldAccess;
-import spoon.reflect.code.CtFieldRead;
 import spoon.reflect.code.CtIf;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtAnnotation;
@@ -39,8 +32,15 @@ import spoon.reflect.declaration.ModifierKind;
 import spoon.reflect.factory.Factory;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
-import spoon.support.reflect.code.CtAssignmentImpl;
 
+/**
+ * This processor processes the field future groups, and adopts specific
+ * methods for synchronizing and adding asynchronous tasks to global future
+ * groups, in order to guarantee efficiency and correct behavior
+ * 
+ * @author Mostafa Mehrabi
+ * @since  2017
+ */
 public class FieldFutureGroupProcessor extends FutureGroupProcessor {
 	private Set<ModifierKind> fieldModifiers = new HashSet<>();
 	/*

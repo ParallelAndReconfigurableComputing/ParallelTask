@@ -11,18 +11,18 @@
 	<property name="classes.dir"  value="${dist.dir}/classes" />
 	<property name="lib.dir"      value="libs" />
 	<property name="temp.dir"     value="${dist.dir}/temp" />
-	<property name="@PT.jar"      value="${lib.dir}/@PT-1.2.0.jar" />
+	<property name="@PT.jar"      value="${lib.dir}/@PT-1.3.0.jar" />
 	
 	<property name="spoon.jar"    value="${lib.dir}/spoon-core-5.4.0-jar-with-dependencies.jar"/>
 	<property name="spoonDoc.jar" value="${lib.dir}/spoon-core-5.4.0-javadoc.jar"/>
 	<property name="spoonSrc.jar" value="${lib.dir}/spoon-core-5.4.0-sources.jar"/>
-	<property name="PT.jar"		  value="${lib.dir}/PTLambda-Runtime-1.2.0.jar"/>
-	<property name="PTSrc.jar"    value="${lib.dir}/PTLambda-Src-1.2.0.jar"/>
-	<property name="PTDoc.jar"    value="${lib.dir}/PTLambda-JavaDoc-1.2.0.jar"/>
+	<property name="PT.jar"		  value="${lib.dir}/PTLambda-Runtime-1.2.1.jar"/>
+	<property name="PTSrc.jar"    value="${lib.dir}/PTLambda-Src-1.2.1.jar"/>
+	<property name="PTDoc.jar"    value="${lib.dir}/PTLambda-JavaDoc-1.2.1.jar"/>
 	<property name="PARC.jar"     value="${lib.dir}/PARCutils-1.2.3.jar" /> 
 	<property name="PARCSrc.jar"  value="${lib.dir}/PARCutils-1.2.3-src.jar"/>
 	<property name="PARCDoc.jar"  value="${lib.dir}/PARCutils-1.2.3-javadoc.jar"/>
-	<property name="APTJarName"   value="@PT-1.2.0" />
+	<property name="APTJarName"   value="@PT-1.3.0" />
 
 	<!-- Check the operating system -->
 	<target name="CheckOS">
