@@ -5,5 +5,5 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.LOCAL_VARIABLE)
 public @interface Gui{
-	String[] notifiedBy() default "";
+	String[] notifiedBy() default {};
 }

@@ -5,7 +5,7 @@
 	<property name="test.dir"     value="test" />
 	<property name="dist.dir"     value="dist" />
 	<property name="docs.dir"     value="docs" />
-	<property name="input.dir"    value="input" />
+	<property name="input.dir"    value="input/guiHandlerTest" />
 	<property name="release.dir"  value="release" />
 	<property name="gen.dir"      value="${dist.dir}/gen" />
 	<property name="classes.dir"  value="${dist.dir}/classes" />
@@ -136,7 +136,9 @@
 		<exec executable="java">
 			<arg line="-cp ${PARC.jar}${Delim}${PT.jar}${Delim}${spoon.jar}${Delim}${classes.dir}${Delim}${temp.dir} spoon.Launcher -o ${gen.dir} -i ${gen.dir} -p apt.processors.AptFutureProcessor" />
 		</exec>
-		
+		<exec executable="java">
+			<arg line="-cp ${PARC.jar}${Delim}${PT.jar}${Delim}${spoon.jar}${Delim}${classes.dir}${Delim}${temp.dir} spoon.Launcher -o ${gen.dir} -i ${gen.dir} -p apt.processors.AptGuiProcessor"/>
+		</exec>
 		<echo message="Processing the annotations finished!" />
 	</target>	
 	

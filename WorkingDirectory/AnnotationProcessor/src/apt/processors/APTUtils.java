@@ -1021,7 +1021,7 @@ public class APTUtils {
 	}
 	
 	public static String getExecuteInterimHandlerSyntax(){
-		return ".executeInterimHandler";
+		return "executeInterimHandler";
 	}
 	
 	public static String getResultSyntax(){
@@ -1036,7 +1036,7 @@ public class APTUtils {
 		return "registerDependences";
 	}
 	
-	public static String getRegisterHandlerSlotSyntax(){
+	public static String getRegisterSlotToNotifySyntax(){
 		return "registerSlotToNotify";
 	}
 	

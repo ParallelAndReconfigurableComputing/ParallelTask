@@ -434,7 +434,7 @@ public class InvocationProcessor extends AptAbstractFutureProcessor {
 		
 		CtInvocationImpl<?> notifyStatement = (CtInvocationImpl<?>) thisFactory.Core().createInvocation();
 		CtExecutableReferenceImpl executablePhrase = (CtExecutableReferenceImpl<?>) thisFactory.Core().createExecutableReference();
-		executablePhrase.setSimpleName(APTUtils.getParaTaskSyntax() + "." + APTUtils.getRegisterHandlerSlotSyntax());
+		executablePhrase.setSimpleName(APTUtils.getParaTaskSyntax() + "." + APTUtils.getRegisterSlotToNotifySyntax());
 		notifyStatement.setExecutable(executablePhrase);
 		
 				
