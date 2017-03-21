@@ -22,7 +22,7 @@
 	<property name="PARC.jar"     value="${lib.dir}/PARCutils-1.2.3.jar" /> 
 	<property name="PARCSrc.jar"  value="${lib.dir}/PARCutils-1.2.3-src.jar"/>
 	<property name="PARCDoc.jar"  value="${lib.dir}/PARCutils-1.2.3-javadoc.jar"/>
-	<property name="APTJarName"   value="@PT-1.3.0" />
+	<property name="APTJarName"   value="@PT-1.4.0" />
 
 	<!-- Check the operating system -->
 	<target name="CheckOS">

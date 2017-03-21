@@ -1,7 +1,8 @@
 package guiHandlerTest;
 
 import java.util.Random;
-
+import java.io.IOException;
+import apt.annotations.AsyncCatch;
 import apt.annotations.Future;
 import apt.annotations.Gui;
 import apt.annotations.InitParaTask;
@@ -9,12 +10,10 @@ import apt.annotations.TaskInfoType;
 
 public class GuiHandlerTest {
 
-	private int foo(int x){
+	private int foo(int x) throws InterruptedException{
 		Random rand = new Random();
 		int randNo = rand.nextInt(x);
-		try{
-			Thread.sleep(randNo*1000);
-		}catch(Exception e){}
+		Thread.sleep(randNo*1000);
 		return randNo;
 	}
 	
@@ -26,6 +25,10 @@ public class GuiHandlerTest {
 		return null;
 	}
 	
+	public void handleException(){
+		System.out.println("Exception occurred");
+	}
+	
 	@InitParaTask()
 	public void taskRun(){
 		try{
@@ -33,9 +36,10 @@ public class GuiHandlerTest {
 			int y = 13;
 	
 			@Future()
+			@AsyncCatch(throwables={IOException.class}, handlers={"handleException()"})
 			int a = foo(x);
-			@Gui(notifiedBy={"a"})
-			Void handler1 = updateGui(a, y);
+//			@Gui(notifiedBy={"a"})
+//			Void handler1 = updateGui(a, y);
 			@Future()
 			int b = foo(y);
 			@Gui(notifiedBy={"b"})

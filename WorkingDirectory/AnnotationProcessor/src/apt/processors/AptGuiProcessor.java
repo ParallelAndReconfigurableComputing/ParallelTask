@@ -124,7 +124,7 @@ public class AptGuiProcessor extends AbstractAnnotationProcessor<Gui, CtLocalVar
 		for(String notifier : notifierFutures){
 			if(!APTUtils.isFutureVariable(thisAnnotatedElement, notifier)){
 				System.err.println("THE PARAMETER " + notifier + " PROVIDED FOR @Gui IN " + thisAnnotatedElement.toString()
-				  + " DOES NOT REPRESESNT A FUTURE!");
+				  + " DOES NOT REPRESESNT A FUTURE, OR IS NOT RESOLVED WITHIN THE SAME SCOPE!");
 				return false;
 			}
 		}		
@@ -180,7 +180,6 @@ public class AptGuiProcessor extends AbstractAnnotationProcessor<Gui, CtLocalVar
 			//if argument "a" is a future object, then it has been replaced with "a_id.getReturnResult()"
 			//that means, its taskID has replaced the actual future object after being processed by the 
 			//@Future processor.
-			System.out.println("inspecting expression: " + argument.toString() + " in invocation " + thisAnnotatedElement.getDefaultExpression().toString());
 			if(APTUtils.isTaskIDReplacement(thisAnnotatedElement, argument.toString())){
 				futureArguments.add(argument);
 			}

@@ -16,12 +16,15 @@ import spoon.reflect.factory.Factory;
 import spoon.reflect.code.CtArrayAccess;
 import spoon.reflect.code.CtBinaryOperator;
 import spoon.reflect.code.CtBlock;
+import spoon.reflect.code.CtCatch;
+import spoon.reflect.code.CtCatchVariable;
 import spoon.reflect.code.CtCodeSnippetExpression;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtStatementList;
+import spoon.reflect.code.CtTry;
 import spoon.reflect.code.CtUnaryOperator;
 import spoon.reflect.code.CtVariableAccess;
 import spoon.reflect.declaration.CtAnnotation;
@@ -217,6 +220,8 @@ public class InvocationProcessor extends AptAbstractFutureProcessor {
 	 * AsyncCatch annotation. 
 	 */
 	private void extractAsyncExceptionsFromAnnotations(){
+		
+		//inspectTryCatchBlock();
 		List<CtAnnotation<? extends Annotation>> annotations = thisAnnotatedLocalElement.getAnnotations();
 		for(CtAnnotation<? extends Annotation> annotation : annotations){
 			Annotation actualAnnotation = annotation.getActualAnnotation();
@@ -536,6 +541,23 @@ public class InvocationProcessor extends AptAbstractFutureProcessor {
 	}
 			
 	//---------------------------------------HELPER METHODS-----------------------------------------
+	
+	private void inspectTryCatchBlock(){
+		CtTry tryBlock = thisAnnotatedLocalElement.getParent(CtTry.class);
+		while(tryBlock != null){
+			List<CtCatch> catchers = tryBlock.getCatchers();
+			for(CtCatch catcher : catchers){
+				CtCatchVariable<? extends Throwable> throwable = catcher.getParameter();
+				String throwableClass = throwable.getType().toString();
+				String catcherBlock = catcher.getBody().toString();
+				String catcherParameter = catcher.getParameter().getSimpleName();
+				String functorCast = "(" + APTUtils.getFunctorSyntax() + "OneArgNoReturn<" + throwableClass + ">)";
+				String asyncHandlerFunctor = "(" + catcherParameter + ")->" + catcherBlock ;
+				asyncExceptions.put(throwableClass, asyncHandlerFunctor);
+			}
+			tryBlock  = tryBlock.getParent(CtTry.class);
+		}
+	}
 	
 	private String getNumArgs(){
 		Set<String> argTypes = argumentsAndTypes.keySet();

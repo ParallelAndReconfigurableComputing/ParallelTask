@@ -756,13 +756,12 @@ public class APTUtils {
 		if (!argName.matches("[a-zA-Z0-9_]+")) {
 			return null;
 		}		
-		
 		CtBlock<?> block = currentStatement.getParent(CtBlock.class);
 		while(block != null){
 			List<CtStatement> blockStatements = block.getStatements();
 			
 			for(CtStatement statement : blockStatements) {
-				
+							
 				if(statement == currentStatement){
 					if(statement instanceof CtLocalVariable<?>){
 						CtLocalVariable<?> localVariable = (CtLocalVariable<?>) statement;
