@@ -34,4 +34,9 @@ Version 1.3.0 - 22/03/2017
 - ParaTask functors originally were not able to throw Throwable objects, effectively
   making the asynchronous exception handling uneffective. Version 1.3.0 enables throwing
   Throwable objects from functors and their corresponding tasks to TaskThreads, which 
-  in return will store the Throwable objects. 
+  in return will store the Throwable objects.
+
+Version 1.4.0 - 22/03/2017
+==========================
+- TaskIDGroups that represent future groups can now receive handler methods to notify
+  on their synchronization. 

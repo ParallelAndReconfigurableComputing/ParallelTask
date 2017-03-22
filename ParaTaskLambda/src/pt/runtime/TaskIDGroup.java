@@ -58,7 +58,7 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	/*Indicates how many sub tasks should be expanded, and its value can
 	only be set from {@link AbstractTaskPool#enqueueMulti()}*/
 	private int groupSize = 0;
-	private boolean elasticTaskGroup = false;
+	private boolean futureGroup = false;
 	
 	private Reduction<T> reductionOperation = null; 
 	
@@ -68,7 +68,8 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	
 	private ParaTaskExceptionGroup exceptionGroup = null;
 	private CopyOnWriteArrayList<Throwable> exceptionList = new CopyOnWriteArrayList<Throwable>();
-	
+	private List<Slot<T>> slotsToNotify = null;
+
 	/**
 	 * 
 	 * @author Kingsley
@@ -79,7 +80,8 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	private boolean isExpanded = false;
 	
 	public TaskIDGroup(){
-		elasticTaskGroup = true;
+		futureGroup = true;
+		slotsToNotify = new ArrayList<>();
 	}
 	
 	/**
@@ -156,13 +158,13 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	 * it is used for multi task group only but not user defined group.
 	 * */
 	public void addInnerTask(TaskID<?> id) {
-		if(!elasticTaskGroup && innerTasks.size() == groupSize)
+		if(!futureGroup && innerTasks.size() == groupSize)
 			throw new RuntimeException("\nTHE NUMBER OF INNER TASKS IS NOW THE SAME AS THE SIZE THAT WAS SET FOR THIS GROUP! NO MORE TASKS CAN BE ADDED\n"
 					+ "FOR DYNAMIC GROUP SIZE USE DEAFULT CONSTRUCTOR OF TaskIDGroup!\n");
 		
 		innerTasks.add(id);
 		
-		if(elasticTaskGroup)
+		if(futureGroup)
 			groupSize = innerTasks.size();		
 	}
 	
@@ -439,6 +441,8 @@ public class TaskIDGroup<T> extends TaskID<T> {
 				/* ignore the exception, all inner exceptions will be thrown below */
 			}
 			this.status.set(COMPLETED);
+			if(futureGroup)
+				executeAllFutureGroupSlots();
 		}
 		if (hasUserError.get()) {
 			String reason = "Exception(s) occured inside multi-task execution (GlobalID of "+globalID+"). Individual exceptions are accessed via getExceptionSet()";
@@ -508,5 +512,20 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	
 	protected boolean isExpanded(){
 		return isExpanded;
+	}
+	
+	void addHandlerSlot(Slot<T> slot){
+		if(!futureGroup)
+			throw new IllegalArgumentException("HANDLER SLOTS CAN BE ADDED TO TASKIDGROUPS ONLY IF IT IS A FUTURE GROUPS");
+		if(hasCompleted())
+			throw new IllegalAccessError("THE FUTURE GROUP HAS BEEN SYNCHRONIZED! NO MORE HANDLER METHODS CAN BE ADDED TO THE GROUP!");
+		slot.setTaskID(this);
+		slotsToNotify.add(slot);
+	}	
+	
+	private void executeAllFutureGroupSlots() {
+		for(Slot<T> slot : slotsToNotify){
+			executeOneTaskSlot(slot);
+		}
 	}
 }

@@ -715,7 +715,7 @@ public class TaskID<T> {
 		executeOneTaskSlot(slot);
 	}
 	
-	void executeOneTaskSlot(Slot<?> slot) {
+	protected void executeOneTaskSlot(Slot<?> slot) {
 		ParaTask.getEDTTaskListener().executeSlot(slot);
 	}
 	
@@ -723,11 +723,10 @@ public class TaskID<T> {
 		return 0;
 	}
 	
-	protected int executeAllTaskSlots() {
+	protected void executeAllTaskSlots() {
 		List<Slot<T>> slotsToNotify = taskInfo.getSlotsToNotify();
 		for (Slot<T> slotToNotify : slotsToNotify)
 			executeOneTaskSlot(slotToNotify);
-		return taskInfo.getSlotsToNotify().size();
 	}
 	
 	
@@ -771,7 +770,5 @@ public class TaskID<T> {
 	 * */
 	protected void setGlobalID(int globalID) {
 		this.globalID = globalID;
-	}
-	
-	
+	}	
 }

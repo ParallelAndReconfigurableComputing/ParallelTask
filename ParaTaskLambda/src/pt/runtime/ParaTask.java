@@ -350,11 +350,19 @@ public class ParaTask {
 	}
 	
 	public static <R> void registerSlotToNotify(TaskInfo<R> taskInfo, FunctorNoArgsNoReturn functor){
-		taskInfo.notify(new Slot<R>(functor));
+		taskInfo.addHandlerSlot(new Slot<R>(functor));
 	}	
 	
 	public static <R> void registerSlotToNotify(TaskInfo<R> taskInfo, FunctorOneArgNoReturn<R> functor){
-		taskInfo.notify(new Slot<R>(functor));
+		taskInfo.addHandlerSlot(new Slot<R>(functor));
+	}
+	
+	public static <R> void registerSlotToNotify(TaskIDGroup<R> taskID, FunctorNoArgsNoReturn functor){
+		taskID.addHandlerSlot(new Slot<R>(functor));
+	}
+	
+	public static <R> void registerSlotToNotify(TaskIDGroup<R> taskID, FunctorOneArgNoReturn<R> functor){
+		taskID.addHandlerSlot(new Slot<R>(functor));
 	}
 	
 	public static <R, E extends Throwable> void registerAsyncCatch(TaskInfo<R> taskInfo, Class<E> exceptionClass, FunctorNoArgsNoReturn functor){

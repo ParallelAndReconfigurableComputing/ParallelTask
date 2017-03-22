@@ -265,7 +265,7 @@ public abstract class TaskInfo<R> {
     	}		
 	}
 	
-	void notify(Slot<R> handler) {
+	void addHandlerSlot(Slot<R> handler) {
 		if (slotsToNotify == null)
 			slotsToNotify = new ArrayList<Slot<R>>();
 		this.slotsToNotify.add(handler);
