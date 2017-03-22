@@ -51,7 +51,7 @@ public class TaskInfoOneArg<R, T1> extends TaskInfo<R> {
 		}
 	}
 	
-	R execute(){
+	R execute() throws Throwable{
 		if (functorWithReturn!=null)
 			return functorWithReturn.exec(arg1);
 		functorNoReturn.exec(arg1);

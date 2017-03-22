@@ -12,5 +12,5 @@ package pt.functionalInterfaces;
 
 @FunctionalInterface
 public interface FunctorNoArgsWithReturn <R> {
-	public R exec();
+	public R exec() throws Throwable;
 }

@@ -2,5 +2,5 @@ package pt.functionalInterfaces;
 
 @FunctionalInterface
 public interface FunctorNoArgsNoReturn {
-	void exec();
+	void exec() throws Throwable;
 }

@@ -43,6 +43,7 @@ public abstract class AbstractBarrierMapReducer<T, E> implements MapReducer<T, E
 	 * successfully, <code>false</code> otherwise. 
 	 * 
 	 * @author Mostafa Mehrabi
+	 * @throws Throwable 
 	 * @since  2016
 	 */
 	public synchronized boolean startMapReduceOperation(){
@@ -132,6 +133,7 @@ public abstract class AbstractBarrierMapReducer<T, E> implements MapReducer<T, E
 	 * <code>public</code> {@link#startMapReduceOperation} method.
 	 * 
 	 * @author Mostafa Mehrabi
+	 * @throws Throwable 
 	 * @since  2016
 	 */
 	protected abstract void map();

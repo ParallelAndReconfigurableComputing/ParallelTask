@@ -47,7 +47,7 @@ public class TaskInfoNoArgs<R> extends TaskInfo<R> {
 		}
 	}
 	
-	R execute(){
+	R execute() throws Throwable{
 		if (this.functorWithReturn != null)
 			return this.functorWithReturn.exec();
 		this.functorNoReturn.exec();

@@ -49,7 +49,7 @@ public class TaskInfoTwoArgs<R, T1, T2> extends TaskInfo<R> {
 		}
 	}
 	
-	R execute(){
+	R execute() throws Throwable{
 		if (this.functorWithReturn!=null)
 			return this.functorWithReturn.exec(arg1, arg2);
 		this.functorNoReturn.exec(arg1, arg2);

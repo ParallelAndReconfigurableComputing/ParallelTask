@@ -124,11 +124,16 @@ public class Slot<T>{
 	}
 
 	void execute(){
-		if (this.functorOneArg!=null){
-			functorOneArg.exec(getArgument());
-			return;
+		try{
+			if (this.functorOneArg!=null){
+				functorOneArg.exec(getArgument());
+				return;
+			}
+			functorNoArg.exec();
+		}catch(Throwable e){
+			System.err.println("ERROR ENCOUNTERED WHILE EXECUTING A TASK SLOT");
+			e.printStackTrace();
 		}
-		functorNoArg.exec();
 	}
 }
 	

@@ -12,5 +12,5 @@ package pt.functionalInterfaces;
  */
 @FunctionalInterface
 public interface FunctorOneArgNoReturn<T1> {
-	public void exec(T1 arg1);
+	public void exec(T1 arg1) throws Throwable;
 }

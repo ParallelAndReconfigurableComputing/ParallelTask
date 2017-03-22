@@ -50,7 +50,7 @@ public class TaskInfoFiveArgs<R, T1, T2, T3, T4, T5> extends TaskInfo<R> {
 		}
 	}
 	
-	R execute(){
+	R execute() throws Throwable{
 		if(this.functorWithReturn!=null)
 			return this.functorWithReturn.exec(arg1, arg2, arg3, arg4, arg5);
 		this.functorNoReturn.exec(arg1, arg2, arg3, arg4, arg5);

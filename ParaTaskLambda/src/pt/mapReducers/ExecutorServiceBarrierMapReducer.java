@@ -95,11 +95,17 @@ public class ExecutorServiceBarrierMapReducer<T, E> extends AbstractBarrierMapRe
 	}
 
 	@Override
-	protected void map() {
+	protected void map(){
 		for(E element : thisDataCollection){
 			Runnable runnable = () -> {
-					T result = userDefinedFunctor.exec(element);
-					submitResult(result);
+					try {
+						T result;
+						result = userDefinedFunctor.exec(element);
+						submitResult(result);
+					} catch (Throwable e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				};
 			executor.submit(runnable);
 		}

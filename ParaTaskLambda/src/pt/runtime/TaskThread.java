@@ -110,7 +110,7 @@ public abstract class TaskThread extends Thread {
 			taskID.enqueueSlots(false);
 			threadTaskStack.pop();
 			return true;
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			taskID.setException(e);
 			threadTaskStack.pop();
 			//For lambda expressions we don't enqueue slots when an

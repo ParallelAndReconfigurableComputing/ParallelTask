@@ -27,3 +27,11 @@ Version 1.2.1 - 17/03/2017
 - ParaTask.executeInterimHandler bug fixed, to receive Functors with no arg
   and with one arg as an input, and create the corresponding slot object internally
   by runtime. 
+
+
+Version 1.3.0 - 22/03/2017
+==========================
+- ParaTask functors originally were not able to throw Throwable objects, effectively
+  making the asynchronous exception handling uneffective. Version 1.3.0 enables throwing
+  Throwable objects from functors and their corresponding tasks to TaskThreads, which 
+  in return will store the Throwable objects. 

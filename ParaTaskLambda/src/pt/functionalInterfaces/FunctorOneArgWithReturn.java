@@ -13,5 +13,5 @@ package pt.functionalInterfaces;
 
 @FunctionalInterface
 public interface FunctorOneArgWithReturn<R, T1>{
-	R exec(T1 arg);
+	R exec(T1 arg) throws Throwable;
 }

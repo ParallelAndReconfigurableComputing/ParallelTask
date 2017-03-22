@@ -277,5 +277,5 @@ public abstract class TaskInfo<R> {
 		this.dependences = Arrays.asList(taskIDs);
 	}
 
-	abstract R execute();
+	abstract R execute() throws Throwable;
 }
