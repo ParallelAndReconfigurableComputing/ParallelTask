@@ -186,7 +186,7 @@ public class FieldFutureGroupProcessor extends FutureGroupProcessor {
 					 * inspected.
 					 */
 					else{
-						for (int expIndex = 0; expIndex < node.numberOfExpressions(); expIndex++){
+						for (int expIndex = 0; expIndex < node.getNumberOfExpressions(); expIndex++){
 							CtExpression<?> expression = node.getExpression(expIndex);
 							if(containsFutureGroupSyntax(2, expression.toString())){
 								inspectReferencedElement(currentStatement);

@@ -683,7 +683,7 @@ public abstract class AptAbstractFutureProcessor {
 			CtStatement statement = node.getStatement();
 			System.out.println("Inspecting statement: " + statement + ", type: " + statement.getClass());
 						
-			for(int index = 0; index < node.numberOfExpressions(); index++){
+			for(int index = 0; index < node.getNumberOfExpressions(); index++){
 				CtExpression<?> expression = node.getExpression(index);
 				ExpressionRole role = node.getExpressionRole(index);
 				System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++");

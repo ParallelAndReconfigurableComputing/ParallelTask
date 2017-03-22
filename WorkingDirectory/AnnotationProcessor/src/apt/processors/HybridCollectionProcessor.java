@@ -206,7 +206,7 @@ public class HybridCollectionProcessor extends AptAbstractFutureProcessor {
 			 * invocations on the collection. Therefore, its expressions need to be further inspected. 
 			 */
 			if(!insideCollectionStatement){
-				for (int index = 0; index < node.numberOfExpressions(); index++){
+				for (int index = 0; index < node.getNumberOfExpressions(); index++){
 					findArgumentsToProcess(node.getExpression(index));
 				}
 			}

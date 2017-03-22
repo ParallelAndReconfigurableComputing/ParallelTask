@@ -227,7 +227,7 @@ public class FutureGroupProcessor extends AptAbstractFutureProcessor{
 					 * inspected.
 					 */
 					else{
-						for (int expIndex = 0; expIndex < node.numberOfExpressions(); expIndex++){
+						for (int expIndex = 0; expIndex < node.getNumberOfExpressions(); expIndex++){
 							CtExpression<?> expression = node.getExpression(expIndex);
 							if(containsFutureGroupSyntax(2, expression.toString())){
 								insertWaitStatement(currentStatement);
@@ -500,7 +500,7 @@ public class FutureGroupProcessor extends AptAbstractFutureProcessor{
 			
 			if(nodeStatement instanceof CtAssignment<?, ?>){
 				
-				int numOfExpressions = varAccessNode.numberOfExpressions();
+				int numOfExpressions = varAccessNode.getNumberOfExpressions();
 				
 				for(int index = 0; index < numOfExpressions; index++){
 					CtExpression<?> expression = varAccessNode.getExpression(index);

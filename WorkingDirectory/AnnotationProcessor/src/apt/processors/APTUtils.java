@@ -943,11 +943,15 @@ public class APTUtils {
 	}
 	
 	public static boolean isNonLambdaArg(String name){
-		return (name.startsWith("__") && name.endsWith("NonLambdaArg__")) ? true : false;
+		return (name.startsWith("__") && name.endsWith("NonLambdaArg__"));
 	}
 	
 	public static boolean isLambdaArg(String name){
-		return (name.startsWith("__") && name.endsWith("LambdaArg__")) ? true : false;
+		return (name.startsWith("__") && name.endsWith("LambdaArg__"));
+	}
+	
+	public static boolean isPtTaskName(String name){
+		return (name.startsWith("__") && name.endsWith("PtTask__"));
 	}
 	
 	public static String getOrigName(String elementName) {

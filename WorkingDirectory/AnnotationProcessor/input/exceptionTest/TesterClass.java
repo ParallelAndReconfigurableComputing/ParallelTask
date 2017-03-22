@@ -9,16 +9,15 @@ import apt.annotations.Gui;
 import apt.annotations.InitParaTask;
 
 public class TesterClass {
-	public int foo(int x){
+	public int foo(int x) throws InterruptedException{
 		Random rand = new Random();
 		int randomNo = rand.nextInt(x);
-		try {
-			Thread.sleep(randomNo*1000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		Thread.sleep(randomNo*1000);
 		return randomNo;
+	}
+	
+	public int foox(int x) throws IOException{
+		return x * 10;
 	}
 	
 	public void handleExcep(Exception e) throws Exception{
@@ -45,12 +44,16 @@ public class TesterClass {
 				@Future
 				@AsyncCatch(throwables={Exception.class}, handlers={"handleException()"})
 				int a = foo(i);
+				@Gui(notifiedBy={"a"})
+				Void handler = updateGui();	
 			}
 			@Future
-			int b = foo(10);
+			int b = foox(10);
 			@Gui(notifiedBy={"b"})
-			Void handler = updateGui();			
-		}catch(IllegalArgumentException e){
+			Void handler = updateGui();	
+//			int num = foo(10) + foox(10);
+			System.out.println("result: " + foo(10));
+		}catch(IllegalArgumentException|IOException e){
 			try {
 				handleExcep(e);
 			} catch (Exception e1) {
@@ -59,7 +62,7 @@ public class TesterClass {
 			}
 		}catch(RuntimeException e2){
 			e2.printStackTrace();
-		}catch(Exception e){
+		}catch(InterruptedException e){
 			e.printStackTrace();
 		}
 	}

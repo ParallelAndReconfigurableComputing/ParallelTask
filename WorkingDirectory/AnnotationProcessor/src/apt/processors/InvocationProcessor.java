@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import apt.annotations.AsyncCatch;
@@ -28,6 +29,7 @@ import spoon.reflect.code.CtTry;
 import spoon.reflect.code.CtUnaryOperator;
 import spoon.reflect.code.CtVariableAccess;
 import spoon.reflect.declaration.CtAnnotation;
+import spoon.reflect.declaration.CtTypeParameter;
 import spoon.reflect.declaration.CtVariable;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
@@ -59,12 +61,14 @@ public class InvocationProcessor extends AptAbstractFutureProcessor {
 	private String thisTaskInfoName = null;
 	private String thisTaskType = null;
 	private int thisTaskCount = 0;
+	private boolean throwsExceptions = false;
 	private Set<String> dependencies = null;
 	private Set<String> handlers = null;
 	private Map<String, CtTypeReference<?>> argumentsAndTypes = null;
-	private boolean throwsExceptions = false;
 	private Map<String, String> asyncExceptions = null;
 	private List<CtVariableAccess<?>> variableAccessExpressions = null;
+	private List<CtCatch> catchersToRemove = null;
+	private List<Map<List<CtTypeReference<?>>, CtTypeReference<?>>> throwablesToRemoveFromMultiThrowables = null;
 	
 	public InvocationProcessor(Factory factory, Future future, CtLocalVariable<?> annotatedElement){
 		dependencies = new HashSet<>();
@@ -72,6 +76,8 @@ public class InvocationProcessor extends AptAbstractFutureProcessor {
 		asyncExceptions = new HashMap<>();
 		argumentsAndTypes = new HashMap<>();
 		variableAccessExpressions = new ArrayList<>();
+		catchersToRemove = new ArrayList<>();
+		throwablesToRemoveFromMultiThrowables = new ArrayList<>();
 		
 		thisFutureAnnotation = future;
 		thisAnnotatedLocalElement = annotatedElement;
@@ -234,7 +240,8 @@ public class InvocationProcessor extends AptAbstractFutureProcessor {
 					throw new IllegalArgumentException("THE NUMBER OF EXCEPTION CLASSES SPECIFIED FOR " + thisAnnotatedLocalElement + 
 							" IS NOT COMPLIANT WITH THE NUMBER OF HANDLERS SPECIFIED FOR THOSE EXCEPTIONS!");
 				for(int i = 0; i < handlers.length; i++){
-					asyncExceptions.put(exceptions[i].getName(), ("()->{try{" + handlers[i]) +";}catch(Exception e){e.printStackTrace();}}");
+					asyncExceptions.put(exceptions[i].getName(), "()->" + handlers[i]);
+					//asyncExceptions.put(exceptions[i].getName(), ("()->{try{" + handlers[i]) +";}catch(Exception e){e.printStackTrace();}}");
 				}
 			}
 		}
@@ -346,6 +353,7 @@ public class InvocationProcessor extends AptAbstractFutureProcessor {
 		//if invocation target is not set to null, the 'asTask' method maybe called on an incorrect target. 
 		thisInvocation.setTarget(executableTarget); 
 		addNewStatements();	
+		removeRedundantExceptions();
 	}
 
 	/*
@@ -539,7 +547,20 @@ public class InvocationProcessor extends AptAbstractFutureProcessor {
 		taskIdDeclaration.setSimpleName(thisTaskIDName);
 		taskIdDeclaration.setDefaultExpression(defaultExp);
 		
-		return taskIdDeclaration;
+		return taskIdDeclaration;		
+	}
+	
+	private void removeRedundantExceptions(){
+		for(CtCatch catcher : catchersToRemove){
+			catcher.delete();
+		}
+		for(Map<List<CtTypeReference<?>>, CtTypeReference<?>> map : throwablesToRemoveFromMultiThrowables){
+			for(Entry<List<CtTypeReference<?>>, CtTypeReference<?>> entry : map.entrySet()){
+				List<CtTypeReference<?>> throwables = entry.getKey();
+				CtTypeReference<?> throwable = entry.getValue();
+				throwables.remove(throwable);
+			}
+		}
 	}
 			
 	//---------------------------------------HELPER METHODS-----------------------------------------
@@ -549,16 +570,117 @@ public class InvocationProcessor extends AptAbstractFutureProcessor {
 		while(tryBlock != null){
 			List<CtCatch> catchers = tryBlock.getCatchers();
 			for(CtCatch catcher : catchers){
-				CtCatchVariable<? extends Throwable> throwable = catcher.getParameter();
-				String throwableClass = throwable.getType().toString();
-				String catcherBlock = catcher.getBody().toString();
-				String catcherParameter = catcher.getParameter().getSimpleName();
-				String functorCast = "(" + APTUtils.getFunctorSyntax() + "OneArgNoReturn<" + throwableClass + ">)";
-				String asyncHandlerFunctor = "(" + catcherParameter + ")->" + catcherBlock ;
-				asyncExceptions.put(throwableClass, asyncHandlerFunctor);
+				CtCatchVariable<?> throwableVariable = catcher.getParameter();
+				List<CtTypeReference<?>> multiThrowables = throwableVariable.getMultiTypes();
+				if(!multiThrowables.isEmpty()){
+					for(CtTypeReference<?> throwable : multiThrowables)
+						processAsyncExceptionHandling(throwable, catcher, tryBlock);
+				}
+				else{
+					CtTypeReference<?> throwable = throwableVariable.getType();
+					processAsyncExceptionHandling(throwable, catcher, tryBlock);
+				}	
 			}
 			tryBlock  = tryBlock.getParent(CtTry.class);
 		}
+	}
+	
+	private void processAsyncExceptionHandling(CtTypeReference<?> throwable, CtCatch catcher, CtTry tryBlock){
+		if(methodThrowsException(throwable, thisInvocation)){
+			addForAsynchronousHandlig(throwable, catcher);
+			if(removeThrowable(tryBlock, throwable)){
+				List<CtTypeReference<?>> multiThrowables = catcher.getParameter().getMultiTypes();
+				if(!multiThrowables.isEmpty()){
+					Map<List<CtTypeReference<?>>, CtTypeReference<?>> tempMap = new HashMap<>();
+					tempMap.put(multiThrowables, throwable);
+					throwablesToRemoveFromMultiThrowables.add(tempMap);
+				}
+				else{
+					catchersToRemove.add(catcher);
+				}
+			}
+		}
+		//inspect each try/catch block separately
+		//if there are outer try/catch blocks, they are inspected when their turn comes.
+		//inspectRemovalOfCatcher(tryBlock, catcher); 
+	}
+	
+	private boolean methodThrowsException(CtTypeReference<?> throwable, CtInvocation<?> invocation){
+		Set<CtTypeReference<? extends Throwable>> methodThrowables = invocation.getExecutable().getDeclaration().getThrownTypes();
+		if(methodThrowables.contains(throwable))
+			return true;
+		return false;
+	}
+	
+	private void addForAsynchronousHandlig(CtTypeReference<?> throwable, CtCatch catcher){
+		String throwableClass = throwable.toString();
+		String catcherBlock = catcher.getBody().toString();
+		String catcherParameter = catcher.getParameter().getSimpleName();
+		String functorCast = "(" + APTUtils.getFunctorSyntax() + "OneArgNoReturn<" + throwableClass + ">)";
+		String asyncHandlerFunctor = "(" + catcherParameter + ")->" + catcherBlock ;
+		asyncExceptions.put(throwableClass, asyncHandlerFunctor);
+	}
+	
+	/*
+	 * Inspects every expression in a try block, to see if there is any invocation that throws the same exception.
+	 * If there is, then it keeps the catcher where it is, other wise it removes it, as it is asynchronously 
+	 * handled by the corresponding task, and the catcher is not required to be in the enclosing try/catch block
+	 * anymore.  
+	 */
+	private boolean removeThrowable(CtTry tryBlock, CtTypeReference<?> throwable){
+		List<CtStatement> blockStatements = tryBlock.getBody().getStatements();
+		List<ASTNode> astNodes = APTUtils.listAllExpressionsOfStatements(blockStatements);
+		for(ASTNode astNode : astNodes){
+			//if it is a PtTask, it has already passed the same set of inspections, 
+			//and has asynchronous exception handling.
+			if(!isPtTask(astNode.getStatement())){
+				int numOfExpressions = astNode.getNumberOfExpressions();
+				for(int i = 0; i < numOfExpressions; i++){
+					CtExpression<?> expression = astNode.getExpression(i);
+					if(expressionThrowsException(expression, throwable)){
+						return false;
+					}
+				}
+			}
+		}
+		return true;
+	}
+	
+	private boolean isPtTask(CtStatement statement){
+		if (statement instanceof CtLocalVariable<?>){
+			if(statement.equals(thisAnnotatedLocalElement)){
+				return true;
+			}
+			
+			CtLocalVariable<?> localVariable = (CtLocalVariable<?>) statement;
+			String variableName = localVariable.getSimpleName();
+			if(APTUtils.isPtTaskName(variableName)){
+				return true;
+			}				
+		}
+		return false;
+	}
+	
+	private boolean expressionThrowsException(CtExpression<?> expression, CtTypeReference<?> throwable){
+		if(expression instanceof CtInvocation<?>){
+			CtInvocation<?> invocation = (CtInvocation<?>) expression;
+			Set<CtTypeReference<? extends Throwable>> invocationThrowables = invocation.getExecutable().getDeclaration().getThrownTypes();
+			if(invocationThrowables.contains(throwable))
+				return true;
+		}
+		else if (expression instanceof CtUnaryOperator<?>){
+			CtUnaryOperator<?> unaryOperation = (CtUnaryOperator<?>) expression;
+			if(expressionThrowsException(unaryOperation.getOperand(), throwable))
+				return true;
+		}
+		else if (expression instanceof CtBinaryOperator<?>){
+			CtBinaryOperator<?> binaryOperation = (CtBinaryOperator<?>) expression;
+			if(expressionThrowsException(binaryOperation.getLeftHandOperand(), throwable))
+				return true;
+			if(expressionThrowsException(binaryOperation.getRightHandOperand(), throwable))	
+				return true;
+		}
+		return false;
 	}
 	
 	private String getNumArgs(){
@@ -720,16 +842,16 @@ public class InvocationProcessor extends AptAbstractFutureProcessor {
 			functorTypeCast = "(" + functorTypeCast + ")";
 		
 		String invocationPhrase = invocation.toString();
-		if(throwsExceptions){
-			invocationPhrase =  "{ try\n"+
-								" \t\t\t\t {  \n"+
-								"\t\t\t\t\t\t" + returnStatement + invocationPhrase + ";\n" +
-								" \t\t\t\t }catch(Exception e){\n"+
-								"\t\t\t\t\t\te.printStackTrace();\n"+
-								catchReturnStmt + 
-								"  \t\t\t\t }\n"+
-								"\t\t\t}";
-		}
+//		if(throwsExceptions){
+//			invocationPhrase =  "{ try\n"+
+//								" \t\t\t\t {  \n"+
+//								"\t\t\t\t\t\t" + returnStatement + invocationPhrase + ";\n" +
+//								" \t\t\t\t }catch(Exception e){\n"+
+//								"\t\t\t\t\t\te.printStackTrace();\n"+
+//								catchReturnStmt + 
+//								"  \t\t\t\t }\n"+
+//								"\t\t\t}";
+//		}
 		
 		String newFunctorPhrase = "\n\t\t\t" + functorTypeCast + getLambdaArgs() + " -> " + invocationPhrase;
 		return newFunctorPhrase;
