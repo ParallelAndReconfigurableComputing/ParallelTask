@@ -146,7 +146,7 @@ public class InvocationProcessor extends AptAbstractFutureProcessor {
 		List<CtExpression<?>> arguments = thisInvocation.getArguments();
 		for (CtExpression<?> argument : arguments){
 			if(APTUtils.isTaskIDReplacement(thisAnnotatedLocalElement, argument.toString())){
-				String originalArgumentName = APTUtils.getOrigName(argument.toString());
+				String originalArgumentName = APTUtils.getOriginalName(argument.toString());
 				dependencies.add(APTUtils.getTaskIDName(originalArgumentName));
 			}
 		}				
@@ -196,7 +196,7 @@ public class InvocationProcessor extends AptAbstractFutureProcessor {
 						
 				if(!dependencyName.isEmpty()){
 					//in case user feeds taskID name etc. Small possibility but...
-					dependencyName = APTUtils.getOrigName(dependencyName); 
+					dependencyName = APTUtils.getOriginalName(dependencyName); 
 					if(APTUtils.isFutureVariable(thisAnnotatedLocalElement, dependencyName))
 						dependencies.add(APTUtils.getTaskIDName(dependencyName));
 				}
@@ -258,7 +258,7 @@ public class InvocationProcessor extends AptAbstractFutureProcessor {
 		listVariableAccessExpressions();
 		for (CtVariableAccess<?> varAccess : variableAccessExpressions){
 			String argName = varAccess.toString();
-			String origName = APTUtils.getOrigName(argName);
+			String origName = APTUtils.getOriginalName(argName);
 				
 			if(APTUtils.isTaskIDReplacement(thisAnnotatedLocalElement, argName)){
 				
@@ -522,10 +522,10 @@ public class InvocationProcessor extends AptAbstractFutureProcessor {
 			CtTypeReference<?> argumentType = argumentsAndTypes.get(argumentName);
 			
 			if (APTUtils.isNonLambdaArg(argumentName))				
-				startPhrase += APTUtils.getOrigName(argumentName);
+				startPhrase += APTUtils.getOriginalName(argumentName);
 			
 			else if (APTUtils.isLambdaArg(argumentName))
-				startPhrase += APTUtils.getTaskIDName(APTUtils.getOrigName(argumentName));
+				startPhrase += APTUtils.getTaskIDName(APTUtils.getOriginalName(argumentName));
 			 
 			counter++;
 			if(counter != argumentNames.size())
@@ -772,7 +772,7 @@ public class InvocationProcessor extends AptAbstractFutureProcessor {
 	 */
 	private CtTypeReference getTaskIDType(CtVariable<?> declaration, boolean taskIDGroup){
 		String declarationType = declaration.getType().toString();
-		declarationType = APTUtils.getOrigName(declarationType);
+		declarationType = APTUtils.getOriginalName(declarationType);
 		String taskType = APTUtils.getReturnType(declarationType);
 		
 		if(taskIDGroup)

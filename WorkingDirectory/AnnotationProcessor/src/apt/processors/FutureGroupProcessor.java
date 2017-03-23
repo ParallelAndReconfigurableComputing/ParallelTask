@@ -322,7 +322,8 @@ public class FutureGroupProcessor extends AptAbstractFutureProcessor{
 		}
 		
 		else{
-			CtStatement declarationStatement = APTUtils.getDeclarationStatement(accessStatement, assignmentString);
+			CtVariable<?> declaration = APTUtils.getDeclarationStatement(accessStatement, assignmentString);
+			CtLocalVariable<?> declarationStatement = (CtLocalVariable<?>) declaration;
 			if(declarationStatement != null){
 				Future future = hasFutureAnnotation(declarationStatement);
 				if(future != null){
@@ -399,7 +400,7 @@ public class FutureGroupProcessor extends AptAbstractFutureProcessor{
 	private void modifyWithTaskIDReplacement(CtAssignment<?, ?> accessStatement){
 		String assignedString   = accessStatement.getAssigned().toString();
 		String assignmentString = accessStatement.getAssignment().toString();
-		String taskIDName = APTUtils.getTaskIDName(APTUtils.getOrigName(assignmentString));
+		String taskIDName = APTUtils.getTaskIDName(APTUtils.getOriginalName(assignmentString));
 		
 		String index = assignedString.substring(assignedString.indexOf('[')+1, assignedString.indexOf(']'));
 		

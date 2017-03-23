@@ -248,8 +248,8 @@ public class HybridCollectionProcessor extends AptAbstractFutureProcessor {
 			}
 			
 			else{
-				CtStatement declarationStatement = APTUtils.getDeclarationStatement(varAccess.getParent(CtStatement.class)
-													, varName);
+				CtVariable<?> declaration = APTUtils.getDeclarationStatement(varAccess.getParent(CtStatement.class), varName);
+				CtLocalVariable<?> declarationStatement = (CtLocalVariable<?>) declaration;
 				if(declarationStatement != null){
 					Future future = hasFutureAnnotation(declarationStatement);
 					if(future != null){
@@ -294,7 +294,7 @@ public class HybridCollectionProcessor extends AptAbstractFutureProcessor {
 		if(!(varAccess.getParent() instanceof CtInvocation<?>))
 			return;
 		String varName = varAccess.toString();
-		varName = APTUtils.getOrigName(varName);
+		varName = APTUtils.getOriginalName(varName);
 		varName = varName.trim();
 		varName = APTUtils.getTaskIDName(varName);
 		CtVariableReference varRef = thisFactory.Core().createFieldReference();
@@ -484,13 +484,13 @@ public class HybridCollectionProcessor extends AptAbstractFutureProcessor {
 	protected String getCollectionType(){
 		String currentType = thisElementType.toString();
 		if(currentType.contains("List"))
-			return APTUtils.getListWrapperSyntax();
+			return APTUtils.getHybridListSyntax();
 		else if (currentType.contains("Set"))
-			return APTUtils.getSetWrapperSyntax();
+			return APTUtils.getHybridSetSyntax();
 		else if (currentType.contains("Map"))
-			return APTUtils.getMapWrapperSyntax();
+			return APTUtils.getHybridMapSyntax();
 		else
-			return APTUtils.getCollecitonWrapperSyntax();
+			return APTUtils.getHybridCollectionSyntax();
 	}		
 
 	/*

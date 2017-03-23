@@ -752,7 +752,7 @@ public class APTUtils {
 	 * 
 	 * @return CtStatement, declaring statement
 	 */
-	public static CtStatement getDeclarationStatement(CtStatement currentStatement, String argName) {
+	public static CtVariable<?> getDeclarationStatement(CtStatement currentStatement, String argName) {
 		if (!argName.matches("[a-zA-Z0-9_]+")) {
 			return null;
 		}		
@@ -766,7 +766,7 @@ public class APTUtils {
 					if(statement instanceof CtLocalVariable<?>){
 						CtLocalVariable<?> localVariable = (CtLocalVariable<?>) statement;
 						if(isTheWantedDeclaration(localVariable, argName))
-							return statement;
+							return localVariable;
 						else
 							break;
 					}
@@ -777,11 +777,18 @@ public class APTUtils {
 				if (statement instanceof CtLocalVariable<?>){
 					CtLocalVariable<?> localVariable = (CtLocalVariable<?>) statement;
 					if(isTheWantedDeclaration(localVariable, argName))
-						return statement;
+						return localVariable;
 				}				
 			}
 			
 			block = block.getParent(CtBlock.class);
+		}
+		//if not found yet, it might be among class fields
+		CtClass<?> parentClass = currentStatement.getParent(CtClass.class);
+		List<CtField<?>> classFields = parentClass.getFields();
+		for(CtField<?> classField : classFields){
+			if(isTheWantedDeclaration(classField, argName))
+				return classField;
 		}
 		return null;
 	}
@@ -887,7 +894,7 @@ public class APTUtils {
 		
 		if(currentDeclaredElement instanceof CtLocalVariable<?>){
 			CtLocalVariable<?> localVariable = (CtLocalVariable<?>) currentDeclaredElement;
-			declaration = (CtLocalVariable<?>)getDeclarationStatement(localVariable, argName);
+			declaration = getDeclarationStatement(localVariable, argName);
 		}
 		
 		else if(currentDeclaredElement instanceof CtFieldImpl<?>){
@@ -954,7 +961,7 @@ public class APTUtils {
 		return (name.startsWith("__") && name.endsWith("PtTask__"));
 	}
 	
-	public static String getOrigName(String elementName) {
+	public static String getOriginalName(String elementName) {
 		
 		if(elementName.startsWith("__") && elementName.endsWith("PtLambdaArg__"+getResultSyntax()))
 			return elementName.substring("__".length(), (elementName.length() - ("PtLambdaArg__"+getResultSyntax()).length()));
@@ -996,12 +1003,42 @@ public class APTUtils {
 	 */
 	public static boolean isTaskIDReplacement(CtVariable<?> element, String name){
 		if(name.startsWith("__") && name.endsWith("PtTaskID__"+getResultSyntax())){
-			String originalName = getOrigName(name);
+			String originalName = getOriginalName(name);
 			if(isFutureVariable(element, originalName)){
 				return true;
 			}
 		}
 		return false;
+	}
+	
+	public static boolean isFutureGroup(CtVariable<?> element, String name){
+		String taskIDGroupName = getTaskIDGroupName(name);
+		CtVariable<?> futureGroupDeclaration = null;
+		CtVariable<?> taskIDGroupDeclaration = null;
+		if(element instanceof CtLocalVariable<?>){
+			CtLocalVariable<?> localVariable = (CtLocalVariable<?>) element;
+			futureGroupDeclaration = getDeclarationStatement(localVariable, name);
+			taskIDGroupDeclaration = getDeclarationStatement(localVariable, taskIDGroupName);
+		}
+		else if (element instanceof CtField<?>){
+			CtField<?> field = (CtField<?>) element;
+			futureGroupDeclaration = getDeclarationStatement(field, name);
+			taskIDGroupDeclaration = getDeclarationStatement(field, taskIDGroupName);
+		}
+		if((futureGroupDeclaration == null) || (taskIDGroupDeclaration == null))
+			return false;
+		
+		String taskIDGroupType = taskIDGroupDeclaration.getType().toString();
+		String futureGroupType = futureGroupDeclaration.getType().toString();
+		if(!taskIDGroupType.contains(getTaskIDGroupSyntax()))
+			return false;
+		if(!(futureGroupType.contains("[]")))
+			return false;
+		//check if it is a one dimensional array
+		futureGroupType = futureGroupType.substring(futureGroupType.indexOf("]")+1); 
+		if(futureGroupType.contains("]"))
+			return false;
+		return true;
 	}
 	
 	public static String getLockQualifiedSyntax(){
@@ -1075,19 +1112,19 @@ public class APTUtils {
 		return "pt.runtime.ParaTask.registerReduction";
 	}
 	
-	public static String getCollecitonWrapperSyntax(){
+	public static String getHybridCollectionSyntax(){
 		return "pt.hybridWrappers.PtHybridCollection";
 	}
 	
-	public static String getListWrapperSyntax(){
+	public static String getHybridListSyntax(){
 		return "pt.hybridWrappers.PtHybridList";
 	}
 	
-	public static String getMapWrapperSyntax(){
+	public static String getHybridMapSyntax(){
 		return "pt.hybridWrappers.PtHybridMap";
 	}
 	
-	public static String getSetWrapperSyntax(){
+	public static String getHybridSetSyntax(){
 		return "pt.hybridWrappers.PtHybridSet";
 	}
 	

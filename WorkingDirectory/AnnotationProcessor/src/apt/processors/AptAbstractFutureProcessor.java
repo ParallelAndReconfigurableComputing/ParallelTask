@@ -487,7 +487,7 @@ public abstract class AptAbstractFutureProcessor {
 	}
 	
 	private boolean isVisibleForLocalFuture(String reductionName){
-			CtStatement declarationStatement = APTUtils.getDeclarationStatement(thisAnnotatedLocalElement, reductionName);
+			CtVariable<?> declarationStatement = APTUtils.getDeclarationStatement(thisAnnotatedLocalElement, reductionName);
 			if(declarationStatement != null){
 				if(declarationStatement instanceof CtLocalVariable<?>){
 					CtLocalVariable<?> reductionDeclaration = (CtLocalVariable<?>) declarationStatement;

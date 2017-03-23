@@ -1,8 +1,10 @@
 package apt.processors;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import apt.annotations.Gui;
@@ -13,7 +15,10 @@ import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtVariableRead;
+import spoon.reflect.declaration.CtAnnotation;
 import spoon.reflect.declaration.CtExecutable;
+import spoon.reflect.declaration.CtField;
+import spoon.reflect.declaration.CtVariable;
 import spoon.reflect.factory.Factory;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
@@ -52,21 +57,23 @@ import spoon.reflect.reference.CtTypeReference;
  */
 public class AptGuiProcessor extends AbstractAnnotationProcessor<Gui, CtLocalVariable<?>> {
 
-	Gui thisAnnotation = null;
-	CtLocalVariable<?> thisAnnotatedElement = null;
-	CtInvocation<?> thisInvocation = null;
-	List<CtExpression<?>> invocationArguments = null;
-	List<CtExpression<?>> futureArguments = null;
-	List<CtExpression<?>> variableArguments = null;
-	boolean interimHandler = false;
-	String[] notifierFutures;
-	Factory thisFactory = null;
+	private enum FutureType {FUTURE, FUTUREGROUP};
 	
+	private Gui thisAnnotation = null;
+	private CtLocalVariable<?> thisAnnotatedElement = null;
+	private CtInvocation<?> thisInvocation = null;
+	private List<CtExpression<?>> invocationArguments = null;
+	private Map<CtExpression<?>, FutureType> futureArguments = null;
+	private List<CtExpression<?>> variableArguments = null;
+	private boolean interimHandler = false;
+	private String[] notifierFutures;
+	private Factory thisFactory = null;
+		
 	@Override
 	public void process(Gui annotation, CtLocalVariable<?> element) {
 		try{
 			invocationArguments = new ArrayList<>();
-			futureArguments = new ArrayList<>();
+			futureArguments = new HashMap<>();
 			variableArguments = new ArrayList<>();
 			thisFactory = getFactory();
 			thisAnnotation = annotation;
@@ -89,11 +96,20 @@ public class AptGuiProcessor extends AbstractAnnotationProcessor<Gui, CtLocalVar
 	}
 	
 	private void inspectAnnotation() throws Exception{
+		if(APTUtils.isFutureVariable(thisAnnotatedElement, thisAnnotatedElement.getSimpleName())){
+			throw new Exception("ANNOTATION USAGE IS NOT VALID! @Gui CANNOT ANNOTATE FUTURE OBJECTS!");
+		}
+		 
+		if(APTUtils.isFutureGroup(thisAnnotatedElement, thisAnnotatedElement.getSimpleName())){
+			throw new Exception("ANNOTATION USAGE IS NOT VALID! @Gui CANNOT ANNOTATE FUTURE GROUPS!");
+		}
+		//ALSO ADD A CHECK FOR HYBRID COLLECTIONS
+		
 		//first check if the right-hand side of the annotated element is an invocation
 		CtExpression<?> defaultExpression = thisAnnotatedElement.getDefaultExpression();
 		if(!(defaultExpression instanceof CtInvocation<?>)){			
 			throw new Exception("THE RIGHT-HAND SIDE OF THE STATEMENT " + thisAnnotatedElement 
-					+ " CAN ONLY BE AN INVOCATION.");
+					+ " IS NOT AN INVOCATION.");
 		}
 		//second, ensure that there is no return value specified for the invocation
 		CtTypeReference<?> elementType = thisAnnotatedElement.getType();
@@ -122,7 +138,7 @@ public class AptGuiProcessor extends AbstractAnnotationProcessor<Gui, CtLocalVar
 	private boolean validate(){			
 		//if notifiers are specified for the GUI handler, ensure that they are all futures
 		for(String notifier : notifierFutures){
-			if(!APTUtils.isFutureVariable(thisAnnotatedElement, notifier)){
+			if(!APTUtils.isFutureVariable(thisAnnotatedElement, notifier) && !APTUtils.isFutureGroup(thisAnnotatedElement, notifier)){
 				System.err.println("THE PARAMETER " + notifier + " PROVIDED FOR @Gui IN " + thisAnnotatedElement.toString()
 				  + " DOES NOT REPRESESNT A FUTURE, OR IS NOT RESOLVED WITHIN THE SAME SCOPE!");
 				return false;
@@ -139,8 +155,8 @@ public class AptGuiProcessor extends AbstractAnnotationProcessor<Gui, CtLocalVar
 		if(futureArguments.size() > 1){
 			System.err.print("A GUI HANDLER MAY NOT DEPEND ON THE TERMINATION OF MULTIPLE FUTURES AT THE SAME TIME.\n"
 					+ "THERE ARE MORE THAN ONE FUTURES AS ARGUMENTS: ");
-			for(CtExpression<?> futureArgument : futureArguments){
-				System.err.print(APTUtils.getOrigName(futureArgument.toString()) + " ");
+			for(CtExpression<?> futureArgument : futureArguments.keySet()){
+				System.err.print(APTUtils.getOriginalName(futureArgument.toString()) + " ");
 			}
 			System.err.println();
 			return false;
@@ -149,7 +165,7 @@ public class AptGuiProcessor extends AbstractAnnotationProcessor<Gui, CtLocalVar
 		//else, if there is only one future argument
 		if(futureArguments.size() == 1){
 			if(notifierFutures.length > 1){
-				System.err.print("HANDLER METHOD DEPENDS ON THE TERMINATION OF FUTUER " + APTUtils.getOrigName(futureArguments.get(0).toString())
+				System.err.print("HANDLER METHOD DEPENDS ON THE TERMINATION OF FUTUER " + APTUtils.getOriginalName(futureArguments.get(0).toString())
 				 		+ ", AND CAN NOT BE NOTIFIED BY OTHER FUTURES. SPECIFIED NOTIFIER FUTURES: " );
 				for(String notifier : notifierFutures){
 					System.err.print(notifier + " "); 
@@ -158,13 +174,16 @@ public class AptGuiProcessor extends AbstractAnnotationProcessor<Gui, CtLocalVar
 				return false;
 			}
 			else{
-				String futureObj = futureArguments.get(0).toString();
-				futureObj = APTUtils.getOrigName(futureObj);
-				String notifierFuture = notifierFutures[0];
-				if(!futureObj.equals(notifierFuture)){
-					System.err.println("HANDLER METHOD DEPENDS ON THE TERMINATION OF FUTURE " + futureObj +
-							", AND CAN BE NOTIFIED BY THE SAME FUTURE OBJECT ONLY! THE SPECIFIED NOTIFIER: " + notifierFuture);
-					return false;
+				Set<CtExpression<?>> arguments = futureArguments.keySet();
+				for(CtExpression<?> argument : arguments){
+					String futureObj = argument.toString();
+					futureObj = APTUtils.getOriginalName(futureObj);
+					String notifierFuture = notifierFutures[0];
+					if(!futureObj.equals(notifierFuture)){
+						System.err.println("HANDLER METHOD DEPENDS ON THE TERMINATION OF FUTURE " + futureObj +
+								", AND CAN BE NOTIFIED BY THE SAME FUTURE OBJECT ONLY! THE SPECIFIED NOTIFIER: " + notifierFuture);
+						return false;
+					}
 				}
 			}
 		}
@@ -181,7 +200,10 @@ public class AptGuiProcessor extends AbstractAnnotationProcessor<Gui, CtLocalVar
 			//that means, its taskID has replaced the actual future object after being processed by the 
 			//@Future processor.
 			if(APTUtils.isTaskIDReplacement(thisAnnotatedElement, argument.toString())){
-				futureArguments.add(argument);
+				futureArguments.put(argument, FutureType.FUTURE);
+			}
+			else if(APTUtils.isFutureGroup(thisAnnotatedElement, argument.toString())){
+				futureArguments.put(argument, FutureType.FUTUREGROUP);
 			}
 			else if (argument instanceof CtVariableRead<?>){
 				variableArguments.add(argument);
@@ -191,13 +213,25 @@ public class AptGuiProcessor extends AbstractAnnotationProcessor<Gui, CtLocalVar
 	
 	private boolean variableArgumentsValidForAllNotifiers(){
 		for(String notifierFuture : notifierFutures){
-			String taskInfoName = APTUtils.getTaskName(notifierFuture);
-			CtStatement notifierDeclarationStatement = APTUtils.getDeclarationStatement(thisAnnotatedElement, taskInfoName);
+			String aptName = "";
+			if(APTUtils.isFutureVariable(thisAnnotatedElement, notifierFuture))
+				aptName = APTUtils.getTaskName(notifierFuture);
+			else if(APTUtils.isFutureGroup(thisAnnotatedElement, notifierFuture))
+				aptName = APTUtils.getTaskIDGroupName(notifierFuture);
+			CtVariable<?> notifierDeclarationStatement = APTUtils.getDeclarationStatement(thisAnnotatedElement, aptName);
 			for(CtExpression<?> variableArgument : variableArguments){
-				CtStatement variableDeclarationStatement = APTUtils.getDeclarationStatement(notifierDeclarationStatement, variableArgument.toString());	
-				if(variableDeclarationStatement == null){
-					System.err.println("VARIABLE " + variableArgument.toString() + " IS NOT RESOLVED FOR FUTURE " + notifierFuture);
-					return false;
+				//if the notifier is a field future group, and the javac hasn't complained about the variable initially,
+				//then the variable is resolved/recognized by the field future group.
+				if(notifierDeclarationStatement instanceof CtField<?>)
+					return true;
+				
+				if(notifierDeclarationStatement instanceof CtLocalVariable<?>){
+					CtLocalVariable<?> localNotifier = (CtLocalVariable<?>) notifierDeclarationStatement;
+					CtVariable<?> variableDeclarationStatement = APTUtils.getDeclarationStatement(localNotifier, variableArgument.toString());	
+					if(variableDeclarationStatement == null){
+						System.err.println("VARIABLE " + variableArgument.toString() + " IS NOT RESOLVED FOR FUTURE " + notifierFuture);
+						return false;
+					}
 				}
 			}
 		}
@@ -208,7 +242,7 @@ public class AptGuiProcessor extends AbstractAnnotationProcessor<Gui, CtLocalVar
 		if(interimHandler)
 			insertInterimHandler();
 		else
-			registerHandlerForTaskInfos();
+			registerHandlerForFutureObjects();
 	}
 	
 	private void insertInterimHandler(){
@@ -230,7 +264,7 @@ public class AptGuiProcessor extends AbstractAnnotationProcessor<Gui, CtLocalVar
 		thisAnnotatedElement.replace(executeInterimHandler);
 	}
 	
-	private void registerHandlerForTaskInfos(){
+	private void registerHandlerForFutureObjects(){
 		if(!futureArguments.isEmpty())
 			proceedWithFunctorOneArg();
 		else
@@ -241,31 +275,62 @@ public class AptGuiProcessor extends AbstractAnnotationProcessor<Gui, CtLocalVar
 	
 	private void proceedWithFunctorOneArg(){
 		String futureName = notifierFutures[0];
-		String taskInfoName = APTUtils.getTaskName(futureName);
+		String taskInfoName = APTUtils.getTaskName(futureName); //for future objects
+		String taskIDGroupName = APTUtils.getTaskIDGroupName(futureName); //for future groups
 		String futureArgName = APTUtils.getNonLambdaArgName(futureName);
+		CtExpression<?> futureArgument = null;
+		FutureType futureType = FutureType.FUTURE;
 		
 		//updateGui(a_id.getReturnResult) --> updateGui(a_id_argName) Replacement starts
 		CtCodeSnippetExpression newFutureArgExpression = thisFactory.Core().createCodeSnippetExpression();
 		newFutureArgExpression.setValue(futureArgName);
 		
-		CtExpression<?> futureArgument = futureArguments.get(0);
+		//Only one element must be in the map!
+		for(CtExpression<?> expression : futureArguments.keySet()){
+			futureArgument = expression;
+			futureType = futureArguments.get(expression);
+		}
+		
 		futureArgument.replace(newFutureArgExpression);
 		//Replacement ends here
 		//create the declaration of the functor (a_id_argName) -> updateGui(a_id_argName)
 		String functorDeclarationPhrase = "(" + futureArgName + ")->" + getFunctorStatement();
-		registerHandlerForTaskInfo(taskInfoName, functorDeclarationPhrase);		
+		
+		if(futureType.equals(FutureType.FUTURE))
+			registerHandlerForLocalFuture(taskInfoName, functorDeclarationPhrase);	
+		else if(futureType.equals(FutureType.FUTUREGROUP))
+			registerHandlerForFutureGroup(taskIDGroupName, functorDeclarationPhrase);
 	}
 	
 	private void proceedWithFunctorNoArg(){
 		for(String notifierFuture : notifierFutures){
-			String futureName = APTUtils.getOrigName(notifierFuture);
+			String futureName = APTUtils.getOriginalName(notifierFuture);
 			String taskInfoName = APTUtils.getTaskName(futureName);
+			String taskIDGroupName = APTUtils.getTaskIDGroupName(futureName);
 			String functorDeclarationPhrase = "()->" + getFunctorStatement();
-			registerHandlerForTaskInfo(taskInfoName, functorDeclarationPhrase);		
+			
+			if(APTUtils.isFutureVariable(thisAnnotatedElement, notifierFuture))
+				registerHandlerForLocalFuture(taskInfoName, functorDeclarationPhrase);	
+			else if(APTUtils.isFutureGroup(thisAnnotatedElement, notifierFuture))
+				registerHandlerForFutureGroup(taskIDGroupName, functorDeclarationPhrase);
 		}
 	}
 	
-	private void registerHandlerForTaskInfo(String taskInfoName, String functorDeclarationPhrase){
+	private void registerHandlerForLocalFuture(String taskInfoName, String functorDeclarationPhrase){
+		
+		CtInvocation<?> registerHandler = createHandlerRegistrationStatement(taskInfoName, functorDeclarationPhrase);		
+		CtVariable<?> futureDeclaration = APTUtils.getDeclarationStatement(thisAnnotatedElement, taskInfoName);
+		CtLocalVariable<?> localFuture = (CtLocalVariable<?>) futureDeclaration;
+		localFuture.insertAfter(registerHandler);
+	}
+	
+	private void registerHandlerForFutureGroup(String taskIDGroupName, String functorDeclarationPhrase){
+		System.out.println("inserting for taskIDGroup: " + taskIDGroupName);
+		CtInvocation<?> registerHandler = createHandlerRegistrationStatement(taskIDGroupName, functorDeclarationPhrase);
+		thisAnnotatedElement.insertBefore(registerHandler);
+	}
+	
+	private CtInvocation<?> createHandlerRegistrationStatement(String futureName, String functorDeclarationPhrase){
 		//create the handler registering statement
 		List<CtExpression<?>> invocationArguments = new ArrayList<>();
 		CtInvocation<?> registerHandler = thisFactory.Core().createInvocation(); //the main invocation statement
@@ -278,18 +343,17 @@ public class AptGuiProcessor extends AbstractAnnotationProcessor<Gui, CtLocalVar
 		target.setValue(APTUtils.getParaTaskSyntax());
 		executable.setSimpleName(APTUtils.getRegisterSlotToNotifySyntax());		
 			
-		taskInfoArg.setValue(taskInfoName);
+		taskInfoArg.setValue(futureName);
 		functorArg.setValue(functorDeclarationPhrase);
-						
+								
 		invocationArguments.add(taskInfoArg);
 		invocationArguments.add(functorArg);
-			
+				
 		registerHandler.setTarget(target);
 		registerHandler.setExecutable(executable);
 		registerHandler.setArguments(invocationArguments);
-				
-		CtStatement futureDeclaration = APTUtils.getDeclarationStatement(thisAnnotatedElement, taskInfoName);
-		futureDeclaration.insertAfter(registerHandler);
+		
+		return registerHandler;
 	}
 	
 	private String getFunctorStatement(){
