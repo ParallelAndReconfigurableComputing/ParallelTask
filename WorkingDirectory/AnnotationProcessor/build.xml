@@ -5,7 +5,7 @@
 	<property name="test.dir"     value="test" />
 	<property name="dist.dir"     value="dist" />
 	<property name="docs.dir"     value="docs" />
-	<property name="input.dir"    value="input/guiHandlerTest" />
+	<property name="input.dir"    value="input/exceptionTest" />
 	<property name="release.dir"  value="release" />
 	<property name="gen.dir"      value="${dist.dir}/gen" />
 	<property name="classes.dir"  value="${dist.dir}/classes" />

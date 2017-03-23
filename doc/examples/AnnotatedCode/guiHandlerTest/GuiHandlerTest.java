@@ -10,6 +10,9 @@ import apt.annotations.TaskInfoType;
 
 public class GuiHandlerTest {
 
+	@Future
+	int[] array1 = new int[5];
+	
 	private int foo(int x) throws InterruptedException{
 		Random rand = new Random();
 		int randNo = rand.nextInt(x);
@@ -31,6 +34,9 @@ public class GuiHandlerTest {
 	
 	@InitParaTask()
 	public void taskRun(){
+		@Future
+		int[] array2 = new int[5];
+		
 		try{
 			int x = 25;
 			int y = 13;
@@ -50,7 +56,7 @@ public class GuiHandlerTest {
 			int k = b;
 			@Future(taskType=TaskInfoType.MULTI)
 			int c = foo(24);
-			@Gui(notifiedBy={"c"})
+			@Gui(notifiedBy={"c", "array1", "array2"})
 			Void handler4 = updateDB(j, k);
 		}catch(Exception e){
 			e.printStackTrace();

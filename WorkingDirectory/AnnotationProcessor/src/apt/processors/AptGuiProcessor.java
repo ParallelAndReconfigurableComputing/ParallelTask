@@ -325,7 +325,6 @@ public class AptGuiProcessor extends AbstractAnnotationProcessor<Gui, CtLocalVar
 	}
 	
 	private void registerHandlerForFutureGroup(String taskIDGroupName, String functorDeclarationPhrase){
-		System.out.println("inserting for taskIDGroup: " + taskIDGroupName);
 		CtInvocation<?> registerHandler = createHandlerRegistrationStatement(taskIDGroupName, functorDeclarationPhrase);
 		thisAnnotatedElement.insertBefore(registerHandler);
 	}
