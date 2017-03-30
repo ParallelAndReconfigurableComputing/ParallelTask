@@ -20,6 +20,7 @@
 
 package pt.runtime;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
@@ -93,7 +94,7 @@ public class TaskID<T> {
 	
 	protected TaskInfo<T> taskInfo = null;
 	private T returnResult = null;
-	
+	protected boolean exceptionAlreadyHandled = false;
 	private int progress = 0;
 
 	//protected AtomicBoolean hasCompleted = null;
@@ -113,6 +114,8 @@ public class TaskID<T> {
 	
 	private boolean isInteractive = false;
 	
+	protected List<Slot<T>> slotsToNotify = null;
+	
 	/*
 	 * TaskIDs waiting for this task to finish.
 	 * 
@@ -127,7 +130,7 @@ public class TaskID<T> {
 	 * @author Mostafa Mehrabi
 	 * @since  4/8/2015
 	 * */
-	protected ConcurrentLinkedQueue<TaskID<?>> remainingDependences = new ConcurrentLinkedQueue<>();
+	protected ConcurrentLinkedQueue<TaskID<?>> remainingDependees = new ConcurrentLinkedQueue<>();
 	
 	/*
 	 * The group of tasks that this task belongs to, if it is a <code>subtask</code> of 
@@ -139,8 +142,6 @@ public class TaskID<T> {
 	 * */
 	protected TaskIDGroup<?> group = null;
 	
-	protected boolean hasSlots = false;
-
 	static final protected int CREATED = 0;
 	static final protected int CANCELLED = 1;
 	static final protected int STARTED = 2;
@@ -159,9 +160,12 @@ public class TaskID<T> {
 	 */
 	
 	TaskID() {
+		completedLatchForRegisteringThread = new CountDownLatch(1);
 		completedLatchForNonRegisteringThreads = new CountDownLatch(1);
 		status = new AtomicInteger(CREATED);
 		changeStatusLock = new ReentrantLock();
+		exceptionAlreadyHandled = false;
+		slotsToNotify = new ArrayList<>();
 	}
 	
 
@@ -174,11 +178,10 @@ public class TaskID<T> {
 		if(taskInfo == null)
 			throw new IllegalArgumentException("NULL POINTER HAS BEEN PASSED TO TASKID AS TASKINFO!");				
 		globalID = nextGlobalID.incrementAndGet();
-		completedLatchForRegisteringThread = new CountDownLatch(1);
 		this.taskInfo = taskInfo;
 		this.noReturn = taskInfo.hasNoReturn();
 		isInteractive = taskInfo.isInteractive();
-		hasSlots = taskInfo.getSlotsToNotify() != null;
+		slotsToNotify = taskInfo.getSlotsToNotify();
 	}
 	
 	
@@ -204,6 +207,10 @@ public class TaskID<T> {
 
 	protected void setSubTask(boolean isSubTask) {
 		this.isSubTask = isSubTask;
+	}
+	
+	protected boolean hasSlots(){
+		return (slotsToNotify != null && !slotsToNotify.isEmpty());
 	}
 	
 	/**
@@ -397,7 +404,7 @@ public class TaskID<T> {
 	 * @author Mostafa Mehrabi
 	 * @since 9/9/2014
 	 * */
-	void setComplete() {
+	protected void setComplete() {
 		
 		changeStatusLock.lock();
 				
@@ -415,7 +422,7 @@ public class TaskID<T> {
 	
 	
 	/**
-	 * A <code>waiter</code> is another task that is waiting for the instance of task to finish. Once a 
+	 * A <code>waiter</code> is another task that is waiting for this instance of task to finish. Once a 
 	 * request for adding a waiter for this task is received, the instance will check if it is already 
 	 * completed. If that is the case, the instance will remove itself from the list of dependences of 
 	 * the <code>waiter</code>, otherwise the <code>waiter</code> will be added to the list of waiters.
@@ -448,17 +455,17 @@ public class TaskID<T> {
 	 *  @since  9/9/2014
 	 * */
 	void dependenceFinished(TaskID<?> otherTask) {
-		remainingDependences.remove(otherTask);
-		if (remainingDependences.isEmpty()) {
+		remainingDependees.remove(otherTask);
+		if (remainingDependees.isEmpty()) {
 			TaskpoolFactory.getTaskpool().nowReady(this);
 		}
 	}
 	
 	//maybe remianingDependences can be a concurrent queue instead of hashMap?
-	void setRemainingDependences(List<TaskID<?>> dependences) {
+	void setRemainingDependees(List<TaskID<?>> dependences) {
 		for (TaskID<?> dependency : dependences){
-			if (!remainingDependences.contains(dependency))
-				remainingDependences.add(dependency);
+			if (!remainingDependees.contains(dependency))
+				remainingDependees.add(dependency);
 		}
 	}
 	
@@ -561,8 +568,9 @@ public class TaskID<T> {
 		//This is checked at the end because we have to give a task a chance to 
 		//be executed. If the task has any errors, it will finish, and then we can check
 		//if there is any errors.
-		if (hasUserError.get()) {
-			throw new ExecutionException(exception);
+		if (hasUserError()) {
+			if(!executeExceptionHandler())
+				throw new ExecutionException(exception);
 		}
 	}
 	
@@ -630,26 +638,41 @@ public class TaskID<T> {
 	void enqueueSlots(boolean onlyEnqueueFinishedSlot) {
 		
 		//Assuming that ONLY the tasks that are part of a multi-task are called sub-tasks
-		if (isSubTask()) {
+		if (isSubTask() && !group.isFutureGroup()) {
 			//Part of a multi-task, will only enqueue the slots of the group when the last TaskID in the group completes
 			group.oneMoreInnerTaskCompleted();
 			
 			//Then, this sub-task needs to be set as complete, to let the waiting thread return.
 			setComplete();	
 			
+		} else if (isSubTask() && group.isFutureGroup()){
+			
+			group.oneMoreInnerTaskCompleted();
+			if(hasSlots()){
+				completedLatchForRegisteringThread.countDown();
+				completedLatchForNonRegisteringThreads.countDown();
+				executeAllTaskSlots();
+				Slot<Void> slot = new Slot<>(this::setComplete);
+				slot.setIsSetCompleteSlot(true);
+				executeOneTaskSlot(slot);
+				
+			}else{
+				setComplete();
+			}
+			
 		} else {
 			//Even if this TaskID is within a group, it is a separate entity since not a multi-task
 			
 			//If it has been cancelled, then probably don't want to execute the handlers... (except the setCompleteMethod())
-			if (hasUserError() || hasSlots) {
+			if (hasUserError() || hasSlots()) {
 				
 				//The waiting thread will not block in slots (in case it is EDT and needs to execute slots) 
 				completedLatchForRegisteringThread.countDown(); 
 				completedLatchForNonRegisteringThreads.countDown();  
 				
-				if (hasUserError.get())
+				if (hasUserError())
 					executeExceptionHandler();
-				if (hasSlots){
+				if (hasSlots()){
 					executeAllTaskSlots();
 				}
 				
@@ -693,10 +716,14 @@ public class TaskID<T> {
 		return handler;
 	}
 	
-	//-- returns the number of handlers that it will execute for this TaskID
+	//Doesn't want to handle an exception more than once.
 	private boolean executeExceptionHandler() {
-		Slot<? extends Throwable> handler = getExceptionHandler(exception);
+		if(exceptionAlreadyHandled)
+			return true;
 		
+		Slot<? extends Throwable> handler = getExceptionHandler(exception);
+		exceptionAlreadyHandled = true;
+
 		if (handler != null) {
 			executeOneTaskSlot(handler);
 			return true;
@@ -724,7 +751,6 @@ public class TaskID<T> {
 	}
 	
 	protected void executeAllTaskSlots() {
-		List<Slot<T>> slotsToNotify = taskInfo.getSlotsToNotify();
 		for (Slot<T> slotToNotify : slotsToNotify)
 			executeOneTaskSlot(slotToNotify);
 	}

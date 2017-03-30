@@ -66,7 +66,11 @@ public abstract class TaskInfo<R> {
 	protected Thread registeringThread;
 	protected List<Slot<R>> slotsToNotify;
 	protected List<Slot<R>> interSlotsToNotify;
-	protected List<TaskID<?>> dependences;
+	/*
+	 * Holds onto the dependees of this depender. In computer science, dependee is
+	 * an agent or entity that another component depends on. The target of a dependence. 
+	 */
+	protected List<TaskID<?>> dependees;
 
 	// for implicit results/dequeuing
 	protected int[] taskIdArgIndexes = new int[] {};
@@ -206,8 +210,13 @@ public abstract class TaskInfo<R> {
 		return slotsToNotify;
 	}
 
-	public List<TaskID<?>> getDependences() {
-		return dependences;
+	/*
+	 * returns the list of dependees for this taskInfo object.
+	 * That is, other tasks that this task needs to wait for
+	 * until they are finished. 
+	 */
+	public List<TaskID<?>> getDependees() {
+		return dependees;
 	}
 
 	public boolean isInteractive() {
@@ -274,7 +283,7 @@ public abstract class TaskInfo<R> {
 
 	
 	void dependsOn(TaskID<?>... taskIDs) {
-		this.dependences = Arrays.asList(taskIDs);
+		this.dependees = Arrays.asList(taskIDs);
 	}
 
 	abstract R execute() throws Throwable;

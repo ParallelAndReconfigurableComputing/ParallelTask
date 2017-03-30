@@ -129,14 +129,9 @@ public class TaskpoolMixedScheduling extends AbstractTaskPool {
 				taskInfo.setTaskInfoOfMultiTask(true);
 				
 				for (int i = 0; i < count; i++) {
-					TaskID<?> taskID = new TaskID(taskInfo);
-					
+					TaskID taskID = new TaskID<>(taskInfo);					
 					taskID.setRelativeID(i);
 					taskID.setExecuteOnThread(i%currentMultiTaskThreadPool);
-					
-					taskID.setSubTask(true);
-					
-					taskID.setPartOfGroup(((TaskIDGroup<?>)nextTaskID));
 					((TaskIDGroup<?>)nextTaskID).addInnerTask(taskID);
 					enqueueReadyTask(taskID);
 					

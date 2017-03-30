@@ -196,7 +196,6 @@ public class PtDynamicMapReducer<T, E> extends AbstractDynamicMapReducer<T, E> {
 		computationGroup = taskInfo.start();
 	}
 	
-	@SuppressWarnings("unchecked")
 	private void startOneOffTasks(){
 		computationGroup = new TaskIDGroup<Void>();
 		
@@ -207,7 +206,7 @@ public class PtDynamicMapReducer<T, E> extends AbstractDynamicMapReducer<T, E> {
 			};
 			
 			TaskInfoNoArgs<Void> taskInfo = (TaskInfoNoArgs<Void>) ParaTask.asTask(TaskType.ONEOFF, functor);
-			((TaskIDGroup<E>)computationGroup).addInnerTask(taskInfo.start());
+			((TaskIDGroup<Void>)computationGroup).addInnerTask(taskInfo.start());
 		}
 	}
 	

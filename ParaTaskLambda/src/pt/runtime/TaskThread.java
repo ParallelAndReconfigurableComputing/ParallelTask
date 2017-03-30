@@ -113,10 +113,7 @@ public abstract class TaskThread extends Thread {
 		} catch (Throwable e) {
 			taskID.setException(e);
 			threadTaskStack.pop();
-			//For lambda expressions we don't enqueue slots when an
-			//exception occurs. This encourages better exception handling
-			//as corresponding task slots must be specified as exception handlers.
-			//taskID.enqueueSlots(false);
+			taskID.enqueueSlots(false);
 			return false;
 		}
 		

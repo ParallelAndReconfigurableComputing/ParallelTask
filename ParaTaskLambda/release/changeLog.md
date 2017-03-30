@@ -40,3 +40,17 @@ Version 1.4.0 - 22/03/2017
 ==========================
 - TaskIDGroups that represent future groups can now receive handler methods to notify
   on their synchronization. 
+
+- Basic big fixes and improvements with retrieving results, specifying reduction operations
+  and performing customized one-off reduction operations on TaskIDGroups.
+
+Version 1.5.0 - 30/03/2017
+==========================
+- TaskIDGroup has changed to notify handlers for future groups as well
+
+- Asynchronous error handling mechansims for TaskIDGroup has been enhanced
+
+- TaskIDGroup is now able to return an array of the results of its sub-tasks
+
+The main purpose for these enhancements is to provide runtime support for advanced features
+that are offered in the API level of @PT.  

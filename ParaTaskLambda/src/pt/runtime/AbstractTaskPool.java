@@ -140,7 +140,7 @@ public abstract class AbstractTaskPool implements Taskpool {
 	 * thread is a task-thread, then its corresponding task is recorded as the enclosing task. 
 	 */
 	public <T> TaskID<T> enqueue(TaskInfo<T> taskInfo) {
-		List<TaskID<?>> allDependences = taskInfo.getDependences();
+		List<TaskID<?>> allDependees = taskInfo.getDependees();
 		TaskID<T> taskID = new TaskID<T>(taskInfo);
 		
 		//determine if this task is being enqueued from within another task. If so, set the enclosing task (needed to 
@@ -153,13 +153,13 @@ public abstract class AbstractTaskPool implements Taskpool {
 		if (taskInfo.hasAnySlots())
 			taskInfo.setTaskIDForSlotsAndHandlers(taskID);
 		
-		if (allDependences == null) {
+		if (allDependees == null) {
 			if (taskID.isInteractive())
 				startInteractiveTask(taskID);
 			else
 				enqueueReadyTask(taskID);
 		} else {
-			enqueueWaitingTask(taskID, allDependences);
+			enqueueWaitingTask(taskID, allDependees);
 		}
 		
 		return taskID;
@@ -174,7 +174,7 @@ public abstract class AbstractTaskPool implements Taskpool {
 		//currently there is no mechanism for TaskIDGroups where different tasks are scheduled within a group!
 		TaskIDGroup<T> group = new TaskIDGroup<T>(count, taskInfo);
 		
-		List<TaskID<?>> allDependences = taskInfo.getDependences();
+		List<TaskID<?>> allDependees = taskInfo.getDependees();
 		Thread registeringThread = taskInfo.setRegisteringThread();
 		
 		if (registeringThread instanceof TaskThread)
@@ -183,7 +183,7 @@ public abstract class AbstractTaskPool implements Taskpool {
 		if (taskInfo.hasAnySlots())
 			taskInfo.setTaskIDForSlotsAndHandlers(group);
 		
-		if (allDependences == null)
+		if (allDependees == null)
 			if (group.isInteractive()){ 
 				startInteractiveTask(group);
 			}
@@ -191,7 +191,7 @@ public abstract class AbstractTaskPool implements Taskpool {
 				enqueueReadyTask(group);
 			}
 		else// addDependences != null
-			enqueueWaitingTask(group, allDependences);
+			enqueueWaitingTask(group, allDependees);
 		
 		return group;
 	}
@@ -240,20 +240,18 @@ public abstract class AbstractTaskPool implements Taskpool {
 	  * new interactive thread, and starts the thread. 
 	  * @param taskID The TaskID<?> object that represents the interactive task.
 	  */
-	protected void startInteractiveTask(TaskID<?> taskID) {
+	protected <T> void startInteractiveTask(TaskID<T> taskID) {
 		if (!taskID.isInteractive() || taskID == null)
 			return;
 		
 		else if (taskID instanceof TaskIDGroup<?>){
-			TaskIDGroup<?> taskIDGroup = (TaskIDGroup<?>) taskID;
+			TaskIDGroup<T> taskIDGroup = (TaskIDGroup<T>) taskID;
 			int taskCount = taskIDGroup.getGroupSize();
-			TaskInfo<?> taskInfo = taskIDGroup.getTaskInfo();
+			TaskInfo<T> taskInfo = taskIDGroup.getTaskInfo();
 			taskInfo.setTaskInfoOfMultiTask(true);
 			for (int taskIndex = 0; taskIndex < taskCount; taskIndex++){
-				TaskID<?> subTaskID = new TaskID<>(taskInfo);
+				TaskID<T> subTaskID = new TaskID<T>(taskInfo);
 				subTaskID.setRelativeID(taskIndex);				
-				subTaskID.setSubTask(true);
-				subTaskID.setPartOfGroup(taskIDGroup);
 				taskIDGroup.addInnerTask(subTaskID);
 				startInteractiveTask(subTaskID);
 			}
@@ -264,12 +262,11 @@ public abstract class AbstractTaskPool implements Taskpool {
 			interactiveTaskCount.incrementAndGet();
 			for (WeakReference<InteractiveThread> interactiveRef : cachedInteractiveThreadPool){
 				InteractiveThread interactiveThread = interactiveRef.get();
-				if(interactiveThread.isInactive()){
+				if(interactiveThread != null && interactiveThread.isInactive()){
 					interactiveThread.setTaskID(taskID);
 					return;
 				}
-			}
-			
+			}			
 			InteractiveThread newInteractiveThread = new InteractiveThread(this, taskID);
 			newInteractiveThread.start();
 			cachedInteractiveThreadPool.add(new WeakReference<InteractiveThread>(newInteractiveThread));
@@ -282,14 +279,14 @@ public abstract class AbstractTaskPool implements Taskpool {
 	 * If a waiting task has dependencies, those dependencies will be set for the TaskID as well.
 	 * and They get the waiting task as a waiter for the dependencies.  
 	 */
-	protected void enqueueWaitingTask(TaskID<?> taskID, List<TaskID<?>> allDependences) {
+	protected void enqueueWaitingTask(TaskID<?> taskID, List<TaskID<?>> allDependees) {
 
-		if (allDependences.size() > 0) {
+		if (allDependees.size() > 0) {
 			waitingTasks.put(taskID, "");
-			taskID.setRemainingDependences(allDependences);
+			taskID.setRemainingDependees(allDependees);
 			
-			for (int dependentIndex = 0; dependentIndex < allDependences.size(); dependentIndex++) {
-				allDependences.get(dependentIndex).addWaiter(taskID);
+			for (int dependeeIndex = 0; dependeeIndex < allDependees.size(); dependeeIndex++) {
+				allDependees.get(dependeeIndex).addWaiter(taskID);
 			}
 		} else {
 			enqueueReadyTask(taskID);

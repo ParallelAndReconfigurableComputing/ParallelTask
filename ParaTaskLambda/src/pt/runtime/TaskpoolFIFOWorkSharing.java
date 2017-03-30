@@ -21,10 +21,6 @@ package pt.runtime;
 
 import java.util.AbstractQueue;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.PriorityBlockingQueue;
 /**
  * This class extends <code>AbstractTaskPool</code> which is an implementation of <code>TaskPool</code>
@@ -123,13 +119,9 @@ public class TaskpoolFIFOWorkSharing extends AbstractTaskPool {
 				taskInfo.setTaskInfoOfMultiTask(true);
 				
 				for (int i = 0; i < count; i++) {
-					TaskID<?> taskID = new TaskID(taskInfo);
-					
+					TaskID taskID = new TaskID<>(taskInfo);					
 					taskID.setRelativeID(i);
 					taskID.setExecuteOnThread(i%multiTaskThreadPoolSize);
-					
-					taskID.setSubTask(true);
-					taskID.setPartOfGroup(((TaskIDGroup<?>)nextTaskID));
 					((TaskIDGroup<?>)nextTaskID).addInnerTask(taskID);
 					enqueueReadyTask(taskID);
 					
