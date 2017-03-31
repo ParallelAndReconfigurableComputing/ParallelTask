@@ -15,6 +15,7 @@ import java.util.List;
 
 import spoon.reflect.factory.Factory;
 import spoon.reflect.code.CtArrayAccess;
+import spoon.reflect.code.CtArrayRead;
 import spoon.reflect.code.CtBinaryOperator;
 import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtCatch;
@@ -29,7 +30,8 @@ import spoon.reflect.code.CtTry;
 import spoon.reflect.code.CtUnaryOperator;
 import spoon.reflect.code.CtVariableAccess;
 import spoon.reflect.declaration.CtAnnotation;
-import spoon.reflect.declaration.CtTypeParameter;
+import spoon.reflect.declaration.CtEnum;
+import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtVariable;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
@@ -109,7 +111,7 @@ public class InvocationProcessor extends AptAbstractFutureProcessor {
 	private void checkIfThrowsException(){
 		try{
 			Set<CtTypeReference<? extends Throwable>> exceptions = null;
-			exceptions = thisInvocation.getExecutable().getDeclaration().getThrownTypes();
+			exceptions = thisInvocation.getExecutable().getExecutableDeclaration().getThrownTypes();
 			if(exceptions != null && !exceptions.isEmpty())
 				throwsExceptions = true;
 		}catch(Exception e){
@@ -148,6 +150,21 @@ public class InvocationProcessor extends AptAbstractFutureProcessor {
 			if(APTUtils.isTaskIDReplacement(thisAnnotatedLocalElement, argument.toString())){
 				String originalArgumentName = APTUtils.getOriginalName(argument.toString());
 				dependencies.add(APTUtils.getTaskIDName(originalArgumentName));
+			}
+			else if (APTUtils.isFutureGroup(thisAnnotatedLocalElement, argument.toString())){
+				String originalArgumentName = APTUtils.getOriginalName(argument.toString());
+				dependencies.add(APTUtils.getTaskIDGroupName(originalArgumentName));
+			}
+			//the argument may be referring to a specific element of a future group.
+			else if(argument instanceof CtArrayRead<?>){
+				CtArrayRead<?> arrayRead = (CtArrayRead<?>) argument;
+				String arrayName = arrayRead.getTarget().toString();
+				if(!arrayName.contains(".")){
+					//if the array belongs to this class
+					if(APTUtils.isFutureGroup(thisAnnotatedLocalElement, arrayName)){
+						dependencies.add(APTUtils.getTaskIDGroupName(arrayName));
+					}
+				}
 			}
 		}				
 	}	
@@ -197,8 +214,11 @@ public class InvocationProcessor extends AptAbstractFutureProcessor {
 				if(!dependencyName.isEmpty()){
 					//in case user feeds taskID name etc. Small possibility but...
 					dependencyName = APTUtils.getOriginalName(dependencyName); 
-					if(APTUtils.isFutureVariable(thisAnnotatedLocalElement, dependencyName))
+					if(APTUtils.isFutureVariable(thisAnnotatedLocalElement, dependencyName)){
 						dependencies.add(APTUtils.getTaskIDName(dependencyName));
+					}else if(APTUtils.isFutureGroup(thisAnnotatedLocalElement, dependencyName)){
+						dependencies.add(APTUtils.getTaskIDGroupName(dependencyName));
+					}
 				}
 			}					
 		}		
@@ -254,6 +274,7 @@ public class InvocationProcessor extends AptAbstractFutureProcessor {
 	 * The name of the representative and its corresponding type is saved in a map to be used
 	 * when creating the taskInfo declaration.   
 	 */
+	@SuppressWarnings("unchecked")
 	private void processInvocationArguments(){
 		listVariableAccessExpressions();
 		for (CtVariableAccess<?> varAccess : variableAccessExpressions){
@@ -267,19 +288,73 @@ public class InvocationProcessor extends AptAbstractFutureProcessor {
 				 * LocalVariable. 
 				 */
 				CtLocalVariable<?> declaration = (CtLocalVariable<?>)APTUtils.getDeclarationStatement(thisAnnotatedLocalElement, origName);
-				CtTypeReference taskIDType = getTaskIDType(declaration, false);
+				CtTypeReference taskIDType = getTaskIDType(declaration.getType().toString(), false);
 				
 				varAccess.getVariable().setSimpleName(APTUtils.getLambdaArgName(origName)+APTUtils.getResultSyntax());
-				varAccess.getVariable().setType(taskIDType);					
-				
+				varAccess.getVariable().setType(taskIDType);									
 				argumentsAndTypes.put(APTUtils.getLambdaArgName(origName), varAccess.getType());
-			}
-			else{
-				varAccess.getVariable().setSimpleName(APTUtils.getNonLambdaArgName(argName));
-				CtTypeReference<?> varType = thisFactory.Core().createTypeReference();
-				varType.setSimpleName(APTUtils.getType(varAccess.getType().toString()));
-				argumentsAndTypes.put(APTUtils.getNonLambdaArgName(argName), varType);
-			}				
+				
+			}else if(APTUtils.isFutureGroup(thisAnnotatedLocalElement, origName)){
+					//for future groups, the argName is still the actual name of the array, because when processing the 
+					//future groups, references to the corresponding arrays are ignored if they are within future variables. 
+					CtVariable<?> futureGroupDeclaration = APTUtils.getDeclarationStatement(thisAnnotatedLocalElement, origName);
+					
+					String futureGroupType = futureGroupDeclaration.getType().toString();
+					futureGroupType = futureGroupType.substring(0, futureGroupType.indexOf("["));
+					futureGroupType = futureGroupType.trim();
+				
+					String replacingSyntax = APTUtils.getLambdaArgName(origName)+APTUtils.getFutureGroupArraySyntax(futureGroupType);
+					varAccess.getVariable().setSimpleName(replacingSyntax);
+					
+					CtTypeReference taskIDGroupType = getTaskIDType(futureGroupType, true);
+					varAccess.getVariable().setType(taskIDGroupType);
+					argumentsAndTypes.put(APTUtils.getLambdaArgName(origName), varAccess.getType());
+							
+			}else{
+				if(varAccess.getParent() instanceof CtArrayRead){
+					CtArrayRead<?> arrayRead = (CtArrayRead<?>) varAccess.getParent();
+					String arrayName = arrayRead.getTarget().toString();
+					//if the target belongs to the current class, then it may be a future group
+					if(!arrayName.contains(".")){
+						if(APTUtils.isFutureGroup(thisAnnotatedLocalElement, arrayName)){
+							CtVariable<?> futureGroupDeclaration = APTUtils.getDeclarationStatement(thisAnnotatedLocalElement, arrayName);
+							String futureGroupType = futureGroupDeclaration.getType().toString();
+							futureGroupType = futureGroupType.substring(0, futureGroupType.indexOf("["));
+							futureGroupType = futureGroupType.trim();
+							CtTypeReference taskIDGroupType = getTaskIDType(futureGroupType, true);
+							argumentsAndTypes.put(APTUtils.getLambdaArgName(arrayName), taskIDGroupType);
+							
+							CtInvocation<?> getTaskIDGroupInnerResult = thisFactory.Core().createInvocation();
+							CtCodeSnippetExpression<?> taskIDGroup = thisFactory.Core().createCodeSnippetExpression();
+							CtExecutableReference getInnerResult = thisFactory.Core().createExecutableReference();
+							
+							taskIDGroup.setValue(APTUtils.getLambdaArgName(arrayName));
+							getInnerResult.setSimpleName(APTUtils.getFutureGroupInnerResultSyntax());
+							List<CtExpression<?>> arguments = new ArrayList<>();
+							arguments.add(varAccess);
+														
+							getTaskIDGroupInnerResult.setTarget(taskIDGroup);
+							getTaskIDGroupInnerResult.setExecutable(getInnerResult);
+							getTaskIDGroupInnerResult.setArguments(arguments);
+							arrayRead.replace(getTaskIDGroupInnerResult);
+						}
+					}
+				}
+				
+//				if(argName.contains(".")){
+//					//variable is read from another domain.
+//					argName = argName.substring(argName.lastIndexOf(".")+1);
+//				}
+				
+				if(!Enum.class.isAssignableFrom(varAccess.getType().getActualClass())){
+					//System.out.println(Enum.class.isAssignableFrom(varAccess.getType().getActualClass()));
+					CtTypeReference<?> varType = thisFactory.Core().createTypeReference();
+					varAccess.getVariable().setSimpleName(APTUtils.getNonLambdaArgName(argName));
+					varType.setSimpleName(APTUtils.getType(varAccess.getType().toString()));
+					argumentsAndTypes.put(APTUtils.getNonLambdaArgName(argName), varType);
+				}
+			}	
+						
 		}
 	}
 	
@@ -518,15 +593,17 @@ public class InvocationProcessor extends AptAbstractFutureProcessor {
 		Set<String> argumentNames = argumentsAndTypes.keySet();	
 		int counter = 0;
 		for(String argumentName : argumentNames){
-			
-			CtTypeReference<?> argumentType = argumentsAndTypes.get(argumentName);
-			
-			if (APTUtils.isNonLambdaArg(argumentName))				
+		
+			if (APTUtils.isNonLambdaArg(argumentName)){
 				startPhrase += APTUtils.getOriginalName(argumentName);
-			
-			else if (APTUtils.isLambdaArg(argumentName))
-				startPhrase += APTUtils.getTaskIDName(APTUtils.getOriginalName(argumentName));
-			 
+			}
+			else if (APTUtils.isLambdaArg(argumentName)){
+				String argType = argumentsAndTypes.get(argumentName).toString();
+				if(argType.contains(APTUtils.getTaskIDGroupSyntax()))
+					startPhrase += APTUtils.getTaskIDGroupName(APTUtils.getOriginalName(argumentName));
+				else
+					startPhrase += APTUtils.getTaskIDName(APTUtils.getOriginalName(argumentName));
+			}
 			counter++;
 			if(counter != argumentNames.size())
 				startPhrase += ", ";
@@ -534,7 +611,7 @@ public class InvocationProcessor extends AptAbstractFutureProcessor {
 		startPhrase += ")";
 		
 		boolean taskIDGroup = (thisTaskType.contains("MULTI")) ? true : false;
-		CtTypeReference taskIDType = getTaskIDType(thisAnnotatedLocalElement, taskIDGroup);
+		CtTypeReference taskIDType = getTaskIDType(thisAnnotatedLocalElement.getType().toString(), taskIDGroup);
 		String castingPhrase = "";
 		if(taskIDGroup)
 			castingPhrase = "(" + taskIDType.toString() + ")";
@@ -770,9 +847,8 @@ public class InvocationProcessor extends AptAbstractFutureProcessor {
 	 * boolean value is here, because TaskIDGroups are only meant to be created for the start statements,
 	 * and not when TaskIDs are used as functor arguments. 
 	 */
-	private CtTypeReference getTaskIDType(CtVariable<?> declaration, boolean taskIDGroup){
-		String declarationType = declaration.getType().toString();
-		declarationType = APTUtils.getOriginalName(declarationType);
+	private CtTypeReference<?> getTaskIDType(String initialType, boolean taskIDGroup){
+		String declarationType = APTUtils.getOriginalName(initialType);
 		String taskType = APTUtils.getReturnType(declarationType);
 		
 		if(taskIDGroup)
@@ -890,8 +966,7 @@ public class InvocationProcessor extends AptAbstractFutureProcessor {
 		else if (expression instanceof CtArrayAccess<?, ?>){
 			CtArrayAccess<?, ?> arrayAccess = (CtArrayAccess<?, ?>) expression;
 			listVariableAccessExpressions(arrayAccess.getIndexExpression());
-		}
-		
+		}		
 	}
 
 	//---------------------------------------HELPER METHODS-----------------------------------------

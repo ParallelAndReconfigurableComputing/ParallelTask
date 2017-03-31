@@ -50,3 +50,14 @@ Version 1.4.0 - 21/03/2017
 - Enhanced asynchronous exception handling added
 
 - minor bug fixes
+
+
+Version 1.5.0 - 31/03/2017
+==========================
+@PT 1.5.0 is now compatible with latest enhancements in ParaTaskLambda-1.5.0.The main purpose
+for these enhancements is that a task can asynchronously wait for a future group, retrieve its
+sub-results in order to do further operations with them. An important example is a task that
+reduces the results of a future group, and then updates GUI based on the reduced result. This
+is mainly because in the annotated API, there is no approach for symbolizing the reduced result
+of a future group. Therefore, reducing the results of a future group would require blocking. 
+This is not required now.  

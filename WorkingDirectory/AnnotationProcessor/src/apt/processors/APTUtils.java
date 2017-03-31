@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import apt.annotations.Future;
 import apt.annotations.TaskInfoType;
 import apt.annotations.TaskScheduingPolicy;
 import spoon.reflect.code.CtBlock;
@@ -100,8 +101,8 @@ public class APTUtils {
 			
 			type = type.trim();
 		}
-		else
-			type = getType(type);
+		
+		type = getType(type);
 		return type;
 	}
 	
@@ -1041,6 +1042,20 @@ public class APTUtils {
 		return true;
 	}
 	
+	public static Future getFutureAnnotation(CtVariable<?> declarationStatement){
+		//CtLocalVariable<?> declarationStatement = (CtLocalVariable<?>) statement;
+		List<CtAnnotation<? extends Annotation>> annotations = declarationStatement.getAnnotations();
+		for(CtAnnotation<? extends Annotation> annotation : annotations){
+			Annotation actualAnnotation = annotation.getActualAnnotation();
+			if(actualAnnotation instanceof Future){
+				Future future = (Future) actualAnnotation;
+				return future;
+			}
+		}
+		return null;
+	}
+	
+	
 	public static String getLockQualifiedSyntax(){
 		return "java.util.concurrent.locks.Lock";
 	}
@@ -1068,8 +1083,42 @@ public class APTUtils {
 		return ".getReturnResult()";
 	}
 	
-	public static String getResultSyntax(int index){
-		return ".getReturnResult(" + index + ")";
+	public static String getFutureGroupArraySyntax(String type){
+		String arrayType = getType(type);
+		//when defining a new array, generic types shall not be used. 
+		if(arrayType.contains("<") && arrayType.contains(">")){
+			if(arrayType.contains("Map"))
+				arrayType = getJavaHashMapSyntax();
+			else if(arrayType.contains("Set"))
+				arrayType = getJavaHashSetSyntax();
+			else if(arrayType.contains("List"))
+				arrayType = getJavaArrayListSyntax();
+			else
+				arrayType = arrayType.substring(0, arrayType.indexOf("<"));
+		}
+		//@PT runtime automatically adjusts the size of the array to the size of 
+		//TaskIDGroup sub-tasks. 
+		return ".getResultsAsArray(new " + arrayType + "[1])";
+	}
+	
+	public static String getJavaArrayListSyntax(){
+		return "java.util.ArrayList";
+	}
+	
+	public static String getJavaHashMapSyntax(){
+		return "java.util.HashMap";
+	}
+	
+	public static String getJavaHashSetSyntax(){
+		return "java.util.HashSet";
+	}
+	
+	public static String getFutureGroupInnerResultSyntax(String indexName){
+		return ".getInnerTaskResult(" + indexName + ")";
+	}
+	
+	public static String getFutureGroupInnerResultSyntax(){
+		return "getInnerTaskResult";
 	}
 	
 	public static String getRegisterDependencesSyntax(){

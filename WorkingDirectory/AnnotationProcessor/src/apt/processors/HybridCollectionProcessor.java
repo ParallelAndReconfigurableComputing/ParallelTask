@@ -251,7 +251,7 @@ public class HybridCollectionProcessor extends AptAbstractFutureProcessor {
 				CtVariable<?> declaration = APTUtils.getDeclarationStatement(varAccess.getParent(CtStatement.class), varName);
 				CtLocalVariable<?> declarationStatement = (CtLocalVariable<?>) declaration;
 				if(declarationStatement != null){
-					Future future = hasFutureAnnotation(declarationStatement);
+					Future future = APTUtils.getFutureAnnotation(declarationStatement);
 					if(future != null){
 						modifyWithFutuerObject(future, declarationStatement, varAccess);
 					}
