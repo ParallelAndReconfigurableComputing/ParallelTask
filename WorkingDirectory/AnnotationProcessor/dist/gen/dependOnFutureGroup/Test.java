@@ -77,8 +77,8 @@ public class Test {
                 pt.runtime.TaskInfoOneArg<Integer, Integer> ____group_1__PtTask__ = ((pt.runtime.TaskInfoOneArg<Integer, Integer>) (pt.runtime.ParaTask.asTask(pt.runtime.ParaTask.TaskType.ONEOFF, 
 			(pt.functionalInterfaces.FunctorOneArgWithReturn<Integer, Integer>)(__iPtNonLambdaArg__) -> IOTask(__iPtNonLambdaArg__))));
                 pt.runtime.ParaTask.registerAsyncCatch(____group_1__PtTask__, java.lang.InterruptedException.class, (e)->{
-                		e.printStackTrace();
-                });
+    e.printStackTrace();
+});
                 pt.runtime.TaskID<Integer> ____group_1__PtTaskID__ = ____group_1__PtTask__.start(i);
                 __groupPtTaskIDGroup__.setInnerTask(i, ____group_1__PtTaskID__);
             }
@@ -94,8 +94,7 @@ public class Test {
         }
     }
 
-    @SuppressWarnings("unchecked")
-	private void testParallelFuture() {
+    private void testParallelFuture() {
         pt.runtime.ParaTask.init(pt.runtime.ParaTask.PTSchedulingPolicy.MixedSchedule, java.lang.Runtime.getRuntime().availableProcessors());
         java.util.concurrent.ConcurrentLinkedDeque<java.lang.String> myList = new java.util.concurrent.ConcurrentLinkedDeque<>();
         myList.add("hello");

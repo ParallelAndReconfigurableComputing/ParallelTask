@@ -298,16 +298,16 @@ public class InvocationProcessor extends AptAbstractFutureProcessor {
 					//for future groups, the argName is still the actual name of the array, because when processing the 
 					//future groups, references to the corresponding arrays are ignored if they are within future variables. 
 					CtVariable<?> futureGroupDeclaration = APTUtils.getDeclarationStatement(thisAnnotatedLocalElement, origName);
-					
 					String futureGroupType = futureGroupDeclaration.getType().toString();
 					futureGroupType = futureGroupType.substring(0, futureGroupType.indexOf("["));
 					futureGroupType = futureGroupType.trim();
-				
+
 					String replacingSyntax = APTUtils.getLambdaArgName(origName)+APTUtils.getFutureGroupArraySyntax(futureGroupType);
 					varAccess.getVariable().setSimpleName(replacingSyntax);
 					
 					CtTypeReference taskIDGroupType = getTaskIDType(futureGroupType, true);
 					varAccess.getVariable().setType(taskIDGroupType);
+					System.out.println("future type: " + varAccess.getType());
 					argumentsAndTypes.put(APTUtils.getLambdaArgName(origName), varAccess.getType());
 							
 			}else{
@@ -848,8 +848,12 @@ public class InvocationProcessor extends AptAbstractFutureProcessor {
 	 * and not when TaskIDs are used as functor arguments. 
 	 */
 	private CtTypeReference<?> getTaskIDType(String initialType, boolean taskIDGroup){
+		System.out.println("type: " + initialType);
 		String declarationType = APTUtils.getOriginalName(initialType);
+		System.out.println("after process: " + declarationType);
 		String taskType = APTUtils.getReturnType(declarationType);
+		System.out.println("final task type: "+taskType); 
+		System.out.println("----------------------------------");
 		
 		if(taskIDGroup)
 			taskType = APTUtils.getTaskIDGroupSyntax() + "<" + taskType + ">";
