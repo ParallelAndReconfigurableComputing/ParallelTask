@@ -415,7 +415,7 @@ public class FutureGroupProcessor extends AptAbstractFutureProcessor{
 				
 		CtAnnotation<?> futureAnnotation = thisFactory.Core().createAnnotation();
 		CtTypeReference<? extends Annotation> annotationType = thisFactory.Core().createTypeReference();
-		annotationType.setSimpleName("sp.annotations.Future");
+		annotationType.setSimpleName("apt.annotations.Future");
 	
 		CtExpression<?> asyncTaskDefaultExpression = accessStatement.getAssignment();
 		futureAnnotation.setAnnotationType(annotationType);
@@ -431,7 +431,8 @@ public class FutureGroupProcessor extends AptAbstractFutureProcessor{
 		CtBlock parentBlock = accessStatement.getParent(CtBlock.class);
 		StatementMatcherFilter<CtStatement> filter = new StatementMatcherFilter<CtStatement>(accessStatement);
 		parentBlock.insertBefore(filter, localAsyncTask);
-		InvocationProcessor processor = new InvocationProcessor(thisFactory, thisFutureAnnotation, localAsyncTask);
+		InvocationProcessor processor = new InvocationProcessor(thisFactory, thisFutureAnnotation, localAsyncTask,
+												true, accessStatement, (CtInvocation<?>)asyncTaskDefaultExpression);
 		processor.process();
 		
 		String newAssignment = APTUtils.getTaskIDName(asyncTaskName) + ".getReturnResult()";

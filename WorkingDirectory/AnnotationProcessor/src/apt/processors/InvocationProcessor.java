@@ -64,6 +64,17 @@ public class InvocationProcessor extends AptAbstractFutureProcessor {
 	private String thisTaskType = null;
 	private int thisTaskCount = 0;
 	private boolean throwsExceptions = false;
+	/*
+	 * APT adds asynchronous tasks to be processed for invocations that are assigned to future groups
+	 * and hybrid collections. In this case, there will be a duplicate of that invocation in code, which
+	 * cause malfunctioning of the enhanced asynchronous exception handling mechanism. So, there must be
+	 * a way to tell the invocation processor, that then invocation it is processing has been added by
+	 * APT, and to identify the element that is being processed by the future group processor, or the 
+	 * hybrid collection processor.  
+	 */
+	private boolean aptCreatedTask = false; 
+	private CtStatement  aptStatementUnderProcess = null;
+	private CtInvocation<?> aptInvocationUnderProcess = null;
 	private Set<String> dependencies = null;
 	private Set<String> handlers = null;
 	private Map<String, CtTypeReference<?>> argumentsAndTypes = null;
@@ -72,7 +83,8 @@ public class InvocationProcessor extends AptAbstractFutureProcessor {
 	private List<CtCatch> catchersToRemove = null;
 	private List<Map<List<CtTypeReference<?>>, CtTypeReference<?>>> throwablesToRemoveFromMultiThrowables = null;
 	
-	public InvocationProcessor(Factory factory, Future future, CtLocalVariable<?> annotatedElement){
+	public InvocationProcessor(Factory factory, Future future, CtLocalVariable<?> annotatedElement, 
+											boolean aptTask, CtStatement statementUnderProcess, CtInvocation<?> invocationUnderProcess){
 		dependencies = new HashSet<>();
 		handlers = new HashSet<>();
 		asyncExceptions = new HashMap<>();
@@ -88,6 +100,13 @@ public class InvocationProcessor extends AptAbstractFutureProcessor {
 		thisTaskIDName = APTUtils.getTaskIDName(thisElementName);
 		thisTaskInfoName = APTUtils.getTaskName(thisElementName);
 		thisFactory = factory;
+		aptCreatedTask = aptTask;
+		aptStatementUnderProcess = statementUnderProcess;
+		aptInvocationUnderProcess = invocationUnderProcess;
+	}
+	
+	public InvocationProcessor(Factory factory, Future future, CtLocalVariable<?> annotatedElement){
+		this(factory, future, annotatedElement, false, null, null);
 	}
 	
 	@Override
@@ -304,12 +323,9 @@ public class InvocationProcessor extends AptAbstractFutureProcessor {
 
 					String replacingSyntax = APTUtils.getLambdaArgName(origName)+APTUtils.getFutureGroupArraySyntax(futureGroupType);
 					varAccess.getVariable().setSimpleName(replacingSyntax);
-					
 					CtTypeReference taskIDGroupType = getTaskIDType(futureGroupType, true);
 					varAccess.getVariable().setType(taskIDGroupType);
-					System.out.println("future type: " + varAccess.getType());
-					argumentsAndTypes.put(APTUtils.getLambdaArgName(origName), varAccess.getType());
-							
+					argumentsAndTypes.put(APTUtils.getLambdaArgName(origName), varAccess.getType());							
 			}else{
 				if(varAccess.getParent() instanceof CtArrayRead){
 					CtArrayRead<?> arrayRead = (CtArrayRead<?>) varAccess.getParent();
@@ -340,11 +356,6 @@ public class InvocationProcessor extends AptAbstractFutureProcessor {
 						}
 					}
 				}
-				
-//				if(argName.contains(".")){
-//					//variable is read from another domain.
-//					argName = argName.substring(argName.lastIndexOf(".")+1);
-//				}
 				
 				if(!Enum.class.isAssignableFrom(varAccess.getType().getActualClass())){
 					//System.out.println(Enum.class.isAssignableFrom(varAccess.getType().getActualClass()));
@@ -629,6 +640,22 @@ public class InvocationProcessor extends AptAbstractFutureProcessor {
 	
 	private void removeRedundantExceptions(){
 		for(CtCatch catcher : catchersToRemove){
+			/*
+			 * If this catcher is the only catcher of the try block, removing it will cause an error in
+			 * the final version. 
+			 */
+			CtTry parentTryBlock = catcher.getParent(CtTry.class);
+			List<CtCatch> catchers = parentTryBlock.getCatchers();
+			if(catchers.size() == 1){
+				//the catcher being removed is the only catcher -> insert a "finally" block if there is not one
+				CtBlock<?> finalizer = parentTryBlock.getFinalizer();
+				if(finalizer == null){
+					CtBlock<?> finalizerBlock = thisFactory.Core().createBlock();
+					List<CtStatement> finalizerStatements = new ArrayList<>();
+					finalizerBlock.setStatements(finalizerStatements);
+					parentTryBlock.setFinalizer(finalizerBlock);
+				}
+			}
 			catcher.delete();
 		}
 		for(Map<List<CtTypeReference<?>>, CtTypeReference<?>> map : throwablesToRemoveFromMultiThrowables){
@@ -683,7 +710,8 @@ public class InvocationProcessor extends AptAbstractFutureProcessor {
 	}
 	
 	private boolean methodThrowsException(CtTypeReference<?> throwable, CtInvocation<?> invocation){
-		Set<CtTypeReference<? extends Throwable>> methodThrowables = invocation.getExecutable().getDeclaration().getThrownTypes();
+		Set<CtTypeReference<? extends Throwable>> methodThrowables = invocation.getExecutable().getExecutableDeclaration().getThrownTypes();
+				//getDeclaration().getThrownTypes();
 		if(methodThrowables.contains(throwable))
 			return true;
 		return false;
@@ -710,51 +738,59 @@ public class InvocationProcessor extends AptAbstractFutureProcessor {
 		for(ASTNode astNode : astNodes){
 			//if it is a PtTask, it has already passed the same set of inspections, 
 			//and has asynchronous exception handling.
-			if(!isPtTask(astNode.getStatement())){
-				int numOfExpressions = astNode.getNumberOfExpressions();
-				for(int i = 0; i < numOfExpressions; i++){
-					CtExpression<?> expression = astNode.getExpression(i);
-					if(expressionThrowsException(expression, throwable)){
-						return false;
-					}
+			CtStatement currentStatement = astNode.getStatement();
+			int numOfExpressions = astNode.getNumberOfExpressions();
+			for(int i = 0; i < numOfExpressions; i++){
+				CtExpression<?> expression = astNode.getExpression(i);
+				if(expressionThrowsException(currentStatement, expression, throwable)){
+					System.out.println(thisAnnotatedLocalElement + " says no");
+					return false;
 				}
 			}
+			
 		}
 		return true;
 	}
 	
-	private boolean isPtTask(CtStatement statement){
+	private boolean inspectInvocationForExceptions(CtStatement statement, CtInvocation<?> invocation){
+		if(aptCreatedTask){
+			if(statement.equals(aptStatementUnderProcess) && invocation.equals(aptInvocationUnderProcess))
+				return false;
+		}
 		if (statement instanceof CtLocalVariable<?>){
 			if(statement.equals(thisAnnotatedLocalElement)){
-				return true;
+				return false;
 			}
 			
 			CtLocalVariable<?> localVariable = (CtLocalVariable<?>) statement;
 			String variableName = localVariable.getSimpleName();
 			if(APTUtils.isPtTaskName(variableName)){
-				return true;
+				return false;
 			}				
 		}
-		return false;
+		return true;
 	}
 	
-	private boolean expressionThrowsException(CtExpression<?> expression, CtTypeReference<?> throwable){
+	private boolean expressionThrowsException(CtStatement currentStatement, CtExpression<?> expression, CtTypeReference<?> throwable){
 		if(expression instanceof CtInvocation<?>){
 			CtInvocation<?> invocation = (CtInvocation<?>) expression;
-			Set<CtTypeReference<? extends Throwable>> invocationThrowables = invocation.getExecutable().getDeclaration().getThrownTypes();
-			if(invocationThrowables.contains(throwable))
-				return true;
+				if(inspectInvocationForExceptions(currentStatement, invocation)){
+					Set<CtTypeReference<? extends Throwable>> invocationThrowables = invocation.getExecutable().getExecutableDeclaration().getThrownTypes();
+						//getDeclaration().getThrownTypes();
+					if(invocationThrowables.contains(throwable))
+						return true;
+			}
 		}
 		else if (expression instanceof CtUnaryOperator<?>){
 			CtUnaryOperator<?> unaryOperation = (CtUnaryOperator<?>) expression;
-			if(expressionThrowsException(unaryOperation.getOperand(), throwable))
+			if(expressionThrowsException(currentStatement, unaryOperation.getOperand(), throwable))
 				return true;
 		}
 		else if (expression instanceof CtBinaryOperator<?>){
 			CtBinaryOperator<?> binaryOperation = (CtBinaryOperator<?>) expression;
-			if(expressionThrowsException(binaryOperation.getLeftHandOperand(), throwable))
+			if(expressionThrowsException(currentStatement, binaryOperation.getLeftHandOperand(), throwable))
 				return true;
-			if(expressionThrowsException(binaryOperation.getRightHandOperand(), throwable))	
+			if(expressionThrowsException(currentStatement, binaryOperation.getRightHandOperand(), throwable))	
 				return true;
 		}
 		return false;
@@ -848,12 +884,8 @@ public class InvocationProcessor extends AptAbstractFutureProcessor {
 	 * and not when TaskIDs are used as functor arguments. 
 	 */
 	private CtTypeReference<?> getTaskIDType(String initialType, boolean taskIDGroup){
-		System.out.println("type: " + initialType);
-		String declarationType = APTUtils.getOriginalName(initialType);
-		System.out.println("after process: " + declarationType);
+		String declarationType = APTUtils.getOriginalType(initialType);
 		String taskType = APTUtils.getReturnType(declarationType);
-		System.out.println("final task type: "+taskType); 
-		System.out.println("----------------------------------");
 		
 		if(taskIDGroup)
 			taskType = APTUtils.getTaskIDGroupSyntax() + "<" + taskType + ">";

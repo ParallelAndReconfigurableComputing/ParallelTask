@@ -962,6 +962,13 @@ public class APTUtils {
 		return (name.startsWith("__") && name.endsWith("PtTask__"));
 	}
 	
+	/**
+	 * Returns the original name of an @PT element, if the element has its name 
+	 * set by the processors. That is, a lambda or non-lambda parameter, a TaskID
+	 * or TaskInfo object, or a phrase for receiving the result of a TaskID object.
+	 * @param elementName
+	 * @return
+	 */
 	public static String getOriginalName(String elementName) {
 		
 		if(elementName.startsWith("__") && elementName.endsWith("PtLambdaArg__"+getResultSyntax()))
@@ -981,11 +988,21 @@ public class APTUtils {
 				
 		else if (elementName.startsWith("__") && elementName.endsWith("PtLambdaArg__"))
 			return elementName.substring("__".length(), (elementName.length() - "PtLambdaArg__".length()));
-				
-		else if (elementName.contains("<") && elementName.contains(">") && (elementName.indexOf("<") < elementName.lastIndexOf(">")))
-			return elementName.substring(elementName.indexOf("<")+1, elementName.lastIndexOf(">"));
-		
+						
 		return elementName;
+	}
+	
+	public static String getOriginalType(String type){
+		String mainType = "";
+		if(type.contains("<"))
+			mainType = type.substring(0, type.indexOf("<"));
+		
+		if(mainType.contains("TaskInfo") || mainType.contains("TaskID")){
+			if ((type.indexOf("<") < type.lastIndexOf(">")))
+				return type.substring(type.indexOf("<")+1, type.lastIndexOf(">"));
+		}
+	
+		return getType(type);
 	}
 	
 	/**

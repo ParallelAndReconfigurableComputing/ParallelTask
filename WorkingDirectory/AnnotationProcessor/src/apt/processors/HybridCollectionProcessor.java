@@ -310,15 +310,8 @@ public class HybridCollectionProcessor extends AptAbstractFutureProcessor {
 	private void modifyInvocationExpressions(){
 		Set<CtStatement> statements = invocationsToBeProcessed.keySet();
 		for(CtStatement statement : statements){
-			int numOfAnnotatedInvocations = 0;
 			List<CtInvocation<?>> invocations = invocationsToBeProcessed.get(statement);
-		
-			for(CtInvocation<?> invocation : invocations){
-				if(hasTaskAnnotation(invocation)){
-					numOfAnnotatedInvocations++;
-				}			
-			}
-			modifyWithInvocation(numOfAnnotatedInvocations, statement, invocations);
+			modifyWithInvocation(statement, invocations);
 		}
 	}
 	
@@ -328,7 +321,7 @@ public class HybridCollectionProcessor extends AptAbstractFutureProcessor {
 	 * call is the only argument; otherwise the program blocks until the result is back for that asynchronous task. 
 	 * This is the case only when the method is annotated with @Task. 
 	 */
-	private void modifyWithInvocation(int numOfAnnotatedInvocations, CtStatement parentStatement, List<CtInvocation<?>> invocations){
+	private void modifyWithInvocation(CtStatement parentStatement, List<CtInvocation<?>> invocations){
 		for(CtInvocation<?> invocation : invocations){
 			if(hasTaskAnnotation(invocation)){
 				newLocalVariableIndex++;
@@ -350,7 +343,8 @@ public class HybridCollectionProcessor extends AptAbstractFutureProcessor {
 				newLocalVariable.setDefaultExpression((CtExpression)invocation);
 				parentStatement.insertBefore(newLocalVariable);
 				
-				InvocationProcessor processor = new InvocationProcessor(thisFactory, thisFutureAnnotation, newLocalVariable);
+				InvocationProcessor processor = new InvocationProcessor(thisFactory, thisFutureAnnotation, newLocalVariable, 
+							true, parentStatement, invocation);
 				processor.process();
 				
 				if(replacingVariable.getParent() instanceof CtInvocation<?>){
@@ -359,12 +353,6 @@ public class HybridCollectionProcessor extends AptAbstractFutureProcessor {
 					newTaskIDReference.setSimpleName(newTaskIDName);
 					replacingVariable.setVariable(newTaskIDReference);
 				}
-					
-//				if(!(invocation.getParent() instanceof CtInvocation<?>))
-//					newVariableTaskIDName = APTUtils.getTaskIDName(newVariableName)+".getReturnResult()";
-//				else
-//					newVariableTaskIDName = APTUtils.getTaskIDName(newVariableName);
-
 			}
 		}		
 	}
