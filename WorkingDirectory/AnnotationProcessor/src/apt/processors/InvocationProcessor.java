@@ -690,6 +690,11 @@ public class InvocationProcessor extends AptAbstractFutureProcessor {
 	}
 	
 	private void processAsyncExceptionHandling(CtTypeReference<?> throwable, CtCatch catcher, CtTry tryBlock){
+		if(isUnchecked(throwable)){
+			addForAsynchronousHandlig(throwable, catcher);
+			//do not remove unchecked throwables from their try/catch blocks, because
+			//they may be thrown by invocations that do not explicitly throw them.
+		}
 		if(methodThrowsException(throwable, thisInvocation)){
 			addForAsynchronousHandlig(throwable, catcher);
 			if(removeThrowable(tryBlock, throwable)){
@@ -707,6 +712,14 @@ public class InvocationProcessor extends AptAbstractFutureProcessor {
 		//inspect each try/catch block separately
 		//if there are outer try/catch blocks, they are inspected when their turn comes.
 		//inspectRemovalOfCatcher(tryBlock, catcher); 
+	}
+	
+	private boolean isUnchecked(CtTypeReference<?> throwable){
+		Class<?> throwableClass = throwable.getActualClass();
+		if(RuntimeException.class.isAssignableFrom(throwableClass) | Error.class.isAssignableFrom(throwableClass)){
+			return true;
+		}
+		return false;
 	}
 	
 	private boolean methodThrowsException(CtTypeReference<?> throwable, CtInvocation<?> invocation){
