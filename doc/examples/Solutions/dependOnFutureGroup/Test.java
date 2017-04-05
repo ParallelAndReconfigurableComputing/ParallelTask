@@ -79,15 +79,45 @@ public class Test {
                 pt.runtime.ParaTask.registerAsyncCatch(____group_1__PtTask__, java.lang.InterruptedException.class, ( e) -> {
                     e.printStackTrace();
                 });
+                pt.runtime.ParaTask.registerAsyncCatch(____group_1__PtTask__, java.lang.Error.class, ( throwable) -> {
+                    java.lang.System.err.println(("Something went wrong with " + (throwable.toString())));
+                });
+                pt.runtime.ParaTask.registerAsyncCatch(____group_1__PtTask__, java.lang.RuntimeException.class, ( throwable) -> {
+                    java.lang.System.err.println(("Something went wrong with " + (throwable.toString())));
+                });
+                pt.runtime.ParaTask.registerAsyncCatch(____group_1__PtTask__, java.lang.ArrayStoreException.class, ( e1) -> {
+                    java.lang.System.out.println("ArrayStore Exception");
+                });
+                pt.runtime.ParaTask.registerAsyncCatch(____group_1__PtTask__, java.lang.NullPointerException.class, ( e) -> {
+                    e.printStackTrace();
+                });
                 pt.runtime.TaskID<java.lang.Integer> ____group_1__PtTaskID__ = ____group_1__PtTask__.start(i);
                 __groupPtTaskIDGroup__.setInnerTask(i, ____group_1__PtTaskID__);
             }
             pt.runtime.TaskInfoOneArg<java.lang.Integer, pt.runtime.TaskIDGroup<java.lang.Integer>> __reducePtTask__ = ((pt.runtime.TaskInfoOneArg<java.lang.Integer, pt.runtime.TaskIDGroup<java.lang.Integer>>) (pt.runtime.ParaTask.asTask(pt.runtime.ParaTask.TaskType.ONEOFF, ((pt.functionalInterfaces.FunctorOneArgWithReturn<java.lang.Integer, pt.runtime.TaskIDGroup<java.lang.Integer>>) (( __groupPtLambdaArg__) -> pu.RedLib.Reducer.reduce(__groupPtLambdaArg__.getResultsAsArray(new java.lang.Integer[1]), pu.RedLib.Reducer.OPERATION.SUM))))));
             pt.runtime.ParaTask.registerSlotToNotify(__reducePtTask__, (__reducePtNonLambdaArg__)->reportResult(__reducePtNonLambdaArg__));
             pt.runtime.ParaTask.registerDependences(__reducePtTask__, __groupPtTaskIDGroup__);
+            pt.runtime.ParaTask.registerAsyncCatch(__reducePtTask__, java.lang.Error.class, ( throwable) -> {
+                java.lang.System.err.println(("Something went wrong with " + (throwable.toString())));
+            });
+            pt.runtime.ParaTask.registerAsyncCatch(__reducePtTask__, java.lang.RuntimeException.class, ( throwable) -> {
+                java.lang.System.err.println(("Something went wrong with " + (throwable.toString())));
+            });
+            pt.runtime.ParaTask.registerAsyncCatch(__reducePtTask__, java.lang.ArrayStoreException.class, ( e1) -> {
+                java.lang.System.out.println("ArrayStore Exception");
+            });
+            pt.runtime.ParaTask.registerAsyncCatch(__reducePtTask__, java.lang.NullPointerException.class, ( e) -> {
+                e.printStackTrace();
+            });
             pt.runtime.TaskID<java.lang.Integer> __reducePtTaskID__ = __reducePtTask__.start(__groupPtTaskIDGroup__);
             java.lang.System.out.println("Enqueueing thread is processing here!");
             java.lang.System.out.println(("result of reduce is: " + (__reducePtTaskID__.getReturnResult())));
+        } catch (java.lang.NullPointerException e) {
+            e.printStackTrace();
+        } catch (java.lang.ArrayStoreException e1) {
+            java.lang.System.out.println("ArrayStore Exception");
+        } catch (java.lang.Error | java.lang.RuntimeException throwable) {
+            java.lang.System.err.println(("Something went wrong with " + (throwable.toString())));
         } finally {
             java.lang.System.out.println("finished");
         }

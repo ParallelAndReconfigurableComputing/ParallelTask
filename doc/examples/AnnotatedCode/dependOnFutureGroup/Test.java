@@ -97,8 +97,12 @@ public class Test {
 			Void handler = reportResult(reduce);
 			System.out.println("Enqueueing thread is processing here!");
 			System.out.println("result of reduce is: " + reduce);
-		}catch(InterruptedException e){
+		}catch(NullPointerException | InterruptedException e){
 			e.printStackTrace();
+		}catch(ArrayStoreException e1){
+			System.out.println("ArrayStore Exception");
+		}catch(Error | RuntimeException throwable){
+			System.err.println("Something went wrong with " + throwable.toString());
 		}finally{
 			System.out.println("finished");
 		}
