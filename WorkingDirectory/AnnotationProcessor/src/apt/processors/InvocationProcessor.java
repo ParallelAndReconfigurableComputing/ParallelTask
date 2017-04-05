@@ -695,7 +695,7 @@ public class InvocationProcessor extends AptAbstractFutureProcessor {
 			//do not remove unchecked throwables from their try/catch blocks, because
 			//they may be thrown by invocations that do not explicitly throw them.
 		}
-		if(methodThrowsException(throwable, thisInvocation)){
+		else if(methodThrowsException(throwable, thisInvocation)){
 			addForAsynchronousHandlig(throwable, catcher);
 			if(removeThrowable(tryBlock, throwable)){
 				List<CtTypeReference<?>> multiThrowables = catcher.getParameter().getMultiTypes();
