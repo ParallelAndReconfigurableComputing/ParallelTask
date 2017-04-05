@@ -272,7 +272,11 @@ public class TaskIDGroup<T> extends TaskID<T> {
 						ParaTaskExceptionGroup groupException = (ParaTaskExceptionGroup) taskIDGroup.getException();
 						if(groupException != null){
 							nothingToQueue = false;
-							taskIDGroup.handleGroupExceptions();
+							try {
+								taskIDGroup.handleGroupExceptions();
+							} catch (Throwable e) {
+								e.printStackTrace();
+							}
 						}
 					}
 					else{
@@ -503,7 +507,11 @@ public class TaskIDGroup<T> extends TaskID<T> {
 		if (hasUserError()) {
 			String reason = "Exception(s) occured inside multi-task execution (GlobalID of "+globalID+"). Individual exceptions are accessed via getExceptionSet()";
 			exceptionGroup = new ParaTaskExceptionGroup(reason, exceptionList.toArray(new Throwable[0]));
-			handleGroupExceptions();
+			try{
+				handleGroupExceptions();
+			}catch(Throwable throwable){
+				throw new ExecutionException(throwable);
+			}
 		}
 		this.status.set(COMPLETED);
 	}
@@ -580,21 +588,21 @@ public class TaskIDGroup<T> extends TaskID<T> {
 		slotsToNotify.add(slot);
 	}	
 	
-	void handleGroupExceptions(){
+	void handleGroupExceptions() throws Throwable{
 		if(exceptionAlreadyHandled)
 			return;
 		ParaTaskExceptionGroup group = (ParaTaskExceptionGroup) getException();
 		exceptionAlreadyHandled = true;
 		if(group != null){
 			Throwable[] throwables = group.getExceptionSet();
-			for(Throwable exception : throwables){
-				Slot<? extends Throwable> handler = getExceptionHandler(exception);
+			for(Throwable throwable : throwables){
+				Slot<? extends Throwable> handler = getExceptionHandler(throwable);
 				if(handler != null){
 					executeOneTaskSlot(handler);
 				} else {
 					System.err.println("No asynchronous exception handler found in Task " 
-												+ getGlobalID() + " for the following exception: ");
-					exception.printStackTrace();
+												+ getGlobalID() + " for throwable: " + throwable.toString());
+					throw throwable;
 				}
 			}
 		}
