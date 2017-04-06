@@ -716,7 +716,7 @@ public class InvocationProcessor extends AptAbstractFutureProcessor {
 	
 	private boolean isUnchecked(CtTypeReference<?> throwable){
 		Class<?> throwableClass = throwable.getActualClass();
-		if(RuntimeException.class.isAssignableFrom(throwableClass) | Error.class.isAssignableFrom(throwableClass)){
+		if(RuntimeException.class.isAssignableFrom(throwableClass) || Error.class.isAssignableFrom(throwableClass)){
 			return true;
 		}
 		return false;
@@ -765,7 +765,7 @@ public class InvocationProcessor extends AptAbstractFutureProcessor {
 		return true;
 	}
 	
-	private boolean inspectInvocationForExceptions(CtStatement statement, CtInvocation<?> invocation){
+	private boolean isInspectable(CtStatement statement, CtInvocation<?> invocation){
 		if(aptCreatedTask){
 			if(statement.equals(aptStatementUnderProcess) && invocation.equals(aptInvocationUnderProcess))
 				return false;
@@ -787,7 +787,7 @@ public class InvocationProcessor extends AptAbstractFutureProcessor {
 	private boolean expressionThrowsException(CtStatement currentStatement, CtExpression<?> expression, CtTypeReference<?> throwable){
 		if(expression instanceof CtInvocation<?>){
 			CtInvocation<?> invocation = (CtInvocation<?>) expression;
-				if(inspectInvocationForExceptions(currentStatement, invocation)){
+				if(isInspectable(currentStatement, invocation)){
 					Set<CtTypeReference<? extends Throwable>> invocationThrowables = invocation.getExecutable().getExecutableDeclaration().getThrownTypes();
 						//getDeclaration().getThrownTypes();
 					if(invocationThrowables.contains(throwable))

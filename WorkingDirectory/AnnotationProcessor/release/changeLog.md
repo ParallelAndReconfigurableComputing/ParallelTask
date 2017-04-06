@@ -63,3 +63,8 @@ of a future group. Therefore, reducing the results of a future group would requi
 This is not required now.  
 
 - major bug fixes applied
+
+Version 1.5.1 - 06/04/2017
+==========================
+
+- asynchronous exception handling bugs fixed
