@@ -53,4 +53,11 @@ Version 1.5.0 - 30/03/2017
 - TaskIDGroup is now able to return an array of the results of its sub-tasks
 
 The main purpose for these enhancements is to provide runtime support for advanced features
-that are offered in the API level of @PT.  
+that are offered in the API level of @PT. 
+
+Version 1.5.1 - 06/04/2017
+========================== 
+- Exception handling enhanced such that, exception class E receives a handler if there is
+  a handler associated to itself or one of its parents. Previously, @PT was able to handle
+  exceptions of type E if and only if there was a handler associated to exception class E,
+  and parent types were not considered

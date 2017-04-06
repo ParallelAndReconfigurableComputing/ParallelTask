@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import pt.runtime.ParaTask.TaskType;
 
@@ -188,13 +189,23 @@ public abstract class TaskInfo<R> {
 	 */
 	@SuppressWarnings("unchecked")
 	<E extends Throwable> Slot<E> getExceptionHandler(Class<E> occuredException) {
-		
+		//if no exceptions have been recorded for this task return null
 		if (asyncExceptions.isEmpty())
 			return null;
 		
-		if (asyncExceptions.containsKey(occuredException))
+		//if a handler has been registered for this exact exception class, return it
+		if(asyncExceptions.containsKey(occuredException)){
 			return (Slot<E>) asyncExceptions.get(occuredException);
-			
+		}
+		
+		//otherwise, if a handler has been registered for the parent of this exception class, return it
+		for(Entry<Class<? extends Throwable>, Slot<? extends Throwable>> entry : asyncExceptions.entrySet()){
+			Class<? extends Throwable> exceptionClass = entry.getKey();
+			if(exceptionClass.isAssignableFrom(occuredException)){
+				return  (Slot<E>) entry.getValue();
+			}
+		}
+				
 		return null; 
 	}
 	
