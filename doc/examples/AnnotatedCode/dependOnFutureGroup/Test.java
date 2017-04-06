@@ -14,7 +14,7 @@ import pu.RedLib.Reducer.OPERATION;
 import pu.RedLib.Reducer;
 
 public class Test {
-	private int IOTask(int num) throws InterruptedException{
+	private int IOTask(int num) throws InterruptedException, RuntimeException{
 		int randNo = 0;
 		Random rand = new Random();
 		if(num == 0)

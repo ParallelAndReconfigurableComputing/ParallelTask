@@ -4,7 +4,7 @@ package dependOnFutureGroup;
 
 
 public class Test {
-    private int IOTask(int num) throws java.lang.InterruptedException {
+    private int IOTask(int num) throws java.lang.InterruptedException, java.lang.RuntimeException {
         int randNo = 0;
         java.util.Random rand = new java.util.Random();
         if (num == 0)
