@@ -76,7 +76,7 @@
 	<target name="compressJar" depends="compile" description="compress compiled files into jar">
 		<echo message="Compressing @PT compiled files into jar." />
 		<jar basedir="${classes.dir}" destfile="${release.dir}/${APTJarName}.jar">
-			<zipgroupfileset dir="${lib.dir}" includes="${spoon.jar}, ${PT.jar}, ${PARC.jar}"/>
+			<zipgroupfileset dir="${lib.dir}" includes="**/*.jar"/>
 		</jar>
 		<echo message="Compressing @PT compiled fileds finished."/>
 	</target>
