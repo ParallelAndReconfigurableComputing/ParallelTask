@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project basedir="." default="main" name="AtPtExceptionHandlingTest">
+    <property name="src.dir"   value="src"  />
+	<property name="mainClass" value="exceptionHandling.Main" />
+	<property name="libs.dir"  value="libs" />
+	<property name="dist.dir"  value="dist" />
+	<property name="gen.dir"   value="${dist.dir}/gen"  />
+	<property name="build.dir" value="bin"  />
+	<property name="input"     value="${src.dir}" />
+	<property name="tempBuild" value="${build.dir}/temp"/>
+	<property name="execJar"   value="${gen.dir}/exec.jar"/> 
+	<property name="@PT.jar"   value="${libs.dir}/@PT-1.5.1.jar" />
+	
+	<target name="decideOS">
+		<condition property="isWindows">
+			<os family="windows"/>
+		</condition>
+		<condition property="isLinux">
+			<os family="unix" />
+		</condition>
+	</target>
+	
+	<!-- Define a delimiter for the execution line, based on the detected OS -->
+	<target name="winDelim" depends="decideOS" if="isWindows">
+		<echo message="WINDOWS DETECTED AS OPERATING SYSTEM"/>
+		<property name="Delim" value=";" />
+	</target>
+	
+	<target name="linDelim" depends="decideOS" if="isLinux">
+		<echo message="LINUX DETECTED AS OPERATING SYSTEM"/>
+		<property name="Delim" value=":" />
+	</target>
+	<!-- Delimiter defined -->
+	
+	<!-- Deleting the previously created directories, and making them again -->
+	<target name="clean" depends="winDelim, linDelim">
+		<echo message="DELETING THE DIRECTORIES"/>
+		<delete dir="${build.dir}"/>
+		<delete dir="${dist.dir}" />
+	</target>
+	
+	<target name="mkDir" depends="clean">
+		<echo message="MAKING THE DIRECTORIES" />
+		<mkdir dir="${build.dir}"/>
+		<mkdir dir="${dist.dir}" />
+		<mkdir dir="${gen.dir}"  />
+		<mkdir dir="${tempBuild}"/>
+	</target>	
+	<!-- -->		
+	
+	<!-- Temporary Compile -->
+	<target name="tempCompile" depends="mkDir">
+		<echo message="TEMPORARY COMPILATION"/>
+		<javac srcdir="${src.dir}"  destdir="${tempBuild}">
+			<classpath>
+				<pathelement path="${@PT.jar}"/>
+			</classpath>
+		</javac>
+	</target>
+	
+	<target name="processAnnotation" depends="tempCompile">
+		<echo message="PROCESSING ANNOTATION"/>
+		<exec executable="java">
+			<arg line="-cp ${@PT.jar}${Delim}${tempBuild} spoon.Launcher -i ${input} -o ${dist.dir} -p apt.processors.AptInitParaTaskProcessor"/>
+		</exec>
+		<exec executable="java">
+			<arg line="-cp ${@PT.jar}${Delim}${tempBuild} spoon.Launcher -i ${dist.dir} -o ${dist.dir} -p apt.processors.AptFutureProcessor"/>
+		</exec>
+		<exec executable="java">
+			<arg line="-cp ${@PT.jar}${Delim}${tempBuild} spoon.Launcher -i ${dist.dir} -o ${dist.dir} -p apt.processors.AptGuiProcessor"/>
+		</exec>
+	</target>
+	
+	<target name="deleteTemp" depends="processAnnotation">
+		<echo message="DELETING TEMPORARY COMPILATIONS"/>
+		<delete dir="${tempBuild}"/>
+	</target>
+	<!-- -->
+	
+	<!-- Final compilation -->
+	<target name="finalCompile" depends="deleteTemp">
+		<echo message="FINAL COMPILATION"/>
+		<javac srcdir="${dist.dir}" destdir="${build.dir}">
+			<classpath>
+				<pathelement path="${@PT.jar}"/>
+			</classpath>
+		</javac>
+	</target>
+	
+	<target name="runnableJar" depends="finalCompile">
+		<echo message="CREATING RUNNABLE JAR"/>
+		<jar destfile="${execJar}" basedir="${build.dir}">
+			<manifest>
+				<attribute name="Main-Class" value="${mainClass}"/>
+			</manifest>
+			<zipgroupfileset dir="${libs.dir}" includes="**/*.jar"/>
+		</jar>
+	</target>
+	
+	<target name="run" depends="runnableJar">
+		<echo message="-- AUTO-EXECUTION OF THE PROGRAM --"/>
+		<java fork="true" jar="${execJar}">			
+		</java>
+	</target>
+	<!-- -->
+	
+	<target name="main" depends="run">
+    </target>
+</project>
