@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project basedir="." default="main" name="AtPtExceptionHandlingTest">
     <property name="src.dir"   value="src"  />
-	<property name="mainClass" value="exceptionHandling.Main" />
+	<property name="mainClass" value="dependingNestedTryCatch.Main" />
 	<property name="libs.dir"  value="libs" />
 	<property name="dist.dir"  value="dist" />
 	<property name="gen.dir"   value="${dist.dir}/gen"  />
