@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -335,6 +336,8 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	
 	@Override
 	Throwable getException() {
+		String reason = "Exception(s) occured inside multi-task execution (GlobalID of "+globalID+"). Individual exceptions are accessed via getExceptionSet()";
+		exceptionGroup = new ParaTaskExceptionGroup(reason, exceptionList.toArray(new Throwable[0]));
 		return exceptionGroup;
 	}
 
@@ -355,12 +358,21 @@ public class TaskIDGroup<T> extends TaskID<T> {
 			throw new UnsupportedOperationException("NO REDUCTION OBJECT HAS BEEN SPECIFIED FOR THE GROUP. EITHER A REDUCTION OBJECT MUST BE SPECIFIED,\n"
 					+ "OR THE SUB-RESULTS MUST BE RETRIEVED INDIVIDUALLY!");
 		
+		AtomicBoolean complain = new AtomicBoolean(false);
 		try {
 			waitTillFinished();
+			if(hasUserError()){
+				complain.set(true);
+				throw new RuntimeException("THE TASK REACHED FOR ITS RETURN RESULT HAS ENCOUNTERED EXCEPTIONAL ERROR, \n"
+						+ "THEREFORE, THE RESULT CANNOT BE VALID! FOR SUPPRESSING THIS ERROR, HANDLE EXCEPTIONS INTERNALLY IN THE TASKS!");
+			}
 			if(hasBeenCancelled() || noReturn)
 				return null;
 		} catch (Exception e) {
-			setException(e);
+			if(e instanceof RuntimeException && complain.get())
+				throw (RuntimeException)e;
+			e.printStackTrace();
+			return null;
 		}
 		//Another thread might/process might have performed reduction while this one was waiting.
 		if(!performedReduction)
@@ -384,10 +396,19 @@ public class TaskIDGroup<T> extends TaskID<T> {
 			array = Arrays.copyOf(array, innerTasks.size());
 		}
 		
+		AtomicBoolean complain = new AtomicBoolean(false);
 		try {
 			waitTillFinished();
+			if(hasUserError()){
+				complain.set(true);
+				throw new RuntimeException("THE TASK-GROUP REACHED FOR ITS ARRAY OF RESULTS HAS ENCOUNTERED EXCEPTIONAL ERROR, \n"
+						+ "THEREFORE, THE ARRAY CANNOT BE VALID! FOR SUPPRESSING THIS ERROR, HANDLE EXCEPTIONS INTERNALLY IN THE TASKS!");
+			}
 		} catch (Exception e) {
+			if(e instanceof RuntimeException && complain.get())
+				throw (RuntimeException)e;
 			e.printStackTrace();
+			return null;
 		} 
 		
 		for(int index = 0; index < innerTasks.size(); index++){
@@ -409,12 +430,21 @@ public class TaskIDGroup<T> extends TaskID<T> {
 		if (reductionOperation == null)
 			throw new NullPointerException("THE REDUCTION OBJECT SPECIFIED IS NOT VALID!");
 		
+		AtomicBoolean complain = new AtomicBoolean(false);
 		try {
 			waitTillFinished();
+			if(hasUserError()){
+				complain.set(true);
+				throw new RuntimeException("THE TASK REACHED FOR ITS RETURN RESULT HAS ENCOUNTERED EXCEPTIONAL ERROR, \n"
+						+ "THEREFORE, THE RESULT CANNOT BE VALID! FOR SUPPRESSING THIS ERROR, HANDLE EXCEPTIONS INTERNALLY IN THE TASKS!");
+			}
 			if(hasBeenCancelled() || noReturn)
 				return null;
 		} catch (Exception e) {
-			setException(e);
+			if(e instanceof RuntimeException && complain.get())
+				throw (RuntimeException)e;
+			e.printStackTrace();
+			return null;
 		}
 		return reduceResults(reductionOperation);
 	}
@@ -503,15 +533,6 @@ public class TaskIDGroup<T> extends TaskID<T> {
 			} catch (ExecutionException e) {
 				/* ignore the exception, all inner exceptions will be thrown below */
 			}			
-		}
-		if (hasUserError()) {
-			String reason = "Exception(s) occured inside multi-task execution (GlobalID of "+globalID+"). Individual exceptions are accessed via getExceptionSet()";
-			exceptionGroup = new ParaTaskExceptionGroup(reason, exceptionList.toArray(new Throwable[0]));
-			try{
-				handleGroupExceptions();
-			}catch(Throwable throwable){
-				throw new ExecutionException(throwable);
-			}
 		}
 		this.status.set(COMPLETED);
 	}

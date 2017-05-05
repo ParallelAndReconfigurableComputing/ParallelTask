@@ -94,7 +94,7 @@ public class TaskID<T> {
 	
 	protected TaskInfo<T> taskInfo = null;
 	private T returnResult = null;
-	protected boolean exceptionAlreadyHandled = false;
+	protected volatile boolean exceptionAlreadyHandled = false;
 	private int progress = 0;
 
 	//protected AtomicBoolean hasCompleted = null;
@@ -481,15 +481,24 @@ public class TaskID<T> {
 	 * @throws InterruptedException
 	 */
 	public T getReturnResult() {
+		AtomicBoolean complain = new AtomicBoolean(false);
 		try{
 			waitTillFinished();
-			if (hasBeenCancelled() || noReturn)
+			if(hasUserError()){
+				complain.set(true);
+				throw new RuntimeException("RUNTIME ERROR: THE TASK THAT IS REACHED FOR ITS RETURN RESULT HAS ENCOUNTERED EXCEPTIONAL ERROR, \n"
+						+ "THEREFORE, THE RESULT CANNOT BE VALID! FOR SUPPRESSING THIS ERROR, HANDLE EXCEPTIONS INTERNALLY IN THE TASK!");
+			}
+			if (hasBeenCancelled() || noReturn) //if has been canceled, then definitely no user errors!
 				return null;
 			return returnResult;
 		}catch(Exception e){
-			setException(e);
+			if(e instanceof RuntimeException && complain.get())
+				throw (RuntimeException)e;
+			e.printStackTrace();
 			return null;
 		}
+	
 	}
 	
 	/**
@@ -563,15 +572,7 @@ public class TaskID<T> {
 					completedLatchForNonRegisteringThreads.await();
 				}
 			}
-		}
-		
-		//This is checked at the end because we have to give a task a chance to 
-		//be executed. If the task has any errors, it will finish, and then we can check
-		//if there is any errors.
-		if (hasUserError()) {
-			if(!executeExceptionHandler())
-				throw new ExecutionException(exception);
-		}
+		}		
 	}
 	
 	/**
