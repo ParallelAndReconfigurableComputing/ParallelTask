@@ -1,16 +1,11 @@
 package apt.processors;
 
-import java.lang.annotation.Annotation;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import apt.annotations.Future;
 import apt.processors.APTUtils.ExpressionRole;
 import spoon.reflect.factory.Factory;
 import spoon.reflect.code.CtBlock;
@@ -20,7 +15,6 @@ import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtVariableAccess;
-import spoon.reflect.declaration.CtAnnotation;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtVariable;
@@ -487,7 +481,7 @@ public abstract class AptAbstractFutureProcessor {
 	}
 	
 	private boolean isVisibleForLocalFuture(String reductionName){
-			CtStatement declarationStatement = APTUtils.getDeclarationStatement(thisAnnotatedLocalElement, reductionName);
+			CtVariable<?> declarationStatement = APTUtils.getDeclarationStatement(thisAnnotatedLocalElement, reductionName);
 			if(declarationStatement != null){
 				if(declarationStatement instanceof CtLocalVariable<?>){
 					CtLocalVariable<?> reductionDeclaration = (CtLocalVariable<?>) declarationStatement;
@@ -663,19 +657,6 @@ public abstract class AptAbstractFutureProcessor {
 			parentStatement = parentStatement.getParent(CtStatement.class);
 		return parentStatement;
 	}
-
-	protected Future hasFutureAnnotation(CtStatement declarationStatement){
-		//CtLocalVariable<?> declarationStatement = (CtLocalVariable<?>) statement;
-		List<CtAnnotation<? extends Annotation>> annotations = declarationStatement.getAnnotations();
-		for(CtAnnotation<? extends Annotation> annotation : annotations){
-			Annotation actualAnnotation = annotation.getActualAnnotation();
-			if(actualAnnotation instanceof Future){
-				Future future = (Future) actualAnnotation;
-				return future;
-			}
-		}
-		return null;
-	}
 	
 	protected void printIncludingExpressions(){
 		for(ASTNode node : listOfContainingNodes){
@@ -683,7 +664,7 @@ public abstract class AptAbstractFutureProcessor {
 			CtStatement statement = node.getStatement();
 			System.out.println("Inspecting statement: " + statement + ", type: " + statement.getClass());
 						
-			for(int index = 0; index < node.numberOfExpressions(); index++){
+			for(int index = 0; index < node.getNumberOfExpressions(); index++){
 				CtExpression<?> expression = node.getExpression(index);
 				ExpressionRole role = node.getExpressionRole(index);
 				System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++");

@@ -5,13 +5,9 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import apt.annotations.Future;
 import apt.processors.APTUtils.ExpressionRole;
 import spoon.reflect.factory.Factory;
-import spoon.reflect.code.CtArrayRead;
 import spoon.reflect.code.CtArrayWrite;
 import spoon.reflect.code.CtAssignment;
 import spoon.reflect.code.CtBlock;
@@ -27,14 +23,12 @@ import spoon.reflect.code.CtNewArray;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtStatementList;
 import spoon.reflect.code.CtTry;
-import spoon.reflect.code.CtVariableRead;
 import spoon.reflect.declaration.CtAnnotation;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtVariable;
 import spoon.reflect.reference.CtTypeReference;
-import spoon.support.reflect.code.CtAssignmentImpl;
 
 /**
  * This annotation processor processes <code>Future</code> annotations that appear at the declaration
@@ -227,7 +221,7 @@ public class FutureGroupProcessor extends AptAbstractFutureProcessor{
 					 * inspected.
 					 */
 					else{
-						for (int expIndex = 0; expIndex < node.numberOfExpressions(); expIndex++){
+						for (int expIndex = 0; expIndex < node.getNumberOfExpressions(); expIndex++){
 							CtExpression<?> expression = node.getExpression(expIndex);
 							if(containsFutureGroupSyntax(2, expression.toString())){
 								insertWaitStatement(currentStatement);
@@ -322,9 +316,10 @@ public class FutureGroupProcessor extends AptAbstractFutureProcessor{
 		}
 		
 		else{
-			CtStatement declarationStatement = APTUtils.getDeclarationStatement(accessStatement, assignmentString);
+			CtVariable<?> declaration = APTUtils.getDeclarationStatement(accessStatement, assignmentString);
+			CtLocalVariable<?> declarationStatement = (CtLocalVariable<?>) declaration;
 			if(declarationStatement != null){
-				Future future = hasFutureAnnotation(declarationStatement);
+				Future future = APTUtils.getFutureAnnotation(declarationStatement);
 				if(future != null){
 					modifyWithFutuerObject(future, declarationStatement, accessStatement);
 					statementModified = true;
@@ -343,6 +338,10 @@ public class FutureGroupProcessor extends AptAbstractFutureProcessor{
 	}
 	
 	protected void insertWaitStatement(CtStatement statement){
+		//check if future group has been referenced from the declaration statement
+		//of another future variable (ensure it is not a future group).
+		if(isArrayReferencedByFutureVariable(statement))
+			return;
 		CtMethod<?> parentMethod = statement.getParent(CtMethod.class);
 		if(synchronizedMethods.contains(parentMethod)){
 			return;
@@ -399,7 +398,7 @@ public class FutureGroupProcessor extends AptAbstractFutureProcessor{
 	private void modifyWithTaskIDReplacement(CtAssignment<?, ?> accessStatement){
 		String assignedString   = accessStatement.getAssigned().toString();
 		String assignmentString = accessStatement.getAssignment().toString();
-		String taskIDName = APTUtils.getTaskIDName(APTUtils.getOrigName(assignmentString));
+		String taskIDName = APTUtils.getTaskIDName(APTUtils.getOriginalName(assignmentString));
 		
 		String index = assignedString.substring(assignedString.indexOf('[')+1, assignedString.indexOf(']'));
 		
@@ -416,7 +415,7 @@ public class FutureGroupProcessor extends AptAbstractFutureProcessor{
 				
 		CtAnnotation<?> futureAnnotation = thisFactory.Core().createAnnotation();
 		CtTypeReference<? extends Annotation> annotationType = thisFactory.Core().createTypeReference();
-		annotationType.setSimpleName("sp.annotations.Future");
+		annotationType.setSimpleName("apt.annotations.Future");
 	
 		CtExpression<?> asyncTaskDefaultExpression = accessStatement.getAssignment();
 		futureAnnotation.setAnnotationType(annotationType);
@@ -432,7 +431,8 @@ public class FutureGroupProcessor extends AptAbstractFutureProcessor{
 		CtBlock parentBlock = accessStatement.getParent(CtBlock.class);
 		StatementMatcherFilter<CtStatement> filter = new StatementMatcherFilter<CtStatement>(accessStatement);
 		parentBlock.insertBefore(filter, localAsyncTask);
-		InvocationProcessor processor = new InvocationProcessor(thisFactory, thisFutureAnnotation, localAsyncTask);
+		InvocationProcessor processor = new InvocationProcessor(thisFactory, thisFutureAnnotation, localAsyncTask,
+												true, accessStatement, (CtInvocation<?>)asyncTaskDefaultExpression);
 		processor.process();
 		
 		String newAssignment = APTUtils.getTaskIDName(asyncTaskName) + ".getReturnResult()";
@@ -460,6 +460,29 @@ public class FutureGroupProcessor extends AptAbstractFutureProcessor{
 	}
 	
 	//-------------------------------------------------------HELPER METHODS------------------------------------------------------
+	
+	protected boolean isArrayReferencedByFutureVariable(CtStatement statement){
+	
+		if(!(statement instanceof CtLocalVariable<?>))
+			return false;
+		
+		CtLocalVariable<?> variableDeclaration = (CtLocalVariable<?>) statement;
+		
+		/*
+		 * inspects if the declared variable is an array. If it is the declaration of an
+		 * array, even if it is annotated with @Future, it is a future group, and needs
+		 * to block for the result of current future group.
+		 */
+		String variableType = variableDeclaration.getType().toString();
+		if(variableType.contains("[]"))
+			return false;
+		
+		Future future = APTUtils.getFutureAnnotation(variableDeclaration);
+		if(future == null)
+			return false;
+		
+		return true;
+	}
 	
 	/*
 	 * If the size of the array is not specified at the time of declaring the array, then 
@@ -500,7 +523,7 @@ public class FutureGroupProcessor extends AptAbstractFutureProcessor{
 			
 			if(nodeStatement instanceof CtAssignment<?, ?>){
 				
-				int numOfExpressions = varAccessNode.numberOfExpressions();
+				int numOfExpressions = varAccessNode.getNumberOfExpressions();
 				
 				for(int index = 0; index < numOfExpressions; index++){
 					CtExpression<?> expression = varAccessNode.getExpression(index);
@@ -596,7 +619,7 @@ public class FutureGroupProcessor extends AptAbstractFutureProcessor{
 		updateStmt.setValue(loopIndexName + "++");
 		loopCondition.setValue(loopIndexName + " < " + thisElementName + APTUtils.getArrayLengthSyntax());
 		
-		String bodyString = thisElementName + "[" + loopIndexName + "] = " + thisTaskIDGroupName + ".getInnerTaskResult(" + loopIndexName + ")";    
+		String bodyString = thisElementName + "[" + loopIndexName + "] = " + thisTaskIDGroupName + APTUtils.getFutureGroupInnerResultSyntax(loopIndexName);    
 		forBody.setValue(bodyString);
 		
 		List<CtStatement> initStmts = new ArrayList<>();

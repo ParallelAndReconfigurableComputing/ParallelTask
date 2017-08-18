@@ -206,7 +206,7 @@ public class HybridCollectionProcessor extends AptAbstractFutureProcessor {
 			 * invocations on the collection. Therefore, its expressions need to be further inspected. 
 			 */
 			if(!insideCollectionStatement){
-				for (int index = 0; index < node.numberOfExpressions(); index++){
+				for (int index = 0; index < node.getNumberOfExpressions(); index++){
 					findArgumentsToProcess(node.getExpression(index));
 				}
 			}
@@ -248,10 +248,10 @@ public class HybridCollectionProcessor extends AptAbstractFutureProcessor {
 			}
 			
 			else{
-				CtStatement declarationStatement = APTUtils.getDeclarationStatement(varAccess.getParent(CtStatement.class)
-													, varName);
+				CtVariable<?> declaration = APTUtils.getDeclarationStatement(varAccess.getParent(CtStatement.class), varName);
+				CtLocalVariable<?> declarationStatement = (CtLocalVariable<?>) declaration;
 				if(declarationStatement != null){
-					Future future = hasFutureAnnotation(declarationStatement);
+					Future future = APTUtils.getFutureAnnotation(declarationStatement);
 					if(future != null){
 						modifyWithFutuerObject(future, declarationStatement, varAccess);
 					}
@@ -294,7 +294,7 @@ public class HybridCollectionProcessor extends AptAbstractFutureProcessor {
 		if(!(varAccess.getParent() instanceof CtInvocation<?>))
 			return;
 		String varName = varAccess.toString();
-		varName = APTUtils.getOrigName(varName);
+		varName = APTUtils.getOriginalName(varName);
 		varName = varName.trim();
 		varName = APTUtils.getTaskIDName(varName);
 		CtVariableReference varRef = thisFactory.Core().createFieldReference();
@@ -310,15 +310,8 @@ public class HybridCollectionProcessor extends AptAbstractFutureProcessor {
 	private void modifyInvocationExpressions(){
 		Set<CtStatement> statements = invocationsToBeProcessed.keySet();
 		for(CtStatement statement : statements){
-			int numOfAnnotatedInvocations = 0;
 			List<CtInvocation<?>> invocations = invocationsToBeProcessed.get(statement);
-		
-			for(CtInvocation<?> invocation : invocations){
-				if(hasTaskAnnotation(invocation)){
-					numOfAnnotatedInvocations++;
-				}			
-			}
-			modifyWithInvocation(numOfAnnotatedInvocations, statement, invocations);
+			modifyWithInvocation(statement, invocations);
 		}
 	}
 	
@@ -328,7 +321,7 @@ public class HybridCollectionProcessor extends AptAbstractFutureProcessor {
 	 * call is the only argument; otherwise the program blocks until the result is back for that asynchronous task. 
 	 * This is the case only when the method is annotated with @Task. 
 	 */
-	private void modifyWithInvocation(int numOfAnnotatedInvocations, CtStatement parentStatement, List<CtInvocation<?>> invocations){
+	private void modifyWithInvocation(CtStatement parentStatement, List<CtInvocation<?>> invocations){
 		for(CtInvocation<?> invocation : invocations){
 			if(hasTaskAnnotation(invocation)){
 				newLocalVariableIndex++;
@@ -350,7 +343,8 @@ public class HybridCollectionProcessor extends AptAbstractFutureProcessor {
 				newLocalVariable.setDefaultExpression((CtExpression)invocation);
 				parentStatement.insertBefore(newLocalVariable);
 				
-				InvocationProcessor processor = new InvocationProcessor(thisFactory, thisFutureAnnotation, newLocalVariable);
+				InvocationProcessor processor = new InvocationProcessor(thisFactory, thisFutureAnnotation, newLocalVariable, 
+							true, parentStatement, invocation);
 				processor.process();
 				
 				if(replacingVariable.getParent() instanceof CtInvocation<?>){
@@ -359,12 +353,6 @@ public class HybridCollectionProcessor extends AptAbstractFutureProcessor {
 					newTaskIDReference.setSimpleName(newTaskIDName);
 					replacingVariable.setVariable(newTaskIDReference);
 				}
-					
-//				if(!(invocation.getParent() instanceof CtInvocation<?>))
-//					newVariableTaskIDName = APTUtils.getTaskIDName(newVariableName)+".getReturnResult()";
-//				else
-//					newVariableTaskIDName = APTUtils.getTaskIDName(newVariableName);
-
 			}
 		}		
 	}
@@ -484,13 +472,13 @@ public class HybridCollectionProcessor extends AptAbstractFutureProcessor {
 	protected String getCollectionType(){
 		String currentType = thisElementType.toString();
 		if(currentType.contains("List"))
-			return APTUtils.getListWrapperSyntax();
+			return APTUtils.getHybridListSyntax();
 		else if (currentType.contains("Set"))
-			return APTUtils.getSetWrapperSyntax();
+			return APTUtils.getHybridSetSyntax();
 		else if (currentType.contains("Map"))
-			return APTUtils.getMapWrapperSyntax();
+			return APTUtils.getHybridMapSyntax();
 		else
-			return APTUtils.getCollecitonWrapperSyntax();
+			return APTUtils.getHybridCollectionSyntax();
 	}		
 
 	/*

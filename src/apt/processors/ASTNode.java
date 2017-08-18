@@ -43,7 +43,7 @@ public class ASTNode {
 		statementExpressions.add(newExpression);
 	}
 	
-	public int numberOfExpressions(){
+	public int getNumberOfExpressions(){
 		return statementExpressions.size();
 	}
 	
