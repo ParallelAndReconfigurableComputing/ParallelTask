@@ -32,6 +32,7 @@ import spoon.reflect.declaration.ModifierKind;
 import spoon.reflect.factory.Factory;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
+import spoon.support.reflect.code.CtCodeSnippetExpressionImpl;
 
 /**
  * This processor processes the field future groups, and adopts specific
@@ -202,6 +203,12 @@ public class FieldFutureGroupProcessor extends FutureGroupProcessor {
 		}
 	}	
 	
+	/*
+	 * If the future group is referenced from within a method that is annotated with
+	 * @ReductionMethod, then replace the body of that method with a statement that 
+	 * retrieves the reduced result of the future group, otherwise wait for the synchronization
+	 * of the future group. 
+	 */
 	private void inspectReferencedElement(CtStatement statement){
 		CtMethod<?> parentMethod = statement.getParent(CtMethod.class);
 		if(synchronizedMethods.contains(parentMethod))
@@ -213,6 +220,12 @@ public class FieldFutureGroupProcessor extends FutureGroupProcessor {
 			insertWaitStatement(statement);
 	}
 	
+	/*
+	 * The assignment checks if the future group is synchronized. If the future group is
+	 * not synchronized yet, then the assignments are treated as adding futures to future
+	 * group. If the future group is synchronized, then assignments are treated as ordinary
+	 * assignments to the elements of the corresponding array. 
+	 */
 	private void insertAssignmentBlock(CtAssignment<?, ?> assignment){
 		CtMethod<?> parentMethod = assignment.getParent(CtMethod.class);
 		if(synchronizedMethods.contains(parentMethod))
@@ -231,15 +244,17 @@ public class FieldFutureGroupProcessor extends FutureGroupProcessor {
 		CtIf ifStatement = thisFactory.Core().createIf();
 
 		//we don't want the elseBody to be affected by code modification, since both elseBody and
-		//ifBody refer to the same assignment statement. So, we trick the compiler, we create a 
-		//code snippet element that is not recognized as an assignment, and just has the syntax!
-		CtCodeSnippetStatement elseBody = thisFactory.Core().createCodeSnippetStatement();
-		elseBody.setValue(assignment.toString());
-
-		CtAssignment<?, ?> ifBody = thisFactory.Core().createAssignment();
-		ifBody.setAssigned((CtExpression) assignment.getAssigned());
-		ifBody.setAssignment((CtExpression) assignment.getAssignment());
-			
+		//ifBody refer to the same assignment statement. So, we need to make a deep copy of the 
+		//current assignment expression for either the "if" statement or the "else" statement. 
+		//Here, we make the deep copy for the "if" statement, because the "else" statement may
+		//require further modifications, if it is the name of a future variable which is going to
+		//be processed later. So, it is safer to keep the original statement for the "else" statement.
+		CtAssignment<?, ?> elseBody = thisFactory.Core().createAssignment();
+		elseBody.setAssigned((CtExpression)assignment.getAssigned());
+		elseBody.setAssignment((CtExpression)assignment.getAssignment());
+		
+		CtAssignment<?, ?> ifBody = assignment.clone();
+		
 		CtUnaryOperator<Boolean> ifCondition = thisFactory.Core().createUnaryOperator();
 		ifCondition.setKind(UnaryOperatorKind.NOT);
 		
@@ -331,6 +346,8 @@ public class FieldFutureGroupProcessor extends FutureGroupProcessor {
 	protected CtBlock<?> getParentBlockForWaitStatement(CtStatement containingStatement){
 		//it has to be the method, in case the statement is found within a for loop,
 		//we don't want the wait block to be inserted in a for loop, but before the for loop!
+		//Because this is a field future group, so waiting for its synchronization every time
+		//in a for loop is time consuming and pointless. 
 		CtMethod<?> parentMethod = containingStatement.getParent(CtMethod.class);
 		return parentMethod.getBody();
 	}

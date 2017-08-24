@@ -139,7 +139,7 @@ public class FutureGroupProcessor extends AptAbstractFutureProcessor{
 	}
 		
 	/*
-	 * ElasticTaskGroups where there is no size-boundary for a task group. This is especifically the case where a task group
+	 * ElasticTaskGroups where there is no size-boundary for a task group. This is specifically the case where a task group
 	 * is defined as a field. We should allow field declarations of future groups and hybrid collections. A field future group
 	 * can only be an elastic task group, because the size of the array maybe unknown at the time of declaring the array. 
 	 * @see sp.processors.PtAnnotationProcessor#modifySourceCode()
@@ -284,15 +284,16 @@ public class FutureGroupProcessor extends AptAbstractFutureProcessor{
 	 *                    //This means, that the future variable is declared
 	 *                    //before 'array' the future TaskIDGroup
 	 * 
-	 * 2.	@Future
-	 * 		Obj a = foo();
-	 * 		array[i] = a; //where 'a' is a future variable that is defined
-	 *                    //after the declaration of 'array' and before
-	 *                    //this assignment statement.
-	 * 
-	 * 3. array[i] = foo(args); //where we have to define 'foo' as an 
+	 * 2. array[i] = foo(args); //where we have to define 'foo' as an 
 	 *                          //asynchronous task within the code 
 	 *                          //separately 
+	 *                          
+	 * 3. @Future
+	 * 	  Obj a = foo();
+	 * 	  array[i] = a; //where 'a' is a future variable that is defined
+	 *                  //after the declaration of 'array' and before
+	 *                  //this assignment statement.
+	 * 
 	 */
 	protected void modifyAssignmentStatement(CtAssignment<?, ?> accessStatement){
 		CtMethod<?> parentMethod = accessStatement.getParent(CtMethod.class);
@@ -304,17 +305,18 @@ public class FutureGroupProcessor extends AptAbstractFutureProcessor{
 		boolean statementModified = false;
 		
 		CtVariable<?> currentAnnotatedElement = getCurrentAnnotatedElement();
-		
+
+		//if case 1
 		if(APTUtils.isTaskIDReplacement(currentAnnotatedElement, assignmentString)){
 			modifyWithTaskIDReplacement(accessStatement);
 			statementModified = true;
 		}
-		
+		//else if case 2
 		else if(hasInvocationExpression(assignment)){
 			modifyWithInvocation(accessStatement);
 			statementModified = true;
 		}
-		
+		//else if case 3
 		else{
 			CtVariable<?> declaration = APTUtils.getDeclarationStatement(accessStatement, assignmentString);
 			CtLocalVariable<?> declarationStatement = (CtLocalVariable<?>) declaration;
@@ -333,6 +335,8 @@ public class FutureGroupProcessor extends AptAbstractFutureProcessor{
 					+ "\nTHE EXPRESSION " + assignmentString + " IS PROBABLY COMBINING TASKID WITH OTHER TYPES OF EXPRESSIONS!");
 	}
 	
+	//for local future groups, the wait statement must be inserted in the same scope
+	//as the declaration scope of the local future group. 
 	protected CtBlock<?> getParentBlockForWaitStatement(CtStatement containingStatement){
 		return thisAnnotatedLocalElement.getParent(CtBlock.class);
 	}
@@ -340,6 +344,9 @@ public class FutureGroupProcessor extends AptAbstractFutureProcessor{
 	protected void insertWaitStatement(CtStatement statement){
 		//check if future group has been referenced from the declaration statement
 		//of another future variable (ensure it is not a future group).
+		//in this case, we don't insert wait statement for the future group. That is,
+		//we don't block until the future group is synchronized, rather, declare a
+		//dependency between the future variable that is referring to this future group. 
 		if(isArrayReferencedByFutureVariable(statement))
 			return;
 		CtMethod<?> parentMethod = statement.getParent(CtMethod.class);
@@ -357,7 +364,9 @@ public class FutureGroupProcessor extends AptAbstractFutureProcessor{
 			CtBlock<?> parentBlockOfAnnotatedElement = getParentBlockForWaitStatement(containingStatement);
 			CtElement parentStatement = containingStatement;
 					
-			//go to the same scope in which the task group is defined. 
+			//We want the wait statement to be inserted immediately before the encountering statement, so that 
+			//early synchronization is avoided, but at the same time we want to ensure that the wait statement 
+			//is inserted in the correct scope/block!
 			while(!parentBlockOfAnnotatedElement.equals(parentStatement.getParent())){
 				parentStatement = parentStatement.getParent();
 			}

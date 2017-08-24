@@ -60,6 +60,11 @@ sub-results in order to do further operations with them. An important example is
 reduces the results of a future group, and then updates GUI based on the reduced result. This
 is mainly because in the annotated API, there is no approach for symbolizing the reduced result
 of a future group. Therefore, reducing the results of a future group would require blocking. 
-This is not required now.
+This is not required now.  
 
-- major bug fixes applied  
+- major bug fixes applied
+
+Version 1.5.1 - 06/04/2017
+==========================
+
+- asynchronous exception handling bugs fixed
