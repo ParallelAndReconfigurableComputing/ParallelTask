@@ -61,3 +61,8 @@ Version 1.5.1 - 06/04/2017
   a handler associated to itself or one of its parents. Previously, @PT was able to handle
   exceptions of type E if and only if there was a handler associated to exception class E,
   and parent types were not considered
+
+Version 1.5.2 - 29/08/2017
+==========================
+- Minor bug fixes with the "getReturnResult" of taskIdGroups, so that tasks with "Void" 
+  return type do not expect reductions to be specified. 

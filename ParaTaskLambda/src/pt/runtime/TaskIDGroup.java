@@ -353,11 +353,11 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	public T getReturnResult() {
 		if(performedReduction)
 			return reducedResult;
-		
-		if (this.reductionOperation == null)
-			throw new UnsupportedOperationException("NO REDUCTION OBJECT HAS BEEN SPECIFIED FOR THE GROUP. EITHER A REDUCTION OBJECT MUST BE SPECIFIED,\n"
-					+ "OR THE SUB-RESULTS MUST BE RETRIEVED INDIVIDUALLY!");
-		
+		if(!noReturn){
+			if (this.reductionOperation == null)
+				throw new UnsupportedOperationException("NO REDUCTION OBJECT HAS BEEN SPECIFIED FOR THE GROUP. EITHER A REDUCTION OBJECT MUST BE SPECIFIED,\n"
+						+ "OR THE SUB-RESULTS MUST BE RETRIEVED INDIVIDUALLY!");
+		}
 		AtomicBoolean complain = new AtomicBoolean(false);
 		try {
 			waitTillFinished();
@@ -374,6 +374,8 @@ public class TaskIDGroup<T> extends TaskID<T> {
 			e.printStackTrace();
 			return null;
 		}
+		if(noReturn)
+			return null;
 		//Another thread might/process might have performed reduction while this one was waiting.
 		if(!performedReduction)
 			reduceResults();
