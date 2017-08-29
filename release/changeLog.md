@@ -68,3 +68,8 @@ Version 1.5.1 - 06/04/2017
 ==========================
 
 - asynchronous exception handling bugs fixed
+
+Version 1.5.2 - 24/08/2017
+==========================
+
+- minor bug fixes with field future groups

@@ -16,9 +16,9 @@
 	<property name="spoon.jar"    value="${lib.dir}/spoon-core-5.4.0-jar-with-dependencies.jar"/>
 	<property name="spoonDoc.jar" value="${lib.dir}/spoon-core-5.4.0-javadoc.jar"/>
 	<property name="spoonSrc.jar" value="${lib.dir}/spoon-core-5.4.0-sources.jar"/>
-	<property name="PT.jar"		  value="${lib.dir}/PTLambda-Runtime-1.5.1.jar"/>
-	<property name="PTSrc.jar"    value="${lib.dir}/PTLambda-Src-1.5.1.jar"/>
-	<property name="PTDoc.jar"    value="${lib.dir}/PTLambda-JavaDoc-1.5.1.jar"/>
+	<property name="PT.jar"		  value="${lib.dir}/PTLambda-Runtime-1.5.2.jar"/>
+	<property name="PTSrc.jar"    value="${lib.dir}/PTLambda-Src-1.5.2.jar"/>
+	<property name="PTDoc.jar"    value="${lib.dir}/PTLambda-JavaDoc-1.5.2.jar"/>
 	<property name="PARC.jar"     value="${lib.dir}/PARCutils-1.2.3.jar" /> 
 	<property name="PARCSrc.jar"  value="${lib.dir}/PARCutils-1.2.3-src.jar"/>
 	<property name="PARCDoc.jar"  value="${lib.dir}/PARCutils-1.2.3-javadoc.jar"/>
