@@ -11,8 +11,7 @@
 	<property name="classes.dir"  value="${dist.dir}/classes" />
 	<property name="lib.dir"      value="libs" />
 	<property name="temp.dir"     value="${dist.dir}/temp" />
-	<property name="@PT.jar"      value="${lib.dir}/@PT-1.5.2.jar" />
-	
+	<property name="@PT.jar"      value="spoonForCompile\@PT-1.5.2.jar" />	
 	<property name="spoon.jar"    value="${lib.dir}/spoon-core-5.4.0-jar-with-dependencies.jar"/>
 	<property name="spoonDoc.jar" value="${lib.dir}/spoon-core-5.4.0-javadoc.jar"/>
 	<property name="spoonSrc.jar" value="${lib.dir}/spoon-core-5.4.0-sources.jar"/>
@@ -76,7 +75,7 @@
 	<target name="compressJar" depends="compile" description="compress compiled files into jar">
 		<echo message="Compressing @PT compiled files into jar." />
 		<jar basedir="${classes.dir}" destfile="${release.dir}/${APTJarName}.jar">
-			<zipgroupfileset dir="${lib.dir}" includes="**/*.jar"/>
+			 <zipgroupfileset dir="${lib.dir}" includes="**/*.jar"/>
 		</jar>
 		<echo message="Compressing @PT compiled fileds finished."/>
 	</target>
