@@ -82,6 +82,7 @@ public abstract class TaskInfo<R> {
 	protected boolean isInteractive = false;
 	protected boolean registeredByGuiThread = false;
 	protected boolean hasNoReturn = false;
+	protected boolean isCloudTask = false;
 
 	protected Map<Class<? extends Throwable>, Slot<? extends Throwable>> asyncExceptions = new HashMap<>();
 	
@@ -124,6 +125,10 @@ public abstract class TaskInfo<R> {
 
 	public void setQueueArgIndexes(int... indexes) {
 		this.queueArgIndexes = indexes;
+	}
+	
+	public boolean isCloudTask() {
+		return this.isCloudTask;
 	}
 
 	/**

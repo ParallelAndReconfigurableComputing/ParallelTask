@@ -81,10 +81,21 @@ public class ParaTask {
 	private static boolean isInitialized = false;
 	private static boolean paraTaskStartedWorking = false;
 	private static boolean processInParallel = false;
+	
+	//use this flag later for terminating ParaTask, such that once this flag is set, the task pools will not accept any
+    //more tasks, and the worker threads process the existing tasks in the pool and then terminate. 
+	private static boolean terminate = false; 
 
 	private static Thread EDT = null;		// a reference to the EDT
 	private static AbstractTaskListener listener;	// the EDT task listener
 	private static ReentrantLock lock;
+	
+	private static String remoteIP = "";
+	private static String remotePort = "";
+	private static String userName = "";
+	private static String password = "";
+	//by default @PT uses weblogic clients, this can be changed by setting up the @InitAPTCloud. 
+	private static String javaNamingFactory = "weblogic.jndi.WLInitialContextFactory";
 	
 	//for internal use only
 	static final String PT_PREFIX = "__pt__";
@@ -162,6 +173,45 @@ public class ParaTask {
 		return ParaTask.paraTaskStartedWorking;
 	}
 		
+	public static void setRemoteIP(String remoteIP) {
+		ParaTask.remoteIP = remoteIP;
+	}
+	
+	public static String getRemoteIP() {
+		return ParaTask.remoteIP;
+	}
+	
+	public static void setRemotePort(String remotePort) {
+		ParaTask.remotePort = remotePort;
+	}
+	
+	public static String getRemotePort() {
+		return ParaTask.remotePort;
+	}	
+	
+	public static void setUserName(String userName) {
+		ParaTask.userName = userName;
+	}
+	
+	public static String getUserName() {
+		return ParaTask.userName;
+	}
+	
+	public static void setPassword(String password) {
+		ParaTask.password = password;
+	}
+	
+	public static String getPassword() {
+		return ParaTask.password;
+	}
+	
+	public static void setJavaNamingFactory(String namingFactory) {
+		ParaTask.javaNamingFactory = namingFactory;
+	}
+	
+	public static String getJavaNamingFactory() {
+		return ParaTask.javaNamingFactory;
+	}
 
     /**
      * Set the size of the thread pool. To have any effect, this must be executed very early before 
@@ -184,6 +234,13 @@ public class ParaTask {
 		return true;
     }
     
+    public static void terminateParaTask(boolean terminate) {
+    	ParaTask.terminate = terminate;
+    }
+    
+    public static boolean terminateParaTask() {
+    	return ParaTask.terminate;
+    }
         
     /**
      * Set the scheduling scheme. This only has an effect if no tasks have been executed yet 

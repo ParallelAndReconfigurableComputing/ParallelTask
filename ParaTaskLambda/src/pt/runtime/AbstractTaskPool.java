@@ -56,6 +56,10 @@ public abstract class AbstractTaskPool implements Taskpool {
 	 */
 	protected ConcurrentLinkedQueue<WeakReference<InteractiveThread>> cachedInteractiveThreadPool = new ConcurrentLinkedQueue<>();
 	
+	/**
+	 * This queue holds the cloud tasks, from which the CloudTaskThread picks its tasks.
+	 */
+	protected ConcurrentLinkedQueue<TaskID<?>> cloudTaskQueue = new ConcurrentLinkedQueue<>();
 	/** 
 	 * Tasks that are not ready to be executed yet, still waiting for dependences to be done! 
 	 * */
@@ -154,6 +158,8 @@ public abstract class AbstractTaskPool implements Taskpool {
 			taskInfo.setTaskIDForSlotsAndHandlers(taskID);
 		
 		if (allDependees == null) {
+			if (taskID.isCloudTask())
+				enqueueCloudTask(taskID);
 			if (taskID.isInteractive())
 				startInteractiveTask(taskID);
 			else
@@ -273,6 +279,10 @@ public abstract class AbstractTaskPool implements Taskpool {
 		}
 	}
 	
+	protected <T> void enqueueCloudTask(TaskID<T> cloudTask) {
+		this.cloudTaskQueue.add(cloudTask);
+	}
+	
 	/*
 	 * Adds a task to the queue of waiting-tasks, which are waiting on their dependencies to finish.  
 	 * There is just one waiting queue, therefore adding to the waiting queue is not schedule-specific.
@@ -301,6 +311,8 @@ public abstract class AbstractTaskPool implements Taskpool {
 		//ensures that it is only enqueued once (so that enqueuing it a second time will fail)
 		Object obj = waitingTasks.remove(waiter);
 		if (obj != null) {
+			if (waiter.isCloudTask())
+				enqueueCloudTask(waiter);
 			if (waiter.isInteractive())
 				startInteractiveTask(waiter);
 			else
@@ -327,5 +339,10 @@ public abstract class AbstractTaskPool implements Taskpool {
 	
 	public List<AbstractQueue<TaskID<?>>> getPrivateTaskQueues() {
 		return privateTaskQueues;
+	}
+	
+	public synchronized TaskID<?> getNextCloudTask(){
+		//the "poll" method retrieves and removes the head of the queue, or returns "null" if the queue is empty.
+		return this.cloudTaskQueue.poll();
 	}
 }

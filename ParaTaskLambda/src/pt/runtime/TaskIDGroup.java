@@ -510,7 +510,8 @@ public class TaskIDGroup<T> extends TaskID<T> {
 		if(hasCompleted())
 			return;
 		int size = 0;
-		if(isMultiTask()){
+		if(isMultiTask()){//because it may be a task group, which is not a multi-task, and is already expanded. 
+		                  //without this condition, a task-group will wait indefinitely. 
 			while(!this.isExpanded()){
 				Thread.sleep(ParaTask.WORKER_SLEEP_DELAY);
 			}

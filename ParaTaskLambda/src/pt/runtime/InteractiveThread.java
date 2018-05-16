@@ -26,12 +26,12 @@ public class InteractiveThread extends TaskThread {
 
 	private TaskID<?> taskID = null;
 	private AtomicBoolean alive = new AtomicBoolean();
-	private AtomicBoolean setByThisThread = new AtomicBoolean();
+	private AtomicBoolean newTaskReceived = new AtomicBoolean();
 	
 	InteractiveThread(Taskpool taskpool, TaskID<?> taskID) {
 		super(taskpool);
 		alive.set(true);
-		setByThisThread.set(false);
+		newTaskReceived.set(false);
 		this.taskID = taskID;
 	}
 	
@@ -41,14 +41,14 @@ public class InteractiveThread extends TaskThread {
 	
 	void setTaskID(TaskID<?> taskID){
 		this.taskID = taskID;
-		this.setByThisThread.set(true);
+		this.newTaskReceived.set(true);
 		interrupt();
 	}
 	
 	private void resetThread(){
 		taskpool.interactiveTaskCompleted(taskID);
 		this.taskID = null;
-		this.setByThisThread.set(false);
+		this.newTaskReceived.set(false);
 	}
 
 	@Override
@@ -66,7 +66,7 @@ public class InteractiveThread extends TaskThread {
 			try{
 				Thread.sleep(ParaTask.INTERACTIVE_SLEEP_DELAY);
 			}catch(InterruptedException e){
-				if(!setByThisThread.get())
+				if(!newTaskReceived.get())//if the interrupt exception is not due to a new task, then kill the thread.
 					break;
 				Thread.interrupted();//for clearing the flag!
 			}
@@ -74,6 +74,6 @@ public class InteractiveThread extends TaskThread {
 		
 		/*without this flag, sometimes a taskID is added exactly before
 		 * run() method ends, and therefore taskID won't be executed.*/
-		alive.set(false);;
+		alive.set(false);
 	}
 }

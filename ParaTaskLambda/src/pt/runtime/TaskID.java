@@ -113,7 +113,7 @@ public class TaskID<T> {
 	private Throwable exception = null;
 	
 	private boolean isInteractive = false;
-	
+	private boolean isCloudTask = false;
 	protected List<Slot<T>> slotsToNotify = null;
 	
 	/*
@@ -181,6 +181,7 @@ public class TaskID<T> {
 		this.taskInfo = taskInfo;
 		this.noReturn = taskInfo.hasNoReturn();
 		isInteractive = taskInfo.isInteractive();
+		isCloudTask = taskInfo.isCloudTask();
 		slotsToNotify = taskInfo.getSlotsToNotify();
 	}
 	
@@ -220,6 +221,10 @@ public class TaskID<T> {
 	 */
 	public boolean isInteractive() {
 		return isInteractive;
+	}
+	
+	public boolean isCloudTask() {
+		return isCloudTask;
 	}
 	
 	/**
@@ -556,7 +561,6 @@ public class TaskID<T> {
 						//if the worker thread is cancelled, then put it to sleep
 						//until it is killed by JVM or Dalvik
 						try {
-							//sleeping for the thread before it polls again
 							Thread.sleep(ParaTask.WORKER_SLEEP_DELAY);
 						} catch (InterruptedException e) {
 							e.printStackTrace();

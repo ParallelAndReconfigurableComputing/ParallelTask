@@ -97,4 +97,6 @@ public interface Taskpool {
 	 * Used to access private task queues by thread pool at the initialization stage.
 	 * */
 	public List<AbstractQueue<TaskID<?>>> getPrivateTaskQueues();
+	
+	public TaskID<?> getNextCloudTask();
 }
