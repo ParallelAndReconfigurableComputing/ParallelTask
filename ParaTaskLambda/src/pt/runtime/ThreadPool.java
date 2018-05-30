@@ -39,6 +39,8 @@ public class ThreadPool {
 	
 	private static int oneOffTaskThreadPoolSize = 0;
 
+	private static int cloudTaskThreadPoolSize = 1;
+	
 	private final static ReentrantLock reentrantLock = new ReentrantLock();
 
 	
@@ -145,6 +147,17 @@ public class ThreadPool {
 				workerThread.start();
 			}
 		}
+		
+		//globalID is now one unit higher than the total number of one-off and multi worker threads.  
+		//for now, the cloud-task thread pool only contains one thread. 
+		//cloud-task thread pool is only created if the cloud mode is activated. 
+		if(ParaTask.cloudModeOn()) {
+			for(int i = 0; i < cloudTaskThreadPoolSize; i++, globalID++) {
+				CloudTaskThread cloudTaskThread = new CloudTaskThread(globalID, taskpool);
+				cloudTaskThread.start();
+			}
+		}
+		
 		threadPoolInitialized = true;
 	}
 	

@@ -80,9 +80,9 @@ public abstract class TaskInfo<R> {
 	protected boolean hasAnySlots = false;
 	protected boolean isMultiTask = false;
 	protected boolean isInteractive = false;
+	protected boolean isCloudTask = false;
 	protected boolean registeredByGuiThread = false;
 	protected boolean hasNoReturn = false;
-	protected boolean isCloudTask = false;
 
 	protected Map<Class<? extends Throwable>, Slot<? extends Throwable>> asyncExceptions = new HashMap<>();
 	

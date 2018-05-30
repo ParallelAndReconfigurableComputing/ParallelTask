@@ -81,6 +81,7 @@ public class ParaTask {
 	private static boolean isInitialized = false;
 	private static boolean paraTaskStartedWorking = false;
 	private static boolean processInParallel = false;
+	private static boolean cloudModeOn = false;
 	
 	//use this flag later for terminating ParaTask, such that once this flag is set, the task pools will not accept any
     //more tasks, and the worker threads process the existing tasks in the pool and then terminate. 
@@ -173,6 +174,14 @@ public class ParaTask {
 		return ParaTask.paraTaskStartedWorking;
 	}
 		
+	public static void setCloudModeOn(boolean value) {
+		ParaTask.cloudModeOn = value;
+	}
+	
+	public static boolean cloudModeOn() {
+		return ParaTask.cloudModeOn;
+	}
+	
 	public static void setRemoteIP(String remoteIP) {
 		ParaTask.remoteIP = remoteIP;
 	}
@@ -673,5 +682,5 @@ public class ParaTask {
 	
 	public static <R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> TaskInfo<R> asTask(TaskType taskType, FunctorTwelveArgsWithReturn<R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> functor){
 		return new TaskInfoTwelveArgs<>(functor, taskType);
-	}
+	}	
 }

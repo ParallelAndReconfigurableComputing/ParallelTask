@@ -7,7 +7,7 @@ import java.util.concurrent.Future;
 import javax.naming.Context;
 import javax.naming.NamingException;
 
-public class CloudTask<R> extends TaskInfo<R> {
+public abstract class AbstractCloudTask<R> extends TaskInfo<R> {
 	protected String remoteIP = "";
 	protected String remotePort = "";
 	protected String userName = "";
@@ -21,8 +21,10 @@ public class CloudTask<R> extends TaskInfo<R> {
 	protected Method invokedMethod = null;
 	protected boolean ejbSet = false;
 	protected Future<R> futureResult = null;
+	protected Throwable exception = null;
+	protected boolean hasException = false;
 	
-	protected CloudTask(boolean hasNoReturn, String remoteIP, String remotePort, String userName, String password, String namingFactory, Class<?> remoteInterface, Method invokedMethod) {
+	protected AbstractCloudTask(boolean hasNoReturn, String remoteIP, String remotePort, String userName, String password, String namingFactory, Class<?> remoteInterface, Method invokedMethod) {
 		this.hasNoReturn = hasNoReturn;
 		this.isCloudTask = true;
 		this.remoteIP = remoteIP;
@@ -54,6 +56,23 @@ public class CloudTask<R> extends TaskInfo<R> {
 	public R execute() throws Throwable {
 		return null;
 	}
+	
+	/**
+	 * This is the method that actually needs to be implemented by every cloud task for executing its task.
+	 */
+	public void executeCloudTask() {
+		try {
+			Object proxy = this.getRemoteObject();
+			if(proxy != null)
+				customizedExecution(proxy);
+			else
+				throw new RuntimeException("ERROR MUST HAVE OCCURRED DURING LOOKING UP REMOTE OBJECT IN @PT RUNTIME!");	
+		}catch(Throwable e) {
+			this.setException(e);
+		}
+	}
+	
+	protected abstract void customizedExecution(Object proxy) throws Throwable;
 	
 	public void setRemoteIP(String IP) {
 		this.remoteIP = IP;
@@ -123,7 +142,7 @@ public class CloudTask<R> extends TaskInfo<R> {
 		return this.ejbSet;
 	}
 	
-	public boolean isResultReady() {
+	public boolean resultIsReady() {
 		if(this.hasNoReturn()) {
 			return true;
 		}
@@ -133,20 +152,47 @@ public class CloudTask<R> extends TaskInfo<R> {
 	}
 	
 	public R getResult() throws InterruptedException, ExecutionException {
-		if(isResultReady())
+		if(this.hasNoReturn())
+			return null;
+		
+		if(resultIsReady())
 			return this.futureResult.get();
 		else
 			return null;
 	}
 	
-	protected Object getRemoteObject() throws NamingException {
+	public boolean hasException() {
+		return this.hasException;
+	}
+	
+	public Throwable getException() {
+		return this.exception;
+	}
+	
+	protected void setException(Throwable exception) {
+		this.exception = exception;
+		this.hasException = true;
+	}
+	
+	protected Object getRemoteObject(){
 		Context initialContext = null;
-		if(this.javaNamingFactory.isEmpty())
-			initialContext = AtPtCloudClient.getInitialContext(remoteIP, remotePort, userName, password);
-		else
-			initialContext = AtPtCloudClient.getInitialContext(javaNamingFactory, remoteIP, remotePort, userName, password);
-		
-		String lookupString = AtPtCloudClient.getLookupString(appName, moduleName, beanName, qualifiedRemoteInterfaceName);
-		return initialContext.lookup(lookupString);
+		String lookupString = "";
+		try {
+			if(this.javaNamingFactory.isEmpty())
+				initialContext = AtPtCloudClient.getInitialContext(remoteIP, remotePort, userName, password);
+			else
+				initialContext = AtPtCloudClient.getInitialContext(javaNamingFactory, remoteIP, remotePort, userName, password);
+			
+			lookupString = AtPtCloudClient.getLookupString(appName, moduleName, beanName, qualifiedRemoteInterfaceName);
+			return initialContext.lookup(lookupString);
+		}catch(NamingException e) {
+			System.err.println("ERROR OCCURRED WHILE LOOKING UP " + lookupString + " IN @PT RUNTIME!");
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	protected TaskID<R> submitToTaskPool(){
+		return TaskpoolFactory.getTaskpool().enqueue(this);
 	}
 }
