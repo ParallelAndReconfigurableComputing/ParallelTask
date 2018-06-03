@@ -3,6 +3,7 @@
  */
 package pt.runtime;
 
+import java.lang.ref.WeakReference;
 import java.util.AbstractQueue;
 import java.util.Collections;
 import java.util.HashMap;
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.locks.ReentrantLock;
@@ -41,6 +43,8 @@ public class ThreadPool {
 
 	private static int cloudTaskThreadPoolSize = 1;
 	
+	private static int defaultCloudThreadPoolSize = 1;
+	
 	private final static ReentrantLock reentrantLock = new ReentrantLock();
 
 	
@@ -56,6 +60,8 @@ public class ThreadPool {
 	private static SortedMap<Integer, WorkerThread> multiTaskWorkers = Collections.synchronizedSortedMap(new TreeMap<Integer, WorkerThread>());
 	
 	private static Map<Integer, WorkerThread> oneOffTaskWorkers = new HashMap<Integer, WorkerThread>();
+	
+	private static ConcurrentLinkedQueue<WeakReference<CloudTaskThread>> cloudTaskThreads = new ConcurrentLinkedQueue<>();
 
 	private static boolean threadPoolInitialized = false;
 	
@@ -65,12 +71,20 @@ public class ThreadPool {
 
 	protected static void initialize(Taskpool taskpool) {
 		ThreadPool.taskPool = taskpool;		
-		initializeWorkerThreads(taskpool);
+		initializeWorkerThreads(ThreadPool.taskPool);
 	}
 	
 	static void resetThreadPool(){
 		threadPoolInitialized = false;
 		globalID = 0;
+	}
+	
+	static int getDefaultCloudThreadPoolSize() {
+		return ThreadPool.defaultCloudThreadPoolSize;
+	}
+	
+	static int getCloudThreadPoolSize() {
+		return ThreadPool.cloudTaskThreadPoolSize;
 	}
 	
 	/*
@@ -147,20 +161,49 @@ public class ThreadPool {
 				workerThread.start();
 			}
 		}
-		
+		threadPoolInitialized = true;
+	}	
+	
+	/*
+	 * initializes the cloud-task thread pool with the default number of cloud-task threads.
+	 */
+	static void initializeCloudThreadPool(Taskpool taskpool) {
+		initializeCloudThreadPool(taskpool, ThreadPool.defaultCloudThreadPoolSize);
+	}
+	
+	/*
+	 * initializes the cloud-task thread pool with the specified number of cloud-task threads;
+	 */
+	static void initializeCloudThreadPool(Taskpool taskpool, int cloudThreadPoolSize) {
 		//globalID is now one unit higher than the total number of one-off and multi worker threads.  
 		//for now, the cloud-task thread pool only contains one thread. 
-		//cloud-task thread pool is only created if the cloud mode is activated. 
-		if(ParaTask.cloudModeOn()) {
-			for(int i = 0; i < cloudTaskThreadPoolSize; i++, globalID++) {
-				CloudTaskThread cloudTaskThread = new CloudTaskThread(globalID, taskpool);
-				cloudTaskThread.start();
+		//cloud-task thread pool is only created if the cloud mode is activated.
+		ThreadPool.cloudTaskThreadPoolSize = cloudThreadPoolSize;
+		for(int i = 0; i < cloudTaskThreadPoolSize; i++, globalID++) {
+			CloudTaskThread cloudTaskThread = new CloudTaskThread(globalID, taskpool);
+			cloudTaskThreads.add(new WeakReference<CloudTaskThread>(cloudTaskThread));
+			cloudTaskThread.start();
+			
+		}
+	}
+	
+	static void shutDownCloudThreadPool(Taskpool taskpool) {
+		//while the cloud taskpool is not empty do not kill the threads. When the taskpool is empty,
+		//then trigger the termination signal for all cloud-task threads.
+		while(taskpool.cloudTaskPoolSize() != 0) {
+			try {
+				Thread.sleep(ParaTask.WORKER_SLEEP_DELAY);
+			}catch(Exception e) {
+				e.printStackTrace();
 			}
 		}
 		
-		threadPoolInitialized = true;
+		for(WeakReference<CloudTaskThread> cloudTaskThread : cloudTaskThreads) {
+			CloudTaskThread thread = cloudTaskThread.get();
+			thread.killThread();
+			cloudTaskThreads.remove(cloudTaskThread);
+		}
 	}
-	
 	
 	//? How should I return the pool size ?
 	//Maybe multi task thread pool size + one-off task thread pool size

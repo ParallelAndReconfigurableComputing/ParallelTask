@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 
 import pu.RedLib.Reduction;
@@ -81,7 +82,7 @@ public class ParaTask {
 	private static boolean isInitialized = false;
 	private static boolean paraTaskStartedWorking = false;
 	private static boolean processInParallel = false;
-	private static boolean cloudModeOn = false;
+	private static AtomicBoolean cloudModeOn = new AtomicBoolean(false);
 	
 	//use this flag later for terminating ParaTask, such that once this flag is set, the task pools will not accept any
     //more tasks, and the worker threads process the existing tasks in the pool and then terminate. 
@@ -173,13 +174,19 @@ public class ParaTask {
 	static boolean paraTaskStarted(){
 		return ParaTask.paraTaskStartedWorking;
 	}
-		
-	public static void setCloudModeOn(boolean value) {
-		ParaTask.cloudModeOn = value;
-	}
 	
-	public static boolean cloudModeOn() {
-		return ParaTask.cloudModeOn;
+	public static void setCloudMode(boolean value) {
+		//we cannot have more than one cloud thread, because RMI does not allow clustered inquiring of future results.
+		ParaTask.cloudModeOn.set(value);
+		if(ParaTask.cloudModeOn.get()) {
+			ThreadPool.initializeCloudThreadPool(TaskpoolFactory.getTaskpool(), ThreadPool.getDefaultCloudThreadPoolSize());
+		}else {
+			ThreadPool.shutDownCloudThreadPool(TaskpoolFactory.getTaskpool());
+		}
+	}
+		
+	public static boolean isCloudModeOn() {
+		return ParaTask.cloudModeOn.get();
 	}
 	
 	public static void setRemoteIP(String remoteIP) {

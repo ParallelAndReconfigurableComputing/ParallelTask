@@ -99,4 +99,6 @@ public interface Taskpool {
 	public List<AbstractQueue<TaskID<?>>> getPrivateTaskQueues();
 	
 	public TaskID<?> getNextCloudTask();
+	
+	public int cloudTaskPoolSize();
 }

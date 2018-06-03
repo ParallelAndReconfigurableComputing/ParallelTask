@@ -158,12 +158,13 @@ public abstract class AbstractTaskPool implements Taskpool {
 			taskInfo.setTaskIDForSlotsAndHandlers(taskID);
 		
 		if (allDependees == null) {
-			if (taskID.isCloudTask())
+			if (taskID.isCloudTask()) {
 				enqueueCloudTask(taskID);
-			if (taskID.isInteractive())
+			}else if (taskID.isInteractive()) {
 				startInteractiveTask(taskID);
-			else
+			}else {
 				enqueueReadyTask(taskID);
+			}
 		} else {
 			enqueueWaitingTask(taskID, allDependees);
 		}
@@ -280,7 +281,12 @@ public abstract class AbstractTaskPool implements Taskpool {
 	}
 	
 	protected <T> void enqueueCloudTask(TaskID<T> cloudTask) {
-		this.cloudTaskQueue.add(cloudTask);
+		//new cloud tasks are only added to the cloud task pool if the cloud engine is active. 
+		if(ParaTask.isCloudModeOn()) {
+			this.cloudTaskQueue.add(cloudTask);
+		}else {
+			throw new RuntimeException("ONE OR MORE CLOUD TASKS COULD NOT BE ENQUEUED, DUE TO CLOUD ENGINE SHUTDOWN!");
+		}
 	}
 	
 	/*
@@ -342,7 +348,16 @@ public abstract class AbstractTaskPool implements Taskpool {
 	}
 	
 	public synchronized TaskID<?> getNextCloudTask(){
-		//the "poll" method retrieves and removes the head of the queue, or returns "null" if the queue is empty.
-		return this.cloudTaskQueue.poll();
+		TaskID<?> taskID = cloudTaskQueue.poll();
+		if(taskID != null) {
+			cloudTaskQueue.remove(taskID);
+			return taskID;
+		}
+		return null;
+	}
+	
+	@Override
+	public int cloudTaskPoolSize() {
+		return cloudTaskQueue.size();
 	}
 }

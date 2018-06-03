@@ -537,9 +537,8 @@ public class TaskID<T> {
 	 * @since 25/05/2013
 	 * */
 	
-	public void waitTillFinished() throws ExecutionException, InterruptedException {		
+	public void waitTillFinished() throws ExecutionException, InterruptedException {	
 		if (!(hasCompleted() || hasBeenCancelled())) { 
-			
 			//get the thread which is trying to finish the task.
 			Thread thisThread = Thread.currentThread();
 			// Only WorkerThreads can execute a new TaskID.. all other threads belong to the user, or 

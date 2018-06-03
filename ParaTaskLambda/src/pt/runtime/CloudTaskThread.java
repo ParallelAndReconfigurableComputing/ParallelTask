@@ -1,17 +1,21 @@
 package pt.runtime;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class CloudTaskThread extends TaskThread {
 	
-	private Map<TaskID<?>, AbstractCloudTask<?>> results = null;
+	private Map<TaskID<?>, AbstractCloudTask<?>> pendingResults = null;
+	private AtomicBoolean threadKilled = null;
 
 	public CloudTaskThread(int globalID, Taskpool taskpool) {
 		super(taskpool, false);
-		results = new HashMap<>();
+		threadKilled = new AtomicBoolean(false);
+		pendingResults = new HashMap<>();
 	}
 	
 	/** 
@@ -20,48 +24,77 @@ public class CloudTaskThread extends TaskThread {
 	 **/				
 	@Override
 	public void run() {
-		while(!ParaTask.terminateParaTask()) {
+		while(!(ParaTask.terminateParaTask()||threadKilled.get())) {
 			TaskID<?> taskID = this.taskpool.getNextCloudTask();
 			if(taskID != null)
 				executeTask(taskID);
 			else
 				checkForResults();
 		}
+		processTerminationPhase();
 	}	
 	
 	@Override
 	protected <T> boolean executeTask(TaskID<T> taskID) {
 		TaskInfo<T> taskInfo = taskID.getTaskInfo();
-		if(taskInfo instanceof CloudTaskNoArgs){
-			CloudTaskNoArgs<T> cloudTask = (CloudTaskNoArgs<T>) taskInfo;
+		if(taskInfo instanceof AbstractCloudTask){
+			AbstractCloudTask<T> cloudTask = (AbstractCloudTask<T>) taskInfo;
 			cloudTask.executeCloudTask();
-			results.put(taskID, cloudTask);
+			pendingResults.put(taskID, cloudTask);
 		}
 		return true;
 	}
 	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private void checkForResults() {
-		for(Entry<TaskID<?>, AbstractCloudTask<?>> entry : results.entrySet()) {
+		Iterator<?> iterator = pendingResults.entrySet().iterator();
+		
+		while(iterator.hasNext()) {
+			Entry<TaskID<?>, AbstractCloudTask<?>> entry = (Entry<TaskID<?>, AbstractCloudTask<?>>) iterator.next();
 			
-			AbstractCloudTask cloudTask = entry.getValue();
 			TaskID taskID = entry.getKey();
+			AbstractCloudTask cloudTask = entry.getValue();
+			
 			
 			if(cloudTask.resultIsReady() && !cloudTask.hasException()) {
 				try {
 					taskID.setReturnResult(cloudTask.getResult());
 					taskID.enqueueSlots(false);
-					results.remove(taskID);
+					iterator.remove();
 				} catch (InterruptedException | ExecutionException e) {
 					cloudTask.setException(e);
 				}
 			}
 			
+			//this is a separate if statement, needs to be checked regardless of a 
+			//cloud task being done or not. 
 			if(cloudTask.hasException()) {
 				taskID.setException(cloudTask.getException());
 				taskID.enqueueSlots(false);
-				results.remove(taskID);
+				iterator.remove();
 			}
 		}
+	}
+	
+	/* 
+	* In this phase that either ParaTask or the cloud engine has been shut down, the 
+	* cloud thread/threads process all of the tasks that currently exist in ParaTask
+	* cloud task queue, and wait until all of the results are back, then the thread 
+	* terminates itself. 
+	*/
+	private void processTerminationPhase() {
+		TaskID<?> taskID = this.taskpool.getNextCloudTask();
+		while(taskID != null) {
+			executeTask(taskID);
+			taskID = this.taskpool.getNextCloudTask();
+		}
+		
+		while(!pendingResults.isEmpty()) {
+			checkForResults();
+		}
+	}
+	
+	public void killThread() {
+		this.threadKilled.set(true);
 	}
 }

@@ -5,9 +5,10 @@
 	<property name="build.dir" value="bild" />
  	<property name="dist.dir"  value="release" />
 	<property name="productName" value="PTLambda"/>
-	<property name="reductionJar" value="PARCutils-1.2.3.jar"/>
+	<property name="parcUtilsJar" value="PARCutils-1.2.3.jar"/>
+	<property name="wLClientJar"  value="wlthint3client.jar"/>
 	<property name="libsDir" value="./libs"/>
- 	<property name="jarVersion" value="1.5.2"/>
+ 	<property name="jarVersion" value="2.0.0"/>
 	
 	<!-- Check the operating system -->
     <target name="checkOS">
@@ -38,14 +39,17 @@
 	<target name="compile" depends="makeDir">
 		<javac includeantruntime="false" srcdir="${src.dir}" destdir="${build.dir}">
 			<classpath>
-				<pathelement location="${libsDir}/${reductionJar}"/>
+				<pathelement location="${libsDir}/${parcUtilsJar}"/>
+				<pathelement location="${libsDir}/${wLClientJar}"/>
 			</classpath>
 		</javac>
 	</target>
 	
 	<!-- Compress the classes into a jar file -->
 	<target name="classesJar" depends="compile">
-		<jar  basedir="${build.dir}" destfile="${dist.dir}/${productName}-Runtime-${jarVersion}.jar"/>
+		<jar  basedir="${build.dir}" destfile="${dist.dir}/${productName}-Runtime-${jarVersion}.jar">
+			<zipgroupfileset dir="${libsDir}" includes="**/**"/>	
+		</jar>
 	</target>
 	
 	<!-- Document the source codes, export the documentations to the docs directory -->
@@ -55,7 +59,8 @@
 				<include name="**/**" />
 			</fileset>
 			<classpath>
-				<pathelement location="${libsDir}/${reductionJar}"/>
+				<pathelement location="${libsDir}/${parcUtilsJar}"/>
+				<pathelement location="${libsDir}/${wLClientJar}"/>
 			</classpath>
 		</javadoc>
 	</target>
