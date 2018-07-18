@@ -21,6 +21,7 @@ package pt.runtime;
 
 import pu.RedLib.Reduction;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -200,6 +201,7 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	 * @param red	The reduction to perform
 	 * @return The result of performing the reduction on the set of <code>TaskID</code>s contained in this group.
 	 */
+	@SuppressWarnings("unchecked")
 	private void reduceResults() {
 		if (groupSize == 0)			
 			return;
@@ -208,22 +210,57 @@ public class TaskIDGroup<T> extends TaskID<T> {
 			reductionLock.unlock();
 			return;
 		}
-		reducedResult = getInnerTaskResult(0);
-		for (int i = 1; i < groupSize; i++) {
-			reducedResult = reductionOperation.reduce(reducedResult, getInnerTaskResult(i));
+		
+		T sampleResult = innerTasks.get(0).getReturnResult();
+		T[] resultsArray = (T[]) Array.newInstance(sampleResult.getClass(), groupSize);
+		
+		int resultsReady = 0;
+		while(resultsReady < groupSize) {
+			resultsReady = 0;
+			for(int index = 0; index < groupSize; index++){
+				T result = innerTasks.get(index).getReturnResult();
+				if(result != null) {
+					resultsReady ++;				
+					resultsArray[index] = innerTasks.get(index).getReturnResult();
+				}
+			}
 		}
+		
+		reducedResult = resultsArray[0];
+		for (int i = 1; i < groupSize; i++) {
+			reducedResult = reductionOperation.reduce(reducedResult, resultsArray[i]);
+		}
+		
 		performedReduction = true;
 		reductionLock.unlock();
 	}
 	
+	@SuppressWarnings("unchecked")
 	private T reduceResults(Reduction<T> reductionOperation){
 		if (groupSize == 0)			
 			return null;
 		reductionLock.lock();
-		T result = getInnerTaskResult(0);
-		for (int i = 1; i < groupSize; i++) {
-			result = reductionOperation.reduce(result, getInnerTaskResult(i));
+		
+		T sampleResult = innerTasks.get(0).getReturnResult();
+		T[] resultsArray = (T[]) Array.newInstance(sampleResult.getClass(), groupSize);
+		
+		int resultsReady = 0;
+		while(resultsReady < groupSize) {
+			resultsReady = 0;
+			for(int index = 0; index < groupSize; index++){
+				T result = innerTasks.get(index).getReturnResult();
+				if(result != null) {
+					resultsReady ++;				
+					resultsArray[index] = innerTasks.get(index).getReturnResult();
+				}
+			}
 		}
+		
+		T result = resultsArray[0];
+		for (int i = 1; i < groupSize; i++) {
+			result = reductionOperation.reduce(result, resultsArray[i]);
+		}
+		
 		reductionLock.unlock();
 		return result;
 	}
@@ -235,10 +272,28 @@ public class TaskIDGroup<T> extends TaskID<T> {
 	 * @see TaskID#getRelativeID()
 	 * @return The result for that task.
 	 */
+	@SuppressWarnings("unchecked")
 	public T getInnerTaskResult(int relativeID) {
 		if(relativeID < 0 || relativeID >= innerTasks.size())
 			throw new IndexOutOfBoundsException("INVALID INDEX REQUEST: " + relativeID + "! VALID RANGE: [" + 0 + "," + innerTasks.size() + ")");
-		return innerTasks.get(relativeID).getReturnResult();
+	
+		
+		//for some results, especially cloud-based results or streamed results, it may take some time before the result is 
+		//actually allocated to its representing object.
+		//JVM tends to suppress processes that perform many repetitive operations such as thread sleep, or iterator parsing. 
+		//The mechanism below is the only approach that has proven to work. 
+		int resultIsReady = 0;
+		T sampleResult = innerTasks.get(0).getReturnResult();
+		T[] resultArray = (T[]) Array.newInstance(sampleResult.getClass(), 1);
+		while (resultIsReady != 1) {
+			resultIsReady = 0;
+			T result = innerTasks.get(relativeID).getReturnResult();
+			if(result != null) {
+				resultIsReady = 1;
+				resultArray[0]	= result;
+			}
+		}
+		return resultArray[0];
 	}
 	
 	/**
@@ -413,8 +468,23 @@ public class TaskIDGroup<T> extends TaskID<T> {
 			return null;
 		} 
 		
-		for(int index = 0; index < innerTasks.size(); index++){
-			array[index] = innerTasks.get(index).getReturnResult();
+		//considering that some results may be available some time after they are retrieved,
+		//this is especially the case for cloud-based tasks or streaming data, we need to 
+		//ensure that the result is actually saved in its allocated object before it is put
+		//into the final array.
+		//For some reason, this technique only works with the following mechanism, and does not
+		//work with Maps, Lists and other containers that need iterators. Perhaps this is due
+		//to efficiency considerations that are imposed by JVM.
+		int resultsReady = 0;
+		while(resultsReady < groupSize) {
+			resultsReady = 0;
+			for(int index = 0; index < groupSize; index++){
+				T result = innerTasks.get(index).getReturnResult();
+				if(result != null) {
+					resultsReady ++;				
+					array[index] = innerTasks.get(index).getReturnResult();
+				}
+			}
 		}
 		return array;
 	}

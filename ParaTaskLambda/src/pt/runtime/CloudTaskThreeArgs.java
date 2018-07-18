@@ -24,7 +24,10 @@ public class CloudTaskThreeArgs<R, T1, T2, T3> extends AbstractCloudTask<R> {
 	@SuppressWarnings("unchecked")
 	@Override
 	protected void customizedExecution(Object proxy) throws Throwable {
-		this.futureResult = (Future<R>) this.invokedMethod.invoke(this.remoteInterface.cast(proxy), paramOne, paramTwo, paramThree);
+		Object p1 = (paramOne instanceof TaskID<?>) ? ((TaskID<?>)paramOne).getReturnResult() : paramOne;
+		Object p2 = (paramTwo instanceof TaskID<?>) ? ((TaskID<?>)paramTwo).getReturnResult() : paramTwo;
+		Object p3 = (paramThree instanceof TaskID<?>) ? ((TaskID<?>)paramThree).getReturnResult() : paramThree;
+		this.futureResult = (Future<R>) this.invokedMethod.invoke(this.remoteInterface.cast(proxy), p1, p2, p3);
 	}
 
 }

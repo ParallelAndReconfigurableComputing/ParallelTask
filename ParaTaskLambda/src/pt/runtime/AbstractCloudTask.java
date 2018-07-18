@@ -23,6 +23,7 @@ public abstract class AbstractCloudTask<R> extends TaskInfo<R> {
 	protected Future<R> futureResult = null;
 	protected Throwable exception = null;
 	protected boolean hasException = false;
+	protected boolean hasRetrievedResult = false;
 	
 	protected AbstractCloudTask(boolean hasNoReturn, String remoteIP, String remotePort, String userName, String password, String namingFactory, Class<?> remoteInterface, Method invokedMethod) {
 		this.hasNoReturn = hasNoReturn;
@@ -38,6 +39,7 @@ public abstract class AbstractCloudTask<R> extends TaskInfo<R> {
 		this.invokedMethod = invokedMethod;
 		//invokedMethod.invoke(obj, args...); --> obj is the instance on which the invocation is made, and args are the arguments
 		//invokedMethod.getReturnType()
+		this.hasRetrievedResult = false;
 	}
 	
 	public void setEJB(String appName, String moduleName, String ejbName, String qualifiedRemoteInterfaceName) {
@@ -73,6 +75,14 @@ public abstract class AbstractCloudTask<R> extends TaskInfo<R> {
 	}
 	
 	protected abstract void customizedExecution(Object proxy) throws Throwable;
+	
+	public void setRetrievedResult(boolean set) {
+		this.hasRetrievedResult = set;
+	}
+	
+	public boolean hasRetrievedResult() {
+		return this.hasRetrievedResult;
+	}
 	
 	public void setRemoteIP(String IP) {
 		this.remoteIP = IP;
@@ -152,13 +162,17 @@ public abstract class AbstractCloudTask<R> extends TaskInfo<R> {
 	}
 	
 	public R getResult() throws InterruptedException, ExecutionException {
-		if(this.hasNoReturn())
+		if(this.hasNoReturn()) {
 			return null;
+		}
 		
-		if(resultIsReady())
-			return this.futureResult.get();
-		else
+		if(resultIsReady()) {
+			R result = this.futureResult.get();
+			return result;
+		}
+		else {
 			return null;
+		}
 	}
 	
 	public boolean hasException() {

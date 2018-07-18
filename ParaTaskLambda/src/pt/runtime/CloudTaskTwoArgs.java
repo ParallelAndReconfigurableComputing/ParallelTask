@@ -22,6 +22,8 @@ public class CloudTaskTwoArgs<R, T1, T2> extends AbstractCloudTask<R> {
 	@SuppressWarnings("unchecked")
 	@Override
 	protected void customizedExecution(Object proxy) throws Throwable {
-		futureResult = (Future<R>) this.invokedMethod.invoke(this.remoteInterface.cast(proxy), paramOne, paramTwo);		
+		Object p1 = (paramOne instanceof TaskID<?>) ? ((TaskID<?>)paramOne).getReturnResult() : paramOne;
+		Object p2 = (paramTwo instanceof TaskID<?>) ? ((TaskID<?>)paramTwo).getReturnResult() : paramTwo;
+		futureResult = (Future<R>) this.invokedMethod.invoke(this.remoteInterface.cast(proxy), p1, p2);		
 	}
 }

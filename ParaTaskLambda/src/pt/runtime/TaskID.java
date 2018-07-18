@@ -21,6 +21,7 @@
 package pt.runtime;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
@@ -413,9 +414,11 @@ public class TaskID<T> {
 		
 		changeStatusLock.lock();
 				
-		TaskID<?> waiter = null;
-		while ((waiter = waitingTasks.poll())!=null){
-				waiter.dependenceFinished(this);
+		Iterator<TaskID<?>> iterator = waitingTasks.iterator();
+		while(iterator.hasNext()) {
+			TaskID<?> waiter = iterator.next();
+			waiter.dependenceFinished(this);
+			iterator.remove();
 		}
 		
 		completedLatchForRegisteringThread.countDown();	
@@ -560,6 +563,7 @@ public class TaskID<T> {
 						//if the worker thread is cancelled, then put it to sleep
 						//until it is killed by JVM or Dalvik
 						try {
+							System.out.println("waiting thread has to sleep");
 							Thread.sleep(ParaTask.WORKER_SLEEP_DELAY);
 						} catch (InterruptedException e) {
 							e.printStackTrace();
@@ -650,8 +654,8 @@ public class TaskID<T> {
 			setComplete();	
 			
 		} else if (isSubTask() && group.isFutureGroup()){
-			
 			group.oneMoreInnerTaskCompleted();
+
 			if(hasSlots()){
 				completedLatchForRegisteringThread.countDown();
 				completedLatchForNonRegisteringThreads.countDown();
@@ -687,7 +691,7 @@ public class TaskID<T> {
 				slot.setIsSetCompleteSlot(true);
 				executeOneTaskSlot(slot);
 				
-			} else {
+			} else {				
 				setComplete();
 			}			
 		}

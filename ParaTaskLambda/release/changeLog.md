@@ -66,3 +66,10 @@ Version 1.5.2 - 29/08/2017
 ==========================
 - Minor bug fixes with the "getReturnResult" of taskIdGroups, so that tasks with "Void" 
   return type do not expect reductions to be specified. 
+
+Versuib 2.0.0 - 18/07/2018
+=========================
+- ParaTask runtime extended with the new cloud-computing extension.
+
+- Other components are modified, or bug fixed, in order to accommodate the new developments
+  to the runtime. 

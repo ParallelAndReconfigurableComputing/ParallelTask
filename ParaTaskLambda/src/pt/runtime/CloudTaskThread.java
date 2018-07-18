@@ -1,21 +1,21 @@
 package pt.runtime;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.Map;
-import java.util.Map.Entry;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class CloudTaskThread extends TaskThread {
 	
-	private Map<TaskID<?>, AbstractCloudTask<?>> pendingResults = null;
+	//private Map<TaskID<?>, AbstractCloudTask<?>> pendingResults = null;
+	private List<TaskID<?>> pendingResults = null;
 	private AtomicBoolean threadKilled = null;
 
 	public CloudTaskThread(int globalID, Taskpool taskpool) {
 		super(taskpool, false);
 		threadKilled = new AtomicBoolean(false);
-		pendingResults = new HashMap<>();
+		pendingResults = new ArrayList<>();
 	}
 	
 	/** 
@@ -40,22 +40,19 @@ public class CloudTaskThread extends TaskThread {
 		if(taskInfo instanceof AbstractCloudTask){
 			AbstractCloudTask<T> cloudTask = (AbstractCloudTask<T>) taskInfo;
 			cloudTask.executeCloudTask();
-			pendingResults.put(taskID, cloudTask);
+			pendingResults.add(taskID);
 		}
 		return true;
 	}
 	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private void checkForResults() {
-		Iterator<?> iterator = pendingResults.entrySet().iterator();
-		
+			
+		Iterator<TaskID<?>> iterator = pendingResults.iterator();
 		while(iterator.hasNext()) {
-			Entry<TaskID<?>, AbstractCloudTask<?>> entry = (Entry<TaskID<?>, AbstractCloudTask<?>>) iterator.next();
 			
-			TaskID taskID = entry.getKey();
-			AbstractCloudTask cloudTask = entry.getValue();
-			
-			
+			TaskID taskID = iterator.next();
+			AbstractCloudTask cloudTask = (AbstractCloudTask) taskID.getTaskInfo();
 			if(cloudTask.resultIsReady() && !cloudTask.hasException()) {
 				try {
 					taskID.setReturnResult(cloudTask.getResult());
@@ -69,6 +66,7 @@ public class CloudTaskThread extends TaskThread {
 			//this is a separate if statement, needs to be checked regardless of a 
 			//cloud task being done or not. 
 			if(cloudTask.hasException()) {
+				System.out.println("cloud task is finished with exception");
 				taskID.setException(cloudTask.getException());
 				taskID.enqueueSlots(false);
 				iterator.remove();
@@ -91,7 +89,7 @@ public class CloudTaskThread extends TaskThread {
 		
 		while(!pendingResults.isEmpty()) {
 			checkForResults();
-		}
+		}	
 	}
 	
 	public void killThread() {

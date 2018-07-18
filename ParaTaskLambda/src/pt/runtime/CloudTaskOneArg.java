@@ -1,10 +1,9 @@
 package pt.runtime;
 
-import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.concurrent.Future;
 
-public class CloudTaskOneArg<R, T1 extends Serializable> extends AbstractCloudTask<R> {
+public class CloudTaskOneArg<R, T1> extends AbstractCloudTask<R> {
 	
 	private T1 paramOne = null;
 
@@ -21,6 +20,7 @@ public class CloudTaskOneArg<R, T1 extends Serializable> extends AbstractCloudTa
 	@SuppressWarnings("unchecked")
 	@Override
 	protected void customizedExecution(Object proxy) throws Throwable {
-		futureResult = (Future<R>) this.invokedMethod.invoke(this.remoteInterface.cast(proxy), paramOne);		
+		Object p1 = (paramOne instanceof TaskID<?>) ? ((TaskID<?>)paramOne).getReturnResult() : paramOne;
+		futureResult = (Future<R>) this.invokedMethod.invoke(this.remoteInterface.cast(proxy), p1);		
 	}
 }

@@ -28,7 +28,17 @@ public class CloudTaskElevenArgs<R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11
 	@SuppressWarnings("unchecked")
 	@Override
 	protected void customizedExecution(Object proxy) throws Throwable {
-		this.futureResult = (Future<R>) this.invokedMethod.invoke(this.remoteInterface.cast(proxy), this.paramOne, this.paramTwo, this.paramThree, this.paramFour,
-				this.paramFive, this.paramSix, this.paramSeven, this.paramEight, this.paramNine, this.paramTen, this.paramEleven);
+		Object p1 = (paramOne instanceof TaskID<?>) ? ((TaskID<?>)paramOne).getReturnResult() : paramOne;
+		Object p2 = (paramTwo instanceof TaskID<?>) ? ((TaskID<?>)paramTwo).getReturnResult() : paramTwo;
+		Object p3 = (paramThree instanceof TaskID<?>) ? ((TaskID<?>)paramThree).getReturnResult() : paramThree;
+		Object p4 = (paramFour instanceof TaskID<?>) ? ((TaskID<?>)paramFour).getReturnResult() : paramFour;
+		Object p5 = (paramFive instanceof TaskID<?>) ? ((TaskID<?>)paramFive).getReturnResult() : paramFive;
+		Object p6 = (paramSix instanceof TaskID<?>) ? ((TaskID<?>)paramSix).getReturnResult() : paramSix;
+		Object p7 = (paramSeven instanceof TaskID<?>) ? ((TaskID<?>)paramSeven).getReturnResult() : paramSeven;
+		Object p8 = (paramEight instanceof TaskID<?>) ? ((TaskID<?>)paramEight).getReturnResult() : paramEight;
+		Object p9 = (paramNine instanceof TaskID<?>) ? ((TaskID<?>)paramNine).getReturnResult() : paramNine;
+		Object p10 = (paramTen instanceof TaskID<?>) ? ((TaskID<?>)paramTen).getReturnResult() : paramTen;
+		Object p11 = (paramEleven instanceof TaskID<?>) ? ((TaskID<?>)paramEleven).getReturnResult() : paramEleven;
+		this.futureResult = (Future<R>) this.invokedMethod.invoke(this.remoteInterface.cast(proxy), p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11);
 	}
 }
